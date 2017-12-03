@@ -7,17 +7,9 @@
 class DelayCP0 {
 
     public:
-        //pass in cpu freq
-        DelayCP0( uint8_t cpu_mhz ) :
+        //pass in cpu freq in MHz, default is 24
+        DelayCP0( uint8_t cpu_mhz = 24 ) :
             m_cpu_MHz(cpu_mhz),
-            m_countn(0),
-            m_expired(true)
-        {
-        }
-
-        //use default 24MHz
-        DelayCP0( void ) :
-            m_cpu_MHz( 24 ),
             m_countn(0),
             m_expired(true)
         {
