@@ -70,16 +70,12 @@ int main()
     }
 }
 
-#ifdef __cplusplus
 extern "C" {
-#endif
     void __attribute__(( vector(0), interrupt(IPL1SOFT) )) CoreTimerISR()
     {
         Cp0::compare_reload();
         led2.invert();
         irq_cp0.flagclear();
     }
-#ifdef __cplusplus
 }
-#endif
 
