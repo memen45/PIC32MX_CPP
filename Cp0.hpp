@@ -5,10 +5,22 @@
 
 namespace Cp0 {
 
-    uint32_t count( void ){         return __builtin_mfc0(9,0); }
-    void count( uint32_t v ){       __builtin_mtc0(9,0,v); }
-    uint32_t compare( void ){       return __builtin_mfc0(11,0); }
-    void compare( uint32_t v ){     __builtin_mtc0(11,0,v); }
+    static uint8_t sysfreq;             //used to calculate compare values
+    static uint32_t m_compare_count;    //save count for reloads
+
+    uint32_t count( void ){             return __builtin_mfc0(9,0); }   //get
+    void count( uint32_t v ){           __builtin_mtc0(9,0,v); }        //set
+    uint32_t compare( void ){           return __builtin_mfc0(11,0); }  //get
+    void compare( uint32_t v ){         __builtin_mtc0(11,0,v); }       //set
+
+    void compare_reload(){              compare( count() + m_compare_count ); }
+    void compare_us( uint32_t us )
+    {
+        m_compare_count = sysfreq / 2 * us;
+        compare_reload();
+    }
+    void compare_ms( uint16_t ms ){     compare_us( ms * 1000 ); }
+
 }
 
 #endif //CP0_H

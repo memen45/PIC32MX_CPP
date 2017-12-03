@@ -6,19 +6,19 @@
 #include "Cp0.hpp"
 
 
-Pins leds[5] = {
+Pins leds[4] = {
     { Pins::PORT::D, 3 },       //LED1
-    { Pins::PORT::C, 13 },      //LED2
     { Pins::PORT::D, 1 },       //RED
     { Pins::PORT::C, 3 },       //GREEN
     { Pins::PORT::C, 15 }       //BLUE
 };
-Pins sw1( Pins::PORT::B, 9 );   //SW1
+Pins led2( Pins::PORT::C, 13 ); //LED2 (cp0 irq blinks)
+Pins sw1( Pins::PORT::B, 9 );   //SW1 (rotate delays))
 
 DelayCP0 sw_dly;                //debounce
-DelayCP0 dly[5];                //CP0 led delays
-uint32_t t_ms[5] = {            //led delay ms
-    200,400,600,800,1000
+DelayCP0 dly[4];                //CP0 led delays
+uint32_t t_ms[4] = {            //led delay ms
+    400,800,1000,1200
 };
 
 Irqn irq_cp0( Irq::CORE_TIMER, Irq::IRQ_PRI::PRI1, Irq::IRQ_SUB::SUB0 );
@@ -26,25 +26,31 @@ Irqn irq_cp0( Irq::CORE_TIMER, Irq::IRQ_PRI::PRI1, Irq::IRQ_SUB::SUB0 );
 
 int main()
 {
+    //init pins
     sw1.digital(); sw1.pullup_on(); sw1.lowison();
+    led2.digital(); led2.output();
+    for( auto& led : leds ){
+        led.output();
+        led.digital();
+    }
 
-//    irq_cp0.enable();
-//    Cp0::compare( Cp0::count() + 12000000UL );
-//    __builtin_enable_interrupts();
+    //cp0 irq, set sysfreq, compare timeout, enable irq + global irqs
+    Cp0::sysfreq = 24;
+    Cp0::compare_ms( 500 );
+    irq_cp0.enable();
+    Irq::enable_all();
 
-    //init delays, pins, also use to rotate delays
+    //init delays or rotate delays
     auto rotate_delays = [ & ](){
         static uint8_t start = 0;
-        for( auto i = 0; i < 4; i++ ){
-            dly[i].set_ms( t_ms[start++] );
-            leds[i].output(); //also set output
-            leds[i].digital(); //and digital- no harm doing again
-            start = start == 4 ? 0 : start;
+        for( auto& d : dly ){
+            if( start >= 4 ) start &= 3;
+            d.set_ms( t_ms[start++] );
         }
-        start = ++start == 4 ? 0 : start;
+        start++;
     };
-
-    rotate_delays(); //initial set delays, pin outputs
+    //initialize delays
+    rotate_delays();
 
     for (;;){
         for( auto i = 0; i < 4; i++ ){
@@ -64,14 +70,13 @@ int main()
     }
 }
 
-//not sure what is going on here
-//irq's on causing reset - I assume some exception is occurring
 #ifdef __cplusplus
 extern "C" {
 #endif
-    void __attribute__(( vector(0), interrupt(IPL1SOFT) )) CoreTimerISR(){
-        Cp0::compare( Cp0::count() + 12000000UL );
-        leds[5].invert();
+    void __attribute__(( vector(0), interrupt(IPL1SOFT) )) CoreTimerISR()
+    {
+        Cp0::compare_reload();
+        led2.invert();
         irq_cp0.flagclear();
     }
 #ifdef __cplusplus

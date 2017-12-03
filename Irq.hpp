@@ -117,6 +117,9 @@ namespace Irq {
     void eint1_falling();
     void eint0_rising();
     void eint0_falling();
+
+    void disable_all(){     __builtin_disable_interrupts(); }
+    void enable_all(){      __builtin_enable_interrupts(); }
 };
 
 //specific to each irq
