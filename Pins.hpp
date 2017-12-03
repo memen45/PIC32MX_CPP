@@ -14,8 +14,8 @@ class Pins {
         };
 
         //inline
-        constexpr Pins( PORT pt, uint8_t pn ) :
-             m_pt( (volatile uint32_t*)pt ),
+        constexpr Pins( PORT pt, const uint8_t pn ) :
+             m_pt( ( volatile uint32_t*)pt ),
              m_pn( 1<<pn ),
              m_lowison()
         {
@@ -31,6 +31,7 @@ class Pins {
         void off(void){             m_lowison ? high() : low(); }
         bool ison(void){            return m_lowison ? !pinval() : pinval(); }
         bool isoff(void){           return !ison(); }
+
         //cpp
         void lowison(void);
         void lowisoff(void);
@@ -59,10 +60,10 @@ class Pins {
         bool icnflag();
         bool icnstat();
         //inline
-        void icnflagclear(){        *(m_pt+45) = m_pn; }
-
+        //void icnflagclear(){        Sfr::clrbit( m_pt+44, m_pn ); }
+        void icnflagclear(){        *( m_pt+45) = m_pn; }
     private:
-        uint16_t m_pn;              //pin mask
+        const uint16_t m_pn;              //pin mask
         volatile uint32_t* m_pt;    //base address
         bool m_lowison;             //pin on val is low
 };

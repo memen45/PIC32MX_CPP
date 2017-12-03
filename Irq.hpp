@@ -12,7 +12,7 @@ namespace Irq {
     };
     //priority,subpriority
     enum IRQ_PRI : uint8_t {
-        PRI0 = 0, PPR1 = 1<<2, PRI2 = 2<<2, PRI3 = 3<<2, PRI4 = 4<<2,
+        PRI0 = 0, PRI1 = 1<<2, PRI2 = 2<<2, PRI3 = 3<<2, PRI4 = 4<<2,
         PRI5 = 5<<2, PRI6 = 6<<2, PRI7 = 7<<2
     };
     enum IRQ_SUB : uint8_t {
@@ -124,17 +124,17 @@ class Irqn {
 
     public:
         Irqn( Irq::IRQVN irqvn, Irq::IRQ_PRI pri, Irq::IRQ_SUB sub ) :
-            m_ifs( (uint32_t*)Irq::BASE_ADDR + 16 + ((irqvn/32)*4) ),
-            m_iec( (uint32_t*)Irq::BASE_ADDR + 32 + ((irqvn/32)*4) ),
-            m_ipc( (uint32_t*)Irq::BASE_ADDR + 48 + ((irqvn/4)*4) ),
+            m_ifs( (volatile uint32_t*)Irq::BASE_ADDR + 16 + ((irqvn/32)*4) ),
+            m_iec( (volatile uint32_t*)Irq::BASE_ADDR + 48 + ((irqvn/32)*4) ),
+            m_ipc( (volatile uint32_t*)Irq::BASE_ADDR + 80 + ((irqvn/4)*4) ),
             m_irq_bit( 1 << (irqvn%32) ),
-            m_priority_shift( 1<< (irqvn%4) )
+            m_priority_shift( 8*(irqvn%4) )
         {
             priority( pri, sub );
         }
 
     public:
-        void enable( void ){        flagclear(); *(m_iec+1) = m_irq_bit; }
+        void enable( void ){        flagclear(); *(m_iec+2) = m_irq_bit; }
         void disable( void ){       *(m_iec+1) = m_irq_bit; }
         void flagclear( void ){     *(m_ifs+1) = m_irq_bit; }
         void priority( Irq::IRQ_PRI p, Irq::IRQ_SUB s = Irq::IRQ_SUB::SUB0 ){
@@ -144,8 +144,8 @@ class Irqn {
 
     private:
         volatile uint32_t* m_ifs;
-        uint32_t* m_iec;
-        uint32_t* m_ipc;
+        volatile uint32_t* m_iec;
+        volatile uint32_t* m_ipc;
         uint8_t m_irq_bit;
         uint8_t m_priority_shift;
 };
