@@ -75,22 +75,22 @@ int main()
             if( sw_dly.isexpired() ){   //is a new press
                 rotate_delays();        //do something visible
             }
-            sw_dly.set_ms( 100 );       //sw debounce
+            sw_dly.set_ms( 100 );       //sw debounce (use for allswitches)
             //sw_dly sets while pressed
             //so will require sw release of 100ms
-            //before timer can expire
+            //before sw_dly timer can expire
         }
         if( sw2.ison() ){
             if( sw_dly.isexpired() ){
-                irq_blinkrate( 100 ); //++
+                irq_blinkrate( 100 );   //++
             }
-            sw_dly.set_ms( 100 );       //sw debounce (use for both switches)
+            sw_dly.set_ms( 100 );       //sw debounce (use for allswitches)
         }
         if( sw3.ison() ){
             if( sw_dly.isexpired() ){
-                irq_blinkrate( -100 ); //--
+                irq_blinkrate( -100 );  //--
             }
-            sw_dly.set_ms( 100 );       //sw debounce (use for both switches)
+            sw_dly.set_ms( 100 );       //sw debounce (use for allswitches)
         }
     }
 }
