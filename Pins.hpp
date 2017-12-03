@@ -60,7 +60,7 @@ class Pins {
         bool icnflag();
         bool icnstat();
         //inline
-        void icnflagclear(){        *( m_pt+45) = m_pn; }
+        void icnflagclear(){        *(m_pt+45) = m_pn; }
     private:
         const uint16_t m_pn;        //pin mask
         volatile uint32_t* m_pt;    //base address

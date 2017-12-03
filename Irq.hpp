@@ -7,8 +7,7 @@
 namespace Irq {
     //proximity timer control
     enum IRQ_TPC : uint8_t {
-        TPC_0 = 0, TPC_1 = 1, TPC_2 = 2, TPC_3 = 3,
-        TPC_4 = 4, TPC_5 = 5, TPC_6 = 6, TPC_7 = 7,
+        TPC_0 = 0, TPC_1, TPC_2, TPC_3, TPC_4, TPC_5, TPC_6, TPC_7
     };
     //priority,subpriority
     enum IRQ_PRI : uint8_t {
@@ -16,95 +15,59 @@ namespace Irq {
         PRI5 = 5<<2, PRI6 = 6<<2, PRI7 = 7<<2
     };
     enum IRQ_SUB : uint8_t {
-        SUB0 = 0, SUB1 = 1, SUB2 = 2, SUB3 = 3
+        SUB0 = 0, SUB1, SUB2, SUB3
     };
     //other
     enum {
         BASE_ADDR = 0xBF80F000UL,
-        INT0EP = 0, INT1EP = 1, INT2EP = 2, INT3EP = 3, INT4EP = 4
+        INT0EP = 0, INT1EP, INT2EP, INT3EP, INT4EP
     };
     //irq vector numbers
     enum IRQVN : uint8_t {
-        CORE_TIMER = 0,
-        CORE_SOFTWARE_0 = 1,
-        CORE_SOFTWARE_1 = 2,
-        EXTERNAL_0 = 3,
-        EXTERNAL_1 = 4,
-        EXTERNAL_2 = 5,
-        EXTERNAL_3 = 6,
-        EXTERNAL_4 = 7,
-        CHANGE_NOTICE_A = 8,
-        CHANGE_NOTICE_B = 9,
-        CHANGE_NOTICE_C = 10,
-        CHANGE_NOTICE_D = 11,
-        TIMER_1 = 17,
-        TIMER_2 = 18,
-        TIMER_3 = 19,
-        COMPARATOR_1 = 23,
-        COMPARATOR_2 = 24,
-        COMPARATOR_3 = 25,
+        CORE_TIMER = 0, CORE_SOFTWARE_0, CORE_SOFTWARE_1,
+        EXTERNAL_0 = 3, EXTERNAL_1, EXTERNAL_2, EXTERNAL_3, EXTERNAL_4,
+        CHANGE_NOTICE_A = 8, CHANGE_NOTICE_B, CHANGE_NOTICE_C, CHANGE_NOTICE_D,
+        //12,13,14,15,16
+        TIMER_1 = 17, TIMER_2, TIMER_3,
+        //20,21,23
+        COMPARATOR_1 = 23, COMPARATOR_2, COMPARATOR_3,
+        //26,27,28
         USB = 29,
         RTCC = 32,
         ADC = 33,
         HLVD = 36,
-        CLC1 = 37,
-        CLC2 = 38,
-        CLC3 = 39,
-        CLC4 = 40,
-        SPI1_ERR = 41,
-        SPI1_TX = 42,
-        SPI1_RX = 43,
-        SPI2_ERR = 44,
-        SPI2_TX = 45,
-        SPI2_RX = 46,
-        SPI3_ERR = 47,
-        SPI3_TX = 48,
-        SPI3_RX = 49,
-        UART1_RX = 53,
-        UART1_TX = 54,
-        UART1_ERR = 55,
-        UART2_RX = 56,
-        UART2_TX = 57,
-        UART2_ERR = 58,
-        UART3_RX = 59,
-        UART3_TX = 60,
-        UART3_ERR = 61,
-        I2C1_SLAVE = 65,
-        I2C1_MASTER = 66,
-        I2C1_BUS = 67,
-        I2C2_SLAVE = 68,
-        I2C2_MASTER = 69,
-        I2C2_BUS = 70,
-        I2C3_SLAVE = 71,
-        I2C3_MASTER = 72,
-        I2C3_BUS = 73,
-        CCP1 = 74,
-        CCT1 = 75,
-        CCP2 = 76,
-        CCT2 = 77,
-        CCP3 = 78,
-        CCT3 = 79,
-        CCP4 = 80,
-        CCT4 = 81,
-        CCP5 = 82,
-        CCT5 = 83,
-        CCP6 = 84,
-        CCT6 = 85,
-        CCP7 = 86,
-        CCT7 = 87,
-        CCP8 = 88,
-        CCT8 = 89,
-        CCP9 = 90,
-        CCT9 = 91,
+        CLC1 = 37, CLC2, CLC3, CLC4,
+        SPI1_ERR = 41, SPI1_TX, SPI1_RX,
+        SPI2_ERR = 44, SPI2_TX, SPI2_RX,
+        SPI3_ERR = 47, SPI3_TX, SPI3_RX,
+        //50,51,52
+        UART1_RX = 53, UART1_TX, UART1_ERR,
+        UART2_RX = 56, UART2_TX, UART2_ERR,
+        UART3_RX = 59, UART3_TX, UART3_ERR,
+        //62,63,64
+        I2C1_SLAVE = 65, I2C1_MASTER, I2C1_BUS,
+        I2C2_SLAVE = 68, I2C2_MASTER, I2C2_BUS,
+        I2C3_SLAVE = 71, I2C3_MASTER, I2C3_BUS,
+        CCP1 = 74, CCT1,
+        CCP2 = 76, CCT2,
+        CCP3 = 78, CCT3,
+        CCP4 = 80, CCT4,
+        CCP5 = 82, CCT5,
+        CCP6 = 84, CCT6,
+        CCP7 = 86, CCT7,
+        CCP8 = 88, CCT8,
+        CCP9 = 90, CCT9,
         FRC_TUNE = 92,
+        //93
         NVM = 94,
         PERFORMANCE_COUNTER = 95,
+        //96
         ECCSB_ERR = 97,
-        DMA0 = 98,
-        DMA1 = 99,
-        DMA2 = 100,
-        DMA3 = 101
+        DMA0 = 98, DMA1, DMA2, DMA3 = 101
     };
+
+    void disable_all(){     __builtin_disable_interrupts(); }
+    void enable_all(){      __builtin_enable_interrupts(); }
 
     void proxtimer( IRQ_TPC );
     void eint4_rising();
@@ -117,9 +80,6 @@ namespace Irq {
     void eint1_falling();
     void eint0_rising();
     void eint0_falling();
-
-    void disable_all(){     __builtin_disable_interrupts(); }
-    void enable_all(){      __builtin_enable_interrupts(); }
 };
 
 //specific to each irq

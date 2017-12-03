@@ -36,7 +36,7 @@ int main()
 
     //cp0 irq, set sysfreq, compare timeout, enable irq + global irqs
     Cp0::sysfreq = 24;
-    Cp0::compare_ms( 500 );
+    Cp0::compare_ms( 250 );
     irq_cp0.enable();
     Irq::enable_all();
 
