@@ -2,7 +2,7 @@
 #define _DELAY_H
 
 #include <cstdint>
-#define CP0_GET_COUNT() __builtin_mfc0(9,0)
+#include "Cp0.hpp"
 
 class DelayCP0 {
 
@@ -17,10 +17,10 @@ class DelayCP0 {
 
         bool isexpired()
         {
-            if( (CP0_GET_COUNT() - m_start) >= m_countn ) m_expired = true;
+            if( ( Cp0::get_count() - m_start) >= m_countn ) m_expired = true;
             return m_expired;
         }
-        void reset(){ m_start = CP0_GET_COUNT(); m_expired = false; }
+        void reset(){ m_start = Cp0::get_count(); m_expired = false; }
         void reset( uint32_t n ){   reset(); m_countn = n>>1; }
         void wait( uint32_t n ){    reset( n ); while( !isexpired() ); }
         void wait_us( uint32_t n ){ wait( m_cpu_MHz * n ); }

@@ -3,9 +3,8 @@
 #include "Delay.hpp"
 #include "Pins.hpp"
 #include "Irq.hpp"
+#include "Cp0.hpp"
 
-#define CP0_SET_COMPARE(v)  __builtin_mtc0(11,0,v)
-#define CP0_GET_COUNT()     __builtin_mfc0(9,0)
 
 Pins leds[5] = {
     { Pins::PORT::D, 3 },       //LED1
@@ -15,6 +14,7 @@ Pins leds[5] = {
     { Pins::PORT::C, 15 }       //BLUE
 };
 Pins sw1( Pins::PORT::B, 9 );   //SW1
+
 DelayCP0 sw_dly;                //debounce
 DelayCP0 dly[5];                //CP0 led delays
 uint32_t t_ms[5] = {            //led delay ms
@@ -23,12 +23,15 @@ uint32_t t_ms[5] = {            //led delay ms
 
 Irqn irq_cp0( Irq::CORE_TIMER, Irq::IRQ_PRI::PRI1, Irq::IRQ_SUB::SUB0 );
 
+
 int main()
 {
     sw1.digital(); sw1.pullup_on(); sw1.lowison();
+
 //    irq_cp0.enable();
-//    CP0_SET_COMPARE( CP0_GET_COUNT() + 12000000UL );
+//    Cp0::set_compare( Cp0::get_count() + 12000000UL );
 //    __builtin_enable_interrupts();
+
     //init delays, pins, also use to rotate delays
     auto rotate_delays = [ & ](){
         static uint8_t start = 0;
@@ -62,12 +65,12 @@ int main()
 }
 
 //not sure what is going on here
-//irq's on causing reset
+//irq's on causing reset - I assume some exception is occurring
 #ifdef __cplusplus
 extern "C" {
 #endif
     void __attribute__(( vector(0), interrupt(IPL1SOFT) )) CoreTimerISR(){
-        CP0_SET_COMPARE( CP0_GET_COUNT() + 12000000UL );
+        Cp0::set_compare( Cp0::get_count() + 12000000UL );
         leds[5].invert();
         irq_cp0.flagclear();
     }
