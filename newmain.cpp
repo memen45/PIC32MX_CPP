@@ -61,6 +61,8 @@ int main()
     }
 }
 
+//not sure what is going on here
+//irq's on causing reset
 #ifdef __cplusplus
 extern "C" {
 #endif
