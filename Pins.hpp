@@ -60,10 +60,9 @@ class Pins {
         bool icnflag();
         bool icnstat();
         //inline
-        //void icnflagclear(){        Sfr::clrbit( m_pt+44, m_pn ); }
         void icnflagclear(){        *( m_pt+45) = m_pn; }
     private:
-        const uint16_t m_pn;              //pin mask
+        const uint16_t m_pn;        //pin mask
         volatile uint32_t* m_pt;    //base address
         bool m_lowison;             //pin on val is low
 };
