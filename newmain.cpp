@@ -29,7 +29,7 @@ int main()
     sw1.digital(); sw1.pullup_on(); sw1.lowison();
 
 //    irq_cp0.enable();
-//    Cp0::set_compare( Cp0::get_count() + 12000000UL );
+//    Cp0::compare( Cp0::count() + 12000000UL );
 //    __builtin_enable_interrupts();
 
     //init delays, pins, also use to rotate delays
@@ -70,7 +70,7 @@ int main()
 extern "C" {
 #endif
     void __attribute__(( vector(0), interrupt(IPL1SOFT) )) CoreTimerISR(){
-        Cp0::set_compare( Cp0::get_count() + 12000000UL );
+        Cp0::compare( Cp0::count() + 12000000UL );
         leds[5].invert();
         irq_cp0.flagclear();
     }
