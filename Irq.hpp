@@ -71,82 +71,47 @@ namespace Irq {
         DMA0 = 98, DMA1, DMA2, DMA3 = 101
     };
 
-    void disable_all( void ){   __builtin_disable_interrupts(); }
-    void enable_all( void ){    __builtin_enable_interrupts(); }
+    void disable_all( void ){           __builtin_disable_interrupts(); }
+    void enable_all( void ){            __builtin_enable_interrupts(); }
 
     void proxtimer( IRQ_TPC pri )
     {
-        Reg::clr( (volatile uint32_t*)BASE_ADDR,7<<8 );
-        Reg::set( (volatile uint32_t*)BASE_ADDR,pri<<8 );
+        Reg::clr( BASE_ADDR, 7<<8 );
+        Reg::set( BASE_ADDR, pri<<8 );
     }
-    void eint4_rising( void )
-    {
-        Reg::set( (volatile uint32_t*)BASE_ADDR, INT4EP );
-    }
-    void eint4_falling( void )
-    {
-        Reg::clr( (volatile uint32_t*)BASE_ADDR, INT4EP );
-    }
-    void eint3_rising( void )
-    {
-        Reg::set( (volatile uint32_t*)BASE_ADDR, INT3EP );
-    }
-    void eint3_falling( void )
-    {
-        Reg::clr( (volatile uint32_t*)BASE_ADDR, INT3EP );
-    }
-    void eint2_rising( void )
-    {
-        Reg::set( (volatile uint32_t*)BASE_ADDR, INT2EP );
-    }
-    void eint2_falling( void )
-    {
-        Reg::clr( (volatile uint32_t*)BASE_ADDR, INT2EP );
-    }
-    void eint1_rising( void )
-    {
-        Reg::set( (volatile uint32_t*)BASE_ADDR, INT1EP );
-    }
-    void eint1_falling( void )
-    {
-        Reg::clr( (volatile uint32_t*)BASE_ADDR, INT1EP );
-    }
-    void eint0_rising( void )
-    {
-        Reg::set( (volatile uint32_t*)BASE_ADDR, INT0EP );
-    }
-    void eint0_falling( void )
-    {
-        Reg::clr( (volatile uint32_t*)BASE_ADDR, INT0EP );
-    }
+    void eint4_rising( void ){          Reg::set( BASE_ADDR, INT4EP ); }
+    void eint4_falling( void ){         Reg::clr( BASE_ADDR, INT4EP ); }
+    void eint3_rising( void ){          Reg::set( BASE_ADDR, INT3EP ); }
+    void eint3_falling( void ){         Reg::clr( BASE_ADDR, INT3EP ); }
+    void eint2_rising( void ){          Reg::set( BASE_ADDR, INT2EP ); }
+    void eint2_falling( void ){         Reg::clr( BASE_ADDR, INT2EP ); }
+    void eint1_rising( void ){          Reg::set( BASE_ADDR, INT1EP ); }
+    void eint1_falling( void ){         Reg::clr( BASE_ADDR, INT1EP ); }
+    void eint0_rising( void ){          Reg::set( BASE_ADDR, INT0EP ); }
+    void eint0_falling( void ){         Reg::clr( BASE_ADDR, INT0EP ); }
 
     void flagclear( Irq::IRQVN irqvn )
     {
-        Reg::clr( (volatile uint32_t*)Irq::BASE_ADDR_IFS + ((irqvn/32)*4),
-                ( 1 << (irqvn%32) ));
+        Reg::clr( Irq::BASE_ADDR_IFS + ((irqvn/32)*4), ( 1 << (irqvn%32) ));
     }
 
     void enable( Irq::IRQVN irqvn )
     {
         flagclear( irqvn );
-        Reg::set( (volatile uint32_t*)Irq::BASE_ADDR_IEC + ((irqvn/32)*4),
-                ( 1 << (irqvn%32) ));
+        Reg::set( Irq::BASE_ADDR_IEC + ((irqvn/32)*4), ( 1 << (irqvn%32) ));
     }
 
     void disable( Irq::IRQVN irqvn )
     {
-        Reg::clr( (volatile uint32_t*)Irq::BASE_ADDR_IEC + ((irqvn/32)*4),
-                ( 1 << (irqvn%32) ));
+        Reg::clr( Irq::BASE_ADDR_IEC + ((irqvn/32)*4), ( 1 << (irqvn%32) ));
     }
 
     void priority( Irq::IRQVN irqvn, Irq::IRQ_PRI p,
             Irq::IRQ_SUB s = Irq::IRQ_SUB::SUB0 )
     {
         uint32_t priority_shift = 8*(irqvn%4);
-        Reg::clr( (volatile uint32_t*)Irq::BASE_ADDR_IPC + ((irqvn/4)*4),
-                (31<<priority_shift));
-        Reg::set( (volatile uint32_t*)Irq::BASE_ADDR_IPC + ((irqvn/4)*4),
-                ((p|s)<<priority_shift));
+        Reg::clr( Irq::BASE_ADDR_IPC + ((irqvn/4)*4), (31<<priority_shift));
+        Reg::set( Irq::BASE_ADDR_IPC + ((irqvn/4)*4), ((p|s)<<priority_shift));
     }
 };
 

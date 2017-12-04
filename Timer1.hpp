@@ -18,56 +18,40 @@ namespace Timer1 {
         TCS = 1<<1
     };
 
-    void timer1( uint16_t n ){ Reg::val( (volatile uint32_t*)TMR1, n ); }
-    uint16_t timer1( void ){ return Reg::val( (volatile uint32_t*)TMR1 ); }
+    void timer1( uint16_t n ){      Reg::val( TMR1, n ); }
+    uint16_t timer1( void ){        return Reg::val( TMR1 ); }
 
-    void pr1( uint16_t n ){ Reg::val( (volatile uint32_t*)PR1, n ); }
-    uint16_t pr1( void ){ return Reg::val( (volatile uint32_t*)PR1 ); }
+    void pr1( uint16_t n ){         Reg::val( PR1, n ); }
+    uint16_t pr1( void ){           return Reg::val( PR1 ); }
 
-    void on( void ){    Reg::set( (volatile uint32_t*)T1CON, ON ); }
-    void off( void ){   Reg::clr( (volatile uint32_t*)T1CON, ON ); }
+    void on( void ){                Reg::set( T1CON, ON ); }
+    void off( void ){               Reg::clr( T1CON, ON ); }
 
-    void stop_idle( void ){ Reg::set( (volatile uint32_t*)T1CON, SIDL ); }
-    void cont_idle( void ){ Reg::clr( (volatile uint32_t*)T1CON, SIDL ); }
+    void stop_idle( void ){         Reg::set( T1CON, SIDL ); }
+    void cont_idle( void ){         Reg::clr( T1CON, SIDL ); }
 
-    void async_wrdis( void ){ Reg::set( (volatile uint32_t*)T1CON, TWDIS ); }
-    void async_wren( void ){ Reg::clr( (volatile uint32_t*)T1CON, TWDIS ); }
+    void async_wrdis( void ){       Reg::set( T1CON, TWDIS ); }
+    void async_wren( void ){        Reg::clr( T1CON, TWDIS ); }
 
-    bool wr_busy( void ){ return Reg::is_set( (volatile uint32_t*)T1CON, TWIP ); }
+    bool wr_busy( void ){           return Reg::is_set( T1CON, TWIP ); }
 
-    void clk_sosc( void ){ Reg::clr( (volatile uint32_t*)T1CON, EXT_RES ); }
-    void clk_lprc( void ){
-        clk_sosc();
-        Reg::set( (volatile uint32_t*)T1CON, EXT_LPRC );
-    }
-    void clk_t1ck( void ){
-        clk_sosc();
-        Reg::set( (volatile uint32_t*)T1CON, EXT_T1CK) ;
-    }
+    void clk_sosc( void ){          Reg::clr( T1CON, EXT_RES ); }
+    void clk_lprc( void ){          clk_sosc(); Reg::set( T1CON, EXT_LPRC ); }
+    void clk_t1ck( void ){          clk_sosc(); Reg::set( T1CON, EXT_T1CK) ; }
 
-    void tgate_on( void ){      Reg::set( (volatile uint32_t*)T1CON, TGATE ); }
-    void tgate_off( void ){     Reg::clr( (volatile uint32_t*)T1CON, TGATE ); }
+    void tgate_on( void ){          Reg::set( T1CON, TGATE ); }
+    void tgate_off( void ){         Reg::clr( T1CON, TGATE ); }
 
-    void prescale_1( void ){
-        Reg::clr( (volatile uint32_t*)T1CON, TCKPS_256 );
-    }
-    void prescale_256( void ){
-        Reg::set( (volatile uint32_t*)T1CON, TCKPS_256 );
-    }
-    void prescale_64( void ){
-        prescale_1();
-        Reg::set( (volatile uint32_t*)T1CON, TCKPS_64 );
-    }
-    void prescale_8( void ){
-        prescale_1();
-        Reg::set( (volatile uint32_t*)T1CON, TCKPS_8 );
-    }
+    void prescale_1( void ){        Reg::clr( T1CON, TCKPS_256 ); }
+    void prescale_256( void ){      Reg::set( T1CON, TCKPS_256 ); }
+    void prescale_64( void ){       prescale_1(); Reg::set( T1CON, TCKPS_64 ); }
+    void prescale_8( void ){        prescale_1(); Reg::set( T1CON, TCKPS_8 ); }
 
-    void tsync_on( void ){      Reg::set( (volatile uint32_t*)T1CON, TSYNC ); }
-    void tsync_off( void ){     Reg::clr( (volatile uint32_t*)T1CON, TSYNC ); }
+    void tsync_on( void ){          Reg::set( T1CON, TSYNC ); }
+    void tsync_off( void ){         Reg::clr( T1CON, TSYNC ); }
 
-    void ext_clk( void ){       Reg::set( (volatile uint32_t*)T1CON, TCS ); }
-    void int_clk( void ){       Reg::clr( (volatile uint32_t*)T1CON, TCS ); }
+    void ext_clk( void ){           Reg::set( T1CON, TCS ); }
+    void int_clk( void ){           Reg::clr( T1CON, TCS ); }
 
 }
 

@@ -21,12 +21,12 @@ class DelayCP0 {
             return m_expired;
         }
         void reset( void ){ m_start = Cp0::count(); m_expired = false; }
-        void reset( uint32_t n ){   reset(); m_countn = n>>1; }
-        void wait( uint32_t n ){    reset( n ); while( !isexpired() ); }
-        void wait_us( uint32_t n ){ wait( m_cpu_MHz * n ); }
-        void wait_ms( uint32_t n ){ wait_us( 1000 * n ); }
-        void set_us( uint32_t n ){  reset( m_cpu_MHz * n ); }
-        void set_ms( uint32_t n ){  set_us( 1000 * n ); }
+        void reset( uint32_t n ){       reset(); m_countn = n>>1; }
+        void wait( uint32_t n ){        reset( n ); while( !isexpired() ); }
+        void wait_us( uint32_t n ){     wait( m_cpu_MHz * n ); }
+        void wait_ms( uint32_t n ){     wait_us( 1000 * n ); }
+        void set_us( uint32_t n ){      reset( m_cpu_MHz * n ); }
+        void set_ms( uint32_t n ){      set_us( 1000 * n ); }
 
     private:
         uint32_t m_start;
