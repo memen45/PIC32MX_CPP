@@ -35,7 +35,7 @@ namespace Timer1 {
     void async_wrdis( void ){ *(volatile uint32_t*)(T1CONSET) = TWDIS; }
     void async_wren( void ){ *(volatile uint32_t*)(T1CONCLR) = TWDIS; }
 
-    bool wr_busy( void ){ *(volatile uint32_t*)(T1CON) & TWIP; }
+    bool wr_busy( void ){ return *(volatile uint32_t*)(T1CON) & TWIP; }
 
     void clk_sosc( void ){
         *(volatile uint32_t*)(T1CON+CLR) = EXT_RES;
