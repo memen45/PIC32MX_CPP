@@ -45,7 +45,6 @@ int main()
     Timer1::on();
     Irq::priority( Irq::TIMER_1, Irq::IRQ_PRI::PRI1 );
     Irq::enable( Irq::TIMER_1 );
-    __asm__("nop");
 
     //turn on timer2, prescale 1:64
     timer2.prescale_64();
