@@ -13,7 +13,7 @@ namespace Reg {
     void clr( volatile uint32_t* r, uint32_t v ){       *(r+CLR) = v; }
     void inv( volatile uint32_t* r, uint32_t v ){       *(r+INV) = v; }
     bool is_set( volatile uint32_t* r, uint32_t v ){    return *r & v; }
-    bool is_clr( volatile uint32_t* r, uint32_t v ){    return !is_set( r, v ); }
+    bool is_clr( volatile uint32_t* r, uint32_t v ){    return ! *r & v; }
     uint32_t val( volatile uint32_t* r ){               return *r; }
     void val( volatile uint32_t* r, uint32_t v ){       *r = v; }
 }
