@@ -5,14 +5,14 @@
 #include "Irq.hpp"
 #include "Cp0.hpp"
 #include "Timer1.hpp"
-
+#include "Timer23.hpp"
 
 Pins leds[3] = {
     { Pins::PORT::D, 1 },       //RED
     { Pins::PORT::C, 3 },       //GREEN
     { Pins::PORT::C, 15 }       //BLUE
 };
-Pins led1( Pins::PORT::D, 3 );  //LED1 (timer1 irq blinks)
+Pins led1( Pins::PORT::D, 3 );  //LED1 (invert in timer1/timer2/timer3 irq)
 Pins led2( Pins::PORT::C, 13 ); //LED2 (cp0 irq blinks)
 Pins sw1( Pins::PORT::B, 9 );   //SW1 (rotate delays))
 Pins sw2( Pins::PORT::C, 10 );  //SW2 cp0 irq blink rate++
@@ -26,6 +26,10 @@ uint32_t t_ms[3] = {            //led delay ms
 
 Irqn irq_cp0( Irq::CORE_TIMER, Irq::IRQ_PRI::PRI1, Irq::IRQ_SUB::SUB0 );
 Irqn irq_timer1( Irq::TIMER_1, Irq::IRQ_PRI::PRI1, Irq::IRQ_SUB::SUB0 );
+Irqn irq_timer2( Irq::TIMER_2, Irq::IRQ_PRI::PRI1, Irq::IRQ_SUB::SUB0 );
+Irqn irq_timer3( Irq::TIMER_3, Irq::IRQ_PRI::PRI1, Irq::IRQ_SUB::SUB0 );
+Timer23 timer2( Timer23::T2 );
+Timer23 timer3( Timer23::T3 );
 
 int main()
 {
@@ -44,6 +48,16 @@ int main()
     Timer1::prescale_256();
     Timer1::on();
     irq_timer1.enable();
+
+    //turn on timer2, prescale 1:64
+    timer2.prescale_64();
+    timer2.on();
+    irq_timer2.enable();
+
+    //turn on timer3, prescale 1:16
+    timer3.prescale_32();
+    timer3.on();
+    irq_timer3.enable();
 
     //cp0 irq, set sysfreq, compare timeout, enable irq + global irqs
     Cp0::sysfreq = 24;
@@ -113,6 +127,16 @@ extern "C" {
     {
         led1.invert();
         irq_timer1.flagclear();
+    }
+    void __attribute__(( vector(18), interrupt(IPL1SOFT) )) Timer2ISR()
+    {
+        led1.invert();
+        irq_timer2.flagclear();
+    }
+    void __attribute__(( vector(19), interrupt(IPL1SOFT) )) Timer3ISR()
+    {
+        led1.invert();
+        irq_timer3.flagclear();
     }
 }
 

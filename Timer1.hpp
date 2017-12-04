@@ -7,7 +7,6 @@
 namespace Timer1 {
 
     enum {
-        SET = 2, CLR = 1,
         T1CON = 0xBF808000,
         TMR1 = 0xBF808010,
         PR1 = 0xBF808020,
