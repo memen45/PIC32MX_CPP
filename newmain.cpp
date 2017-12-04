@@ -24,10 +24,6 @@ uint32_t t_ms[3] = {            //led delay ms
     200,800,1200
 };
 
-Irqn irq_cp0( Irq::CORE_TIMER, Irq::IRQ_PRI::PRI1, Irq::IRQ_SUB::SUB0 );
-Irqn irq_timer1( Irq::TIMER_1, Irq::IRQ_PRI::PRI1, Irq::IRQ_SUB::SUB0 );
-Irqn irq_timer2( Irq::TIMER_2, Irq::IRQ_PRI::PRI1, Irq::IRQ_SUB::SUB0 );
-Irqn irq_timer3( Irq::TIMER_3, Irq::IRQ_PRI::PRI1, Irq::IRQ_SUB::SUB0 );
 Timer23 timer2( Timer23::T2 );
 Timer23 timer3( Timer23::T3 );
 
@@ -47,22 +43,27 @@ int main()
     //turn on timer1, prescale 1:256
     Timer1::prescale_256();
     Timer1::on();
-    irq_timer1.enable();
+    Irq::priority( Irq::TIMER_1, Irq::IRQ_PRI::PRI1 );
+    Irq::enable( Irq::TIMER_1 );
 
     //turn on timer2, prescale 1:64
     timer2.prescale_64();
     timer2.on();
-    irq_timer2.enable();
+    Irq::priority( Irq::TIMER_2, Irq::IRQ_PRI::PRI1 );
+    Irq::enable( Irq::TIMER_2 );
 
     //turn on timer3, prescale 1:16
     timer3.prescale_32();
     timer3.on();
-    irq_timer3.enable();
+    Irq::priority( Irq::TIMER_3, Irq::IRQ_PRI::PRI1 );
+    Irq::enable( Irq::TIMER_3 );
 
     //cp0 irq, set sysfreq, compare timeout, enable irq + global irqs
     Cp0::sysfreq = 24;
     Cp0::compare_ms( 200 );
-    irq_cp0.enable();
+    //irq_cp0.enable();
+    Irq::priority( Irq::CORE_TIMER, Irq::IRQ_PRI::PRI1 );
+    Irq::enable( Irq::CORE_TIMER );
     Irq::enable_all();
 
     //init delays or rotate delays
@@ -121,22 +122,22 @@ extern "C" {
     {
         Cp0::compare_reload();
         led2.invert();
-        irq_cp0.flagclear();
+        Irq::flagclear( Irq::CORE_TIMER );
     }
     void __attribute__(( vector(17), interrupt(IPL1SOFT) )) Timer1ISR()
     {
         led1.invert();
-        irq_timer1.flagclear();
+        Irq::flagclear( Irq::TIMER_1 );
     }
     void __attribute__(( vector(18), interrupt(IPL1SOFT) )) Timer2ISR()
     {
         led1.invert();
-        irq_timer2.flagclear();
+        Irq::flagclear( Irq::TIMER_2 );
     }
     void __attribute__(( vector(19), interrupt(IPL1SOFT) )) Timer3ISR()
     {
         led1.invert();
-        irq_timer3.flagclear();
+        Irq::flagclear( Irq::TIMER_3 );
     }
 }
 
