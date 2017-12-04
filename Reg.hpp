@@ -8,8 +8,9 @@ namespace Reg {
     enum {
         CLR = 1, SET = 2, INV = 3
     };
-    //all register values r cast to volatile uint32_t*
+    //all register values cast to volatile uint32_t*
     //so can use enum values as register argument
+    //SET/CLR/INV offsets will be calculated in words (4 bytes)
     template <typename T>
     void set( T r, uint32_t v )
     {
