@@ -4,27 +4,28 @@
 #include "Pins.hpp"
 #include "Irq.hpp"
 #include "Cp0.hpp"
+#include "Timer1.hpp"
 
 
-Pins leds[4] = {
-    { Pins::PORT::D, 3 },       //LED1
+Pins leds[3] = {
     { Pins::PORT::D, 1 },       //RED
     { Pins::PORT::C, 3 },       //GREEN
     { Pins::PORT::C, 15 }       //BLUE
 };
+Pins led1( Pins::PORT::D, 3 );  //LED1 (timer1 irq blinks)
 Pins led2( Pins::PORT::C, 13 ); //LED2 (cp0 irq blinks)
 Pins sw1( Pins::PORT::B, 9 );   //SW1 (rotate delays))
 Pins sw2( Pins::PORT::C, 10 );  //SW2 cp0 irq blink rate++
 Pins sw3( Pins::PORT::C, 4 );   //SW3 cp0 irq blink rate--
 
 DelayCP0 sw_dly;                //debounce
-DelayCP0 dly[4];                //CP0 led delays
-uint32_t t_ms[4] = {            //led delay ms
-    400,800,1000,1200
+DelayCP0 dly[3];                //CP0 led delays
+uint32_t t_ms[3] = {            //led delay ms
+    200,800,1200
 };
 
 Irqn irq_cp0( Irq::CORE_TIMER, Irq::IRQ_PRI::PRI1, Irq::IRQ_SUB::SUB0 );
-
+Irqn irq_timer1( Irq::TIMER_1, Irq::IRQ_PRI::PRI1, Irq::IRQ_SUB::SUB0 );
 
 int main()
 {
@@ -32,11 +33,18 @@ int main()
     sw1.digital(); sw1.pullup_on(); sw1.lowison();
     sw2.digital(); sw2.pullup_on(); sw2.lowison();
     sw3.digital(); sw3.pullup_on(); sw3.lowison();
+    led1.digital(); led1.output();
     led2.digital(); led2.output();
     for( auto& led : leds ){
         led.output();
         led.digital();
     }
+
+    __asm__("nop");
+    //turn on timer1, prescale 1:256
+    Timer1::prescale_256();
+    Timer1::on();
+    irq_timer1.enable();
 
     //cp0 irq, set sysfreq, compare timeout, enable irq + global irqs
     Cp0::sysfreq = 24;
@@ -48,7 +56,7 @@ int main()
     auto rotate_delays = [ & ](){
         static uint8_t start = 0;
         for( auto& d : dly ){
-            if( start >= 4 ) start &= 3;
+            if( start >= 3 ) start -= 3;
             d.set_ms( t_ms[start++] );
         }
         start++;
@@ -66,7 +74,7 @@ int main()
     };
 
     for (;;){
-        for( auto i = 0; i < 4; i++ ){
+        for( auto i = 0; i < 3; i++ ){
             if( ! dly[i].isexpired() ) continue;
             leds[i].invert();
             dly[i].reset();
@@ -101,6 +109,11 @@ extern "C" {
         Cp0::compare_reload();
         led2.invert();
         irq_cp0.flagclear();
+    }
+    void __attribute__(( vector(17), interrupt(IPL1SOFT) )) Timer1ISR()
+    {
+        led1.invert();
+        irq_timer1.flagclear();
     }
 }
 

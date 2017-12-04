@@ -109,7 +109,7 @@ class Irqn {
         volatile uint32_t* m_ifs;
         volatile uint32_t* m_iec;
         volatile uint32_t* m_ipc;
-        const uint8_t m_irq_bit;
+        const uint32_t m_irq_bit;
         const uint8_t m_priority_shift;
 };
 
