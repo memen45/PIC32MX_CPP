@@ -40,7 +40,6 @@ int main()
         led.digital();
     }
 
-    __asm__("nop");
     //turn on timer1, prescale 1:256
     Timer1::prescale_256();
     Timer1::on();
