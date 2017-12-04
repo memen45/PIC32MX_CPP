@@ -2,6 +2,7 @@
 #define _IRQ_H
 
 #include <cstdint>
+#include"Reg.hpp"
 
 //Irq applies to all Irqn
 namespace Irq {
@@ -20,7 +21,8 @@ namespace Irq {
     //other
     enum {
         BASE_ADDR = 0xBF80F000UL,
-        INT0EP = 0, INT1EP, INT2EP, INT3EP, INT4EP
+        INT0EP = 1<<0, INT1EP = 1<<1, INT2EP = 1<<2,
+        INT3EP = 1<<3, INT4EP = 1<<4
     };
     //irq vector numbers
     enum IRQVN : uint8_t {
@@ -66,20 +68,20 @@ namespace Irq {
         DMA0 = 98, DMA1, DMA2, DMA3 = 101
     };
 
-    void disable_all(){     __builtin_disable_interrupts(); }
-    void enable_all(){      __builtin_enable_interrupts(); }
+    void disable_all( void ){   __builtin_disable_interrupts(); }
+    void enable_all( void ){    __builtin_enable_interrupts(); }
 
     void proxtimer( IRQ_TPC );
-    void eint4_rising();
-    void eint4_falling();
-    void eint3_rising();
-    void eint3_falling();
-    void eint2_rising();
-    void eint2_falling();
-    void eint1_rising();
-    void eint1_falling();
-    void eint0_rising();
-    void eint0_falling();
+    void eint4_rising( void );
+    void eint4_falling( void );
+    void eint3_rising( void );
+    void eint3_falling( void );
+    void eint2_rising( void );
+    void eint2_falling( void );
+    void eint1_rising( void );
+    void eint1_falling( void );
+    void eint0_rising( void );
+    void eint0_falling( void );
 };
 
 //specific to each irq
@@ -97,12 +99,12 @@ class Irqn {
         }
 
     public:
-        void enable( void ){        flagclear(); *(m_iec+2) = m_irq_bit; }
-        void disable( void ){       *(m_iec+1) = m_irq_bit; }
-        void flagclear( void ){     *(m_ifs+1) = m_irq_bit; }
+        void enable( void ){        flagclear(); Reg::set(m_iec,m_irq_bit); }
+        void disable( void ){       Reg::clr(m_iec,m_irq_bit); }
+        void flagclear( void ){     Reg::clr(m_ifs,m_irq_bit); }
         void priority( Irq::IRQ_PRI p, Irq::IRQ_SUB s = Irq::IRQ_SUB::SUB0 ){
-            *(m_ipc+1) = (31<<m_priority_shift); //CLR
-            *(m_ipc+2) = ((p|s)<<m_priority_shift); //SET
+            Reg::clr(m_ipc,(31<<m_priority_shift));
+            Reg::set(m_ipc,((p|s)<<m_priority_shift));
         }
 
     private:

@@ -2,6 +2,7 @@
 #define _PINS_H
 
 #include <cstdint>
+#include "Reg.hpp"
 
 class Pins {
 
@@ -15,52 +16,52 @@ class Pins {
 
         //inline
         constexpr Pins( PORT pt, const uint8_t pn ) :
-             m_pt( ( volatile uint32_t*)pt ),
+             m_pt( (volatile uint32_t*)pt ),
              m_pn( 1<<pn ),
-             m_lowison()
+             m_lowison( false )
         {
         }
 
         //inline
-        bool pinval(void){          return *(m_pt+8) & m_pn; }
-        bool latval(void){          return *(m_pt+12) & m_pn; }
-        void low(void){             *(m_pt+13) = m_pn; }
-        void high(void){            *(m_pt+14) = m_pn; }
-        void invert(void){          *(m_pt+15) = m_pn; }
-        void on(void){              m_lowison ? low() : high(); }
-        void off(void){             m_lowison ? high() : low(); }
-        bool ison(void){            return m_lowison ? !pinval() : pinval(); }
-        bool isoff(void){           return !ison(); }
+        bool pinval( void ){        return Reg::is_set( m_pt+8, m_pn ); }
+        bool latval( void ){        return Reg::is_set( m_pt+12, m_pn ); }
+        void low( void ){           Reg::clr( m_pt+12, m_pn ); }
+        void high( void ){          Reg::set( m_pt+12, m_pn ); }
+        void invert( void ){        Reg::inv( m_pt+12, m_pn ); }
+        void on( void ){            m_lowison ? low() : high(); }
+        void off( void ){           m_lowison ? high() : low(); }
+        bool ison( void ){          return m_lowison ? !pinval() : pinval(); }
+        bool isoff( void ){         return !ison(); }
 
         //cpp
-        void lowison(void);
-        void lowisoff(void);
-        void digital(void);
-        void analog(void);
-        void output(void);
-        void input(void);
-        void odc_off(void);
-        void odc_on(void);
-        void pullup_off(void);
-        void pullup_on(void);
-        void pulldn_off(void);
-        void pulldn_on(void);
+        void lowison( void );
+        void lowisoff( void );
+        void digital( void );
+        void analog( void );
+        void output( void );
+        void input( void );
+        void odc_off( void );
+        void odc_on( void );
+        void pullup_off( void );
+        void pullup_on( void );
+        void pulldn_off( void );
+        void pulldn_on( void );
 
         //input change notification
         //cpp
-        void icnoff();
-        void icnon();
-        void icnmatch();
-        void icnedge();
-        void icnrisingoff();
-        void icnrising();
-        void icnfallingoff();
-        void icnfalling();
-        void icnmismatch();
-        bool icnflag();
-        bool icnstat();
+        void icnoff( void );
+        void icnon( void );
+        void icnmatch( void );
+        void icnedge( void );
+        void icnrisingoff( void );
+        void icnrising( void );
+        void icnfallingoff( void );
+        void icnfalling( void );
+        void icnmismatch( void );
+        bool icnflag( void );
+        bool icnstat( void );
         //inline
-        void icnflagclear(){        *(m_pt+45) = m_pn; }
+        void icnflagclear( void ){      Reg::clr( m_pt+44, m_pn ); }
     private:
         const uint16_t m_pn;        //pin mask
         volatile uint32_t* m_pt;    //base address

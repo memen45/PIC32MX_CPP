@@ -2,6 +2,7 @@
 #define _VDETECT_H
 
 #include <cstdint>
+#include "Reg.hpp"
 
 namespace Vdetect {
 
@@ -20,22 +21,22 @@ namespace Vdetect {
         HLVDL_295_330 = 6, HLVDL_325_363 = 5
     };
 
-    void on( void ){            *(volatile uint32_t*)(HLVDCONSET) = ON; }
-    void off( void ){           *(volatile uint32_t*)(HLVDCONCLR) = ON; }
-    
-    void stop_idle( void ){     *(volatile uint32_t*)(HLVDCONSET) = SIDL; }
-    void cont_idle( void ){     *(volatile uint32_t*)(HLVDCONCLR) = SIDL; }   
+    void on( void ){            Reg::set( HLVDCON,ON ); }
+    void off( void ){           Reg::clr( HLVDCON,ON ); }
 
-    void trip_above( void ){    *(volatile uint32_t*)(HLVDCONSET) = VDIR; }
-    void trip_below( void ){    *(volatile uint32_t*)(HLVDCONCLR) = VDIR; } 
-    
-    bool bgap_stable( void ){   return *(volatile uint32_t*)(HLVDCON) & BGVST; }
-    bool iref_stable( void ){   return *(volatile uint32_t*)(HLVDCON) & IRVST; }
-    bool tripped( void ){       return *(volatile uint32_t*)(HLVDCON) & HLEVT; }
-    
+    void stop_idle( void ){     Reg::set( HLVDCON,SIDL ); }
+    void cont_idle( void ){     Reg::clr( HLVDCON,SIDL ); }
+
+    void trip_above( void ){    Reg::set( HLVDCON,VDIR ); }
+    void trip_below( void ){    Reg::clr( HLVDCON,VDIR ); }
+
+    bool bgap_stable( void ){   return Reg::is_set( HLVDCON,BGVST ); }
+    bool iref_stable( void ){   return Reg::is_set( HLVDCON,IRVST ); }
+    bool tripped( void ){       return Reg::is_set( HLVDCON,HLEVT ); }
+
     void limit_set( HLVDL lvl ){
-        *(volatile uint32_t*)(HLVDCONCLR) = HLVDL_EXT;
-        *(volatile uint32_t*)(HLVDCONSET) = lvl;
+        Reg::clr( HLVDCON, HLVDL_EXT );
+        Reg::set( HLVDCON, lvl );
     }
 }
 

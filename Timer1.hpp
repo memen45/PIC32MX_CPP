@@ -2,14 +2,13 @@
 #define _TIMER1_H
 
 #include <cstdint>
+#include "Reg.hpp"
 
 namespace Timer1 {
 
     enum {
         SET = 2, CLR = 1,
         T1CON = 0xBF808000,
-        T1CONSET = 0xBF808008,
-        T1CONCLR = 0xBF808004,
         TMR1 = 0xBF808010,
         PR1 = 0xBF808020,
         ON = 1<<15, SIDL = 1<<13, TWDIS = 1<<12, TWIP = 1<<11,
@@ -20,54 +19,56 @@ namespace Timer1 {
         TCS = 1<<1
     };
 
-    void timer1( uint16_t n ){ *(volatile uint32_t*)TMR1 = n; }
-    uint16_t timer1( void ){ return *(volatile uint32_t*)TMR1; }
+    void timer1( uint16_t n ){ Reg::val( (volatile uint32_t*)TMR1, n ); }
+    uint16_t timer1( void ){ return Reg::val( (volatile uint32_t*)TMR1 ); }
 
-    void pr1( uint16_t n ){ *(volatile uint32_t*)PR1 = n; }
-    uint16_t pr1( void ){ return *(volatile uint32_t*)PR1; }
+    void pr1( uint16_t n ){ Reg::val( (volatile uint32_t*)PR1, n ); }
+    uint16_t pr1( void ){ return Reg::val( (volatile uint32_t*)PR1 ); }
 
-    void on( void ){    *(volatile uint32_t*)(T1CONSET) = ON; }
-    void off( void ){   *(volatile uint32_t*)(T1CONCLR) = ON; }
+    void on( void ){    Reg::set( (volatile uint32_t*)T1CON, ON ); }
+    void off( void ){   Reg::clr( (volatile uint32_t*)T1CON, ON ); }
 
-    void stop_idle( void ){ *(volatile uint32_t*)(T1CONSET) = SIDL; }
-    void cont_idle( void ){ *(volatile uint32_t*)(T1CONCLR) = SIDL; }
+    void stop_idle( void ){ Reg::set( (volatile uint32_t*)T1CON, SIDL ); }
+    void cont_idle( void ){ Reg::clr( (volatile uint32_t*)T1CON, SIDL ); }
 
-    void async_wrdis( void ){ *(volatile uint32_t*)(T1CONSET) = TWDIS; }
-    void async_wren( void ){ *(volatile uint32_t*)(T1CONCLR) = TWDIS; }
+    void async_wrdis( void ){ Reg::set( (volatile uint32_t*)T1CON, TWDIS ); }
+    void async_wren( void ){ Reg::clr( (volatile uint32_t*)T1CON, TWDIS ); }
 
-    bool wr_busy( void ){ return *(volatile uint32_t*)(T1CON) & TWIP; }
+    bool wr_busy( void ){ return Reg::is_set( (volatile uint32_t*)T1CON, TWIP ); }
 
-    void clk_sosc( void ){
-        *(volatile uint32_t*)(T1CON+CLR) = EXT_RES;
-    }
+    void clk_sosc( void ){ Reg::clr( (volatile uint32_t*)T1CON, EXT_RES ); }
     void clk_lprc( void ){
         clk_sosc();
-        *(volatile uint32_t*)(T1CON+SET) = EXT_LPRC;
+        Reg::set( (volatile uint32_t*)T1CON, EXT_LPRC );
     }
     void clk_t1ck( void ){
         clk_sosc();
-        *(volatile uint32_t*)(T1CON+SET) = EXT_T1CK;
+        Reg::set( (volatile uint32_t*)T1CON, EXT_T1CK) ;
     }
 
-    void tgate_on( void ){      *(volatile uint32_t*)(T1CONSET) = TGATE; }
-    void tgate_off( void ){     *(volatile uint32_t*)(T1CONCLR) = TGATE; }
+    void tgate_on( void ){      Reg::set( (volatile uint32_t*)T1CON, TGATE ); }
+    void tgate_off( void ){     Reg::clr( (volatile uint32_t*)T1CON, TGATE ); }
 
-    void prescale_1( void ){    *(volatile uint32_t*)(T1CONCLR) = TCKPS_256; }
-    void prescale_256( void ){  *(volatile uint32_t*)(T1CONSET) = TCKPS_256; }
+    void prescale_1( void ){
+        Reg::clr( (volatile uint32_t*)T1CON, TCKPS_256 );
+    }
+    void prescale_256( void ){
+        Reg::set( (volatile uint32_t*)T1CON, TCKPS_256 );
+    }
     void prescale_64( void ){
         prescale_1();
-        *(volatile uint32_t*)(T1CONSET) = TCKPS_64;
+        Reg::set( (volatile uint32_t*)T1CON, TCKPS_64 );
     }
     void prescale_8( void ){
         prescale_1();
-        *(volatile uint32_t*)(T1CONSET) = TCKPS_8;
+        Reg::set( (volatile uint32_t*)T1CON, TCKPS_8 );
     }
 
-    void tsync_on( void ){      *(volatile uint32_t*)(T1CONSET) = TSYNC; }
-    void tsync_off( void ){     *(volatile uint32_t*)(T1CONCLR) = TSYNC; }
+    void tsync_on( void ){      Reg::set( (volatile uint32_t*)T1CON, TSYNC ); }
+    void tsync_off( void ){     Reg::clr( (volatile uint32_t*)T1CON, TSYNC ); }
 
-    void ext_clk( void ){       *(volatile uint32_t*)(T1CONSET) = TCS; }
-    void int_clk( void ){       *(volatile uint32_t*)(T1CONCLR) = TCS; }
+    void ext_clk( void ){       Reg::set( (volatile uint32_t*)T1CON, TCS ); }
+    void int_clk( void ){       Reg::clr( (volatile uint32_t*)T1CON, TCS ); }
 
 }
 
