@@ -11,11 +11,11 @@ namespace Irq {
         TPC_0 = 0, TPC_1, TPC_2, TPC_3, TPC_4, TPC_5, TPC_6, TPC_7
     };
     //priority,subpriority
-    enum IRQ_PRI {
+    enum IRQ_PRI : uint8_t {
         PRI0 = 0, PRI1 = 1<<2, PRI2 = 2<<2, PRI3 = 3<<2, PRI4 = 4<<2,
         PRI5 = 5<<2, PRI6 = 6<<2, PRI7 = 7<<2
     };
-    enum IRQ_SUB {
+    enum IRQ_SUB : uint8_t {
         SUB0 = 0, SUB1, SUB2, SUB3
     };
     //other
@@ -71,60 +71,47 @@ namespace Irq {
         DMA0 = 98, DMA1, DMA2, DMA3 = 101
     };
 
-    void disable_all( void ){       __builtin_disable_interrupts(); }
-    void enable_all( void ){        __builtin_enable_interrupts(); }
+    void disable_all( void ){           __builtin_disable_interrupts(); }
+    void enable_all( void ){            __builtin_enable_interrupts(); }
 
     void proxtimer( IRQ_TPC pri )
     {
         Reg::clr( BASE_ADDR, 7<<8 );
         Reg::set( BASE_ADDR, pri<<8 );
     }
-    void eint4_rising( void ){      Reg::set( BASE_ADDR, INT4EP ); }
-    void eint4_falling( void ){     Reg::clr( BASE_ADDR, INT4EP ); }
-    void eint3_rising( void ){      Reg::set( BASE_ADDR, INT3EP ); }
-    void eint3_falling( void ){     Reg::clr( BASE_ADDR, INT3EP ); }
-    void eint2_rising( void ){      Reg::set( BASE_ADDR, INT2EP ); }
-    void eint2_falling( void ){     Reg::clr( BASE_ADDR, INT2EP ); }
-    void eint1_rising( void ){      Reg::set( BASE_ADDR, INT1EP ); }
-    void eint1_falling( void ){     Reg::clr( BASE_ADDR, INT1EP ); }
-    void eint0_rising( void ){      Reg::set( BASE_ADDR, INT0EP ); }
-    void eint0_falling( void ){     Reg::clr( BASE_ADDR, INT0EP ); }
+    void eint4_rising( void ){          Reg::set( BASE_ADDR, INT4EP ); }
+    void eint4_falling( void ){         Reg::clr( BASE_ADDR, INT4EP ); }
+    void eint3_rising( void ){          Reg::set( BASE_ADDR, INT3EP ); }
+    void eint3_falling( void ){         Reg::clr( BASE_ADDR, INT3EP ); }
+    void eint2_rising( void ){          Reg::set( BASE_ADDR, INT2EP ); }
+    void eint2_falling( void ){         Reg::clr( BASE_ADDR, INT2EP ); }
+    void eint1_rising( void ){          Reg::set( BASE_ADDR, INT1EP ); }
+    void eint1_falling( void ){         Reg::clr( BASE_ADDR, INT1EP ); }
+    void eint0_rising( void ){          Reg::set( BASE_ADDR, INT0EP ); }
+    void eint0_falling( void ){         Reg::clr( BASE_ADDR, INT0EP ); }
 
-    //note- the following offsets calculated in bytes as the register
-    //numbers are enums (not uint32_t*)- so need to calculate bytes
-    //the Reg::set/clr will reinterpret the enums to volatile uint32_t*
-
-    //vector 40 example
-    //reg = 0xBF80F040 + (40/32)*16 = 0xBF80F050 = IFS1
-    //bit offset = 1<<(40%32) = 1<<8
-    //bit offset 8 in IFS1
     void flagclear( Irq::IRQVN irqvn )
     {
-        Reg::clr( Irq::BASE_ADDR_IFS + ((irqvn/32)*16), 1<<(irqvn%32) );
+        Reg::clr( Irq::BASE_ADDR_IFS + ((irqvn/32)*4), ( 1 << (irqvn%32) ));
     }
 
     void enable( Irq::IRQVN irqvn )
     {
         flagclear( irqvn );
-        Reg::set( Irq::BASE_ADDR_IEC + ((irqvn/32)*4), 1<<(irqvn%32) );
+        Reg::set( Irq::BASE_ADDR_IEC + ((irqvn/32)*4), ( 1 << (irqvn%32) ));
     }
 
     void disable( Irq::IRQVN irqvn )
     {
-        Reg::clr( Irq::BASE_ADDR_IEC + ((irqvn/32)*4), 1<<(irqvn%32) );
+        Reg::clr( Irq::BASE_ADDR_IEC + ((irqvn/32)*4), ( 1 << (irqvn%32) ));
     }
 
-    //vector 17 example
-    //priority_shift = 8*(17%4) =  8*1= 8
-    //reg = 0xBF80F140 + (17/4)*16 = 0xBF80F180 = IPC4
-    //priority bits at bit offset 8 in IPC4
     void priority( Irq::IRQVN irqvn, Irq::IRQ_PRI p,
             Irq::IRQ_SUB s = Irq::IRQ_SUB::SUB0 )
     {
         uint32_t priority_shift = 8*(irqvn%4);
-        Reg::clr( Irq::BASE_ADDR_IPC + ((irqvn/4)*16), (31<<priority_shift));
-        Reg::set( Irq::BASE_ADDR_IPC + ((irqvn/4)*16),
-                ((p|s)<<priority_shift));
+        Reg::clr( Irq::BASE_ADDR_IPC + ((irqvn/4)*4), (31<<priority_shift));
+        Reg::set( Irq::BASE_ADDR_IPC + ((irqvn/4)*4), ((p|s)<<priority_shift));
     }
 };
 
