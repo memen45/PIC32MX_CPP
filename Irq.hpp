@@ -6,29 +6,17 @@
 
 namespace Irq {
 
-    //proximity timer control
-    enum IRQ_TPC : uint8_t {
-        TPC_0 = 0, TPC_1, TPC_2, TPC_3, TPC_4, TPC_5, TPC_6, TPC_7
-    };
-    //priority,subpriority
-    enum IRQ_PRI {
-        PRI0 = 0, PRI1 = 1<<2, PRI2 = 2<<2, PRI3 = 3<<2, PRI4 = 4<<2,
-        PRI5 = 5<<2, PRI6 = 6<<2, PRI7 = 7<<2
-    };
-    enum IRQ_SUB {
-        SUB0 = 0, SUB1, SUB2, SUB3
-    };
-    //other
     enum {
-        BASE_ADDR = 0xBF80F000UL,
+        BASE_ADDR =     0xBF80F000UL,
         BASE_ADDR_IFS = 0xBF80F040UL,
         BASE_ADDR_IEC = 0xBF80F0C0UL,
         BASE_ADDR_IPC = 0xBF80F140UL,
         INT0EP = 1<<0, INT1EP = 1<<1, INT2EP = 1<<2,
         INT3EP = 1<<3, INT4EP = 1<<4
     };
+
     //irq vector numbers
-    enum IRQVN : uint8_t {
+    enum IRQ_VN : uint8_t {
         CORE_TIMER = 0, CORE_SOFTWARE_0, CORE_SOFTWARE_1,
         EXTERNAL_0 = 3, EXTERNAL_1, EXTERNAL_2, EXTERNAL_3, EXTERNAL_4,
         CHANGE_NOTICE_A = 8, CHANGE_NOTICE_B, CHANGE_NOTICE_C, CHANGE_NOTICE_D,
@@ -75,10 +63,10 @@ namespace Irq {
     void disable_all( void ){       __builtin_disable_interrupts(); }
     void enable_all( void ){        __builtin_enable_interrupts(); }
 
-    void proxtimer( IRQ_TPC pri )
+    void proxtimer( uint8_t pri )
     {
         Reg::clr( BASE_ADDR, 7<<8 );
-        Reg::set( BASE_ADDR, pri<<8 );
+        Reg::set( BASE_ADDR, (pri&7)<<8 );
     }
     void eint4_rising( void ){      Reg::set( BASE_ADDR, INT4EP ); }
     void eint4_falling( void ){     Reg::clr( BASE_ADDR, INT4EP ); }
@@ -99,55 +87,54 @@ namespace Irq {
     //reg = 0xBF80F040 + (40/32)*16 = 0xBF80F050 = IFS1
     //bit offset = 1<<(40%32) = 1<<8
     //bit offset 8 in IFS1
-    void flagclear( Irq::IRQVN irqvn )
+    void flagclear( Irq::IRQ_VN irqvn )
     {
         Reg::clr( Irq::BASE_ADDR_IFS + ((irqvn/32)*16), 1<<(irqvn%32) );
     }
 
-    void enable( Irq::IRQVN irqvn )
+    void enable( Irq::IRQ_VN irqvn )
     {
         flagclear( irqvn );
-        Reg::set( Irq::BASE_ADDR_IEC + ((irqvn/32)*4), 1<<(irqvn%32) );
+        Reg::set( Irq::BASE_ADDR_IEC + ((irqvn/32)*16), 1<<(irqvn%32) );
     }
 
-    void disable( Irq::IRQVN irqvn )
+    void disable( Irq::IRQ_VN irqvn )
     {
-        Reg::clr( Irq::BASE_ADDR_IEC + ((irqvn/32)*4), 1<<(irqvn%32) );
+        Reg::clr( Irq::BASE_ADDR_IEC + ((irqvn/32)*16), 1<<(irqvn%32) );
     }
 
     //vector 17 example
     //priority_shift = 8*(17%4) =  8*1= 8
     //reg = 0xBF80F140 + (17/4)*16 = 0xBF80F180 = IPC4
     //priority bits at bit offset 8 in IPC4
-    void priority( Irq::IRQVN irqvn, Irq::IRQ_PRI p,
-            Irq::IRQ_SUB s = Irq::IRQ_SUB::SUB0 )
+
+    //init specific irq
+    void init( Irq::IRQ_VN irqvn, uint8_t p, uint8_t s, bool en )
     {
         uint32_t priority_shift = 8*(irqvn%4);
+        p &= 7; s &= 3; p <<= 2; p |= s;
         Reg::clr( Irq::BASE_ADDR_IPC + ((irqvn/4)*16), (31<<priority_shift));
         Reg::set( Irq::BASE_ADDR_IPC + ((irqvn/4)*16),
-                ((p|s)<<priority_shift));
+                (p<<priority_shift));
+        if( en ) enable( irqvn );
     }
 
-    void priority_en( Irq::IRQVN irqvn, Irq::IRQ_PRI p,
-            Irq::IRQ_SUB s = Irq::IRQ_SUB::SUB0 )
-    {
-        priority( irqvn, p, s );
-        enable( irqvn );
-    }
-
+    //to create a list (array) of irq's to init/enable
     typedef struct {
-        Irq::IRQVN irqvn;
-        Irq::IRQ_PRI p;
-        Irq::IRQ_SUB s;
+        Irq::IRQ_VN irqvn;
+        uint8_t p;
+        uint8_t s;
+        bool en;
     } irq_list_t;
 
-    void irqlist_en( irq_list_t* arr )
+    //init list (array) of irq's
+    void init( irq_list_t* arr )
     {
         for( ; arr->irqvn != END_LIST; arr++ ){
-            priority_en( arr->irqvn, arr->p, arr->s );
-            enable( arr->irqvn );
+            init( arr->irqvn, arr->p, arr->s, arr->en );
         }
     }
+
 };
 
 #endif /* _IRQ_H */

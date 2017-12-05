@@ -36,10 +36,11 @@ Timer23 timer2( Timer23::T2 );
 Timer23 timer3( Timer23::T3 );
 
 Irq::irq_list_t irqlist[] = {
-    { Irq::TIMER_1,     Irq::IRQ_PRI::PRI1 },
-    { Irq::TIMER_2,     Irq::IRQ_PRI::PRI1 },
-    { Irq::TIMER_3,     Irq::IRQ_PRI::PRI1 },
-    { Irq::CORE_TIMER,  Irq::IRQ_PRI::PRI1 },
+    //vector#           pri sub enable
+    { Irq::TIMER_1,     1,  0,  true },
+    { Irq::TIMER_2,     1,  0,  true },
+    { Irq::TIMER_3,     1,  0,  true },
+    { Irq::CORE_TIMER,  1,  0,  true },
     { Irq::END_LIST }
 };
 
@@ -52,7 +53,7 @@ int main()
     timer3.pre_32(); timer3.on();           //turn on timer3, prescale 1:16
     Cp0::compare_ms( 200 );     //cp0 compare timeout (default sysfreq 24MHz)
     //irq's
-    Irq::irqlist_en( irqlist );
+    Irq::init( irqlist );
     Irq::enable_all();          //global irq enable
 
     //init delays or rotate delays
