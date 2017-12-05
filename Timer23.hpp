@@ -7,12 +7,14 @@
 class Timer23 {
 
     public:
+        
         enum TMR23 : uint32_t {
             T2 = 0xBF808040,
             T3 = 0xBF808080
         };
 
     private:
+
         enum {
             TMRX = 4,
             PRX = 8,
@@ -26,44 +28,41 @@ class Timer23 {
         };
 
     public:
-        Timer23( TMR23 tn ) :
-            m_pt( (volatile uint32_t*)tn )
-        {
-        };
 
-        void timer( uint16_t n ){       Reg::val( m_pt + TMRX, n ); }
-        uint16_t timer( void ){         return Reg::val( m_pt + TMRX ); }
+        Timer23( TMR23 );
 
-        void pr( uint16_t n ){          Reg::val( m_pt + PRX, n ); }
-        uint16_t pr( void ){            return Reg::val( m_pt + PRX ); }
+        void timer( uint16_t );
+        uint16_t timer( void );
 
-        void on( void ){                Reg::set( m_pt, ON ); }
-        void off( void ){               Reg::clr( m_pt, ON ); }
+        void pr( uint16_t );
+        uint16_t pr( void );
 
-        void stop_idle( void ){         Reg::set( m_pt, SIDL ); }
-        void cont_idle( void ){         Reg::clr( m_pt, SIDL ); }
+        void on( void );
+        void off( void );
 
-        void tgate_on( void ){          Reg::set( m_pt, TGATE ); }
-        void tgate_off( void ){         Reg::clr( m_pt, TGATE ); }
+        void stop_idle( void );
+        void cont_idle( void );
 
-        void pre_256( void ){           Reg::set( m_pt, TCKPS_256 ); }
-        void pre_64( void ){            pre_1(); Reg::set( m_pt, TCKPS_64 ); }
-        void pre_32( void ){            pre_1(); Reg::set( m_pt, TCKPS_32 ); }
-        void pre_16( void ){            pre_1(); Reg::set( m_pt, TCKPS_16 ); }
-        void pre_8( void ){             pre_1(); Reg::set( m_pt, TCKPS_8 ); }
-        void pre_4( void ){             pre_1(); Reg::set( m_pt, TCKPS_4 ); }
-        void pre_2( void ){             pre_1(); Reg::set( m_pt, TCKPS_2 ); }
-        void pre_1( void ){             Reg::clr( m_pt, TCKPS_256 ); }
+        void tgate_on( void );
+        void tgate_off( void );
 
-        void t32bit( void ){            Reg::set( m_pt, T32 ); }
-        void t16bit( void ){            Reg::clr( m_pt, T32 ); }
+        void pre_256( void );
+        void pre_64( void );
+        void pre_32( void );
+        void pre_16( void );
+        void pre_8( void );
+        void pre_4( void );
+        void pre_2( void );
+        void pre_1( void );
 
-        void ext_clk( void ){           Reg::set( m_pt, TCS ); }
-        void int_clk( void ){           Reg::clr( m_pt, TCS ); }
+        void t32bit( void );
+        void t16bit( void );
 
-
+        void ext_clk( void );
+        void int_clk( void );
 
     private:
+
         volatile uint32_t * m_pt;
 };
 

@@ -4,7 +4,10 @@ void Pins::lowison( void ){             m_lowison = true; }
 void Pins::lowisoff( void ){            m_lowison = false; }
 void Pins::digital( void ){             Reg::clr( m_pt, m_pn ); }
 void Pins::analog( void ){              Reg::set( m_pt, m_pn ); }
-void Pins::output( void ){              Reg::clr( m_pt+4, m_pn ); }
+void Pins::output( void ){
+    digital();                          //implied, cannot have analog output
+    Reg::clr( m_pt+4, m_pn );
+}
 void Pins::input( void ){               Reg::set( m_pt+4, m_pn ); }
 
 void Pins::odc_off( void ){             Reg::clr( m_pt+16, m_pn ); }

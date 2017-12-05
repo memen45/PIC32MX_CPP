@@ -7,26 +7,16 @@
 class DelayCP0 {
 
     public:
-        //pass in cpu freq in MHz, default is 24
-        DelayCP0( uint8_t cpu_mhz = 24 ) :
-            m_cpu_MHz( cpu_mhz ),
-            m_countn( 0 ),
-            m_expired( true )
-        {
-        }
+        DelayCP0( uint8_t cpu_MHz = 24 );
 
-        bool isexpired( void )
-        {
-            if( (Cp0::count() - m_start) >= m_countn) m_expired = true;
-            return m_expired;
-        }
-        void reset( void ){ m_start = Cp0::count(); m_expired = false; }
-        void reset( uint32_t n ){       reset(); m_countn = n>>1; }
-        void wait( uint32_t n ){        reset( n ); while( !isexpired() ); }
-        void wait_us( uint32_t n ){     wait( m_cpu_MHz * n ); }
-        void wait_ms( uint32_t n ){     wait_us( 1000 * n ); }
-        void set_us( uint32_t n ){      reset( m_cpu_MHz * n ); }
-        void set_ms( uint32_t n ){      set_us( 1000 * n ); }
+        bool isexpired( void );
+        void reset( void );
+        void reset( uint32_t );
+        void wait( uint32_t );
+        void wait_us( uint32_t );
+        void wait_ms( uint32_t );
+        void set_us( uint32_t );
+        void set_ms( uint32_t );
 
     private:
         uint32_t m_start;
