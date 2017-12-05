@@ -36,10 +36,9 @@ class Pins {
         //cpp
         void lowison( void );
         void lowisoff( void );
-        void digital( void );
-        void analog( void );
-        void output( void );
-        void input( void );
+        void digital_in( void );
+        void analog_in( void );
+        void digital_out( void );
         void odc_off( void );
         void odc_on( void );
         void pullup_off( void );

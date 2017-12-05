@@ -2,13 +2,19 @@
 
 void Pins::lowison( void ){             m_lowison = true; }
 void Pins::lowisoff( void ){            m_lowison = false; }
-void Pins::digital( void ){             Reg::clr( m_pt, m_pn ); }
-void Pins::analog( void ){              Reg::set( m_pt, m_pn ); }
-void Pins::output( void ){
-    digital();                          //implied, cannot have analog output
-    Reg::clr( m_pt+4, m_pn );
+
+void Pins::digital_in( void ){
+    Reg::set( m_pt+4, m_pn );   //tris=1
+    Reg::clr( m_pt, m_pn );     //ansel=0
 }
-void Pins::input( void ){               Reg::set( m_pt+4, m_pn ); }
+void Pins::analog_in( void ){
+    Reg::set( m_pt+4, m_pn );   //tris=1
+    Reg::set( m_pt, m_pn );     //ansel=1
+}
+void Pins::digital_out( void ){
+    Reg::clr( m_pt+4, m_pn );   //tris=0
+    Reg::clr( m_pt, m_pn );     //ansel=0
+}
 
 void Pins::odc_off( void ){             Reg::clr( m_pt+16, m_pn ); }
 void Pins::odc_on( void ){              Reg::set( m_pt+16, m_pn ); }

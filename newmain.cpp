@@ -49,22 +49,24 @@ Irq::irq_list_t irqlist[] = {   //list of irq's to init/enable
 
 int main()
 {
-    for( auto& s : sw ){ s.digital(); s.pullup_on(); s.lowison();}  //init pins
+    for( auto& s : sw ){                    //init pins
+        s.digital_in();
+        s.pullup_on();
+        s.lowison();
+    }
+
     for( auto& l : leds ){                  //init leds
-        l.output();                         //digital implied
+        l.digital_out();
         l.on();                             //show each led
         sw_dly.wait_ms( 2000 );             //wait
         l.off();                            //then off
     }
+
     Timer1::pre_256(); Timer1::on();        //turn on timer1, prescale 1:256
     timer2.pre_64(); timer2.on();           //turn on timer2, prescale 1:64
     timer3.pre_32(); timer3.on();           //turn on timer3, prescale 1:16
-    Cp0::compare_ms( 200 );     //cp0 compare timeout (default sysfreq 24MHz)
-    //irq's
-    Irq::init( irqlist );
-    Irq::enable_all();          //global irq enable
-
-
+    Cp0::compare_ms( 200 );                 //cp0 compare timeout
+                                            //(default sysfreq 24MHz)
 
     //init delays or rotate delays
     auto rotate_delays = [ & ](){
@@ -74,9 +76,9 @@ int main()
             d.set_ms( t_ms[start++] );
         }
     };
-    rotate_delays();            //initialize delays
+    rotate_delays();                        //initialize delays
 
-    auto irq_blinkrate = [ & ]( int16_t n ){
+    auto irq_blinkrate = [ & ]( int16_t n ){//sw1/2 adjust cp0 irq rate +/-
         static uint16_t rate = 200;
         rate += n;
         if( rate < 100 || rate > 4000 ) rate -= n;
@@ -86,6 +88,9 @@ int main()
         Irq::enable_all();
     };
 
+    Irq::init( irqlist );                   //init all irq's
+    Irq::enable_all();                      //global irq enable
+
     for (;;){
         for( auto i = 0; i < 3; i++ ){
             if( ! dly[i].isexpired() ) continue;
@@ -93,25 +98,25 @@ int main()
             dly[i].reset();
         }
         if( sw1.ison() ){
-            if( sw_dly.isexpired() ){   //is a new press
-                rotate_delays();        //do something visible
+            if( sw_dly.isexpired() ){       //is a new press
+                rotate_delays();            //do something visible
             }
-            sw_dly.set_ms( 100 );       //sw debounce (use for allswitches)
+            sw_dly.set_ms( 100 );           //sw debounce (use for allswitches)
             //sw_dly sets while pressed
             //so will require sw release of 100ms
             //before sw_dly timer can expire
         }
         if( sw2.ison() ){
             if( sw_dly.isexpired() ){
-                irq_blinkrate( 100 );   //++
+                irq_blinkrate( 100 );       //++
             }
-            sw_dly.set_ms( 100 );       //sw debounce (use for allswitches)
+            sw_dly.set_ms( 100 );           //sw debounce (use for allswitches)
         }
         if( sw3.ison() ){
             if( sw_dly.isexpired() ){
-                irq_blinkrate( -100 );  //--
+                irq_blinkrate( -100 );      //--
             }
-            sw_dly.set_ms( 100 );       //sw debounce (use for allswitches)
+            sw_dly.set_ms( 100 );           //sw debounce (use for allswitches)
         }
     }
 }
