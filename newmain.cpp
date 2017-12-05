@@ -47,7 +47,7 @@ Irq::irq_list_t irqlist[] = {
 int main()
 {
     for( auto& s : sw ){ s.digital(); s.pullup_on(); s.lowison();}  //init pins
-    for( auto& led : leds ){ led.output(); led.digital(); }         //init leds
+    for( auto& l : leds ){ l.output(); l.digital(); }               //init leds
     Timer1::pre_256(); Timer1::on();        //turn on timer1, prescale 1:256
     timer2.pre_64(); timer2.on();           //turn on timer2, prescale 1:64
     timer3.pre_32(); timer3.on();           //turn on timer3, prescale 1:16

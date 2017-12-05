@@ -20,7 +20,7 @@ class Timer23 {
             EXT_RES = 3<<8, EXT_LPRC = 2<<8, EXT_T1CK = 1<<8, EXT_SOSC = 0<<8,
             TGATE = 1<<7,
             TCKPS_256 = 7<<4, TCKPS_64 = 6<<4, TCKPS_32 = 5<<4, TCKPS_16 = 4<<4,
-            TCKPS_8 = 3<<4, TCKPS_4 = 2<<4, TCKPS_2 = 1<<4, TCKPS_1 = 0<<4,
+            TCKPS_8 = 3<<4,   TCKPS_4 = 2<<4,  TCKPS_2 = 1<<4,  TCKPS_1 = 0<<4,
             T32 = 1<<3,
             TCS = 1<<1
         };
@@ -34,7 +34,7 @@ class Timer23 {
         void timer( uint16_t n ){       Reg::val( m_pt + TMRX, n ); }
         uint16_t timer( void ){         return Reg::val( m_pt + TMRX ); }
 
-        void prx( uint16_t n ){         Reg::val( m_pt + PRX, n ); }
+        void pr( uint16_t n ){          Reg::val( m_pt + PRX, n ); }
         uint16_t pr( void ){            return Reg::val( m_pt + PRX ); }
 
         void on( void ){                Reg::set( m_pt, ON ); }

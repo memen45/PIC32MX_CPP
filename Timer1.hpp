@@ -8,9 +8,9 @@ namespace Timer1 {
 
     enum {
         T1CON = 0xBF808000,
-        TMR1 = 0xBF808010,
-        PR1 = 0xBF808020,
-        ON = 1<<15, SIDL = 1<<13, TWDIS = 1<<12, TWIP = 1<<11,
+        TMR1 =  0xBF808010,
+        PR1 =   0xBF808020,
+        ON = 1<<15,     SIDL = 1<<13,    TWDIS = 1<<12,   TWIP = 1<<11,
         EXT_RES = 3<<8, EXT_LPRC = 2<<8, EXT_T1CK = 1<<8, EXT_SOSC = 0<<8,
         TGATE = 1<<7,
         TCKPS_256 = 3<<4, TCKPS_64 = 2<<4, TCKPS_8 = 1<<4, TCKPS_1 = 0<<4,
@@ -18,11 +18,11 @@ namespace Timer1 {
         TCS = 1<<1
     };
 
-    void timer1( uint16_t n ){      Reg::val( TMR1, n ); }
-    uint16_t timer1( void ){        return Reg::val( TMR1 ); }
+    void timer( uint16_t n ){       Reg::val( TMR1, n ); }
+    uint16_t timer( void ){         return Reg::val( TMR1 ); }
 
-    void pr1( uint16_t n ){         Reg::val( PR1, n ); }
-    uint16_t pr1( void ){           return Reg::val( PR1 ); }
+    void pr( uint16_t n ){          Reg::val( PR1, n ); }
+    uint16_t pr( void ){            return Reg::val( PR1 ); }
 
     void on( void ){                Reg::set( T1CON, ON ); }
     void off( void ){               Reg::clr( T1CON, ON ); }
