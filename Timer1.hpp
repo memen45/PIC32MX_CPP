@@ -42,10 +42,10 @@ namespace Timer1 {
     void tgate_on( void ){          Reg::set( T1CON, TGATE ); }
     void tgate_off( void ){         Reg::clr( T1CON, TGATE ); }
 
-    void prescale_1( void ){        Reg::clr( T1CON, TCKPS_256 ); }
-    void prescale_256( void ){      Reg::set( T1CON, TCKPS_256 ); }
-    void prescale_64( void ){       prescale_1(); Reg::set( T1CON, TCKPS_64 ); }
-    void prescale_8( void ){        prescale_1(); Reg::set( T1CON, TCKPS_8 ); }
+    void pre_1( void ){             Reg::clr( T1CON, TCKPS_256 ); }
+    void pre_256( void ){           Reg::set( T1CON, TCKPS_256 ); }
+    void pre_64( void ){            pre_1(); Reg::set( T1CON, TCKPS_64 ); }
+    void pre_8( void ){             pre_1(); Reg::set( T1CON, TCKPS_8 ); }
 
     void tsync_on( void ){          Reg::set( T1CON, TSYNC ); }
     void tsync_off( void ){         Reg::clr( T1CON, TSYNC ); }

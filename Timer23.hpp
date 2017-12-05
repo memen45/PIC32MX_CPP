@@ -46,20 +46,22 @@ class Timer23 {
         void tgate_on( void ){          Reg::set( m_pt, TGATE ); }
         void tgate_off( void ){         Reg::clr( m_pt, TGATE ); }
 
-        void prescale_256( void ){      Reg::set( m_pt, TCKPS_256 ); }
-        void prescale_64( void ){       prescale_1(); Reg::set( m_pt, TCKPS_64 ); }
-        void prescale_32( void ){       prescale_1(); Reg::set( m_pt, TCKPS_32 ); }
-        void prescale_16( void ){       prescale_1(); Reg::set( m_pt, TCKPS_16 ); }
-        void prescale_8( void ){        prescale_1(); Reg::set( m_pt, TCKPS_8 ); }
-        void prescale_4( void ){        prescale_1(); Reg::set( m_pt, TCKPS_4 ); }
-        void prescale_2( void ){        prescale_1(); Reg::set( m_pt, TCKPS_2 ); }
-        void prescale_1( void ){        Reg::clr( m_pt, TCKPS_256 ); }
+        void pre_256( void ){           Reg::set( m_pt, TCKPS_256 ); }
+        void pre_64( void ){            pre_1(); Reg::set( m_pt, TCKPS_64 ); }
+        void pre_32( void ){            pre_1(); Reg::set( m_pt, TCKPS_32 ); }
+        void pre_16( void ){            pre_1(); Reg::set( m_pt, TCKPS_16 ); }
+        void pre_8( void ){             pre_1(); Reg::set( m_pt, TCKPS_8 ); }
+        void pre_4( void ){             pre_1(); Reg::set( m_pt, TCKPS_4 ); }
+        void pre_2( void ){             pre_1(); Reg::set( m_pt, TCKPS_2 ); }
+        void pre_1( void ){             Reg::clr( m_pt, TCKPS_256 ); }
 
         void t32bit( void ){            Reg::set( m_pt, T32 ); }
         void t16bit( void ){            Reg::clr( m_pt, T32 ); }
 
         void ext_clk( void ){           Reg::set( m_pt, TCS ); }
         void int_clk( void ){           Reg::clr( m_pt, TCS ); }
+
+
 
     private:
         volatile uint32_t * m_pt;

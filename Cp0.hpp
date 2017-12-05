@@ -5,7 +5,7 @@
 
 namespace Cp0 {
 
-    static uint8_t sysfreq;             //used to calculate compare values
+    static uint8_t sysfreq = 24;        //used to calculate compare values
     static uint32_t m_compare_count;    //save count for reloads
 
     uint32_t count( void ){             return __builtin_mfc0(9,0); }   //get

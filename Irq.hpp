@@ -126,6 +126,13 @@ namespace Irq {
         Reg::set( Irq::BASE_ADDR_IPC + ((irqvn/4)*16),
                 ((p|s)<<priority_shift));
     }
+
+    void priority_en( Irq::IRQVN irqvn, Irq::IRQ_PRI p,
+            Irq::IRQ_SUB s = Irq::IRQ_SUB::SUB0 )
+    {
+        priority( irqvn, p, s );
+        enable( irqvn );
+    }
 };
 
 #endif /* _IRQ_H */
