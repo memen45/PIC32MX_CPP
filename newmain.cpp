@@ -29,7 +29,7 @@ Pins& sw3 = sw[2];
 DelayCP0 sw_dly;                //debounce
 DelayCP0 dly[3];                //CP0 led delays
 uint32_t t_ms[3] = {            //led delay ms
-    200,800,1200
+    1000,2000,3000
 };
 
 Timer23 timer2( Timer23::T2 );
