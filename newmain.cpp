@@ -67,6 +67,7 @@ int main()
         if( rate < 100 || rate > 4000 ) rate -= n;
         Irq::disable_all();
         Cp0::compare_ms( rate );
+        led2.on();
         Irq::enable_all();
     };
 
