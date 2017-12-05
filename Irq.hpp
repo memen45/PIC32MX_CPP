@@ -68,7 +68,8 @@ namespace Irq {
         PERFORMANCE_COUNTER = 95,
         //96
         ECCSB_ERR = 97,
-        DMA0 = 98, DMA1, DMA2, DMA3 = 101
+        DMA0 = 98, DMA1, DMA2, DMA3 = 101,
+        END_LIST = 255
     };
 
     void disable_all( void ){       __builtin_disable_interrupts(); }
@@ -132,6 +133,20 @@ namespace Irq {
     {
         priority( irqvn, p, s );
         enable( irqvn );
+    }
+
+    typedef struct {
+        Irq::IRQVN irqvn;
+        Irq::IRQ_PRI p;
+        Irq::IRQ_SUB s;
+    } irq_list_t;
+
+    void irqlist_en( irq_list_t* arr )
+    {
+        for( ; arr->irqvn != END_LIST; arr++ ){
+            priority_en( arr->irqvn, arr->p, arr->s );
+            enable( arr->irqvn );
+        }
     }
 };
 

@@ -35,6 +35,14 @@ uint32_t t_ms[3] = {            //led delay ms
 Timer23 timer2( Timer23::T2 );
 Timer23 timer3( Timer23::T3 );
 
+Irq::irq_list_t irqlist[] = {
+    { Irq::TIMER_1,     Irq::IRQ_PRI::PRI1 },
+    { Irq::TIMER_2,     Irq::IRQ_PRI::PRI1 },
+    { Irq::TIMER_3,     Irq::IRQ_PRI::PRI1 },
+    { Irq::CORE_TIMER,  Irq::IRQ_PRI::PRI1 },
+    { Irq::END_LIST }
+};
+
 int main()
 {
     for( auto& s : sw ){ s.digital(); s.pullup_on(); s.lowison();}  //init pins
@@ -44,10 +52,7 @@ int main()
     timer3.pre_32(); timer3.on();           //turn on timer3, prescale 1:16
     Cp0::compare_ms( 200 );     //cp0 compare timeout (default sysfreq 24MHz)
     //irq's
-    Irq::priority_en( Irq::TIMER_1, Irq::IRQ_PRI::PRI1 );
-    Irq::priority_en( Irq::TIMER_2, Irq::IRQ_PRI::PRI1 );
-    Irq::priority_en( Irq::TIMER_3, Irq::IRQ_PRI::PRI1 );
-    Irq::priority_en( Irq::CORE_TIMER, Irq::IRQ_PRI::PRI1 );
+    Irq::irqlist_en( irqlist );
     Irq::enable_all();          //global irq enable
 
     //init delays or rotate delays
