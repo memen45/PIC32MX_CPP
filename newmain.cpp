@@ -17,10 +17,10 @@ Pins leds[] = {
 Pins& led1 = leds[3];
 Pins& led2 = leds[4];
 
-Pins sw[] = {
-    { Pins::PORT::B, 9 },       //SW1 (rotate delays))
-    { Pins::PORT::C, 10 },      //SW2 cp0 irq blink rate++
-    { Pins::PORT::C, 4 }        //SW3 cp0 irq blink rate--
+Pins sw[] = {                   //true=lowison
+    { Pins::PORT::B, 9,  true },//SW1 (rotate delays))
+    { Pins::PORT::C, 10, true },//SW2 cp0 irq blink rate++
+    { Pins::PORT::C, 4,  true } //SW3 cp0 irq blink rate--
 };
 Pins& sw1 = sw[0];
 Pins& sw2 = sw[1];
@@ -52,7 +52,6 @@ int main()
     for( auto& s : sw ){                    //init pins
         s.digital_in();
         s.pullup_on();
-        s.lowison();
     }
 
     for( auto& l : leds ){                  //init leds
@@ -93,12 +92,12 @@ int main()
 
     for (;;){
         for( auto i = 0; i < 3; i++ ){
-            if( ! dly[i].isexpired() ) continue;
+            if( ! dly[i].expired() ) continue;
             leds[i].invert();
             dly[i].reset();
         }
         if( sw1.ison() ){
-            if( sw_dly.isexpired() ){       //is a new press
+            if( sw_dly.expired() ){         //is a new press
                 rotate_delays();            //do something visible
             }
             sw_dly.set_ms( 100 );           //sw debounce (use for allswitches)
@@ -107,13 +106,13 @@ int main()
             //before sw_dly timer can expire
         }
         if( sw2.ison() ){
-            if( sw_dly.isexpired() ){
+            if( sw_dly.expired() ){
                 irq_blinkrate( 100 );       //++
             }
             sw_dly.set_ms( 100 );           //sw debounce (use for allswitches)
         }
         if( sw3.ison() ){
-            if( sw_dly.isexpired() ){
+            if( sw_dly.expired() ){
                 irq_blinkrate( -100 );      //--
             }
             sw_dly.set_ms( 100 );           //sw debounce (use for allswitches)

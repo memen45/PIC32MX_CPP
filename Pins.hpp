@@ -7,6 +7,7 @@
 class Pins {
 
     public:
+        
         enum PORT : uint32_t {
             A = 0xBF802BB0, //make ANSELA base addr
             B = 0xBF802CB0, //make ANSELB base addr
@@ -15,10 +16,10 @@ class Pins {
         };
 
         //inline
-        constexpr Pins( PORT pt, const uint8_t pn ) :
+        constexpr Pins( PORT pt, uint8_t pn, bool lowison = false ) :
              m_pt( (volatile uint32_t*)pt ),
              m_pn( 1<<pn ),
-             m_lowison( false )
+             m_lowison( lowison )
         {
         }
 
@@ -59,9 +60,12 @@ class Pins {
         void icnmismatch( void );
         bool icnflag( void );
         bool icnstat( void );
+
         //inline
         void icnflagclear( void ){      Reg::clr( m_pt+44, m_pn ); }
+
     private:
+
         const uint16_t m_pn;        //pin mask
         volatile uint32_t* m_pt;    //base address
         bool m_lowison;             //pin on val is low
