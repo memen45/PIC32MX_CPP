@@ -62,6 +62,13 @@ namespace Reg {
         val( SYSKEY_ADDR, 0x556699AA );
         return val( SYSKEY_ADDR ) != 0; //succeed = true
     }
+
+    //for wdt reset - needs to do a 16bit write
+    template <typename T>
+    void val16( T r, uint16_t v )
+    {
+        *(reinterpret_cast <volatile uint16_t*>(r)) = v;
+    }
 }
 
 #endif //_REG_H

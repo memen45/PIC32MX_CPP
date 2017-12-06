@@ -8786,5 +8786,38 @@
          <value>disabled</value>
       </entry>
    </tokenMap>
-   <generatedFileHashHistoryMap class="java.util.HashMap"/>
+   <generatedFileHashHistoryMap class="java.util.HashMap">
+      <entry>
+         <file>mcc_generated_files/interrupt_manager.h</file>
+         <hash>5cc192aa3eb2bc5b6e8ecf5fc177b485be1b55ea05c66d47e971662695cd7302</hash>
+      </entry>
+      <entry>
+         <file>mcc_generated_files/pin_manager.h</file>
+         <hash>96b614a5bfb5af6c1851fcd82668cb58be53662544df0f71caab92b17af217f8</hash>
+      </entry>
+      <entry>
+         <file>mcc_generated_files/exceptions.h</file>
+         <hash>b54f41ea7c175a8f22eff43e84134b52a4b6745399d0c1aa74a03a0653bd9484</hash>
+      </entry>
+      <entry>
+         <file>mcc_generated_files/mcc.h</file>
+         <hash>c29bf8ddcf846fd237e992aba895c30d36868418cdff64bb24f48e23967d470f</hash>
+      </entry>
+      <entry>
+         <file>mcc_generated_files/interrupt_manager.c</file>
+         <hash>c7e3a87fbc6dc836c2e8e3bbaccf85d698cc39f9dfab5204a189fcf121df2c05</hash>
+      </entry>
+      <entry>
+         <file>mcc_generated_files/mcc.c</file>
+         <hash>2e40963bd3937cf8935716aa82b245a65ba6d0ca75ffa4fbba719605fefce8b9</hash>
+      </entry>
+      <entry>
+         <file>mcc_generated_files/pin_manager.c</file>
+         <hash>dd63432262800e22aff6678a878aeb1f5b536ff0960e8f819451b0f5c4b4cf83</hash>
+      </entry>
+      <entry>
+         <file>mcc_generated_files/exceptions.c</file>
+         <hash>03fe83a6303588f805d55e7eb03e439453cf38d8a4a34eee069ca188438f9e58</hash>
+      </entry>
+   </generatedFileHashHistoryMap>
 </config>

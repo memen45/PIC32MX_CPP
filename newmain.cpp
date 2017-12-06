@@ -1,4 +1,10 @@
+/*------------------------------------------------------------------------------
+ ___  _  _   ___  _    _   _  ___   ___  ___
+|_ _|| \| | / __|| |  | | | ||   \ | __|/ __|
+ | | | .` || (__ | |__| |_| || |) || _| \__ \
+|___||_|\_| \___||____|\___/ |___/ |___||___/
 
+------------------------------------------------------------------------------*/
 #include <cstdint>
 #include "Delay.hpp"
 #include "Pins.hpp"
@@ -7,7 +13,16 @@
 #include "Timer1.hpp"
 #include "Timer23.hpp"
 #include "Pmd.hpp"
+#include "Wdt.hpp"
 
+
+/*------------------------------------------------------------------------------
+__   __ _    ___  ___    _    ___  _     ___  ___
+\ \ / //_\  | _ \|_ _|  /_\  | _ )| |   | __|/ __|
+ \ V // _ \ |   / | |  / _ \ | _ \| |__ | _| \__ \
+  \_//_/ \_\|_|_\|___|/_/ \_\|___/|____||___||___/
+
+------------------------------------------------------------------------------*/
 Pins leds[] = {                 //group leds
     { Pins::D, 1 },             //RED
     { Pins::C, 3 },             //GREEN
@@ -56,8 +71,19 @@ Pmd::PMD pmd_list[] = {                      //list of modules to disable
     Pmd::END                                //need END or else bad happens
 };
 
+/*------------------------------------------------------------------------------
+ __  __    _    ___  _  _
+|  \/  |  /_\  |_ _|| \| |
+| |\/| | / _ \  | | | .` |
+|_|  |_|/_/ \_\|___||_|\_|
+
+------------------------------------------------------------------------------*/
 int main()
 {
+    Wdt::on();                              //try the watchdog
+                                            //RWDTPS = PS8192, so 8ms timeout
+
+
     Pmd::disable( pmd_list );               //test Pmd disable (T1/2/3 disabled)
                                             //can verify T1,T2,T3 no longer work
                                             //with below enable commented out
@@ -107,6 +133,8 @@ int main()
     Irq::enable_all();                      //global irq enable
 
     for (;;){
+        Wdt::reset();                       //comment out to test wdt reset
+
         for( auto i = 0; i < 3; i++ ){
             if( ! dly[i].expired() ) continue;
             leds[i].invert();
@@ -116,7 +144,7 @@ int main()
             if( sw_dly.expired() ){         //is a new press
                 rotate_delays();            //do something visible
             }
-            sw_dly.set_ms( 100 );           //sw debounce (use for allswitches)
+            sw_dly.set_ms( 100 );           //sw debounce (use for all switches)
             //sw_dly sets while pressed
             //so will require sw release of 100ms
             //before sw_dly timer can expire
@@ -125,17 +153,24 @@ int main()
             if( sw_dly.expired() ){
                 irq_blinkrate( 100 );       //++
             }
-            sw_dly.set_ms( 100 );           //sw debounce (use for allswitches)
+            sw_dly.set_ms( 100 );           //sw debounce (use for all switches)
         }
         if( sw3.ison() ){
             if( sw_dly.expired() ){
                 irq_blinkrate( -100 );      //--
             }
-            sw_dly.set_ms( 100 );           //sw debounce (use for allswitches)
+            sw_dly.set_ms( 100 );           //sw debounce (use for all switches)
         }
     }
 }
 
+/*------------------------------------------------------------------------------
+  ___ _  _ _____ ___ ___ ___ _   _ ___ _____
+ |_ _| \| |_   _| __| _ \ _ \ | | | _ \_   _|
+  | || .` | | | | _||   /   / |_| |  _/ | |
+ |___|_|\_| |_| |___|_|_\_|_\\___/|_|   |_|
+
+------------------------------------------------------------------------------*/
 extern "C" {
     void __attribute__(( vector(0), interrupt(IPL1SOFT) )) CoreTimerISR()
     {
