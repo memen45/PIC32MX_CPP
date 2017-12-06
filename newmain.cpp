@@ -6,6 +6,7 @@
 #include "Cp0.hpp"
 #include "Timer1.hpp"
 #include "Timer23.hpp"
+#include "Pmd.hpp"
 
 Pins leds[] = {                 //group leds
     { Pins::D, 1 },             //RED
@@ -14,7 +15,7 @@ Pins leds[] = {                 //group leds
     { Pins::D, 3 },             //LED1 (invert in timer1/timer2/timer3 irq)
     { Pins::C, 13 }             //LED2 (cp0 irq blinks)
 };
-Pins& led1 = leds[3];
+Pins& led1 = leds[3];           //reference to specific leds
 Pins& led2 = leds[4];
 
 Pins sw[] = {                   //true=lowison
@@ -22,7 +23,7 @@ Pins sw[] = {                   //true=lowison
     { Pins::C, 10, true },      //SW2 cp0 irq blink rate++
     { Pins::C, 4,  true }       //SW3 cp0 irq blink rate--
 };
-Pins& sw1 = sw[0];
+Pins& sw1 = sw[0];              //sw1/2/3 references
 Pins& sw2 = sw[1];
 Pins& sw3 = sw[2];
 
@@ -38,17 +39,32 @@ uint32_t t_ms[] = {             //led delay ms
 Timer23 timer2( Timer23::T2 );
 Timer23 timer3( Timer23::T3 );
 
-Irq::irq_list_t irqlist[] = {   //list of irq's to init/enable
+Irq::irq_list_t irqlist[] = {               //list of irq's to init/enable
     //vector#           pri sub enable
     { Irq::TIMER_1,     1,  0,  true },
     { Irq::TIMER_2,     1,  0,  true },
     { Irq::TIMER_3,     1,  0,  true },
     { Irq::CORE_TIMER,  1,  0,  true },
-    { Irq::END_LIST }
+    { Irq::END }                            //need END or else bad happens
+};
+
+Pmd::PMD pmd_list[] = {                      //list of modules to disable
+    Pmd::USB,
+    Pmd::HLVD, Pmd::CMP1, Pmd::CMP2, Pmd::CMP3,
+    Pmd::I2C1, Pmd::I2C2, Pmd::I2C3,
+    Pmd::T1, Pmd::T2, Pmd::T3,
+    Pmd::END                                //need END or else bad happens
 };
 
 int main()
 {
+    Pmd::disable( pmd_list );               //test Pmd disable (T1/2/3 disabled)
+                                            //can verify T1,T2,T3 no longer work
+                                            //with below enable commented out
+
+    Pmd::enable( pmd_list );                //test Pmd enable- all back on again
+
+
     for( auto& s : sw ){                    //init pins
         s.digital_in();
         s.pullup_on();
@@ -57,7 +73,7 @@ int main()
     for( auto& l : leds ){                  //init leds
         l.digital_out();
         l.on();                             //show each led
-        sw_dly.wait_ms( 2000 );             //wait
+        sw_dly.wait_ms( 1000 );             //wait
         l.off();                            //then off
     }
 

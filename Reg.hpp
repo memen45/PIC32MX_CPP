@@ -6,7 +6,8 @@
 namespace Reg {
 
     enum {
-        CLR = 1, SET = 2, INV = 3
+        CLR = 1, SET = 2, INV = 3,
+        SYSKEY_ADDR = 0xBF803670
     };
     //all register values cast to volatile uint32_t*
     //so can use enum values as register argument
@@ -30,7 +31,8 @@ namespace Reg {
     }
 
     template <typename T>
-    bool is_set( T r, uint32_t v ){
+    bool is_set( T r, uint32_t v )
+    {
         return *(reinterpret_cast <volatile uint32_t*>(r)) & v;
     }
 
@@ -50,6 +52,15 @@ namespace Reg {
     void val( T r, uint32_t v )
     {
         *(reinterpret_cast <volatile uint32_t*>(r)) = v;
+    }
+
+    void syskey_lock( void ){       val( SYSKEY_ADDR, 0 ); }
+    bool syskey_unlock( void )
+    {
+        syskey_lock();
+        val( SYSKEY_ADDR, 0xAA996655 );
+        val( SYSKEY_ADDR, 0x556699AA );
+        return val( SYSKEY_ADDR ) != 0; //succeed = true
     }
 }
 

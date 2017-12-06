@@ -57,7 +57,7 @@ namespace Irq {
         //96
         ECCSB_ERR = 97,
         DMA0 = 98, DMA1, DMA2, DMA3 = 101,
-        END_LIST = 255
+        END = 255
     };
 
     void disable_all( void ){       __builtin_disable_interrupts(); }
@@ -130,7 +130,7 @@ namespace Irq {
     //init list (array) of irq's
     void init( irq_list_t* arr )
     {
-        for( ; arr->irqvn != END_LIST; arr++ ){
+        for( ; arr->irqvn != END; arr++ ){
             init( arr->irqvn, arr->p, arr->s, arr->en );
         }
     }
