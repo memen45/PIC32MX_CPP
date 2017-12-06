@@ -21,14 +21,12 @@ namespace Cvref {
         Reg::set( BASE_ADDR, rs & 3 );
     }
 
-    //dac level 0-31, not using Reg::set/clear so there is no glitch
-    //when changing level, new value written in one write
+    //dac level 0-31, using Reg::val16 to change value
+    //(only DACDAT in upper 16bits, so can just write dat which
+    //will also mask off invalid bits, if dat >31)
     void dac( uint8_t dat )
     {
-        dat &= 31; dat <<= 16;
-        uint32_t r = Reg::val( BASE_ADDR );
-        r &= ~(31<<16); r |= dat;
-        Reg::val( BASE_ADDR, r );
+        Reg::val16( BASE_ADDR+2, dat );
     }
 
 }
