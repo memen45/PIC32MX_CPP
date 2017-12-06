@@ -7,7 +7,7 @@
 class Pins {
 
     public:
-        
+
         enum PORT : uint32_t {
             A = 0xBF802BB0, //make ANSELA base addr
             B = 0xBF802CB0, //make ANSELB base addr
@@ -70,6 +70,5 @@ class Pins {
         volatile uint32_t* m_pt;    //base address
         bool m_lowison;             //pin on val is low
 };
-
 
 #endif // _H

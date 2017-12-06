@@ -7,20 +7,20 @@
 #include "Timer1.hpp"
 #include "Timer23.hpp"
 
-Pins leds[] = {
-    { Pins::PORT::D, 1 },       //RED
-    { Pins::PORT::C, 3 },       //GREEN
-    { Pins::PORT::C, 15 },      //BLUE
-    { Pins::PORT::D, 3 },       //LED1 (invert in timer1/timer2/timer3 irq)
-    { Pins::PORT::C, 13 }       //LED2 (cp0 irq blinks)
+Pins leds[] = {                 //group leds
+    { Pins::D, 1 },             //RED
+    { Pins::C, 3 },             //GREEN
+    { Pins::C, 15 },            //BLUE
+    { Pins::D, 3 },             //LED1 (invert in timer1/timer2/timer3 irq)
+    { Pins::C, 13 }             //LED2 (cp0 irq blinks)
 };
 Pins& led1 = leds[3];
 Pins& led2 = leds[4];
 
 Pins sw[] = {                   //true=lowison
-    { Pins::PORT::B, 9,  true },//SW1 (rotate delays))
-    { Pins::PORT::C, 10, true },//SW2 cp0 irq blink rate++
-    { Pins::PORT::C, 4,  true } //SW3 cp0 irq blink rate--
+    { Pins::B, 9,  true },      //SW1 (rotate delays))
+    { Pins::C, 10, true },      //SW2 cp0 irq blink rate++
+    { Pins::C, 4,  true }       //SW3 cp0 irq blink rate--
 };
 Pins& sw1 = sw[0];
 Pins& sw2 = sw[1];
