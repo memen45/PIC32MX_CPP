@@ -1,12 +1,10 @@
-#ifndef _DELAY_H
-#define _DELAY_H
+#pragma once
 
 /*=============================================================================
  Delay using Coprocessor0 Count
 =============================================================================*/
 
 #include <cstdint>
-#include "Cp0.hpp"
 
 class DelayCP0 {
 
@@ -31,4 +29,3 @@ class DelayCP0 {
         bool m_expired;
 };
 
-#endif /* _DELAY_H */

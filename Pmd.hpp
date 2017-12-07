@@ -1,5 +1,4 @@
-#ifndef _PMD_H
-#define _PMD_H
+#pragma once
 
 /*=============================================================================
  Peripheral Module Disable
@@ -7,16 +6,19 @@
 
 #include <cstdint>
 #include "Reg.hpp"
+#include "Syskey.hpp"
 
 namespace Pmd {
 
-    enum {
+    enum
+    {
         BASE_ADDR = 0xBF8035B0,
         PMD1_ADDR = 0xBF8035C0
     };
 
     //bit shift amount into 7 registers (PMD1-PMD7, 224 possible values)
-    enum PMD {
+    enum PMD
+    {
         ADC = 0, VREF = 12, HLVD = 20,                          //PMD1
         CMP1 = 32, CMP2 = 33, CMP3= 34,                         //PMD2
         CLC1 = 56, CLC2 = 57, CLC3 = 58, CLC4 = 59,
@@ -31,48 +33,50 @@ namespace Pmd {
         END = 255 //for end of array value if using array
     };
 
-    void unlock( void )
+    //private (not really)
+    void _unlock( void )
     {
-        while( ! Reg::syskey_unlock() );
+        Syskey::unlock();
         Reg::clr( BASE_ADDR, 1<<11 );
     }
-    void lock( void )
+    void _lock( void )
     {
         Reg::set( BASE_ADDR, 1<<11 );
-        Reg::syskey_lock();
+        Syskey::lock();
     }
+    //--private
 
-    void disable( PMD n )
+    void off( PMD n )
     {
-        unlock();
+        _unlock();
         Reg::set( PMD1_ADDR + 16*(n/32), (1<<(n%32)) );
-        lock();
+        _lock();
     }
-    void enable( PMD n )
+    void on( PMD n )
     {
-        unlock();
+        _unlock();
         Reg::clr( PMD1_ADDR + 16*(n/32), (1<<(n%32)) );
-        lock();
+        _lock();
     }
 
     //array of modules to disable/enable, END is end of array
-    void disable( PMD* n )
+    void off( PMD* n )
     {
-        unlock();
+        _unlock();
         for( ; *n != END; n++ ){
             Reg::set( PMD1_ADDR + 16*(*n/32), (1<<(*n%32)) );
         }
-        lock();
+        _lock();
     }
-    void enable( PMD* n )
+    void on( PMD* n )
     {
-        unlock();
+        _unlock();
         for( ; *n != END; n++ ){
             Reg::clr( PMD1_ADDR + 16*(*n/32), (1<<(*n%32)) );
         }
-        lock();
+        _lock();
     }
 
-}
+};
 
-#endif //PMD_H
+

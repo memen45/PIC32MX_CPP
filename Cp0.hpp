@@ -1,5 +1,4 @@
-#ifndef _CP0_H
-#define _CP0_H
+#pragma once
 
 /*=============================================================================
  Coprocessor0  Count, Compare
@@ -27,4 +26,3 @@ namespace Cp0 {
 
 }
 
-#endif //CP0_H

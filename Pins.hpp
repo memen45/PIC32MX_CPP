@@ -1,5 +1,4 @@
-#ifndef _PINS_H
-#define _PINS_H
+#pragma once
 
 /*=============================================================================
  I/O pin functions
@@ -12,7 +11,8 @@ class Pins {
 
     public:
 
-        enum PORT : uint32_t {
+        enum PORT : uint32_t
+        {
             A = 0xBF802BB0, //make ANSELA base addr
             B = 0xBF802CB0, //make ANSELB base addr
             C = 0xBF802DB0, //make ANSELC base addr
@@ -75,4 +75,3 @@ class Pins {
         bool m_lowison;             //pin on val is low
 };
 
-#endif // _H

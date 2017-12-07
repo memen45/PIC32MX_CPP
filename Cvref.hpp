@@ -1,23 +1,21 @@
-#ifndef _CVREF_H
-#define _CVREF_H
+#pragma once
 
 /*=============================================================================
  Voltage Reference (CVref, DAC)
 =============================================================================*/
 
 #include <cstdint>
-#include "Reg.hpp"
 
 namespace Cvref {
 
     enum { BASE_ADDR = 0xBF802380 };
     enum REFSEL { AVDD = 3, CVREF = 1, NONE = 0 };
 
-    void on( void ){ Reg::set( BASE_ADDR, 1<<15 );
-    void off( void ){ Reg::clr( BASE_ADDR, 1<<15 );
+    void on( void ){            Reg::set( BASE_ADDR, 1<<15 );
+    void off( void ){           Reg::clr( BASE_ADDR, 1<<15 );
 
-    void pin_on( void ){ Reg::set( BASE_ADDR, 1<<8 );
-    void pin_off( void ){ Reg::clr( BASE_ADDR, 1<<8 );
+    void pin_on( void ){        Reg::set( BASE_ADDR, 1<<8 );
+    void pin_off( void ){       Reg::clr( BASE_ADDR, 1<<8 );
 
     void refsel( REFSEL rs )
     {
@@ -33,6 +31,5 @@ namespace Cvref {
         Reg::val16( BASE_ADDR+2, dat );
     }
 
-}
+};
 
-#endif //CVREF_H

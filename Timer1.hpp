@@ -1,5 +1,4 @@
-#ifndef _TIMER1_H
-#define _TIMER1_H
+#pragma once
 
 /*=============================================================================
  Timer1 functions
@@ -10,7 +9,8 @@
 
 namespace Timer1 {
 
-    enum {
+    enum
+    {
         T1CON = 0xBF808000,
         TMR1 =  0xBF808010,
         PR1 =   0xBF808020,
@@ -57,6 +57,5 @@ namespace Timer1 {
     void ext_clk( void ){           Reg::set( T1CON, TCS ); }
     void int_clk( void ){           Reg::clr( T1CON, TCS ); }
 
-}
+};
 
-#endif //_TIMER1_H

@@ -1,5 +1,4 @@
-#ifndef _TIMER23_H
-#define _TIMER23_H
+#pragma once
 
 /*=============================================================================
  Timer2/Timer3 functions
@@ -12,14 +11,16 @@ class Timer23 {
 
     public:
 
-        enum TMR23 : uint32_t {
+        enum TMR23 : uint32_t
+        {
             T2 = 0xBF808040,
             T3 = 0xBF808080
         };
 
     private:
 
-        enum {
+        enum
+        {
             TMRX = 4,
             PRX = 8,
             ON = 1<<15, SIDL = 1<<13,
@@ -70,4 +71,3 @@ class Timer23 {
         volatile uint32_t * m_pt;
 };
 
-#endif //_TIMER1_H

@@ -22,6 +22,7 @@
 #include "Timer23.hpp"
 #include "Pmd.hpp"
 #include "Wdt.hpp"
+#include "Rtcc.hpp"
 
 
 /*=============================================================================
@@ -95,15 +96,17 @@ Pmd::PMD pmd_list[] = {                      //list of modules to disable
 =============================================================================*/
 int main()
 {
+    Rtcc::off();
+
     Wdt::on();                              //try the watchdog
                                             //RWDTPS = PS8192, so 8ms timeout
 
 
-    Pmd::disable( pmd_list );               //test Pmd disable (T1/2/3 disabled)
+    Pmd::off( pmd_list );                   //test Pmd disable (T1/2/3 disabled)
                                             //can verify T1,T2,T3 no longer work
                                             //with below enable commented out
 
-    Pmd::enable( pmd_list );                //test Pmd enable- all back on again
+    Pmd::on( pmd_list );                    //test Pmd enable- all back on again
 
 
     for( auto& s : sw ){                    //init pins

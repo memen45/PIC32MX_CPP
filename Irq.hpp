@@ -1,16 +1,16 @@
-#ifndef _IRQ_H
-#define _IRQ_H
+#pragma once
 
 /*=============================================================================
  Interrupt functions
 =============================================================================*/
 
 #include <cstdint>
-#include"Reg.hpp"
+#include "Reg.hpp"
 
 namespace Irq {
 
-    enum {
+    enum
+    {
         BASE_ADDR =     0xBF80F000UL,
         BASE_ADDR_IFS = 0xBF80F040UL,
         BASE_ADDR_IEC = 0xBF80F0C0UL,
@@ -20,7 +20,8 @@ namespace Irq {
     };
 
     //irq vector numbers
-    enum IRQ_VN : uint8_t {
+    enum IRQ_VN : uint8_t
+    {
         CORE_TIMER = 0, CORE_SOFTWARE_0, CORE_SOFTWARE_1,
         EXTERNAL_0 = 3, EXTERNAL_1, EXTERNAL_2, EXTERNAL_3, EXTERNAL_4,
         CHANGE_NOTICE_A = 8, CHANGE_NOTICE_B, CHANGE_NOTICE_C, CHANGE_NOTICE_D,
@@ -66,6 +67,8 @@ namespace Irq {
 
     void disable_all( void ){       __builtin_disable_interrupts(); }
     void enable_all( void ){        __builtin_enable_interrupts(); }
+    bool all_ison( void ){          return ( __builtin_mfc0(12,0) & 1 ); }
+    bool all_isoff( void ){         return ! all_ison(); }
 
     void proxtimer( uint8_t pri )
     {
@@ -124,7 +127,8 @@ namespace Irq {
     }
 
     //to create a list (array) of irq's to init/enable
-    typedef struct {
+    typedef struct
+    {
         Irq::IRQ_VN irqvn;
         uint8_t p;
         uint8_t s;
@@ -140,5 +144,3 @@ namespace Irq {
     }
 
 };
-
-#endif /* _IRQ_H */

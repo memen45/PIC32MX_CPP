@@ -7,15 +7,18 @@
 void Pins::lowison( void ){             m_lowison = true; }
 void Pins::lowisoff( void ){            m_lowison = false; }
 
-void Pins::digital_in( void ){
+void Pins::digital_in( void )
+{
     Reg::set( m_pt+4, m_pn );           //tris=1
     Reg::clr( m_pt, m_pn );             //ansel=0
 }
-void Pins::analog_in( void ){
+void Pins::analog_in( void )
+{
     Reg::set( m_pt+4, m_pn );           //tris=1
     Reg::set( m_pt, m_pn );             //ansel=1
 }
-void Pins::digital_out( void ){
+void Pins::digital_out( void )
+{
     Reg::clr( m_pt+4, m_pn );           //tris=0
     Reg::clr( m_pt, m_pn );             //ansel=0
 }
