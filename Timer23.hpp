@@ -1,13 +1,17 @@
 #ifndef _TIMER23_H
 #define _TIMER23_H
 
+/*=============================================================================
+ Timer2/Timer3 functions
+=============================================================================*/
+
 #include <cstdint>
 #include "Reg.hpp"
 
 class Timer23 {
 
     public:
-        
+
         enum TMR23 : uint32_t {
             T2 = 0xBF808040,
             T3 = 0xBF808080

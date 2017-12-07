@@ -1,6 +1,10 @@
 #ifndef _VDETECT_H
 #define _VDETECT_H
 
+/*=============================================================================
+ High/Low-Voltage Detect functions
+=============================================================================*/
+
 #include <cstdint>
 #include "Reg.hpp"
 

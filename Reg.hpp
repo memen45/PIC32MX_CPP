@@ -1,6 +1,10 @@
 #ifndef _REG_H
 #define _REG_H
 
+/*=============================================================================
+ Register (SFR) writes/read, syskey lock/unlock (in here for now)
+=============================================================================*/
+
 #include <cstdint>
 
 namespace Reg {

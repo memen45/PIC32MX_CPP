@@ -1,5 +1,9 @@
 #include "Pins.hpp"
 
+/*=============================================================================
+ Pins functions
+=============================================================================*/
+
 void Pins::lowison( void ){             m_lowison = true; }
 void Pins::lowisoff( void ){            m_lowison = false; }
 
