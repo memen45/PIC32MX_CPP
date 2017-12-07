@@ -77,6 +77,7 @@ Irq::irq_list_t irqlist[] = {               //list of irq's to init/enable
     { Irq::TIMER_2,     1,  0,  true },
     { Irq::TIMER_3,     1,  0,  true },
     { Irq::CORE_TIMER,  1,  0,  true },
+    { Irq::RTCC,        1,  0,  true },
     { Irq::END }                            //need END or else bad happens
 };
 
@@ -96,13 +97,22 @@ Pmd::PMD pmd_list[] = {                      //list of modules to disable
 =============================================================================*/
 int main()
 {
-    Rtcc::off();                            //test while off
-    const uint32_t test_time = (2<<8 | 2<<12 | 2<<16 | 2<<20 | 2<<24 | 2<<28);
-    Rtcc::time( test_time );    //22:22:22
+    //test rtcc (somewhat)
+    Rtcc::clk_sel( Rtcc::LPRC );            //internl lprc
+    Rtcc::clk_div( Rtcc::CLK_DIV_LPRC );    //already calculated div for lprc
+    Rtcc:alarm_interval( Rtcc::MINUTE1 );   //alarm every minute
+    Rtcc::chime_on();                       //repeating alarm
+    Rtcc::alarm_on();
+
+    const uint32_t test_time = (1<<8 | 0<<12 | 5<<16 | 4<<20 | 3<<24 | 2<<28);
+    Rtcc::time( test_time );                //23:45:01
     if( Rtcc::time() != test_time ){        //did write work?
         while( 1 );                         //lockup if read/write not working
     }                                       //else syskey/wrlock working
-
+    Rtcc::on();                             //turn on, alarm is 00:00:00
+                                            //(alarm every 00 seconds match)
+                                            //disable/enable core timer irq
+                                            //every minute
 
     Wdt::on();                              //try the watchdog
                                             //RWDTPS = PS8192, so 8ms timeout
@@ -212,6 +222,19 @@ extern "C" {
     {
         led1.invert();
         Irq::flagclear( Irq::TIMER_3 );
+    }
+    void __attribute__(( vector(32), interrupt(IPL1SOFT) )) RtccISR()
+    {
+        static bool b = false;
+        b = !b;
+        if( b ){
+            Irq::disable( Irq::CORE_TIMER );
+            led2.off();
+        } else {
+            Cp0::compare_reload();
+            Irq::enable( Irq::CORE_TIMER );
+        }
+        Irq::flagclear( Irq::RTCC );
     }
 }
 

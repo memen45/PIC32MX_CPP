@@ -19,16 +19,18 @@ namespace Rtcc {
         RTCDATE = 0xBF800050,
         ALMTIME = 0xBF800060,
         ALMDATE = 0xBF800070,
-        ALARM = 1<<31, CHIME = 1<<30, ALMRPTCLR = 7<<16,
+        ALARMEN = 1<<31, CHIME = 1<<30, ALMRPTCLR = 7<<16,
         ON = 1<<15, WRLOCK = 1<<11, PINON = 1<<7,
         ALMSTAT = 1<<5, SYSNCSTAT = 1<<2,
-        ALMSYNCSTAT = 1<<1, HALFSTAT = 1<<0
+        ALMSYNCSTAT = 1<<1, HALFSTAT = 1<<0,
+        CLK_DIV_LPRC = 0x3FFF
     };
 
     enum AMASK
     {
         YEAR = 9<<24, MONTH = 8<<24, WEEK = 7<<24, DAY = 6<<24, HOUR= 5<<24,
-        MIN10 = 4<<24, MIN = 3<<24, SEC10 = 2<<24, SEC = 1<<24, HALFSEC = 0,
+        MINUTE10 = 4<<24, MINUTE1 = 3<<24, SECOND10 = 2<<24, SECOND1 = 1<<24,
+        HALFSEC = 0,
         AMASKCLR = 15<<24,
     };
 
@@ -64,8 +66,8 @@ namespace Rtcc {
         _unlock(); Reg::val( r, v ); _lock();
     }
     //--private
-    void alarm_on( void ){              _conset( RTCCON1, ALARM ); }
-    void alarm_off( void ){             _conclr( RTCCON1, ALARM ); }
+    void alarm_on( void ){              _conset( RTCCON1, ALARMEN ); }
+    void alarm_off( void ){             _conclr( RTCCON1, ALARMEN ); }
     void chime_on( void ){              _conset( RTCCON1, CHIME ); }
     void chime_off( void ){             _conclr( RTCCON1, CHIME ); }
     void alarm_interval( AMASK v )
@@ -96,7 +98,7 @@ namespace Rtcc {
         _conclr( RTCCON2, 31<<11 );
         _conset( RTCCON2, (v&31)<<11 );
     }
-    void prescale( PRESCALE p )
+    void clk_pre( PRESCALE p )
     {
         _conclr( RTCCON2, PRE256 );
         _conset( RTCCON2, p );
@@ -114,24 +116,12 @@ namespace Rtcc {
 
     //raw time, date
     uint32_t time( void ){          return Reg::val( RTCTIME ); }
-    uint32_t alarm_time( void ){    return Reg::val( ALMTIME ); }
-    void time( uint32_t v ){        _conval( RTCTIME, v ); }
-    void alarm_time( uint32_t v ){  Reg::val( ALMTIME, v ); }
     uint32_t date( void ){          return Reg::val( RTCDATE ); }
+    uint32_t alarm_time( void ){    return Reg::val( ALMTIME ); }
     uint32_t alarm_date( void ){    return Reg::val( ALMDATE ); }
-    void date( uint32_t v ){        _conval( RTCTIME, v ); }
+    void time( uint32_t v ){        _conval( RTCTIME, v ); } //wrlock
+    void date( uint32_t v ){        _conval( RTCTIME, v ); } //wrlock
+    void alarm_time( uint32_t v ){  Reg::val( ALMTIME, v ); }
     void alarm_date( uint32_t v ){  Reg::val( ALMTIME, v ); }
-    //convert bcd time to seconds
-    uint32_t _t_to_sec( uint32_t t )
-    {
-        t>>8;
-        uint32_t s = 0;
-        uint16_t m[] = { 1, 10, 60, 600, 3600, 36000 };
-        for( auto i = 0; i < 6; i++, t>>=4 ){ s += (t&15)*m[i]; }
-        return s;
-    }
-    //time in seconds
-    uint32_t time_sec( void ){          return _t_to_sec( time() ); }
-    uint32_t alarm_time_sec( void ){    return _t_to_sec( alarm_time() ); }
 };
 
