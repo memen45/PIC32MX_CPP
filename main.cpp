@@ -124,8 +124,8 @@ int main()
     Cp0::compare_ms( 200 );                 //cp0 compare timeout
                                             //(default sysfreq 24MHz)
 
-    //init delays or rotate delays
-    auto rotate_delays = [ & ](){
+    //nested function
+    auto rotate_delays = [ & ](){           //init delays or rotate delays
         static uint8_t start = 0;
         for( auto& d : dly ){
             if( ! t_ms[start] ) start = 0;
@@ -134,13 +134,13 @@ int main()
     };
     rotate_delays();                        //initialize delays
 
+    //nested function
     auto irq_blinkrate = [ & ]( int16_t n ){//sw1/2 adjust cp0 irq rate +/-
         static uint16_t rate = 200;
         rate += n;
         if( rate < 100 || rate > 4000 ) rate -= n;
-        Irq::disable_all();
-        Cp0::compare_ms( rate );
-        led2.on();
+        Cp0::compare_ms( rate );            //no need to disable irq's
+        led2.on();                          //as cp0 irq only reloads (reads)
         Irq::enable_all();
     };
 
