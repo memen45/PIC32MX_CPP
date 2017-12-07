@@ -114,21 +114,24 @@ namespace Rtcc {
 
     //raw time, date
     uint32_t time( void ){          return Reg::val( RTCTIME ); }
-    uint32_t time_alarm( void ){    return Reg::val( ALMTIME ); }
-    uint32_t time_sec( void )
+    uint32_t alarm_time( void ){    return Reg::val( ALMTIME ); }
+    void time( uint32_t v ){        _conval( RTCTIME, v ); }
+    void alarm_time( uint32_t v ){  Reg::val( ALMTIME, v ); }
+    uint32_t date( void ){          return Reg::val( RTCDATE ); }
+    uint32_t alarm_date( void ){    return Reg::val( ALMDATE ); }
+    void date( uint32_t v ){        _conval( RTCTIME, v ); }
+    void alarm_date( uint32_t v ){  Reg::val( ALMTIME, v ); }
+    //convert bcd time to seconds
+    uint32_t _t_to_sec( uint32_t t )
     {
-        uint32_t t = time()>>8;
+        t>>8;
         uint32_t s = 0;
         uint16_t m[] = { 1, 10, 60, 600, 3600, 36000 };
         for( auto i = 0; i < 6; i++, t>>=4 ){ s += (t&15)*m[i]; }
         return s;
     }
-    void time( uint32_t v ){        _conval( RTCTIME, v ); }
-    void time_alarm( uint32_t v ){  Reg::val( ALMTIME, v ); }
-    uint32_t date( void ){          return Reg::val( RTCDATE ); }
-    uint32_t date_alarm( void ){    return Reg::val( ALMDATE ); }
-    void date( uint32_t v ){        _conval( RTCTIME, v ); }
-    void date_alarm( uint32_t v ){  Reg::val( ALMTIME, v ); }
-
+    //time in seconds
+    uint32_t time_sec( void ){          return _t_to_sec( time() ); }
+    uint32_t alarm_time_sec( void ){    return _t_to_sec( alarm_time() ); }
 };
 
