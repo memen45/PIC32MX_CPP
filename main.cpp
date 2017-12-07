@@ -55,9 +55,9 @@ Pins& sw3 = sw[2];
 DelayCP0 sw_dly;                //debounce
 DelayCP0 dly[3];                //CP0 led delays
 uint32_t t_ms[] = {             //led delay ms
-    200,4000,4000,
-    4000,200,4000,
-    4000,4000,200,
+    200, 400, 600,
+    1000, 2000, 4000,
+    4000, 8000, 1600,
     0
 };
 
