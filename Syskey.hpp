@@ -32,7 +32,6 @@ namespace Syskey {
         bool dmasusp = Reg::is_set( DMACON, SUSPEND );  //get DMA suspend bit
         Reg::set( DMACON, SUSPEND );                    //DMA suspend
         if( ! unlock_count ){                           //first time, unlock
-            Reg::val( SYSKEY_ADDR, 0 );                 //not sure why
             Reg::val( SYSKEY_ADDR, 0xAA996655 );
             Reg::val( SYSKEY_ADDR, 0x556699AA );
         }
