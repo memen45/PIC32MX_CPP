@@ -5,7 +5,6 @@
  High/Low-Voltage Detect functions
 =============================================================================*/
 
-#include <cstdint>
 #include "Reg.hpp"
 
 namespace Vdetect {

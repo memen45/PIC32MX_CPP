@@ -1,8 +1,6 @@
 
 // PIC32MM0256GPM064 Configuration Bit Settings
 
-// 'C' source line config statements
-
 // FDEVOPT
 #pragma config SOSCHP = OFF             // Secondary Oscillator High Power Enable bit (SOSC oprerates in normal power mode.)
 #pragma config ALTI2C = OFF             // Alternate I2C1 Pins Location Enable bit (Primary I2C1 pins are used)

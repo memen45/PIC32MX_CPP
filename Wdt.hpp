@@ -5,7 +5,6 @@
  Watchdog timer functions
 =============================================================================*/
 
-#include <cstdint>
 #include "Reg.hpp"
 
 namespace Wdt {
