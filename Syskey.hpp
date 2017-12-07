@@ -23,9 +23,11 @@ namespace Syskey {
     static uint8_t unlock_count;
 
     void lock( void ){
+        bool irqstate = Irq::all_ison();                //get STATUS.IE
+        Irq::disable_all();
         if( unlock_count ) unlock_count--;
-        if( unlock_count ) return;
-        Reg::val( SYSKEY_ADDR, 0 );
+        if( unlock_count == 0 ) Reg::val( SYSKEY_ADDR, 0 );
+        if( irqstate ) Irq::enable_all();               //restore IE state
     }
 
     void unlock( void )
