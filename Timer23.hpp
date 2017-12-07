@@ -60,8 +60,8 @@ class Timer23 {
         void pre_2( void );
         void pre_1( void );
 
-        void t32bit( void );
-        void t16bit( void );
+        void t32bit( void ); //T2 only (harmless for T3)
+        void t16bit( void ); //T2 only (harmless for T3)
 
         void ext_clk( void );
         void int_clk( void );
