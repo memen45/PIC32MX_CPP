@@ -96,7 +96,13 @@ Pmd::PMD pmd_list[] = {                      //list of modules to disable
 =============================================================================*/
 int main()
 {
-    Rtcc::off();
+    Rtcc::off();                            //test while off
+    const uint32_t test_time = (2<<8 | 2<<12 | 2<<16 | 2<<20 | 2<<24 | 2<<28);
+    Rtcc::time( test_time );    //22:22:22
+    if( Rtcc::time() != test_time ){        //did write work?
+        while( 1 );                         //lockup if read/write not working
+    }                                       //else syskey/wrlock working
+
 
     Wdt::on();                              //try the watchdog
                                             //RWDTPS = PS8192, so 8ms timeout
