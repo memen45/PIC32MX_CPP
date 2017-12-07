@@ -15,8 +15,11 @@ namespace Syskey {
     //syskey lock/unlock
     //keep track of unlock count- do not lock until unlock_count is 0
     //so we don't get locks while unlock in use elsewhere
-    // code A - unlock; do something; lock;
-    // irq B - unlock; do something; lock;
+    // code A - unlock; (irq in here) do something; lock;
+    // irq B - unlock; do something; lock; <- A is now locked out
+    //with unlock_count-
+    // code A- unlock (count=1); (irq in here) do something; lock(count=0,lock);
+    // irq B- unlock(count=2); do something; lock(count=1,no lock);
     static uint8_t unlock_count;
 
     void lock( void ){
