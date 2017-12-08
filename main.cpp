@@ -104,7 +104,7 @@ int main()
     c1.on( false );
     c2.on( false );
     CompALL::stop_idle( true );
-    CompALL::ref_int();
+    CompALL::ref_ext( false );
 
     //test rtcc (somewhat)
     Rtcc::clk_sel( Rtcc::LPRC );            //internl lprc

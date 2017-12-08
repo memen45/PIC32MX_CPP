@@ -16,8 +16,7 @@ namespace CompALL { //CMSTAT applies to all compares- C1/C2/C3
     };
 
     void stop_idle( bool tf ){      Reg::set( CMSTAT, SIDL, tf ); }
-    void ref_ext( void ){           Reg::set( CMSTAT, CVREFSEL ); }
-    void ref_int( void ){           Reg::clr( CMSTAT, CVREFSEL ); }
+    void ref_ext( bool tf ){        Reg::set( CMSTAT, CVREFSEL, tf ); }
 };
 
 class Comp123  {
