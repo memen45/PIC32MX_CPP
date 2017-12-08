@@ -228,13 +228,18 @@ int main()
  (no way to set these without using defines- and I want to stay away from
   defines- just manually set them, its not that hard)
 
- 1. irq priority p [+enable] set in code for vector vn
+ 1. irq priority p [+enable] set in code for vector vn- Irq::init()
  2. lookup number for vector (in Irq.hpp), set vector(vn) attribute
  3. use same priority p in step 1 for IPLp,
  4. use IPLpSOFT unless using SRS,
     if using SRS, set in code first- Irq::shadow_set( p, 1 )
     set interrupt attribute to IPLpSRS
 
+ first isr below-
+ Irq::CORE_TIMER init to irq priority 7 in main code
+ CORE_TIMER lookup shows vector number is 0, so use vector(0)
+ Irq::shadow_set( 7, 1 ) in main code, so use interrupt(IPL7SRS)
+ (isr function name used not important to compiler)
 =============================================================================*/
 extern "C" {
     void __attribute__(( vector(0), interrupt(IPL7SRS) )) CoreTimerISR()
@@ -263,11 +268,12 @@ extern "C" {
         static bool b = false;
         b = !b;
         if( b ){
-            Irq::disable( Irq::CORE_TIMER );
+            Irq::on( Irq::CORE_TIMER, false );
             led2.off();
         } else {
             Cp0::compare_reload();
-            Irq::enable( Irq::CORE_TIMER );
+            Irq::flagclear( Irq::CORE_TIMER );
+            Irq::on( Irq::CORE_TIMER, true );
         }
         Irq::flagclear( Irq::RTCC );
     }

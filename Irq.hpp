@@ -95,15 +95,9 @@ namespace Irq {
         Reg::clr( Irq::IFS_BASE + ((irqvn/32)*16), 1<<(irqvn%32) );
     }
 
-    void enable( Irq::IRQ_VN irqvn )
+    void on( Irq::IRQ_VN irqvn, bool tf )
     {
-        flagclear( irqvn );
-        Reg::set( Irq::IEC_BASE + ((irqvn/32)*16), 1<<(irqvn%32) );
-    }
-
-    void disable( Irq::IRQ_VN irqvn )
-    {
-        Reg::clr( Irq::IEC_BASE + ((irqvn/32)*16), 1<<(irqvn%32) );
+        Reg::set( Irq::IEC_BASE + ((irqvn/32)*16), 1<<(irqvn%32), tf );
     }
 
     //vector 17 example
@@ -119,9 +113,9 @@ namespace Irq {
         uint32_t priority_shift = 8*(irqvn%4);
         pri &= 7; sub &= 3; pri <<= 2; pri |= sub;
         Reg::clr( Irq::IPC_BASE + ((irqvn/4)*16), (31<<priority_shift));
-        Reg::set( Irq::IPC_BASE + ((irqvn/4)*16),
-                (pri<<priority_shift));
-        if( en ) enable( irqvn );
+        Reg::set( Irq::IPC_BASE + ((irqvn/4)*16), (pri<<priority_shift));
+        flagclear( irqvn );
+        on( irqvn, en );
     }
 
     //to create a list (array) of irq's to init/enable
