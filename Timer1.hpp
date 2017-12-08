@@ -25,8 +25,8 @@ namespace Timer1 {
     void timer( uint16_t n ){       Reg::val( TMR1, n ); }
     uint16_t timer( void ){         return Reg::val( TMR1 ); }
 
-    void pr( uint16_t n ){          Reg::val( PR1, n ); }
-    uint16_t pr( void ){            return Reg::val( PR1 ); }
+    void period( uint16_t n ){      Reg::val( PR1, n ); }
+    uint16_t period( void ){        return Reg::val( PR1 ); }
 
     void on( bool tf ){             Reg::set( T1CON, ON, tf ); }
     void stop_idle( bool tf ){      Reg::set( T1CON, SIDL, tf ); }
