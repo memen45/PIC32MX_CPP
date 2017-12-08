@@ -77,7 +77,7 @@ Irq::irq_list_t irqlist[] = {               //list of irq's to init/enable
     { Irq::TIMER_1,     1,  0,  true },
     { Irq::TIMER_2,     1,  0,  true },
     { Irq::TIMER_3,     1,  0,  true },
-    { Irq::CORE_TIMER,  1,  0,  true },
+    { Irq::CORE_TIMER,  7,  0,  true },
     { Irq::RTCC,        1,  0,  true },
     { Irq::END }                            //need END or else bad happens
 };
@@ -111,9 +111,9 @@ int main()
     Rtcc::clk_div( Rtcc::CLK_DIV_LPRC );    //already calculated div for lprc
     Rtcc:alarm_interval( Rtcc::MINUTE1 );   //alarm every minute
     Rtcc::chime( true );                    //repeating alarm
-    Rtcc::alarm( true );
+    Rtcc::alarm( true );                    //turn on alarm
 
-    const uint32_t test_time = (1<<8 | 0<<12 | 5<<16 | 4<<20 | 3<<24 | 2<<28);
+    const uint32_t test_time = (2<<28 | 3<<24 | 4<<20 | 5<<16 | 0<<12 | 1<<8 );
     Rtcc::time( test_time );                //23:45:01
     if( Rtcc::time() != test_time ){        //did write work?
         while( 1 );                         //lockup if read/write not working
@@ -121,12 +121,13 @@ int main()
     Rtcc::on( true );                       //turn on, alarm is 00:00:00
                                             //(alarm every 00 seconds match)
                                             //disable/enable core timer irq
-                                            //every minute
-
+                                            //every minute in rtcc isr
+    //watchdog timer
     Wdt::on( true );                        //try the watchdog
                                             //RWDTPS = PS8192, so 8ms timeout
 
 
+    //peripheral module disable
     Pmd::off( pmd_list );                   //test Pmd disable (T1/2/3 disabled)
                                             //can verify T1,T2,T3 no longer work
                                             //with below enable commented out
@@ -134,23 +135,28 @@ int main()
     Pmd::on( pmd_list );                    //test Pmd enable- all back on again
 
 
-    for( auto& s : sw ){                    //init pins
+    //init sw pins
+    for( auto& s : sw ){
         s.digital_in();
         s.pullup( true );
     }
 
-    for( auto& l : leds ){                  //init leds
+    //init leds
+    for( auto& l : leds ){
         l.digital_out();
-        l.on();                             //show each led
+        l.on();                             //show each led working
         sw_dly.wait_ms( 1000 );             //wait
         l.off();                            //then off
     }
 
+    //init timers
     Timer1::pre_256(); Timer1::on( true );  //turn on timer1, prescale 1:256
     timer2.pre_64(); timer2.on( true );     //turn on timer2, prescale 1:64
     timer3.pre_32(); timer3.on( true );     //turn on timer3, prescale 1:16
-    Cp0::compare_ms( 200 );                 //cp0 compare timeout
-                                            //(default sysfreq 24MHz)
+
+    //cp0 compare timeout (default sysfreq 24MHz)
+    Cp0::compare_ms( 200 );
+
 
     //nested function
     auto rotate_delays = [ & ](){           //init delays or rotate delays
@@ -172,17 +178,22 @@ int main()
         Irq::enable_all();
     };
 
+    //irq's init/enable
     Irq::init( irqlist );                   //init all irq's
+    Irq::shadow_set( 7, 1 );                //priority7 using shadow set (test)
     Irq::enable_all();                      //global irq enable
 
+    //here we go
     for (;;){
         Wdt::reset();                       //comment out to test wdt reset
 
+        //check for delay timeouts, invert led, reset delay counter
         for( auto i = 0; i < 3; i++ ){
             if( ! dly[i].expired() ) continue;
             leds[i].invert();
             dly[i].reset();
         }
+        //check sw1, rotate delay times among the 3 color led's
         if( sw1.ison() ){
             if( sw_dly.expired() ){         //is a new press
                 rotate_delays();            //do something visible
@@ -192,12 +203,14 @@ int main()
             //so will require sw release of 100ms
             //before sw_dly timer can expire
         }
+        //check sw2, dec blink rate of led2
         if( sw2.ison() ){
             if( sw_dly.expired() ){
                 irq_blinkrate( 100 );       //++
             }
             sw_dly.set_ms( 100 );           //sw debounce (use for all switches)
         }
+        //check sw3, inc blink rate of led2
         if( sw3.ison() ){
             if( sw_dly.expired() ){
                 irq_blinkrate( -100 );      //--
@@ -209,9 +222,18 @@ int main()
 
 /*=============================================================================
  Interrupt code
+ manually specify vector attribute- irq number 0-101
+ and interrupt attribute- IPLnSRS|IPLnSOFT|IPLnAUTO (n=0-7, 0=disabled)
+ (no way to set these from C++, and in C you have to use defines- just
+  manually set them, its not that hard)
+
+ IPLn - n has to match priority used when setting up irq
+ vector(n) - has to match vector number
+ if using SRS, have to enable with Irq::shadow_set( n, 1 ), have only 1
+ shadow set, so can only use in 1 priority
 =============================================================================*/
 extern "C" {
-    void __attribute__(( vector(0), interrupt(IPL1SOFT) )) CoreTimerISR()
+    void __attribute__(( vector(0), interrupt(IPL7SRS) )) CoreTimerISR()
     {
         Cp0::compare_reload();
         led2.invert();

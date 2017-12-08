@@ -12,6 +12,7 @@ namespace Irq {
     enum
     {
         INTCON =   0xBF80F000,
+        PRISS =    0xBF80F010,
         IFS_BASE = 0xBF80F040,
         IEC_BASE = 0xBF80F0C0,
         IPC_BASE = 0xBF80F140,
@@ -69,7 +70,6 @@ namespace Irq {
     void disable_all( void ){       __builtin_disable_interrupts(); }
     void enable_all( void ){        __builtin_enable_interrupts(); }
     bool all_ison( void ){          return ( __builtin_mfc0(12,0) & 1 ); }
-    bool all_isoff( void ){         return ! all_ison(); }
 
     void proxtimer( uint8_t pri )
     {
@@ -112,13 +112,15 @@ namespace Irq {
     //priority bits at bit offset 8 in IPC4
 
     //init specific irq
-    void init( Irq::IRQ_VN irqvn, uint8_t p, uint8_t s, bool en )
+    //pri is masked to 0-7, sub is masked to 0-3
+    //pri of 0 disables irq
+    void init( Irq::IRQ_VN irqvn, uint8_t pri, uint8_t sub, bool en )
     {
         uint32_t priority_shift = 8*(irqvn%4);
-        p &= 7; s &= 3; p <<= 2; p |= s;
+        pri &= 7; sub &= 3; pri <<= 2; pri |= sub;
         Reg::clr( Irq::IPC_BASE + ((irqvn/4)*16), (31<<priority_shift));
         Reg::set( Irq::IPC_BASE + ((irqvn/4)*16),
-                (p<<priority_shift));
+                (pri<<priority_shift));
         if( en ) enable( irqvn );
     }
 
@@ -137,6 +139,16 @@ namespace Irq {
         for( ; arr->irqvn != END; arr++ ){
             init( arr->irqvn, arr->p, arr->s, arr->en );
         }
+    }
+
+    //priority shadow set, 0 or 1
+    //pri = 1-7, ss =0,1 (0=normal, 1=shadow)
+    //pri is masked to 0-7
+    //pri val of 0 will set/clr SS0- nor harm as not using
+    void shadow_set( uint8_t pri, bool ss )
+    {
+        pri &= 7; pri <<= 2; //0*4=0 1*4=4, 7*4=28
+        Reg::set( PRISS, 1<<pri, ss );
     }
 
 };
