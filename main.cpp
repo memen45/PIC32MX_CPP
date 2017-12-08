@@ -107,8 +107,9 @@ int main()
     CompALL::ref_ext( false );
 
     //test rtcc (somewhat)
-    Rtcc::clk_sel( Rtcc::LPRC );            //internl lprc
-    Rtcc::clk_div( Rtcc::CLK_DIV_LPRC );    //already calculated div for lprc
+    Rtcc::clk_sel( Rtcc::SOSC );            //external sosc (curiosity board)
+                                            //(soscen automatically set by rtcc)
+    Rtcc::clk_div( Rtcc::CLK_DIV_32KHZ );   //already calculated div for lprc
     Rtcc:alarm_interval( Rtcc::MINUTE1 );   //alarm every minute
     Rtcc::chime( true );                    //repeating alarm
     Rtcc::alarm( true );                    //turn on alarm
@@ -223,14 +224,17 @@ int main()
 /*=============================================================================
  Interrupt code
  manually specify vector attribute- irq number 0-101
- and interrupt attribute- IPLnSRS|IPLnSOFT|IPLnAUTO (n=0-7, 0=disabled)
- (no way to set these from C++, and in C you have to use defines- just
-  manually set them, its not that hard)
+ and interrupt attribute- IPLpSRS|IPLpSOFT|IPLpAUTO (p=0-7, 0=disabled)
+ (no way to set these without using defines- and I want to stay away from
+  defines- just manually set them, its not that hard)
 
- IPLn - n has to match priority used when setting up irq
- vector(n) - has to match vector number
- if using SRS, have to enable with Irq::shadow_set( n, 1 ), have only 1
- shadow set, so can only use in 1 priority
+ 1. irq priority p [+enable] set in code for vector vn
+ 2. lookup number for vector (in Irq.hpp), set vector(vn) attribute
+ 3. use same priority p in step 1 for IPLp,
+ 4. use IPLpSOFT unless using SRS,
+    if using SRS, set in code first- Irq::shadow_set( p, 1 )
+    set interrupt attribute to IPLpSRS
+
 =============================================================================*/
 extern "C" {
     void __attribute__(( vector(0), interrupt(IPL7SRS) )) CoreTimerISR()

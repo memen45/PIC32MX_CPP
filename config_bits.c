@@ -1,6 +1,8 @@
 
 // PIC32MM0256GPM064 Configuration Bit Settings
 
+// 'C' source line config statements
+
 // FDEVOPT
 #pragma config SOSCHP = OFF             // Secondary Oscillator High Power Enable bit (SOSC oprerates in normal power mode.)
 #pragma config ALTI2C = OFF             // Alternate I2C1 Pins Location Enable bit (Primary I2C1 pins are used)
@@ -28,7 +30,7 @@
 // FOSCSEL
 #pragma config FNOSC = PLL              // Oscillator Selection bits (Primary or FRC oscillator with PLL)
 #pragma config PLLSRC = FRC             // System PLL Input Clock Selection bit (FRC oscillator is selected as PLL reference input on device reset)
-#pragma config SOSCEN = OFF             // Secondary Oscillator Enable bit (Secondary oscillator (SOSC) is disabled)
+#pragma config SOSCEN = ON              // Secondary Oscillator Enable bit (Secondary oscillator (SOSC) is enabled)
 #pragma config IESO = OFF               // Two Speed Startup Enable bit (Two speed startup is disabled)
 #pragma config POSCMOD = OFF            // Primary Oscillator Selection bit (Primary oscillator is disabled)
 #pragma config OSCIOFNC = OFF           // System Clock on CLKO Pin Enable bit (OSCO pin operates as a normal I/O)
@@ -37,5 +39,8 @@
 
 // FSEC
 #pragma config CP = OFF                 // Code Protection Enable bit (Code protection is disabled)
+
+
+
 
 

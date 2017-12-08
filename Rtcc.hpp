@@ -26,7 +26,7 @@ namespace Rtcc {
         ON = 1<<15, WRLOCK = 1<<11, PINON = 1<<7,
         ALMSTAT = 1<<5, SYSNCSTAT = 1<<2,
         ALMSYNCSTAT = 1<<1, HALFSTAT = 1<<0,
-        CLK_DIV_LPRC = 0x3FFF
+        CLK_DIV_32KHZ = 0x3FFF
     };
 
     enum AMASK
