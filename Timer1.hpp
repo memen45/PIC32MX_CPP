@@ -28,34 +28,25 @@ namespace Timer1 {
     void pr( uint16_t n ){          Reg::val( PR1, n ); }
     uint16_t pr( void ){            return Reg::val( PR1 ); }
 
-    void on( void ){                Reg::set( T1CON, ON ); }
-    void off( void ){               Reg::clr( T1CON, ON ); }
-
-    void stop_idle( void ){         Reg::set( T1CON, SIDL ); }
-    void cont_idle( void ){         Reg::clr( T1CON, SIDL ); }
-
-    void async_wrdis( void ){       Reg::set( T1CON, TWDIS ); }
-    void async_wren( void ){        Reg::clr( T1CON, TWDIS ); }
-
+    void on( bool tf ){             Reg::set( T1CON, ON, tf ); }
+    void stop_idle( bool tf ){      Reg::set( T1CON, SIDL, tf ); }
+    void async_wrdis( bool tf ){    Reg::set( T1CON, TWDIS, tf ); }
     bool wr_busy( void ){           return Reg::is_set( T1CON, TWIP ); }
 
     void clk_sosc( void ){          Reg::clr( T1CON, EXT_RES ); }
     void clk_lprc( void ){          clk_sosc(); Reg::set( T1CON, EXT_LPRC ); }
     void clk_t1ck( void ){          clk_sosc(); Reg::set( T1CON, EXT_T1CK) ; }
 
-    void tgate_on( void ){          Reg::set( T1CON, TGATE ); }
-    void tgate_off( void ){         Reg::clr( T1CON, TGATE ); }
+    void tgate_on( bool tf ){       Reg::set( T1CON, TGATE, tf ); }
 
     void pre_1( void ){             Reg::clr( T1CON, TCKPS_256 ); }
     void pre_256( void ){           Reg::set( T1CON, TCKPS_256 ); }
     void pre_64( void ){            pre_1(); Reg::set( T1CON, TCKPS_64 ); }
     void pre_8( void ){             pre_1(); Reg::set( T1CON, TCKPS_8 ); }
 
-    void tsync_on( void ){          Reg::set( T1CON, TSYNC ); }
-    void tsync_off( void ){         Reg::clr( T1CON, TSYNC ); }
+    void tsync_on( bool tf ){       Reg::set( T1CON, TSYNC, tf ); }
+    void ext_clk( bool tf ){        Reg::set( T1CON, TCS, tf ); }
 
-    void ext_clk( void ){           Reg::set( T1CON, TCS ); }
-    void int_clk( void ){           Reg::clr( T1CON, TCS ); }
 
 };
 

@@ -19,6 +19,14 @@ namespace Reg {
         *(reinterpret_cast <volatile uint32_t*>(r)+SET) = v;
     }
 
+    //same name as set, but 3 args, last is true/false = set/clr
+    // sets or clrs a bit
+    template <typename T>
+    uint32_t set( T r, uint32_t v, bool sc )
+    {
+        *(reinterpret_cast <volatile uint32_t*>(r)+CLR+sc) = v;
+    }
+
     template <typename T>
     void clr( T r, uint32_t v )
     {

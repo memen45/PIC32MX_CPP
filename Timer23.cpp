@@ -15,14 +15,9 @@ uint16_t Timer23::timer( void ){         return Reg::val( m_pt + TMRX ); }
 void Timer23::pr( uint16_t n ){          Reg::val( m_pt + PRX, n ); }
 uint16_t Timer23::pr( void ){            return Reg::val( m_pt + PRX ); }
 
-void Timer23::on( void ){                Reg::set( m_pt, ON ); }
-void Timer23::off( void ){               Reg::clr( m_pt, ON ); }
-
-void Timer23::stop_idle( void ){         Reg::set( m_pt, SIDL ); }
-void Timer23::cont_idle( void ){         Reg::clr( m_pt, SIDL ); }
-
-void Timer23::tgate_on( void ){          Reg::set( m_pt, TGATE ); }
-void Timer23::tgate_off( void ){         Reg::clr( m_pt, TGATE ); }
+void Timer23::on( bool tf ){             Reg::set( m_pt, ON, tf ); }
+void Timer23::stop_idle( bool tf ){      Reg::set( m_pt, SIDL, tf ); }
+void Timer23::tgate( bool tf ){          Reg::set( m_pt, TGATE, tf ); }
 
 void Timer23::pre_256( void ){           Reg::set( m_pt, TCKPS_256 ); }
 void Timer23::pre_64( void ){            pre_1(); Reg::set( m_pt, TCKPS_64 ); }
@@ -33,8 +28,5 @@ void Timer23::pre_4( void ){             pre_1(); Reg::set( m_pt, TCKPS_4 ); }
 void Timer23::pre_2( void ){             pre_1(); Reg::set( m_pt, TCKPS_2 ); }
 void Timer23::pre_1( void ){             Reg::clr( m_pt, TCKPS_256 ); }
 
-void Timer23::t32bit( void ){            Reg::set( m_pt, T32 ); }
-void Timer23::t16bit( void ){            Reg::clr( m_pt, T32 ); }
-
-void Timer23::ext_clk( void ){           Reg::set( m_pt, TCS ); }
-void Timer23::int_clk( void ){           Reg::clr( m_pt, TCS ); }
+void Timer23::t32bit( bool tf ){         Reg::set( m_pt, T32, tf ); }
+void Timer23::ext_clk( bool tf ){        Reg::set( m_pt, TCS, tf ); }

@@ -42,14 +42,9 @@ class Timer23 {
         void pr( uint16_t );
         uint16_t pr( void );
 
-        void on( void );
-        void off( void );
-
-        void stop_idle( void );
-        void cont_idle( void );
-
-        void tgate_on( void );
-        void tgate_off( void );
+        void on( bool );
+        void stop_idle( bool );
+        void tgate( bool );
 
         void pre_256( void );
         void pre_64( void );
@@ -60,11 +55,8 @@ class Timer23 {
         void pre_2( void );
         void pre_1( void );
 
-        void t32bit( void ); //T2 only (harmless for T3)
-        void t16bit( void ); //T2 only (harmless for T3)
-
-        void ext_clk( void );
-        void int_clk( void );
+        void t32bit( bool ); //T2 only (harmless for T3)
+        void ext_clk( bool );
 
     private:
 

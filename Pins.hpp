@@ -19,6 +19,17 @@ class Pins {
             D = 0xBF802EB0, //make ANSELD base addr
         };
 
+
+        enum //offsets from base address, in words (>>4)
+        {
+            TRIS = 16>>2, PORT_ = 32>>2, LAT = 48>>2, ODC = 64>>2,
+            CNPU = 80>>2, CNPD = 96>>2, CNCON = 112>>2, CNEN0 = 128>>2,
+            CNSTAT = 144>>2, CNEN1 = 160>>2, CNF = 176>>2
+        };
+
+        enum { ON = 1<<15, CNSTYLE = 1<<11 };
+
+
         //inline
         constexpr Pins( PORT pt, uint8_t pn, bool lowison = false ) :
              m_pt( (volatile uint32_t*)pt ),
@@ -28,45 +39,37 @@ class Pins {
         }
 
         //inline
-        bool pinval( void ){        return Reg::is_set( m_pt+8, m_pn ); }
-        bool latval( void ){        return Reg::is_set( m_pt+12, m_pn ); }
-        void low( void ){           Reg::clr( m_pt+12, m_pn ); }
-        void high( void ){          Reg::set( m_pt+12, m_pn ); }
-        void invert( void ){        Reg::inv( m_pt+12, m_pn ); }
+        bool pinval( void ){        return Reg::is_set( m_pt+PORT_, m_pn ); }
+        bool latval( void ){        return Reg::is_set( m_pt+LAT, m_pn ); }
+        void low( void ){           Reg::clr( m_pt+LAT, m_pn ); }
+        void high( void ){          Reg::set( m_pt+LAT, m_pn ); }
+        void invert( void ){        Reg::inv( m_pt+LAT, m_pn ); }
         void on( void ){            m_lowison ? low() : high(); }
         void off( void ){           m_lowison ? high() : low(); }
         bool ison( void ){          return m_lowison ? !pinval() : pinval(); }
         bool isoff( void ){         return !ison(); }
 
         //cpp
-        void lowison( void );
-        void lowisoff( void );
+        void lowison( bool );
         void digital_in( void );
         void analog_in( void );
         void digital_out( void );
-        void odc_off( void );
-        void odc_on( void );
-        void pullup_off( void );
-        void pullup_on( void );
-        void pulldn_off( void );
-        void pulldn_on( void );
+        void odc( bool );
+        void pullup( bool );
+        void pulldn( bool );
 
         //input change notification
         //cpp
-        void icnoff( void );
-        void icnon( void );
-        void icnmatch( void );
-        void icnedge( void );
-        void icnrisingoff( void );
-        void icnrising( void );
-        void icnfallingoff( void );
-        void icnfalling( void );
-        void icnmismatch( void );
-        bool icnflag( void );
-        bool icnstat( void );
+        void icn( bool );
+        void icn_rising( void );
+        void icn_falling( void );
+        void icn_risefall( void );
+        void icn_mismatch( void );
+        bool icn_flag( void );
+        bool icn_stat( void );
 
         //inline
-        void icnflagclear( void ){      Reg::clr( m_pt+44, m_pn ); }
+        void icn_flagclear( void ){     Reg::clr( m_pt+CNF, m_pn ); }
 
     private:
 

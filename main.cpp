@@ -23,6 +23,7 @@
 #include "Pmd.hpp"
 #include "Wdt.hpp"
 #include "Rtcc.hpp"
+#include "Comp123.hpp"
 
 
 /*=============================================================================
@@ -97,24 +98,32 @@ Pmd::PMD pmd_list[] = {                      //list of modules to disable
 =============================================================================*/
 int main()
 {
+    //try some compare functions (does nothing)
+    Comp123 c1( Comp123::C1 );
+    Comp123 c2( Comp123::C2 );
+    c1.on( false );
+    c2.on( false );
+    CompALL::stop_idle( true );
+    CompALL::ref_int();
+
     //test rtcc (somewhat)
     Rtcc::clk_sel( Rtcc::LPRC );            //internl lprc
     Rtcc::clk_div( Rtcc::CLK_DIV_LPRC );    //already calculated div for lprc
     Rtcc:alarm_interval( Rtcc::MINUTE1 );   //alarm every minute
-    Rtcc::chime_on();                       //repeating alarm
-    Rtcc::alarm_on();
+    Rtcc::chime( true );                    //repeating alarm
+    Rtcc::alarm( true );
 
     const uint32_t test_time = (1<<8 | 0<<12 | 5<<16 | 4<<20 | 3<<24 | 2<<28);
     Rtcc::time( test_time );                //23:45:01
     if( Rtcc::time() != test_time ){        //did write work?
         while( 1 );                         //lockup if read/write not working
     }                                       //else syskey/wrlock working
-    Rtcc::on();                             //turn on, alarm is 00:00:00
+    Rtcc::on( true );                       //turn on, alarm is 00:00:00
                                             //(alarm every 00 seconds match)
                                             //disable/enable core timer irq
                                             //every minute
 
-    Wdt::on();                              //try the watchdog
+    Wdt::on( true );                        //try the watchdog
                                             //RWDTPS = PS8192, so 8ms timeout
 
 
@@ -127,7 +136,7 @@ int main()
 
     for( auto& s : sw ){                    //init pins
         s.digital_in();
-        s.pullup_on();
+        s.pullup( true );
     }
 
     for( auto& l : leds ){                  //init leds
@@ -137,9 +146,9 @@ int main()
         l.off();                            //then off
     }
 
-    Timer1::pre_256(); Timer1::on();        //turn on timer1, prescale 1:256
-    timer2.pre_64(); timer2.on();           //turn on timer2, prescale 1:64
-    timer3.pre_32(); timer3.on();           //turn on timer3, prescale 1:16
+    Timer1::pre_256(); Timer1::on( true );  //turn on timer1, prescale 1:256
+    timer2.pre_64(); timer2.on( true );     //turn on timer2, prescale 1:64
+    timer3.pre_32(); timer3.on( true );     //turn on timer3, prescale 1:16
     Cp0::compare_ms( 200 );                 //cp0 compare timeout
                                             //(default sysfreq 24MHz)
 

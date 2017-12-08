@@ -11,12 +11,13 @@ namespace Irq {
 
     enum
     {
-        BASE_ADDR =     0xBF80F000UL,
-        BASE_ADDR_IFS = 0xBF80F040UL,
-        BASE_ADDR_IEC = 0xBF80F0C0UL,
-        BASE_ADDR_IPC = 0xBF80F140UL,
+        INTCON =   0xBF80F000,
+        IFS_BASE = 0xBF80F040,
+        IEC_BASE = 0xBF80F0C0,
+        IPC_BASE = 0xBF80F140,
         INT0EP = 1<<0, INT1EP = 1<<1, INT2EP = 1<<2,
-        INT3EP = 1<<3, INT4EP = 1<<4
+        INT3EP = 1<<3, INT4EP = 1<<4,
+        TPCMASK = 7, TPCSHIFT = 8,
     };
 
     //irq vector numbers
@@ -72,19 +73,14 @@ namespace Irq {
 
     void proxtimer( uint8_t pri )
     {
-        Reg::clr( BASE_ADDR, 7<<8 );
-        Reg::set( BASE_ADDR, (pri&7)<<8 );
+        Reg::clr( INTCON, TPCMASK<<TPCSHIFT );
+        Reg::set( INTCON, (pri&TPCMASK)<<TPCSHIFT );
     }
-    void eint4_rising( void ){      Reg::set( BASE_ADDR, INT4EP ); }
-    void eint4_falling( void ){     Reg::clr( BASE_ADDR, INT4EP ); }
-    void eint3_rising( void ){      Reg::set( BASE_ADDR, INT3EP ); }
-    void eint3_falling( void ){     Reg::clr( BASE_ADDR, INT3EP ); }
-    void eint2_rising( void ){      Reg::set( BASE_ADDR, INT2EP ); }
-    void eint2_falling( void ){     Reg::clr( BASE_ADDR, INT2EP ); }
-    void eint1_rising( void ){      Reg::set( BASE_ADDR, INT1EP ); }
-    void eint1_falling( void ){     Reg::clr( BASE_ADDR, INT1EP ); }
-    void eint0_rising( void ){      Reg::set( BASE_ADDR, INT0EP ); }
-    void eint0_falling( void ){     Reg::clr( BASE_ADDR, INT0EP ); }
+    void eint4_rising( bool tf ){      Reg::set( INTCON, INT4EP, tf ); }
+    void eint3_rising( bool tf ){      Reg::set( INTCON, INT3EP, tf ); }
+    void eint2_rising( bool tf ){      Reg::set( INTCON, INT2EP, tf ); }
+    void eint1_rising( bool tf ){      Reg::set( INTCON, INT1EP, tf ); }
+    void eint0_rising( bool tf ){      Reg::set( INTCON, INT0EP, tf ); }
 
     //note- the following offsets calculated in bytes as the register
     //numbers are enums (not uint32_t*)- so need to calculate bytes
@@ -96,18 +92,18 @@ namespace Irq {
     //bit offset 8 in IFS1
     void flagclear( Irq::IRQ_VN irqvn )
     {
-        Reg::clr( Irq::BASE_ADDR_IFS + ((irqvn/32)*16), 1<<(irqvn%32) );
+        Reg::clr( Irq::IFS_BASE + ((irqvn/32)*16), 1<<(irqvn%32) );
     }
 
     void enable( Irq::IRQ_VN irqvn )
     {
         flagclear( irqvn );
-        Reg::set( Irq::BASE_ADDR_IEC + ((irqvn/32)*16), 1<<(irqvn%32) );
+        Reg::set( Irq::IEC_BASE + ((irqvn/32)*16), 1<<(irqvn%32) );
     }
 
     void disable( Irq::IRQ_VN irqvn )
     {
-        Reg::clr( Irq::BASE_ADDR_IEC + ((irqvn/32)*16), 1<<(irqvn%32) );
+        Reg::clr( Irq::IEC_BASE + ((irqvn/32)*16), 1<<(irqvn%32) );
     }
 
     //vector 17 example
@@ -120,8 +116,8 @@ namespace Irq {
     {
         uint32_t priority_shift = 8*(irqvn%4);
         p &= 7; s &= 3; p <<= 2; p |= s;
-        Reg::clr( Irq::BASE_ADDR_IPC + ((irqvn/4)*16), (31<<priority_shift));
-        Reg::set( Irq::BASE_ADDR_IPC + ((irqvn/4)*16),
+        Reg::clr( Irq::IPC_BASE + ((irqvn/4)*16), (31<<priority_shift));
+        Reg::set( Irq::IPC_BASE + ((irqvn/4)*16),
                 (p<<priority_shift));
         if( en ) enable( irqvn );
     }

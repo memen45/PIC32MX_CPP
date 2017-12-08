@@ -2,6 +2,9 @@
 
 /*=============================================================================
  Real-Time Clock & Calendar (RTCC)
+
+ not sure exactly when wrlock is required- various info from datasheet and
+ reference manual are not really that specific, or info conflicts
 =============================================================================*/
 
 #include <cstdint>
@@ -53,6 +56,10 @@ namespace Rtcc {
     //private (not really)
     void _unlock( void ){   Syskey::unlock(); Reg::clr( RTCCON1, WRLOCK ); }
     void _lock( void ){     Reg::set( RTCCON1, WRLOCK ); Syskey::lock(); }
+    void _conset( uint32_t r, uint32_t v, bool tf )
+    {
+        _unlock(); Reg::set( r, v, tf ); _lock();
+    }
     void _conset( uint32_t r, uint32_t v )
     {
         _unlock(); Reg::set( r, v ); _lock();
@@ -66,10 +73,9 @@ namespace Rtcc {
         _unlock(); Reg::val( r, v ); _lock();
     }
     //--private
-    void alarm_on( void ){              _conset( RTCCON1, ALARMEN ); }
-    void alarm_off( void ){             _conclr( RTCCON1, ALARMEN ); }
-    void chime_on( void ){              _conset( RTCCON1, CHIME ); }
-    void chime_off( void ){             _conclr( RTCCON1, CHIME ); }
+
+    void alarm( bool tf ){              _conset( RTCCON1, ALARMEN, tf ); }
+    void chime( bool tf ){              _conset( RTCCON1, CHIME, tf ); }
     void alarm_interval( AMASK v )
     {
         _conclr( RTCCON1, AMASKCLR );
@@ -79,10 +85,8 @@ namespace Rtcc {
         _conclr( RTCCON1, ALMRPTCLR );
         _conset( RTCCON1, v );
     }
-    void on( void ){                    _conset( RTCCON1, ON ); }
-    void off( void ){                   _conclr( RTCCON1, ON ); }
-    void pin_on( void ){                _conset( RTCCON1, PINON ); }
-    void pin_off( void ){               _conclr( RTCCON1, PINON ); }
+    void on( bool tf ){                 _conset( RTCCON1, ON, tf ); }
+    void out( bool tf ){                _conset( RTCCON1, PINON, tf ); }
     void pin_src( OUTSEL v ){
         _conclr( RTCCON1, CLRSEL );
         _conclr( RTCCON1, v );

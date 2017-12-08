@@ -12,8 +12,8 @@ namespace Cp0 {
     static uint32_t m_compare_count;    //save count for reloads
 
     uint32_t count( void ){             return __builtin_mfc0(9,0); }   //get
-    void count( uint32_t v ){           __builtin_mtc0(9,0,v); }        //set
     uint32_t compare( void ){           return __builtin_mfc0(11,0); }  //get
+    void count( uint32_t v ){           __builtin_mtc0(9,0,v); }        //set
     void compare( uint32_t v ){         __builtin_mtc0(11,0,v); }       //set
 
     void compare_reload( void ){        compare( count() + m_compare_count ); }

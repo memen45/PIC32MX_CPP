@@ -12,8 +12,9 @@ namespace Pmd {
 
     enum
     {
-        BASE_ADDR = 0xBF8035B0,
-        PMD1_ADDR = 0xBF8035C0
+        PMDCON = 0xBF8035B0,
+        PMD1_ADDR = 0xBF8035C0,
+        PMDLOCK = 1<<11
     };
 
     //bit shift amount into 7 registers (PMD1-PMD7, 224 possible values)
@@ -37,11 +38,11 @@ namespace Pmd {
     void _unlock( void )
     {
         Syskey::unlock();
-        Reg::clr( BASE_ADDR, 1<<11 );
+        Reg::clr( PMDCON, PMDLOCK );
     }
     void _lock( void )
     {
-        Reg::set( BASE_ADDR, 1<<11 );
+        Reg::set( PMDCON, PMDLOCK );
         Syskey::lock();
     }
     //--private

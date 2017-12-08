@@ -24,15 +24,9 @@ namespace Vdetect {
         HLVDL_295_330 = 6, HLVDL_325_363 = 5
     };
 
-    void on( void ){                Reg::set( HLVDCON, ON ); }
-    void off( void ){               Reg::clr( HLVDCON, ON ); }
-
-    void stop_idle( void ){         Reg::set( HLVDCON, SIDL ); }
-    void cont_idle( void ){         Reg::clr( HLVDCON, SIDL ); }
-
-    void trip_above( void ){        Reg::set( HLVDCON, VDIR ); }
-    void trip_below( void ){        Reg::clr( HLVDCON, VDIR ); }
-
+    void on( bool tf ){             Reg::set( HLVDCON, ON, tf ); }
+    void stop_idle( bool tf ){      Reg::set( HLVDCON, SIDL, tf ); }
+    void trip_above( bool tf ){     Reg::set( HLVDCON, VDIR, tf ); }
     bool bgap_stable( void ){       return Reg::is_set( HLVDCON, BGVST ); }
     bool iref_stable( void ){       return Reg::is_set( HLVDCON, IRVST ); }
     bool tripped( void ){           return Reg::is_set( HLVDCON, HLEVT ); }
