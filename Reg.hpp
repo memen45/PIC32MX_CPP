@@ -1,7 +1,7 @@
 #pragma once
 
 /*=============================================================================
- Register (SFR) writes/read, syskey lock/unlock (in here for now)
+ Register (SFR) writes/read
 =============================================================================*/
 
 #include <cstdint>
