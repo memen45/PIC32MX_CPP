@@ -24,6 +24,7 @@
 #include "Wdt.hpp"
 #include "Rtcc.hpp"
 #include "Comp123.hpp"
+#include "Clc.hpp"
 
 
 /*=============================================================================
@@ -105,6 +106,13 @@ int main()
     c2.on( false );
     CompALL::stop_idle( true );
     CompALL::ref_ext( false );
+
+    //try clc (does nothing)
+    Clc clc1( Clc::CLC1 );
+    clc1.in_sel( 1, 3 );
+    clc1.in_sel( 4, 6 );
+    clc1.gate_sel( 0x12345678 );
+    clc1.mode( Clc::ORXOR );
 
     //test rtcc (somewhat)
     Rtcc::clk_sel( Rtcc::SOSC );            //external sosc (curiosity board)

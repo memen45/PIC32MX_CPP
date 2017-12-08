@@ -21,7 +21,7 @@ namespace Irq {
         TPCMASK = 7, TPCSHIFT = 8,
     };
 
-    //irq vector numbers
+   //irq vector numbers
     enum IRQ_VN : uint8_t
     {
         CORE_TIMER = 0, CORE_SOFTWARE_0, CORE_SOFTWARE_1,
