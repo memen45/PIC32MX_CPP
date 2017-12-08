@@ -53,7 +53,8 @@ namespace Rtcc {
     };
 
     //RTCCON1 lock off by default, these functions will lock RTCCON1 when done
-    //private (not really)
+    //private (not really, this is a namespace so just prepend _ to make it
+    //look private- don't use elsewhere stuff starting with a _ )
     void _unlock( void ){   Syskey::unlock(); Reg::clr( RTCCON1, WRLOCK ); }
     void _lock( void ){     Reg::set( RTCCON1, WRLOCK ); Syskey::lock(); }
     void _conset( uint32_t r, uint32_t v, bool tf )
