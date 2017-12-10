@@ -47,33 +47,33 @@ namespace Pmd {
     }
     //--private
 
-    void off( PMD n )
+    void off( PMD e )
     {
         _unlock();
-        Reg::set( PMD1_ADDR + 16*(n/32), (1<<(n%32)) );
+        Reg::set( PMD1_ADDR + 16*(e/32), (1<<(e%32)) );
         _lock();
     }
-    void on( PMD n )
+    void on( PMD e )
     {
         _unlock();
-        Reg::clr( PMD1_ADDR + 16*(n/32), (1<<(n%32)) );
+        Reg::clr( PMD1_ADDR + 16*(e/32), (1<<(e%32)) );
         _lock();
     }
 
     //array of modules to disable/enable, END is end of array
-    void off( PMD* n )
+    void off( PMD* e )
     {
         _unlock();
-        for( ; *n != END; n++ ){
-            Reg::set( PMD1_ADDR + 16*(*n/32), (1<<(*n%32)) );
+        for( ; *e != END; e++ ){
+            Reg::set( PMD1_ADDR + 16*(*e/32), (1<<(*e%32)) );
         }
         _lock();
     }
-    void on( PMD* n )
+    void on( PMD* e )
     {
         _unlock();
-        for( ; *n != END; n++ ){
-            Reg::clr( PMD1_ADDR + 16*(*n/32), (1<<(*n%32)) );
+        for( ; *e != END; e++ ){
+            Reg::clr( PMD1_ADDR + 16*(*e/32), (1<<(*e%32)) );
         }
         _lock();
     }

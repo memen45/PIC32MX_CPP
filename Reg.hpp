@@ -69,5 +69,11 @@ namespace Reg {
     {
         *(reinterpret_cast <volatile uint16_t*>(r)) = v;
     }
+
+    template <typename T>
+    uint16_t val16( T r )
+    {
+        return *(reinterpret_cast <volatile uint16_t*>(r));
+    }
 };
 

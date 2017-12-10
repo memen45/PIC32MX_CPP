@@ -53,10 +53,10 @@ class Comp123  {
         void out_inv( bool tf ){        Reg::set( m_pt, CPOL, tf ); }
         bool event_bit( void ){         return Reg::is_set( m_pt, CEVT ); }
         bool out_bit( void ){           return Reg::is_set( m_pt, COUT ); }
-        void event_sel( EVPOL p ){ Reg::clr( m_pt, ANY ); Reg::set( m_pt, p ); }
+        void event_sel( EVPOL e ){ Reg::clr( m_pt, ANY ); Reg::set( m_pt, e ); }
         void cref_refsel( void ){       Reg::set( m_pt, CREF ); }
         void cref_cxina( void ){        Reg::clr( m_pt, CREF ); }
-        void ch_sel( CCH c ){ Reg::clr( m_pt, BGAP ); Reg::set( m_pt, c ); }
+        void ch_sel( CCH e ){ Reg::clr( m_pt, BGAP ); Reg::set( m_pt, e ); }
 
     private:
 

@@ -77,10 +77,10 @@ namespace Rtcc {
 
     void alarm( bool tf ){              _conset( RTCCON1, ALARMEN, tf ); }
     void chime( bool tf ){              _conset( RTCCON1, CHIME, tf ); }
-    void alarm_interval( AMASK v )
+    void alarm_interval( AMASK e )
     {
         _conclr( RTCCON1, AMASKCLR );
-        _conset( RTCCON1, v );
+        _conset( RTCCON1, e );
     }
     void alarm_repeat( uint8_t v ){
         _conclr( RTCCON1, ALMRPTCLR );
@@ -103,15 +103,15 @@ namespace Rtcc {
         _conclr( RTCCON2, 31<<11 );
         _conset( RTCCON2, (v&31)<<11 );
     }
-    void clk_pre( PRESCALE p )
+    void clk_pre( PRESCALE e )
     {
         _conclr( RTCCON2, PRE256 );
-        _conset( RTCCON2, p );
+        _conset( RTCCON2, e );
     }
-    void clk_sel( CLKSEL c )
+    void clk_sel( CLKSEL e )
     {
         _conclr( RTCCON2, FCY );
-        _conset( RTCCON2, c );
+        _conset( RTCCON2, e );
     }
 
     bool alarm_evt( void ){         return Reg::is_set( RTCSTAT, ALMSTAT ); }

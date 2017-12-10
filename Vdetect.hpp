@@ -31,10 +31,10 @@ namespace Vdetect {
     bool iref_stable( void ){       return Reg::is_set( HLVDCON, IRVST ); }
     bool tripped( void ){           return Reg::is_set( HLVDCON, HLEVT ); }
 
-    void limit_set( HLVDL lvl )
+    void limit_set( HLVDL e )
     {
         Reg::clr( HLVDCON, HLVDL_EXT );
-        Reg::set( HLVDCON, lvl );
+        Reg::set( HLVDCON, e );
     }
 };
 

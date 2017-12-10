@@ -18,10 +18,10 @@ namespace Cvref {
     void on( bool tf ){             Reg::set( DAC1CON, ON, tf );
     void out( bool tf ){            Reg::set( DAC1CON, DACOE, tf );
 
-    void refsel( REFSEL r )
+    void refsel( REFSEL e )
     {
         Reg::clr( DAC1CON, REFSELCLR );
-        Reg::set( DAC1CON, r & REFSELCLR );
+        Reg::set( DAC1CON, e & REFSELCLR );
     }
 
     //dac level 0-31, using Reg::val16 to change value

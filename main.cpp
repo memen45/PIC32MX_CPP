@@ -25,6 +25,7 @@
 #include "Rtcc.hpp"
 #include "Comp123.hpp"
 #include "Clc.hpp"
+#include "Adc.hpp"
 
 
 /*=============================================================================
@@ -99,6 +100,22 @@ Pmd::PMD pmd_list[] = {                      //list of modules to disable
 =============================================================================*/
 int main()
 {
+    //try adc - pot on curiosity board
+    Adc::mode_12bit( true );
+    Adc::trig_sel( Adc::AUTO );             //adc starts conversion
+    Adc::samp_time( 31 );                   //max sampling time- 31Tad
+    Adc::conv_time();                       //default is 4 (for 24MHz)
+    Adc::ch_sel( Adc::AN14 );               //pot- RC8/AN14 (default ANSEL/TRIS)
+    Adc::on( true );
+    //to get adc
+    //Adc::samp( true );    //start sample, auto conversion
+    //if( Adc::done() ){    //check if done
+    //  res = Adc::buf( 0 );//get result
+    //  Adc::samp( true );  //and restart (done bit cleared when samp=1)
+    //}
+
+
+
     //try some compare functions (does nothing)
     Comp123 c1( Comp123::C1 );
     Comp123 c2( Comp123::C2 );
@@ -189,8 +206,11 @@ int main()
 
     //irq's init/enable
     Irq::init( irqlist );                   //init all irq's
-    Irq::shadow_set( 7, 1 );                //priority7 using shadow set (test)
+    Irq::shadow_set( 7, 1 );                //priority7 using shadow set
     Irq::enable_all();                      //global irq enable
+
+    //start first adc sample on AN14
+    Adc::samp( true );
 
     //here we go
     for (;;){
@@ -201,6 +221,13 @@ int main()
             if( ! dly[i].expired() ) continue;
             leds[i].invert();
             dly[i].reset();
+        }
+        //check adc - disable led1 if > 1/2Vref+(Vdd)
+        //(by setting led1 to digital in)
+        if( Adc::done() ){
+            if( Adc::bufn( 0 ) > (4096/2) ) led1.digital_in();
+            else led1.digital_out();
+            Adc::samp( true ); //start again
         }
         //check sw1, rotate delay times among the 3 color led's
         if( sw1.ison() ){

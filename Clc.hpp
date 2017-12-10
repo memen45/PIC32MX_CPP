@@ -46,7 +46,7 @@ class Clc {
         {
         }
 
-        void gate_inv( GXPOL gx, bool tf ){     Reg::set( m_pt, gx, tf ); }
+        void gate_inv( GXPOL e, bool tf ){      Reg::set( m_pt, e, tf ); }
         void on( bool tf ){                     Reg::set( m_pt, ON, tf ); }
         void stop_idle( bool tf ){              Reg::set( m_pt, SIDL, tf ); }
         void intp( bool tf ){                   Reg::set( m_pt, INTP, tf ); }
@@ -54,7 +54,7 @@ class Clc {
         void out( bool tf ){                    Reg::set( m_pt, LCOE, tf ); }
         bool out( void ){                return Reg::is_set( m_pt, LCOUT ); }
         void out_inv( bool tf ){                Reg::set( m_pt, LCPOL, tf ); }
-        void mode( MODE m ){    Reg::clr( m_pt, LSR ); Reg::set( m_pt, m ); }
+        void mode( MODE e ){    Reg::clr( m_pt, LSR ); Reg::set( m_pt, e ); }
 
         //input select, dsn = 1-4, val = 0-7 (invalid args masked to good vals)
         void in_sel( uint8_t dsn, uint8_t val )

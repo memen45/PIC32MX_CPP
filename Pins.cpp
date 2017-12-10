@@ -23,7 +23,7 @@ void Pins::digital_out( void )
 }
 
 
-void Pins::odc( bool tf ){              Reg::set( m_pt+ODC, m_pn, tf ); }
+void Pins::odrain( bool tf ){           Reg::set( m_pt+ODC, m_pn, tf ); }
 void Pins::pullup( bool tf ){           Reg::set( m_pt+CNPU, m_pn, tf ); }
 void Pins::pulldn( bool tf ){           Reg::set( m_pt+CNPD, m_pn, tf ); }
 void Pins::icn( bool tf ){              Reg::set( m_pt+CNCON, ON, tf ); }

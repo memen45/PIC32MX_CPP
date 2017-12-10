@@ -31,8 +31,8 @@ class Pins {
 
 
         //inline
-        constexpr Pins( PORT pt, uint8_t pn, bool lowison = false ) :
-             m_pt( (volatile uint32_t*)pt ),
+        constexpr Pins( PORT e, uint8_t pn, bool lowison = false ) :
+             m_pt( (volatile uint32_t*)e ),
              m_pn( 1<<pn ),
              m_lowison( lowison )
         {
@@ -54,7 +54,7 @@ class Pins {
         void digital_in( void );
         void analog_in( void );
         void digital_out( void );
-        void odc( bool );
+        void odrain( bool );
         void pullup( bool );
         void pulldn( bool );
 
