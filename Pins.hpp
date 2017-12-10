@@ -19,17 +19,6 @@ class Pins {
             D = 0xBF802EB0, //make ANSELD base addr
         };
 
-
-        enum //offsets from base address, in words (>>4)
-        {
-            TRIS = 16>>2, PORT_ = 32>>2, LAT = 48>>2, ODC = 64>>2,
-            CNPU = 80>>2, CNPD = 96>>2, CNCON = 112>>2, CNEN0 = 128>>2,
-            CNSTAT = 144>>2, CNEN1 = 160>>2, CNF = 176>>2
-        };
-
-        enum { ON = 1<<15, CNSTYLE = 1<<11 };
-
-
         //inline
         constexpr Pins( PORT e, uint8_t pn, bool lowison = false ) :
              m_pt( (volatile uint32_t*)e ),
@@ -67,11 +56,21 @@ class Pins {
         void icn_mismatch( void );
         bool icn_flag( void );
         bool icn_stat( void );
-
         //inline
         void icn_flagclear( void ){     Reg::clr( m_pt+CNF, m_pn ); }
 
+        
+
     private:
+
+        enum //offsets from base address, in words (>>2)
+        {
+            TRIS = 16>>2, PORT_ = 32>>2, LAT = 48>>2, ODC = 64>>2,
+            CNPU = 80>>2, CNPD = 96>>2, CNCON = 112>>2, CNEN0 = 128>>2,
+            CNSTAT = 144>>2, CNEN1 = 160>>2, CNF = 176>>2
+        };
+
+        enum { ON = 1<<15, CNSTYLE = 1<<11 };
 
         const uint16_t m_pn;        //pin mask
         volatile uint32_t* m_pt;    //base address

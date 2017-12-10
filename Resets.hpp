@@ -63,6 +63,15 @@ namespace Resets {
     bool config_err( void ){    return boot_flags & (BCFGERR|BCFGFAIL|CMR); }
 
     //RSWRST
+
+    //library version (uses asm, is ~30bytes smaller)
+    //    extern "C" {
+    //    void swreset(){
+    //        void __pic32_software_reset();  //declare
+    //        __pic32_software_reset();       //do
+    //    }
+    //    } //extern C
+
     void swreset( void )
     {
         Syskey::unlock();
@@ -72,9 +81,13 @@ namespace Resets {
     }
 
     //RNMICON
-    void nmi_count( uint16_t v ){       Reg::val16( RNMICON, v ); }
-
-
+    bool nmi_wdt( void ){            return Reg::is_set( RNMICON, WDTR ); }
+    bool nmi_sw( void ){             return Reg::is_set( RNMICON, SWNMI ); }
+    bool nmi_gen( void ){            return Reg::is_set( RNMICON, GNMI ); }
+    bool nmi_clkf( void ){           return Reg::is_set( RNMICON, CF ); }
+    bool nmi_wdts( void ){           return Reg::is_set( RNMICON, WDTS ); }
+    void nmi_wdtcount( uint16_t v ){        Reg::val16( RNMICON, v ); }
+    void nmi_wdtclr( void ){                Reg::clr( RNMICON, WDTR ); }
 
     //PWRCON
     void bor( bool tf ){
