@@ -1,0 +1,85 @@
+#pragma once
+
+#include "Syskey.hpp"
+
+/*=============================================================================
+ Resets functions
+=============================================================================*/
+
+namespace Resets {
+
+    enum {
+        RCON = 0xBF8026E0,
+            PORIO = 1<<31, PORCORE = 1<<30,
+            BCFGERR = 1<<27, BCFGFAIL = 1<<26, CMR = 1<<9,
+        RSWRST = 0xBF8026F0,
+            SWRST = 1,
+        RNMICON = 0xBF802700,
+            WDTR = 1<<24, SWNMI = 1<<23, GNMI = 1<<19, CF = 1<<17, WDTS = 1<<16,
+
+        PWRCON = 0xBF802710,
+            SBOREN = 1<<2, RETEN = 1<<0, VREGS = 1<<0
+    };
+
+    enum CAUSE : uint8_t
+    {
+        EXTR = 1<<7,
+        SWR = 1<<6,
+
+        WDTO = 1<<4,
+        SLEEP = 1<<3,
+        IDLE = 1<<2,
+        BOR = 1<<1,
+        POR = 1
+    };
+
+    static uint32_t boot_flags;
+
+    //RCON
+    //save flags, clear flags, return reset cause
+    CAUSE cause( void )
+    {
+        //if( !boot_flags ) boot_flags = Reg::val( RCON ); //once only
+        boot_flags = Reg::val( RCON );
+        Reg::val( RCON, 0 );
+        if( boot_flags & (PORIO|PORCORE|BOR|POR) ) return POR; //special case
+        for( uint8_t c = EXTR; c; c-- ){
+            if( boot_flags & c ) return (CAUSE)c;
+        }
+    }
+
+
+    bool config_err( void ){    return boot_flags & (BCFGERR|BCFGFAIL|CMR); }
+
+    //RSWRST
+    void swreset( void )
+    {
+        Syskey::unlock();
+        Reg::set( RSWRST, SWRST );
+        Reg::val( RSWRST );
+        //resets after read
+    }
+
+    //RNMICON
+    void nmi_count( uint16_t v ){       Reg::val16( RNMICON, v ); }
+
+
+
+    //PWRCON
+    void bor( bool tf ){
+        Syskey::unlock();
+        Reg::set( PWRCON, SBOREN, tf );
+        Syskey::lock();
+    }
+    void retention( bool tf ){
+        Syskey::unlock();
+        Reg::set( PWRCON,RETEN, tf );
+        Syskey::lock();
+    }
+    void vreg_standby( bool tf ){
+        Syskey::unlock();
+        Reg::set( PWRCON,VREGS, tf );
+        Syskey::lock();
+    }
+};
+

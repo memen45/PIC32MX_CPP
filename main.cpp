@@ -26,6 +26,7 @@
 #include "Comp123.hpp"
 #include "Clc.hpp"
 #include "Adc.hpp"
+#include "Resets.hpp"
 
 
 /*=============================================================================
@@ -100,6 +101,14 @@ Pmd::PMD pmd_list[] = {                      //list of modules to disable
 =============================================================================*/
 int main()
 {
+    __asm__("nop");
+    Resets::CAUSE cause = Resets::cause();  //use cause result somewhere
+                                            //(will be EXTR mostly with pkob)
+
+    __asm__("nop");
+    volatile Resets::CAUSE cause1 = Resets::cause();
+    __asm__("nop");
+
     //try adc - pot on curiosity board
     Adc::mode_12bit( true );
     Adc::trig_sel( Adc::AUTO );             //adc starts conversion
@@ -148,10 +157,6 @@ int main()
                                             //(alarm every 00 seconds match)
                                             //disable/enable core timer irq
                                             //every minute in rtcc isr
-    //watchdog timer
-    Wdt::on( true );                        //try the watchdog
-                                            //RWDTPS = PS8192, so 8ms timeout
-
 
     //peripheral module disable
     Pmd::off( pmd_list );                   //test Pmd disable (T1/2/3 disabled)
@@ -171,7 +176,8 @@ int main()
     for( auto& l : leds ){
         l.digital_out();
         l.on();                             //show each led working
-        sw_dly.wait_ms( 1000 );             //wait
+        auto d = cause == Resets::EXTR ? 500 : 2000; //ext- 1/2sec, else 2sec
+        sw_dly.wait_ms( d ); //wait
         l.off();                            //then off
     }
 
@@ -212,6 +218,9 @@ int main()
     //start first adc sample on AN14
     Adc::samp( true );
 
+    //watchdog timer
+    Wdt::on( true );                        //try the watchdog
+                                            //RWDTPS = PS8192, so 8ms timeout
     //here we go
     for (;;){
         Wdt::reset();                       //comment out to test wdt reset
@@ -222,10 +231,13 @@ int main()
             leds[i].invert();
             dly[i].reset();
         }
-        //check adc - disable led1 if > 1/2Vref+(Vdd)
+        //check adc - swreset if < 10,
+        //disable led1 if > 1/2Vref+(Vdd)
         //(by setting led1 to digital in)
         if( Adc::done() ){
-            if( Adc::bufn( 0 ) > (4096/2) ) led1.digital_in();
+            auto r = Adc::bufn( 0 );
+            if( r < 10 ) Resets::swreset();
+            if( r > (4096/2) ) led1.digital_in();
             else led1.digital_out();
             Adc::samp( true ); //start again
         }
