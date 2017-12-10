@@ -104,6 +104,7 @@ int main()
     Resets::CAUSE cause = Resets::cause();  //use cause result somewhere
                                             //(will be EXTR mostly with pkob)
 
+
     //try adc - pot on curiosity board
     Adc::mode_12bit( true );
     Adc::trig_sel( Adc::AUTO );             //adc starts conversion
@@ -111,7 +112,7 @@ int main()
     Adc::conv_time();                       //default is 4 (for 24MHz)
     Adc::ch_sel( Adc::AN14 );               //pot- RC8/AN14 (default ANSEL/TRIS)
     Adc::on( true );
-    //to get adc
+    //to get adc (polling, non-blocking)
     //Adc::samp( true );    //start sample, auto conversion
     //if( Adc::done() ){    //check if done
     //  res = Adc::buf( 0 );//get result
