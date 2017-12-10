@@ -139,7 +139,7 @@ int main()
     Rtcc::clk_sel( Rtcc::SOSC );            //external sosc (curiosity board)
                                             //(soscen automatically set by rtcc)
     Rtcc::clk_div( Rtcc::CLK_DIV_32KHZ );   //already calculated div for lprc
-    Rtcc:alarm_interval( Rtcc::MINUTE1 );   //alarm every minute
+    Rtcc::alarm_interval( Rtcc::MINUTE1 );  //alarm every minute
     Rtcc::chime( true );                    //repeating alarm
     Rtcc::alarm( true );                    //turn on alarm
 
