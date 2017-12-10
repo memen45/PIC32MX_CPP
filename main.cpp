@@ -101,13 +101,8 @@ Pmd::PMD pmd_list[] = {                      //list of modules to disable
 =============================================================================*/
 int main()
 {
-    __asm__("nop");
     Resets::CAUSE cause = Resets::cause();  //use cause result somewhere
                                             //(will be EXTR mostly with pkob)
-
-    __asm__("nop");
-    volatile Resets::CAUSE cause1 = Resets::cause();
-    __asm__("nop");
 
     //try adc - pot on curiosity board
     Adc::mode_12bit( true );

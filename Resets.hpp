@@ -25,27 +25,38 @@ namespace Resets {
     {
         EXTR = 1<<7,
         SWR = 1<<6,
-
+        //1<<5 none- reads 0
         WDTO = 1<<4,
         SLEEP = 1<<3,
         IDLE = 1<<2,
         BOR = 1<<1,
-        POR = 1
+        POR = 1<<0
     };
 
+    //save rcon on boot (only one time)
     static uint32_t boot_flags;
 
     //RCON
     //save flags, clear flags, return reset cause
     CAUSE cause( void )
     {
-        //if( !boot_flags ) boot_flags = Reg::val( RCON ); //once only
-        boot_flags = Reg::val( RCON );
-        Reg::val( RCON, 0 );
-        if( boot_flags & (PORIO|PORCORE|BOR|POR) ) return POR; //special case
-        for( uint8_t c = EXTR; c; c-- ){
-            if( boot_flags & c ) return (CAUSE)c;
+        //in case called >1 time, save flags only first time
+        //boot_flags var will be 0 on any reset as c runtime will clear
+        //before this function can run
+        if( !boot_flags ){
+            boot_flags = Reg::val( RCON );  //save
+            Reg::val( RCON, 0 );            //then clear all flags
         }
+        //check for por first
+        if( boot_flags & (PORIO|PORCORE|BOR|POR) ) return POR;
+        //then go through flags high bits to low bits
+        //(sleep is before idle, so will not get false flag
+        // because sleep also has idle set)
+        uint8_t ret = EXTR;
+        for( ; ret > POR; ret >>= 1 ){
+            if( boot_flags & ret ) break;
+        }
+        return (CAUSE)ret;
     }
 
 
