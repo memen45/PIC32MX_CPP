@@ -9,7 +9,6 @@
 class Reg {
 
     public:
-        enum { CLR = 1, SET = 2, INV = 3 };
 
         template <typename T>
         static void set( T, uint32_t );
@@ -31,6 +30,11 @@ class Reg {
         static void val16( T, uint16_t );
         template <typename T>
         static uint16_t val16( T r );
+
+    private:
+
+        enum { CLR = 1, SET = 2, INV = 3 };
+        
 };
 
 /*=============================================================================
