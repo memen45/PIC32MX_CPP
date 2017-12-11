@@ -30,11 +30,15 @@ class Reg {
         static void val16( T, uint16_t );
         template <typename T>
         static uint16_t val16( T r );
+        template <typename T>
+        static void val8( T, uint8_t );
+        template <typename T>
+        static uint8_t val8( T r );
 
     private:
 
         enum { CLR = 1, SET = 2, INV = 3 };
-        
+
 };
 
 /*=============================================================================
@@ -93,7 +97,6 @@ void Reg::val( T r, uint32_t v )
     *(reinterpret_cast <volatile uint32_t*>(r)) = v;
 }
 
-//for wdt reset - needs to do a 16bit write
 template <typename T>
 void Reg::val16( T r, uint16_t v )
 {
@@ -104,4 +107,16 @@ template <typename T>
 uint16_t Reg::val16( T r )
 {
     return *(reinterpret_cast <volatile uint16_t*>(r));
+}
+
+template <typename T>
+void Reg::val8( T r, uint8_t v )
+{
+    *(reinterpret_cast <volatile uint8_t*>(r)) = v;
+}
+
+template <typename T>
+uint8_t Reg::val8( T r )
+{
+    return *(reinterpret_cast <volatile uint8_t*>(r));
 }

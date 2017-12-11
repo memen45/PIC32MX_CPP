@@ -19,26 +19,42 @@ class Pins {
             D = 0xBF802EB0, //make ANSELD base addr
         };
 
-        //inline
-        constexpr Pins( PORT e, uint8_t pn, bool lowison = false ) :
-             m_pt( (volatile uint32_t*)e ),
-             m_pn( 1<<pn ),
-             m_lowison( lowison )
+        enum PPSIN //byte offset from RPINR1
         {
-        }
+            INT4 = 0,                                   //R1
+            ICM1 = 6, ICM2 = 7,                         //R2
+            ICM3 = 8, ICM4 = 9,                         //R3
 
-        //inline
-        bool pinval( void ){        return Reg::is_set( m_pt+PORT_, m_pn ); }
-        bool latval( void ){        return Reg::is_set( m_pt+LAT, m_pn ); }
-        void low( void ){           Reg::clr( m_pt+LAT, m_pn ); }
-        void high( void ){          Reg::set( m_pt+LAT, m_pn ); }
-        void invert( void ){        Reg::inv( m_pt+LAT, m_pn ); }
-        void on( void ){            m_lowison ? low() : high(); }
-        void off( void ){           m_lowison ? high() : low(); }
-        bool ison( void ){          return m_lowison ? !pinval() : pinval(); }
-        bool isoff( void ){         return !ison(); }
+            OCFA = 14, OCFB = 15,                       //R5
+            TCKIA = 16, TCKIB = 17,                     //R6
+            ICM5 = 20, ICM6 = 21, ICM7 = 22, ICM8 = 23, //R7
+            ICM9 = 24, U3RX = 27,                       //R8
+            U2RX = 30, U2CTS = 31,                      //R9
+            U3CTS = 35,                                 //R10
+            SDI2 = 36, SCK2IN = 37, SS2IN = 38,         //R11
+            CLCINA = 42, CLCINB = 43                    //R12
+        };
 
-        //cpp
+        enum PPSOUT : uint8_t
+        {
+            OFF = 0,
+            C1OUT, C2OUT, C3OUT,
+            U2TX, U2RTS, U3TX, U3RTS,
+            SDO2, SCK2OUT, SS2OUT,
+            OCM4, OCM5, OCM6, OCM7, OCM8, OCM9,
+            CLC1OUT, CLC2OUT, CLC3OUT, CLC4OUT,
+        };
+
+        constexpr Pins( PORT, uint8_t, bool = false );
+        bool pinval( void );
+        bool latval( void );
+        void low( void );
+        void high( void );
+        void invert( void );
+        void on( void );
+        void off( void );
+        bool ison( void );
+        bool isoff( void );
         void lowison( bool );
         void digital_in( void );
         void analog_in( void );
@@ -46,9 +62,6 @@ class Pins {
         void odrain( bool );
         void pullup( bool );
         void pulldn( bool );
-
-        //input change notification
-        //cpp
         void icn( bool );
         void icn_rising( void );
         void icn_falling( void );
@@ -56,10 +69,12 @@ class Pins {
         void icn_mismatch( void );
         bool icn_flag( void );
         bool icn_stat( void );
-        //inline
-        void icn_flagclear( void ){     Reg::clr( m_pt+CNF, m_pn ); }
+        void icn_flagclear( void );
 
-        
+        //pps
+        void pps_in( PPSIN );
+        void pps_out( PPSOUT );
+
 
     private:
 
@@ -72,8 +87,43 @@ class Pins {
 
         enum { ON = 1<<15, CNSTYLE = 1<<11 };
 
+        enum
+        {
+            RPCON = 0xBF802A00, IOLOCK = 1<<11,
+            RPINR1 = 0xBF802A10,
+            RPOR0 = 0xBF802B10,
+        };
+
         const uint16_t m_pn;        //pin mask
         volatile uint32_t* m_pt;    //base address
         bool m_lowison;             //pin on val is low
+        uint8_t m_rpn;              //RPn number for pps (0=no Rpn for pin)
+
+        static const uint8_t rpn_map[]; //RXn -> RPn map
 };
 
+/*=============================================================================
+ inline functions
+=============================================================================*/
+constexpr Pins::Pins( PORT e, uint8_t pn, bool lowison ) :
+     m_pt( (volatile uint32_t*)e ),
+     m_pn( 1<<(pn&15) ),
+     m_lowison( lowison ),
+     m_rpn(
+        e == A ? rpn_map[pn&15] :
+            e == B ? rpn_map[(pn&15)+16] :
+                e == C ? rpn_map[(pn&15)+32] : 0
+     )
+{
+}
+
+bool Pins::pinval( void ){        return Reg::is_set( m_pt+PORT_, m_pn ); }
+bool Pins::latval( void ){        return Reg::is_set( m_pt+LAT, m_pn ); }
+void Pins::low( void ){           Reg::clr( m_pt+LAT, m_pn ); }
+void Pins::high( void ){          Reg::set( m_pt+LAT, m_pn ); }
+void Pins::invert( void ){        Reg::inv( m_pt+LAT, m_pn ); }
+void Pins::on( void ){            m_lowison ? low() : high(); }
+void Pins::off( void ){           m_lowison ? high() : low(); }
+bool Pins::ison( void ){          return m_lowison ? !pinval() : pinval(); }
+bool Pins::isoff( void ){         return !ison(); }
+void Pins::icn_flagclear( void ){ Reg::clr( m_pt+CNF, m_pn ); }
