@@ -11,14 +11,6 @@ class Pins {
 
     public:
 
-        enum PORT : uint32_t
-        {
-            A = 0xBF802BB0, //make ANSELA base addr
-            B = 0xBF802CB0, //make ANSELB base addr
-            C = 0xBF802DB0, //make ANSELC base addr
-            D = 0xBF802EB0, //make ANSELD base addr
-        };
-
         enum PORTPIN : uint8_t
         {
             A0 = 0, A1, A2, A3, A4, A5, A6, A7, A8,
@@ -59,20 +51,36 @@ class Pins {
             CLC1OUT, CLC2OUT, CLC3OUT, CLC4OUT,
         };
 
-        enum RPN : uint8_t
+        enum RPN : uint16_t //can use either RPn or RXn
         {
+            // encode as- 000ppnnnn 000rrrrr - | 000 PORT/PIN | 000 RPn |
+            // pp = port A=0,B=1,C=2,D=3
+            // nnnnn = pin = 0-15
+            // rrrrr = RPn = 1-24
+            // so we can use one enum to get both RPn and port/pin info
+            // (can then also set tris, clear ansel, for pps_in, and also
+            //  use RPn or RXn as init value for Pins() in addition to Xn )
+
             //RPn 1-24
-            RP1 = 1, RP2, RP3, RP4, RP5, RP6, RP7, RP8, RP9, RP10, RP11,
-            RP12, RP13, RP14, RP15, RP16, RP17, RP18, RP19, RP20, RP21,
-            RP22, RP23, RP24,
+            RP1 = 1+(A0<<8), RP2 = 2+(A1<<8), RP3 = 3+(A2<<8), RP4 = 4+(A3<<8),
+            RP5 = 5+(A4<<8), RP6 = 6+(B0<<8), RP7 = 7+(B1<<8), RP8 = 8+(B2<<8),
+            RP9 = 9+(B3<<8), RP10 = 10+(B4<<8), RP11 = 11+(B5<<8),
+            RP12 = 12+(B7<<8), RP13 = 13+(B8<<8), RP14 = 14+(B9<<8),
+            RP15 = 15+(B13<<8), RP16 = 16+(B14<<8), RP17 = 17+(B15<<8),
+            RP18 = 18+(C8<<8), RP19 = 19+(C2<<8), RP20 = 20+(C7<<8),
+            RP21 = 21+(A7<<8), RP22 = 22+(A10<<8), RP23 = 23+(C6<<8),
+            RP24 = 24+(A9<<8),
 
             //RXn to RPn
-            RA0 = 1, RA1, RA2, RA3, RA4, RA7 = 21, RA9 = 24, RA10 = 22,
-            RB0 = 6, RB1, RB2, RB3, RB4, RB5, RB7 = 12, RB8, RB9,
-            RB13 = 15, RB14, RB15, RC2 = 19, RC6 = 23, RC7 = 20, RC8 = 18
+            RA0 = RP1, RA1 = RP2, RA2 = RP3, RA3 = RP4, RA4 = RP5, RB0 = RP6,
+            RB1 = RP7, RB2 = RP8, RB3 = RP9, RB4 = RP10, RB5 = RP11, RB7 = RP12,
+            RB8 = RP13, RB9 = RP14, RB13 = RP15, RB14 = RP16, RB15 = RP17,
+            RC8 = RP18, RC2 = RP19, RC7 = RP20, RA7 = RP21, RA10 = RP22,
+            RC6 = RP23, RA9 = RP24
         };
 
         constexpr Pins( PORTPIN, bool = false );
+        constexpr Pins( RPN, bool = false );
         bool pinval( void );
         bool latval( void );
         void low( void );
@@ -134,9 +142,17 @@ class Pins {
 /*=============================================================================
  inline functions
 =============================================================================*/
+// A0 format - Pins led1( A0 ); or Pins led2( B3, true );
 constexpr Pins::Pins( PORTPIN e, bool lowison ) :
      m_pt( ANSELA + (e/16)*0x100 ),
      m_pn( 1<<(e%16) ),
+     m_lowison( lowison )
+{
+}
+// RA0/RP1 format - Pins led1( RA0 ); or Pins led2( RP1, true );
+constexpr Pins::Pins( RPN e, bool lowison ) :
+     m_pt( ANSELA + ((e>>8)/16)*0x100 ),
+     m_pn( 1<<((e>>8)%16) ),
      m_lowison( lowison )
 {
 }

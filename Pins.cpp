@@ -54,7 +54,10 @@ bool Pins::icn_stat( void ){        return Reg::is_set( m_pt+CNSTAT, m_pn ); }
 
 
 
-//pps - static functions
+/*=============================================================================
+ Pins functions - static
+=============================================================================*/
+//unlock, write byte, lock
 void Pins::pps_do( uint32_t r, uint8_t v )
 {
     Syskey::unlock();
@@ -63,16 +66,18 @@ void Pins::pps_do( uint32_t r, uint8_t v )
     Reg::set( RPCON, IOLOCK );
     Syskey::lock();
 }
-
+//pps off for peripheral
 void Pins::pps_off( PPSIN e ){          pps_in( e, (RPN)0 ); }
 void Pins::pps_in( PPSIN e, RPN n )
 {
-    //write to IN/peripheral reg with RPn number
-    pps_do( RPINR1+(e/4)*16+(e%4), n );
+    pps_do( RPINR1+((e/4)*16)+(e%4), n&31 );
+    Reg::set( ANSELA + TRIS + ((n>>8)/16)*0x100, 1<<((n>>8)%16) );  //tris=1
+    Reg::clr( ANSELA + ((n>>8)/16)*0x100, 1<<((n>>8)%16) );         //ansel=0
 }
+//pin output not using pps
 void Pins::pps_off( RPN n ){            pps_out( PPSOFF, n ); }
 void Pins::pps_out( PPSOUT e, RPN n )
 {
-    pps_do( RPOR0+((n-1)/4)*16+((n-1)%4), e );
+    pps_do( RPOR0+((((n&31)-1)/4)*16)+(((n&31)-1)%4), e );
 }
 
