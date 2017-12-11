@@ -71,7 +71,7 @@ void Pins::pps_in( PPSIN e, bool tf )
 }
 void Pins::pps_out( PPSOUT e )
 {
-    if( m_rpn == 0 ) return; //not an RPn pin, nothing can do
+    if( m_rpn == 0 ) return; //not an RPn pin, nothing to do
     m_rpn -= 1; //rpn 1 based, to 0 based for reg offset calc
     pps_do( RPOR0+(m_rpn/4)*16, e<<(m_rpn%4) );
 }
