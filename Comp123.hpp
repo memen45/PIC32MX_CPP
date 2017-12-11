@@ -1,37 +1,7 @@
 #pragma once
 
-/*=============================================================================
- Compare1/2/3 static functions for all
-=============================================================================*/
-
 #include <cstdint>
 #include "Reg.hpp"
-
-class CompALL { //CMSTAT applies to all compares- C1/C2/C3
-
-    public:
-
-        static void stop_idle( bool );
-        static void ref_ext( bool );
-
-    private:
-
-        enum
-        {
-            CMSTAT = 0xBF802300,
-            SIDL = 1<<13, CVREFSEL = 1<<8
-        };
-
-};
-
-/*=============================================================================
- all functions inline
-=============================================================================*/
-
-void CompALL::stop_idle( bool tf ){      Reg::set( CMSTAT, SIDL, tf ); }
-void CompALL::ref_ext( bool tf ){        Reg::set( CMSTAT, CVREFSEL, tf ); }
-
-
 
 /*=============================================================================
  Compare1/2/3 functions
@@ -63,13 +33,18 @@ class Comp123  {
         void cref_refsel( void );
         void cref_cxina( void );
         void ch_sel( CCH );
+        //common for all instances
+        static void stop_idle( bool );
+        static void ref_ext( bool );
 
     private:
 
         enum
         {
             ON = 1<<15, COE = 1<<14, CPOL = 1<<13,
-            CEVT = 1<<9, COUT = 1<<8, CREF = 1<<4
+            CEVT = 1<<9, COUT = 1<<8, CREF = 1<<4,
+            CMSTAT = 0xBF802300,
+            SIDL = 1<<13, CVREFSEL = 1<<8
         };
 
         volatile uint32_t * m_pt;       //register CMxCON
@@ -94,3 +69,7 @@ void Comp123::event_sel( EVPOL e ){ Reg::clr( m_pt, ANY ); Reg::set( m_pt, e ); 
 void Comp123::cref_refsel( void ){       Reg::set( m_pt, CREF ); }
 void Comp123::cref_cxina( void ){        Reg::clr( m_pt, CREF ); }
 void Comp123::ch_sel( CCH e ){ Reg::clr( m_pt, BGAP ); Reg::set( m_pt, e ); }
+
+//common static functions
+void Comp123::stop_idle( bool tf ){      Reg::set( CMSTAT, SIDL, tf ); }
+void Comp123::ref_ext( bool tf ){        Reg::set( CMSTAT, CVREFSEL, tf ); }

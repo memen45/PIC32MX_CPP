@@ -126,8 +126,8 @@ int main()
     Comp123 c2( Comp123::C2 );
     c1.on( false );
     c2.on( false );
-    CompALL::stop_idle( true );
-    CompALL::ref_ext( false );
+    Comp123::stop_idle( true );
+    Comp123::ref_ext( false );
 
     //try clc (does nothing)
     Clc clc1( Clc::CLC1 );
