@@ -81,6 +81,7 @@ class Pins {
 
         constexpr Pins( PORTPIN, bool = false );
         constexpr Pins( RPN, bool = false );
+        //r/w pins
         bool pinval( void );
         bool latval( void );
         void low( void );
@@ -90,6 +91,7 @@ class Pins {
         void off( void );
         bool ison( void );
         bool isoff( void );
+        //pin modes
         void lowison( bool );
         void digital_in( void );
         void analog_in( void );
@@ -97,6 +99,7 @@ class Pins {
         void odrain( bool );
         void pullup( bool );
         void pulldn( bool );
+        //icn
         void icn( bool );
         void icn_rising( void );
         void icn_falling( void );
@@ -105,7 +108,6 @@ class Pins {
         bool icn_flag( void );
         bool icn_stat( void );
         void icn_flagclear( void );
-
         //pps
         static void pps_off( PPSIN );
         static void pps_in( PPSIN, RPN );

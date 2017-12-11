@@ -208,6 +208,7 @@ int main()
         rate += n;
         if( rate < 100 || rate > 4000 ) rate -= n;
         Cp0::compare_ms( rate );            //no need to disable irq's
+        Cp0::compare_reload( true );        //true = clear flag, cp0 irq on
         led2.on();                          //as cp0 irq only reloads (reads)
         Irq::enable_all();
     };
@@ -317,12 +318,10 @@ extern "C" {
         static bool b = false;
         b = !b;
         if( b ){
-            Irq::on( Irq::CORE_TIMER, false );
+            Irq::on( Irq::CORE_TIMER, false ); //core timer irq disable
             led2.off();
         } else {
-            Cp0::compare_reload();
-            Irq::flagclear( Irq::CORE_TIMER );
-            Irq::on( Irq::CORE_TIMER, true );
+            Cp0::compare_reload( true ); //true = clear flag, core timer irq on
         }
         Irq::flagclear( Irq::RTCC );
     }

@@ -73,7 +73,7 @@ Resets::CAUSE Resets::cause( void )
         boot_flags = Reg::val( RCON );  //save
         Reg::val( RCON, 0 );            //then clear all flags
     }
-    //check for por first
+    //check for por first- specific combo
     if( boot_flags == (PORIO|PORCORE|BOR|POR) ) return POR;
     //then go through flags high bits to low bits
     //(sleep is before idle, so will not get false flag
