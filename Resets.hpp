@@ -74,7 +74,7 @@ Resets::CAUSE Resets::cause( void )
         Reg::val( RCON, 0 );            //then clear all flags
     }
     //check for por first
-    if( boot_flags & (PORIO|PORCORE|BOR|POR) ) return POR;
+    if( boot_flags == (PORIO|PORCORE|BOR|POR) ) return POR;
     //then go through flags high bits to low bits
     //(sleep is before idle, so will not get false flag
     // because sleep also has idle set)
