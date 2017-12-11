@@ -33,11 +33,11 @@
  LED's
 =============================================================================*/
 Pins leds[] = {                 //group leds
-    { Pins::D, 1 },             //RED
-    { Pins::C, 3 },             //GREEN
-    { Pins::C, 15 },            //BLUE
-    { Pins::D, 3 },             //LED1 (invert in timer1/timer2/timer3 irq)
-    { Pins::C, 13 }             //LED2 (cp0 irq blinks)
+    { Pins::D1 },               //RED
+    { Pins::C3 },               //GREEN
+    { Pins::C15 },              //BLUE
+    { Pins::D3 },               //LED1 (invert in timer1/timer2/timer3 irq)
+    { Pins::C13 }               //LED2 (cp0 irq blinks)
 };
 Pins& led1 = leds[3];           //reference to specific leds
 Pins& led2 = leds[4];
@@ -46,9 +46,9 @@ Pins& led2 = leds[4];
  Switches
 =============================================================================*/
 Pins sw[] = {                   //true=lowison
-    { Pins::B, 9,  true },      //SW1 (rotate delays))
-    { Pins::C, 10, true },      //SW2 cp0 irq blink rate++
-    { Pins::C, 4,  true }       //SW3 cp0 irq blink rate--
+    { Pins::B9,  true },        //SW1 (rotate delays))
+    { Pins::C10, true },        //SW2 cp0 irq blink rate++
+    { Pins::C4,  true }         //SW3 cp0 irq blink rate--
 };
 Pins& sw1 = sw[0];              //sw1/2/3 references
 Pins& sw2 = sw[1];
@@ -163,10 +163,10 @@ int main()
 
     //see if pps code works (does nothing)
     //(do before pins setup below, as out will clear tris)
-    sw1.pps_in( Pins::U2RX );
-    sw1.pps_in( Pins::U2RX, false ); //false = turn off input for U2RX
-    sw1.pps_out( Pins::U2TX );
-    sw1.pps_out( Pins::PPSOFF );
+    Pins::pps_in( Pins::U2RX, Pins::RP1 );
+    Pins::pps_off( Pins::U2RX );
+    Pins::pps_out( Pins::U2TX, Pins::RA0 );
+    Pins::pps_off( Pins::RA0 );
 
     //init sw pins
     for( auto& s : sw ){

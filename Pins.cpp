@@ -52,7 +52,9 @@ void Pins::icn_mismatch( void ){
 bool Pins::icn_flag( void ){        return Reg::is_set( m_pt+CNF, m_pn ); }
 bool Pins::icn_stat( void ){        return Reg::is_set( m_pt+CNSTAT, m_pn ); }
 
-//pps
+
+
+//pps - static functions
 void Pins::pps_do( uint32_t r, uint8_t v )
 {
     Syskey::unlock();
@@ -61,28 +63,16 @@ void Pins::pps_do( uint32_t r, uint8_t v )
     Reg::set( RPCON, IOLOCK );
     Syskey::lock();
 }
-void Pins::pps_in( PPSIN e, bool tf )
+
+void Pins::pps_off( PPSIN e ){          pps_in( e, (RPN)0 ); }
+void Pins::pps_in( PPSIN e, RPN n )
 {
     //write to IN/peripheral reg with RPn number
-    //if pin not an RPn, peripheral input will be disabled (0)
-    //if tf = false (default arg val is true), disable peripheral IN
-    //any Pin instance can disable peripheral input
-    pps_do( RPINR1+(e/4)*16, (tf ? m_pn : 0)<<(e%4) );
+    pps_do( RPINR1+(e/4)*16+(e%4), n );
 }
-void Pins::pps_out( PPSOUT e )
+void Pins::pps_off( RPN n ){            pps_out( PPSOFF, n ); }
+void Pins::pps_out( PPSOUT e, RPN n )
 {
-    if( m_rpn == 0 ) return; //not an RPn pin, nothing to do
-    m_rpn -= 1; //rpn 1 based, to 0 based for reg offset calc
-    pps_do( RPOR0+(m_rpn/4)*16, e<<(m_rpn%4) );
+    pps_do( RPOR0+((n-1)/4)*16+((n-1)%4), e );
 }
 
-// RXn to RPn map
-const uint8_t Pins::rpn_map[] =
-{
-    //RA0-RA15 -RPx (0=noRp for pin)
-    1,2,3,4,5,0,0,21,0,24,22,0,0,0,0,0,
-    //RB0-15 -RPx
-    6,7,8,9,10,11,0,12,13,14,0,0,0,15,16,17,
-    //RC0-15
-    0,0,19,0,0,0,23,20,18,0,0,0,0,0,0
-};

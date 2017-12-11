@@ -19,6 +19,20 @@ class Pins {
             D = 0xBF802EB0, //make ANSELD base addr
         };
 
+        enum PORTPIN : uint8_t
+        {
+            A0 = 0, A1, A2, A3, A4, A5, A6, A7, A8,
+            A9, A10, A11, A12, A13, A14, A15,
+
+            B0, B1, B2, B3, B4, B5, B6, B7, B8,
+            B9, B10, B11,   B13 = 29, B14, B15,
+
+            C0, C1, C2, C3, C4, C5, C6, C7, C8,
+            C9, C10, C11, C12, C13, C14, C15,
+
+            D0, D1, D2, D3, D4
+        };
+
         enum PPSIN //byte offset from RPINR1
         {
             INT4 = 0,                                   //R1
@@ -45,7 +59,20 @@ class Pins {
             CLC1OUT, CLC2OUT, CLC3OUT, CLC4OUT,
         };
 
-        constexpr Pins( PORT, uint8_t, bool = false );
+        enum RPN : uint8_t
+        {
+            //RPn 1-24
+            RP1 = 1, RP2, RP3, RP4, RP5, RP6, RP7, RP8, RP9, RP10, RP11,
+            RP12, RP13, RP14, RP15, RP16, RP17, RP18, RP19, RP20, RP21,
+            RP22, RP23, RP24,
+
+            //RXn to RPn
+            RA0 = 1, RA1, RA2, RA3, RA4, RA7 = 21, RA9 = 24, RA10 = 22,
+            RB0 = 6, RB1, RB2, RB3, RB4, RB5, RB7 = 12, RB8, RB9,
+            RB13 = 15, RB14, RB15, RC2 = 19, RC6 = 23, RC7 = 20, RC8 = 18
+        };
+
+        constexpr Pins( PORTPIN, bool = false );
         bool pinval( void );
         bool latval( void );
         void low( void );
@@ -72,50 +99,45 @@ class Pins {
         void icn_flagclear( void );
 
         //pps
-        void pps_in( PPSIN, bool = true );
-        void pps_out( PPSOUT );
+        static void pps_off( PPSIN );
+        static void pps_in( PPSIN, RPN );
+        static void pps_off( RPN );
+        static void pps_out( PPSOUT, RPN );
 
 
     private:
 
-        enum //offsets from base address, in words (>>2)
+        enum //offsets from base address, in bytes
         {
-            TRIS = 16>>2, PORT_ = 32>>2, LAT = 48>>2, ODC = 64>>2,
-            CNPU = 80>>2, CNPD = 96>>2, CNCON = 112>>2, CNEN0 = 128>>2,
-            CNSTAT = 144>>2, CNEN1 = 160>>2, CNF = 176>>2
+            TRIS = 16, PORT_ = 32, LAT = 48, ODC = 64,
+            CNPU = 80, CNPD = 96, CNCON = 112, CNEN0 = 128,
+            CNSTAT = 144, CNEN1 = 160, CNF = 176
         };
 
         enum { ON = 1<<15, CNSTYLE = 1<<11 };
 
         enum
         {
+            ANSELA = 0xBF802BB0,
             RPCON = 0xBF802A00, IOLOCK = 1<<11,
             RPINR1 = 0xBF802A10,
             RPOR0 = 0xBF802B10,
         };
 
-        void pps_do( uint32_t, uint8_t );
+        static void pps_do( uint32_t, uint8_t );
 
         const uint16_t m_pn;        //pin mask
-        volatile uint32_t* m_pt;    //base address
+        uint32_t m_pt;              //base address
         bool m_lowison;             //pin on val is low
-        uint8_t m_rpn;              //RPn number for pps (0=no Rpn for pin)
-
-        static const uint8_t rpn_map[]; //RXn -> RPn map
 };
 
 /*=============================================================================
  inline functions
 =============================================================================*/
-constexpr Pins::Pins( PORT e, uint8_t pn, bool lowison ) :
-     m_pt( (volatile uint32_t*)e ),
-     m_pn( 1<<(pn&15) ),
-     m_lowison( lowison ),
-     m_rpn(
-        e == A ? rpn_map[pn&15] :
-            e == B ? rpn_map[(pn&15)+16] :
-                e == C ? rpn_map[(pn&15)+32] : 0
-     )
+constexpr Pins::Pins( PORTPIN e, bool lowison ) :
+     m_pt( ANSELA + (e/16)*0x100 ),
+     m_pn( 1<<(e%16) ),
+     m_lowison( lowison )
 {
 }
 
