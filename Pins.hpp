@@ -37,7 +37,7 @@ class Pins {
 
         enum PPSOUT : uint8_t
         {
-            OFF = 0,
+            PPSOFF = 0,
             C1OUT, C2OUT, C3OUT,
             U2TX, U2RTS, U3TX, U3RTS,
             SDO2, SCK2OUT, SS2OUT,
@@ -72,7 +72,7 @@ class Pins {
         void icn_flagclear( void );
 
         //pps
-        void pps_in( PPSIN );
+        void pps_in( PPSIN, bool = true );
         void pps_out( PPSOUT );
 
 
@@ -93,6 +93,8 @@ class Pins {
             RPINR1 = 0xBF802A10,
             RPOR0 = 0xBF802B10,
         };
+
+        void pps_do( uint32_t, uint8_t );
 
         const uint16_t m_pn;        //pin mask
         volatile uint32_t* m_pt;    //base address

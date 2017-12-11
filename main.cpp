@@ -161,6 +161,12 @@ int main()
 
     Pmd::on( pmd_list );                    //test Pmd enable- all back on again
 
+    //see if pps code works (does nothing)
+    //(do before pins setup below, as out will clear tris)
+    sw1.pps_in( Pins::U2RX );
+    sw1.pps_in( Pins::U2RX, false ); //false = turn off input for U2RX
+    sw1.pps_out( Pins::U2TX );
+    sw1.pps_out( Pins::PPSOFF );
 
     //init sw pins
     for( auto& s : sw ){
