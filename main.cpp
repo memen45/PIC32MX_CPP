@@ -100,7 +100,7 @@ Pmd::PMD pmd_list[] = {                      //list of modules to disable
  MAIN
 =============================================================================*/
 int main(){
-    
+
     Resets::CAUSE cause = Resets::cause();  //use cause result somewhere
                                             //(will be EXTR mostly with pkob)
 
@@ -109,7 +109,7 @@ int main(){
     Adc::mode_12bit(true);
     Adc::trig_sel(Adc::AUTO);               //adc starts conversion
     Adc::samp_time(31);                     //max sampling time- 31Tad
-    Adc::conv_time();                       //default is 4 (for 24MHz)
+    Adc::conv_time(Adc::PBCLK12BIT);        //if no arg,default is 4 (for 24MHz)
     Adc::ch_sel(Adc::AN14);                 //pot- RC8/AN14 (default ANSEL/TRIS)
     Adc::on(true);
     //to get adc (polling, non-blocking)
