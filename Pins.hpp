@@ -78,32 +78,32 @@ class Pins {
 
     //public functions
     //r/w pins
-    bool        pinval          (void);
-    bool        latval          (void);
-    void        low             (void);
-    void        high            (void);
-    void        invert          (void);
-    void        on              (void);
-    void        off             (void);
-    bool        ison            (void);
-    bool        isoff           (void);
+    bool        pinval          ();
+    bool        latval          ();
+    void        low             ();
+    void        high            ();
+    void        invert          ();
+    void        on              ();
+    void        off             ();
+    bool        ison            ();
+    bool        isoff           ();
     //pin modes
     void        lowison         (bool);
-    void        digital_in      (void);
-    void        analog_in       (void);
-    void        digital_out     (void);
+    void        digital_in      ();
+    void        analog_in       ();
+    void        digital_out     ();
     void        odrain          (bool);
     void        pullup          (bool);
     void        pulldn          (bool);
     //icn
     void        icn             (bool);
-    void        icn_rising      (void);
-    void        icn_falling     (void);
-    void        icn_risefall    (void);
-    void        icn_mismatch    (void);
-    bool        icn_flag        (void);
-    bool        icn_stat        (void);
-    void        icn_flagclear   (void);
+    void        icn_rising      ();
+    void        icn_falling     ();
+    void        icn_risefall    ();
+    void        icn_mismatch    ();
+    bool        icn_flag        ();
+    bool        icn_stat        ();
+    void        icn_flagclear   ();
     //pps
     static void pps_off         (PPSIN);
     static void pps_in          (PPSIN, RPN);
@@ -156,13 +156,13 @@ constexpr Pins::Pins(RPN e, bool lowison)
       m_pn(1<<((e>>RN_SHIFT)%PINMAX)),
       m_lowison(lowison){}
 
-bool Pins::pinval(void){ return Reg::is_set(m_pt+PORT_, m_pn); }
-bool Pins::latval(void){ return Reg::is_set(m_pt+LAT, m_pn); }
-void Pins::low(void){ Reg::clr(m_pt+LAT, m_pn); }
-void Pins::high(void){ Reg::set(m_pt+LAT, m_pn); }
-void Pins::invert(void){ Reg::inv(m_pt+LAT, m_pn); }
-void Pins::on(void){ m_lowison ? low() : high(); }
-void Pins::off(void){ m_lowison ? high() : low(); }
-bool Pins::ison(void){ return m_lowison ? !pinval() : pinval(); }
-bool Pins::isoff(void){ return !ison(); }
-void Pins::icn_flagclear(void){ Reg::clr(m_pt+CNF, m_pn); }
+bool Pins::pinval(){ return Reg::is_set(m_pt+PORT_, m_pn); }
+bool Pins::latval(){ return Reg::is_set(m_pt+LAT, m_pn); }
+void Pins::low(){ Reg::clr(m_pt+LAT, m_pn); }
+void Pins::high(){ Reg::set(m_pt+LAT, m_pn); }
+void Pins::invert(){ Reg::inv(m_pt+LAT, m_pn); }
+void Pins::on(){ m_lowison ? low() : high(); }
+void Pins::off(){ m_lowison ? high() : low(); }
+bool Pins::ison(){ return m_lowison ? !pinval() : pinval(); }
+bool Pins::isoff(){ return !ison(); }
+void Pins::icn_flagclear(){ Reg::clr(m_pt+CNF, m_pn); }

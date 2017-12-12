@@ -5,8 +5,8 @@ class Syskey {
     public:
 
     //public functions
-    static void lock( void );
-    static void unlock( void );
+    static void lock();
+    static void unlock();
 
     private:
 

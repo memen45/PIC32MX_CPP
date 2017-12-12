@@ -127,7 +127,7 @@ int main(){
     c1.on(false);
     c2.on(false);
     Comp123::stop_idle(true);
-    Comp123::ref_ext(false);
+    Comp123::cref_sel(Comp123::INT_BGAP);
 
     //try clc (does nothing)
     Clc clc1(Clc::CLC1);
@@ -184,9 +184,12 @@ int main(){
     }
 
     //init timers
-    Timer1::pre_256(); Timer1::on(true);    //turn on timer1, prescale 1:256
-    timer2.pre_64(); timer2.on(true);       //turn on timer2, prescale 1:64
-    timer3.pre_32(); timer3.on(true);       //turn on timer3, prescale 1:16
+    Timer1::prescale(Timer1::PS256);        //prescale 1:256
+    Timer1::on(true);                       //turn on timer1
+    timer2.prescale(Timer23::PS64);         //prescale 1:64
+    timer2.on(true);                        //turn on timer2
+    timer3.prescale(Timer23::PS32);         //prescale 1:32
+    timer3.on(true);                        //turn on timer3
 
     //cp0 compare timeout (default sysfreq 24MHz)
     Cp0::compare_ms(200);

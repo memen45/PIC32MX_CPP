@@ -14,29 +14,29 @@ static uint8_t unlock_count;
 
 //not sure if irq disable required, but probably is as this possibly
 //could be called in irq
-void Syskey::lock( void ){
+void Syskey::lock(){
     bool irqstate = Irq::all_ison();                //get STATUS.IE
     Irq::disable_all();
     //
-    if( unlock_count ) unlock_count--;              //dec counter
-    if( unlock_count == 0 ) Reg::val( SYSKEY_ADDR, 0 ); //if 0, lock
+    if(unlock_count) unlock_count--;                //dec counter
+    if(unlock_count == 0) Reg::val(SYSKEY_ADDR, 0); //if 0, lock
     //
-    if( irqstate ) Irq::enable_all();               //restore IE state
+    if(irqstate) Irq::enable_all();                 //restore IE state
 }
 
-void Syskey::unlock( void )
+void Syskey::unlock()
 {
     bool irqstate = Irq::all_ison();                //get STATUS.IE
     Irq::disable_all();
-    bool dmasusp = Reg::is_set( DMACON, DMA_SUSPEND );  //get DMA suspend bit
-    Reg::set( DMACON, DMA_SUSPEND );                    //DMA suspend
+    bool dmasusp = Reg::is_set(DMACON, DMA_SUSPEND);//get DMA suspend bit
+    Reg::set(DMACON, DMA_SUSPEND);                  //DMA suspend
     //
-    if( ! unlock_count ){                           //first time, unlock
-        Reg::val( SYSKEY_ADDR, 0xAA996655 );
-        Reg::val( SYSKEY_ADDR, 0x556699AA );
+    if(! unlock_count){                             //first time, unlock
+        Reg::val(SYSKEY_ADDR, 0xAA996655);
+        Reg::val(SYSKEY_ADDR, 0x556699AA);
     }
     unlock_count++;                                 //inc unlock_count
     //
-    if( ! dmasusp ) Reg::clr( DMACON, DMA_SUSPEND );    //DMA resume
-    if( irqstate ) Irq::enable_all();               //restore IE state
+    if(! dmasusp) Reg::clr(DMACON, DMA_SUSPEND);    //DMA resume
+    if(irqstate) Irq::enable_all();                 //restore IE state
 }

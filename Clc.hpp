@@ -28,7 +28,7 @@ class Clc {
     void    intp        (bool);
     void    intn        (bool);
     void    out         (bool);
-    bool    out         (void);
+    bool    out         ();
     void    out_inv     (bool);
     void    mode        (MODE e);
     void    in_sel      (uint8_t, uint8_t);
@@ -66,7 +66,7 @@ void Clc::stop_idle(bool tf){ Reg::set(m_pt, SIDL, tf); }
 void Clc::intp(bool tf){ Reg::set(m_pt, INTP, tf); }
 void Clc::intn(bool tf){ Reg::set(m_pt, INTN, tf); }
 void Clc::out(bool tf){ Reg::set(m_pt, LCOE, tf); }
-bool Clc::out(void){ return Reg::is_set(m_pt, LCOUT); }
+bool Clc::out(){ return Reg::is_set(m_pt, LCOUT); }
 void Clc::out_inv(bool tf){ Reg::set(m_pt, LCPOL, tf); }
 void Clc::mode(MODE e){ Reg::clr(m_pt, LSR); Reg::set(m_pt, e); }
 //input select, dsn = 1-4, val = 0-7 (invalid args masked to good vals)

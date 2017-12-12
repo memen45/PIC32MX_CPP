@@ -48,6 +48,8 @@ class Adc {
     };
     //minimal conversion times for frc/pbclk(24MHz) for 10/12bits
     enum CONVTIME { FRC10BIT = 1, FRC12BIT, PBCLK10BIT, PBCLK12BIT };
+    //clock source
+    enum CLK { PBCLK = 0, FRC = 1 };
 
     //public functions
     //ADC1BUFn
@@ -60,18 +62,18 @@ class Adc {
     static void     mode_12bit      (bool);
     static void     samp_auto       (bool);
     static void     samp            (bool);
-    static bool     samp            (void);
-    static bool     done            (void);
+    static bool     samp            ();
+    static bool     done            ();
     //ADC1CON2
     static void     vref_cfg        (VCFG);
     static void     offset_cal      (bool);
     static void     buf_reg         (bool);
     static void     scan            (bool);
-    static bool     buf2nd_busy     (void);
-    static void     nper_irq        (uint8_t);
+    static bool     buf2nd_busy     ();
+    static void     samp_nirq       (uint8_t);
     static void     buf_split       (bool);
     //ADC1CON3
-    static void     clk_frc         (bool);
+    static void     clk_src         (CLK);
     static void     samp_extend     (bool);
     static void     samp_time       (uint8_t);
     static void     conv_time       (uint8_t = 4);
@@ -90,7 +92,7 @@ class Adc {
     static void     ch_scan         (uint32_t);
     //ADC1CHIT
     static bool     ch_hit          (CH0SA);
-    static uint32_t ch_hit          (void);
+    static uint32_t ch_hit          ();
 
     private:
 
@@ -130,33 +132,30 @@ void Adc::trig_sel(SSRC e){ Reg::clr(ADC1CON1, CLC2); Reg::set(ADC1CON1, e); }
 void Adc::mode_12bit(bool tf){ Reg::set(ADC1CON1, MODE12, tf); }
 void Adc::samp_auto(bool tf){ Reg::set(ADC1CON1, ASAM, tf); }
 void Adc::samp(bool tf){ Reg::set(ADC1CON1, SAMP, tf); }
-bool Adc::samp(void){ return Reg::is_set(ADC1CON1, SAMP); }
-bool Adc::done(void){ return Reg::is_set(ADC1CON1, DONE); }
+bool Adc::samp(){ return Reg::is_set(ADC1CON1, SAMP); }
+bool Adc::done(){ return Reg::is_set(ADC1CON1, DONE); }
 //ADC1CON2
 void Adc::vref_cfg(VCFG e){ Reg::clr(ADC1CON2, CFGCLR); Reg::set(ADC1CON2, e); }
 void Adc::offset_cal(bool tf){ Reg::set(ADC1CON2, OFFCAL, tf); }
 void Adc::buf_reg(bool tf){ Reg::set(ADC1CON2, BUFREGEN, tf); }
 void Adc::scan(bool tf){ Reg::set(ADC1CON2, CSCNA, tf); }
-bool Adc::buf2nd_busy(void){ Reg::is_set(ADC1CON2, BUFS); }
-void Adc::nper_irq(uint8_t n){
+bool Adc::buf2nd_busy(){ Reg::is_set(ADC1CON2, BUFS); }
+void Adc::samp_nirq(uint8_t n){
     n -= 1; n &= 15; //n = 1-16
     Reg::clr(ADC1CON2, SMPICLR);
     Reg::set(ADC1CON2, n<<SMPISHIFT);
 }
 void Adc::buf_split(bool tf){ Reg::set(ADC1CON2, BUFM, tf); }
 //ADC1CON3
-void Adc::clk_frc(bool tf){ Reg::set(ADC1CON3, ADRC, tf); }
+void Adc::clk_src(CLK e){ Reg::set(ADC1CON3, ADRC, e); }
 void Adc::samp_extend(bool tf){ Reg::set(ADC1CON3, EXTSAM, tf); }
 void Adc::samp_time(uint8_t t){
-    if(t == 0) t = 1; //0 not allowed
-    t &= 31;
+    t &= 31; t = t == 0 ? 1 : t; //0 not allowed (1-31)
     Reg::clr(ADC1CON3, SAMCCLR);
     Reg::set(ADC1CON3, t<<SAMCSHIFT);
 }
 //default value is for 24MHz, 4 will meet 280ns Tad for any clock
-void Adc::conv_time(uint8_t t){
-    Reg::clr(ADC1CON3, 255); Reg::set(ADC1CON3, t);
-}
+void Adc::conv_time(uint8_t t){ Reg::val8(ADC1CON3, t); }
 //ADC1CON5
 void Adc::scan_auto(bool tf){ Reg::set(ADC1CON5, ASEN, tf); }
 void Adc::low_power(bool tf){ Reg::set(ADC1CON5, LPEN, tf); }
@@ -174,11 +173,11 @@ void Adc::compare_mode(CM e){
     Reg::set(ADC1CON5, e);
 }
 //ADC1CHS
-void Adc::ch_sel(CH0SA e){ Reg::val16(ADC1CHS, e);}
+void Adc::ch_sel(CH0SA e){ Reg::val8(ADC1CHS, e);}
 //ADC1SS
 void Adc::ch_scan(CH0SA e, bool tf){ Reg::set(ADC1CSS, e, tf); }
 void Adc::ch_scan(CH0SA* e){
-    Reg::val16(ADC1CSS, 0); //clr all
+    Reg::val(ADC1CSS, 0); //clr all
     for(; *e != END; e++){
         Reg::set(ADC1CSS, 1<<*e); //set list
     }
@@ -187,7 +186,7 @@ void Adc::ch_scan(uint32_t v){ Reg::val(ADC1CSS, v); }
 //ADC1CHIT
 //non AN values will return 0 (like VDD)
 bool Adc::ch_hit(CH0SA e){ return Reg::is_set(ADC1CHIT, 1<<e); }
-uint32_t Adc::ch_hit(void){ return Reg::val(ADC1CHIT); }
+uint32_t Adc::ch_hit(){ return Reg::val(ADC1CHIT); }
 
 /*
  misc info

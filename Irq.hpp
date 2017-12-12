@@ -65,9 +65,9 @@ class Irq {
     } irq_list_t;
 
     //public functions
-    static void     disable_all     (void);
-    static void     enable_all      (void);
-    static bool     all_ison        (void);
+    static void     disable_all     ();
+    static void     enable_all      ();
+    static bool     all_ison        ();
     static void     proxtimer       (uint8_t);
     static void     eint4_rising    (bool);
     static void     eint3_rising    (bool);
@@ -98,9 +98,9 @@ class Irq {
  all functions inline
 =============================================================================*/
 
-void Irq::disable_all(void){ __builtin_disable_interrupts(); }
-void Irq::enable_all(void){ __builtin_enable_interrupts(); }
-bool Irq::all_ison(void){ return (__builtin_mfc0(12,0) & 1); }
+void Irq::disable_all(){ __builtin_disable_interrupts(); }
+void Irq::enable_all(){ __builtin_enable_interrupts(); }
+bool Irq::all_ison(){ return (__builtin_mfc0(12,0) & 1); }
 void Irq::proxtimer(uint8_t pri){
     Reg::clr(INTCON, TPCMASK<<TPCSHIFT);
     Reg::set(INTCON, (pri&TPCMASK)<<TPCSHIFT);

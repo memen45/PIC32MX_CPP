@@ -48,14 +48,14 @@ class Rtcc {
     static void         clk_frdiv       (uint8_t);
     static void         clk_pre         (PRESCALE);
     static void         clk_sel         (CLKSEL);
-    static bool         alarm_evt       (void);
-    static bool         time_busy       (void);
-    static bool         alarm_busy      (void);
-    static bool         half_sec        (void);
-    static uint32_t     time            (void);
-    static uint32_t     date            (void);
-    static uint32_t     alarm_time      (void);
-    static uint32_t     alarm_date      (void);
+    static bool         alarm_evt       ();
+    static bool         time_busy       ();
+    static bool         alarm_busy      ();
+    static bool         half_sec        ();
+    static uint32_t     time            ();
+    static uint32_t     date            ();
+    static uint32_t     alarm_time      ();
+    static uint32_t     alarm_date      ();
     static void         time            (uint32_t);
     static void         date            (uint32_t);
     static void         alarm_time      (uint32_t);
@@ -64,8 +64,8 @@ class Rtcc {
     private:
 
     //private functions
-    static void         unlock          (void);
-    static void         lock            (void);
+    static void         unlock          ();
+    static void         lock            ();
     static void         conset          (uint32_t, uint32_t, bool);
     static void         conset          (uint32_t, uint32_t);
     static void         conclr          (uint32_t, uint32_t);
@@ -110,33 +110,28 @@ void Rtcc::clk_frdiv(uint8_t v){
 }
 void Rtcc::clk_pre(PRESCALE e){ conclr(RTCCON2, PRE256); conset(RTCCON2, e); }
 void Rtcc::clk_sel(CLKSEL e){ conclr(RTCCON2, FCY); conset(RTCCON2, e); }
-bool Rtcc::alarm_evt(void){ return Reg::is_set(RTCSTAT, ALMSTAT); }
-bool Rtcc::time_busy(void){ return Reg::is_set(RTCSTAT, SYSNCSTAT); }
-bool Rtcc::alarm_busy(void){ return Reg::is_set(RTCSTAT, ALMSYNCSTAT);}
-bool Rtcc::half_sec(void){ return Reg::is_set(RTCSTAT, HALFSTAT); }
+bool Rtcc::alarm_evt(){ return Reg::is_set(RTCSTAT, ALMSTAT); }
+bool Rtcc::time_busy(){ return Reg::is_set(RTCSTAT, SYSNCSTAT); }
+bool Rtcc::alarm_busy(){ return Reg::is_set(RTCSTAT, ALMSYNCSTAT);}
+bool Rtcc::half_sec(){ return Reg::is_set(RTCSTAT, HALFSTAT); }
 //raw time, date
-uint32_t Rtcc::time(void){ return Reg::val(RTCTIME); }
-uint32_t Rtcc::date(void){ return Reg::val(RTCDATE); }
-uint32_t Rtcc::alarm_time(void){ return Reg::val(ALMTIME); }
-uint32_t Rtcc::alarm_date(void){ return Reg::val(ALMDATE); }
+uint32_t Rtcc::time(){ return Reg::val(RTCTIME); }
+uint32_t Rtcc::date(){ return Reg::val(RTCDATE); }
+uint32_t Rtcc::alarm_time(){ return Reg::val(ALMTIME); }
+uint32_t Rtcc::alarm_date(){ return Reg::val(ALMDATE); }
 void Rtcc::time(uint32_t v){ conval(RTCTIME, v); } //wrlock
 void Rtcc::date(uint32_t v){ conval(RTCTIME, v); } //wrlock
 void Rtcc::alarm_time(uint32_t v){ Reg::val(ALMTIME, v); }
 void Rtcc::alarm_date(uint32_t v){ Reg::val(ALMTIME, v); }
-
 //RTCCON1 lock off by default, these functions will lock RTCCON1 when done
 //private functions
-void Rtcc::unlock(void){ Syskey::unlock(); Reg::clr(RTCCON1, WRLOCK); }
-void Rtcc::lock(void){ Reg::set(RTCCON1, WRLOCK); Syskey::lock(); }
+void Rtcc::unlock(){ Syskey::unlock(); Reg::clr(RTCCON1, WRLOCK); }
+void Rtcc::lock(){ Reg::set(RTCCON1, WRLOCK); Syskey::lock(); }
 void Rtcc::conset(uint32_t r, uint32_t v, bool tf){
     unlock(); Reg::set(r, v, tf); lock();
 }
-void Rtcc::conset(uint32_t r, uint32_t v){
-    unlock(); Reg::set(r, v); lock();
-}
-void Rtcc::conclr(uint32_t r, uint32_t v){
-    unlock(); Reg::clr(r, v); lock();
-}
+void Rtcc::conset(uint32_t r, uint32_t v){ unlock(); Reg::set(r, v); lock(); }
+void Rtcc::conclr(uint32_t r, uint32_t v){ unlock(); Reg::clr(r, v); lock(); }
 void Rtcc::conval(uint32_t r, uint32_t v){
     Rtcc::unlock(); Reg::val(r, v); Rtcc::lock();
 }

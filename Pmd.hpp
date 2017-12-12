@@ -37,8 +37,8 @@ class Pmd {
     private:
 
     //private functions
-    static void     unlock  (void);
-    static void     lock    (void);
+    static void     unlock  ();
+    static void     lock    ();
 
     enum { PMDCON = 0xBF8035B0, PMD1_ADDR = 0xBF8035C0, PMDLOCK = 1<<11 };
 
@@ -48,8 +48,8 @@ class Pmd {
  all functions inline
 =============================================================================*/
 
-void Pmd::unlock(void){ Syskey::unlock(); Reg::clr(PMDCON, PMDLOCK); }
-void Pmd::lock(void){ Reg::set(PMDCON, PMDLOCK); Syskey::lock(); }
+void Pmd::unlock(){ Syskey::unlock(); Reg::clr(PMDCON, PMDLOCK); }
+void Pmd::lock(){ Reg::set(PMDCON, PMDLOCK); Syskey::lock(); }
 void Pmd::off(PMD e){
     unlock();
     Reg::set(PMD1_ADDR + 16*(e/32), (1<<(e%32)));

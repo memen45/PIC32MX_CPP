@@ -13,30 +13,24 @@ class Resets {
 
     //reset cause
     enum CAUSE : uint8_t {
-        EXTR = 1<<7,
-        SWR = 1<<6,
-        //1<<5 none- reads 0
-        WDTO = 1<<4,
-        SLEEP = 1<<3,
-        IDLE = 1<<2,
-        BOR = 1<<1,
-        POR = 1<<0
+        EXTR = 1<<7, SWR = 1<<6, //1<<5 none- reads 0
+        WDTO = 1<<4, SLEEP = 1<<3, IDLE = 1<<2, BOR = 1<<1, POR = 1<<0
     };
 
     //public functions
     //RCON
-    static CAUSE    cause           (void);
-    static bool     config_err      (void);
+    static CAUSE    cause           ();
+    static bool     config_err      ();
     //RSWRST
-    static void     swreset         (void);
+    static void     swreset         ();
     //RNMICON
-    static bool     nmi_wdt         (void);
-    static bool     nmi_sw          (void);
-    static bool     nmi_gen         (void);
-    static bool     nmi_clkf        (void);
-    static bool     nmi_wdts        (void);
+    static bool     nmi_wdt         ();
+    static bool     nmi_sw          ();
+    static bool     nmi_gen         ();
+    static bool     nmi_clkf        ();
+    static bool     nmi_wdts        ();
     static void     nmi_wdtcount    (uint16_t);
-    static void     nmi_wdtclr      (void);
+    static void     nmi_wdtclr      ();
     //PWRCON
     static void     bor             (bool);
     static void     retention       (bool);
@@ -65,7 +59,7 @@ static uint32_t boot_flags;
 
 //RCON
 //save flags, clear flags, return reset cause
-Resets::CAUSE Resets::cause(void){
+Resets::CAUSE Resets::cause(){
     //save flags only not already saved
     //boot_flags var will be 0 on any reset as c runtime will clear
     //before this function can run (I think)
@@ -85,7 +79,7 @@ Resets::CAUSE Resets::cause(void){
     return (CAUSE)ret;
 }
 //check if config bits error
-bool Resets::config_err(void){
+bool Resets::config_err(){
     return boot_flags & (BCFGERR|BCFGFAIL|CMR);
 }
 //RSWRST
@@ -99,20 +93,20 @@ bool Resets::config_err(void){
 //    } //extern C
 //
 //just use our version, works fine, looks nicer, less library
-void Resets::swreset(void){
+void Resets::swreset(){
     Syskey::unlock();
     Reg::set(RSWRST, SWRST);
     Reg::val(RSWRST);
     //resets after read
 }
 //RNMICON
-bool Resets::nmi_wdt(void){ return Reg::is_set(RNMICON, WDTR); }
-bool Resets::nmi_sw(void){ return Reg::is_set(RNMICON, SWNMI); }
-bool Resets::nmi_gen(void){ return Reg::is_set(RNMICON, GNMI); }
-bool Resets::nmi_clkf(void){ return Reg::is_set(RNMICON, CF); }
-bool Resets::nmi_wdts(void){ return Reg::is_set(RNMICON, WDTS); }
+bool Resets::nmi_wdt(){ return Reg::is_set(RNMICON, WDTR); }
+bool Resets::nmi_sw(){ return Reg::is_set(RNMICON, SWNMI); }
+bool Resets::nmi_gen(){ return Reg::is_set(RNMICON, GNMI); }
+bool Resets::nmi_clkf(){ return Reg::is_set(RNMICON, CF); }
+bool Resets::nmi_wdts(){ return Reg::is_set(RNMICON, WDTS); }
 void Resets::nmi_wdtcount(uint16_t v){ Reg::val16(RNMICON, v); }
-void Resets::nmi_wdtclr(void){ Reg::clr(RNMICON, WDTR); }
+void Resets::nmi_wdtclr(){ Reg::clr(RNMICON, WDTR); }
 //PWRCON
 void Resets::bor(bool tf){
     Syskey::unlock();

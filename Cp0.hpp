@@ -13,8 +13,8 @@ class Cp0 {
     public:
 
     //public functions
-    static uint32_t     count           (void);
-    static uint32_t     compare         (void);
+    static uint32_t     count           ();
+    static uint32_t     compare         ();
     static void         count           (uint32_t);
     static void         compare         (uint32_t);
     static void         compare_reload  (bool = false);
@@ -31,8 +31,8 @@ class Cp0 {
 static uint8_t sysfreq = 24; //used to calculate compare values
 static uint32_t m_compare_count; //save count for reloads
 
-uint32_t Cp0::count(void){ return __builtin_mfc0(9,0); } //get
-uint32_t Cp0::compare(void){ return __builtin_mfc0(11,0); } //get
+uint32_t Cp0::count(){ return __builtin_mfc0(9,0); } //get
+uint32_t Cp0::compare(){ return __builtin_mfc0(11,0); } //get
 void Cp0::count(uint32_t v){ __builtin_mtc0(9,0,v); } //set
 void Cp0::compare(uint32_t v){ __builtin_mtc0(11,0,v); } //set
 
