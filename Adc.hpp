@@ -46,6 +46,8 @@ class Adc {
         VDD = 27, VBG, AVSS, AVDD,
         END = 255
     };
+    //minimal conversion times for frc/pbclk(24MHz) for 10/12bits
+    enum CONVTIME { FRC10BIT = 1, FRC12BIT, PBCLK10BIT, PBCLK12BIT };
 
     //public functions
     //ADC1BUFn
@@ -120,7 +122,6 @@ uint16_t Adc::bufn(uint8_t n){
     if(n > ADC1BUF_LAST) n = ADC1BUF_LAST;
     return Reg::val16(ADC1BUF0+(n*ADC1BUF_SPACING));
 }
-
 //ADC1CON1
 void Adc::on(bool tf){ Reg::set(ADC1CON1, ON, tf); }
 void Adc::stop_idle(bool tf){ Reg::set(ADC1CON1, SIDL, tf); }
@@ -131,7 +132,6 @@ void Adc::samp_auto(bool tf){ Reg::set(ADC1CON1, ASAM, tf); }
 void Adc::samp(bool tf){ Reg::set(ADC1CON1, SAMP, tf); }
 bool Adc::samp(void){ return Reg::is_set(ADC1CON1, SAMP); }
 bool Adc::done(void){ return Reg::is_set(ADC1CON1, DONE); }
-
 //ADC1CON2
 void Adc::vref_cfg(VCFG e){ Reg::clr(ADC1CON2, CFGCLR); Reg::set(ADC1CON2, e); }
 void Adc::offset_cal(bool tf){ Reg::set(ADC1CON2, OFFCAL, tf); }
@@ -144,7 +144,6 @@ void Adc::nper_irq(uint8_t n){
     Reg::set(ADC1CON2, n<<SMPISHIFT);
 }
 void Adc::buf_split(bool tf){ Reg::set(ADC1CON2, BUFM, tf); }
-
 //ADC1CON3
 void Adc::clk_frc(bool tf){ Reg::set(ADC1CON3, ADRC, tf); }
 void Adc::samp_extend(bool tf){ Reg::set(ADC1CON3, EXTSAM, tf); }
@@ -158,7 +157,6 @@ void Adc::samp_time(uint8_t t){
 void Adc::conv_time(uint8_t t){
     Reg::clr(ADC1CON3, 255); Reg::set(ADC1CON3, t);
 }
-
 //ADC1CON5
 void Adc::scan_auto(bool tf){ Reg::set(ADC1CON5, ASEN, tf); }
 void Adc::low_power(bool tf){ Reg::set(ADC1CON5, LPEN, tf); }
@@ -175,10 +173,8 @@ void Adc::compare_mode(CM e){
     Reg::clr(ADC1CON5, OUTWIN);
     Reg::set(ADC1CON5, e);
 }
-
 //ADC1CHS
 void Adc::ch_sel(CH0SA e){ Reg::val16(ADC1CHS, e);}
-
 //ADC1SS
 void Adc::ch_scan(CH0SA e, bool tf){ Reg::set(ADC1CSS, e, tf); }
 void Adc::ch_scan(CH0SA* e){
@@ -188,13 +184,14 @@ void Adc::ch_scan(CH0SA* e){
     }
 }
 void Adc::ch_scan(uint32_t v){ Reg::val(ADC1CSS, v); }
-
 //ADC1CHIT
 //non AN values will return 0 (like VDD)
 bool Adc::ch_hit(CH0SA e){ return Reg::is_set(ADC1CHIT, 1<<e); }
 uint32_t Adc::ch_hit(void){ return Reg::val(ADC1CHIT); }
 
 /*
+ misc info
+
 12bit mode
 Tad     ADC Clock Period    280ns
 Tconv   Comversion Time     14Tad

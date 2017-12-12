@@ -101,7 +101,6 @@ class Irq {
 void Irq::disable_all(void){ __builtin_disable_interrupts(); }
 void Irq::enable_all(void){ __builtin_enable_interrupts(); }
 bool Irq::all_ison(void){ return (__builtin_mfc0(12,0) & 1); }
-
 void Irq::proxtimer(uint8_t pri){
     Reg::clr(INTCON, TPCMASK<<TPCSHIFT);
     Reg::set(INTCON, (pri&TPCMASK)<<TPCSHIFT);
