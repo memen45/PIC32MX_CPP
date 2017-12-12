@@ -18,9 +18,7 @@ class Adc {
     };
     //trigger source select
     enum SSRC {
-        SAMPCLR = 0<<4,
-        SOFT = 0<<4,
-        INT0 = 1<<4,
+        SOFT = 0<<4, INT0 = 1<<4,
         TMR3 = 2<<4, TMR1 = 5<<4, TMR1SLEP = 6<<4,
         AUTO = 7<<4,
         MCCP1 = 8<<4, MCCP2 = 9<<4, MCCP3 = 10<<4,
@@ -29,9 +27,8 @@ class Adc {
     };
     //vref config
     enum VCFG {
-        CFGCLR = 7<<13,
-        EXTP_EXTN = 3<<13, EXTP_VSS = 2<<13,
-        VDD_EXTN = 1<<13, VDD_VSS = 0<<13
+
+        EXTP_EXTN = 3<<13, EXTP_VSS = 2<<13, VDD_EXTN = 1<<13, VDD_VSS = 0<<13
     };
     //auto-scan interrupt mode
     enum ASINT { NONE = 0<<8, DET = 1<<8, COMP = 2<<8, DETCOMP = 3<<8 };
@@ -55,44 +52,44 @@ class Adc {
     //ADC1BUFn
     static uint16_t bufn            (uint8_t);
     //ADC1CON1
-    static void     on              (bool);
-    static void     stop_idle       (bool);
-    static void     format          (FORM);
-    static void     trig_sel        (SSRC);
-    static void     mode_12bit      (bool);
-    static void     samp_auto       (bool);
-    static void     samp            (bool);
-    static bool     samp            ();
-    static bool     done            ();
+    static void         on              (bool);
+    static void         stop_idle       (bool);
+    static void         format          (FORM);
+    static void         trig_sel        (SSRC);
+    static void         mode_12bit      (bool);
+    static void         samp_auto       (bool);
+    static void         samp            (bool);
+    static bool         samp            ();
+    static bool         done            ();
     //ADC1CON2
-    static void     vref_cfg        (VCFG);
-    static void     offset_cal      (bool);
-    static void     buf_reg         (bool);
-    static void     scan            (bool);
-    static bool     buf2nd_busy     ();
-    static void     samp_nirq       (uint8_t);
-    static void     buf_split       (bool);
+    static void         vref_cfg        (VCFG);
+    static void         offset_cal      (bool);
+    static void         buf_reg         (bool);
+    static void         scan            (bool);
+    static bool         buf2nd_busy     ();
+    static void         samp_nirq       (uint8_t);
+    static void         buf_split       (bool);
     //ADC1CON3
-    static void     clk_src         (CLK);
-    static void     samp_extend     (bool);
-    static void     samp_time       (uint8_t);
-    static void     conv_time       (uint8_t = 4);
+    static void         clk_src         (CLK);
+    static void         samp_extend     (bool);
+    static void         samp_time       (uint8_t);
+    static void         conv_time       (uint8_t = 4);
     //ADC1CON5
-    static void     scan_auto       (bool);
-    static void     low_power       (bool);
-    static void     bandgap         (bool);
-    static void     scan_autoirq    (ASINT);
-    static void     write_mode      (WM);
-    static void     compare_mode    (CM);
+    static void         scan_auto       (bool);
+    static void         low_power       (bool);
+    static void         bandgap         (bool);
+    static void         scan_autoirq    (ASINT);
+    static void         write_mode      (WM);
+    static void         compare_mode    (CM);
     //ADC1CHS
-    static void     ch_sel          (CH0SA);
+    static void         ch_sel          (CH0SA);
     //ADC1SS
-    static void     ch_scan         (CH0SA, bool);
-    static void     ch_scan         (CH0SA*);
-    static void     ch_scan         (uint32_t);
+    static void         ch_scan         (CH0SA, bool);
+    static void         ch_scan         (CH0SA*);
+    static void         ch_scan         (uint32_t);
     //ADC1CHIT
-    static bool     ch_hit          (CH0SA);
-    static uint32_t ch_hit          ();
+    static bool         ch_hit          (CH0SA);
+    static uint32_t     ch_hit          ();
 
     private:
 
@@ -103,7 +100,7 @@ class Adc {
             MODE12 = 1<<3, ASAM = 1<<2, SAMP = 1<<1, DONE = 1<<0,
         ADC1CON2 = 0xBF802270,
             OFFCAL = 1<<12, BUFREGEN = 1<<11, CSCNA = 1<<10, BUFS = 1<<7,
-            SMPISHIFT = 2, SMPICLR = 7<<2, BUFM = 1<<0,
+            SMPISHIFT = 2, SMPICLR = 7<<2, BUFM = 1<<0, VCFGCLR = 7<<13,
         ADC1CON3 = 0xBF802280,
             ADRC = 1<<15, EXTSAM = 1<<14, SAMCSHIFT = 8, SAMCCLR = 31<<8,
         ADC1CHS = 0xBF802290,
@@ -135,7 +132,10 @@ void Adc::samp(bool tf){ Reg::set(ADC1CON1, SAMP, tf); }
 bool Adc::samp(){ return Reg::is_set(ADC1CON1, SAMP); }
 bool Adc::done(){ return Reg::is_set(ADC1CON1, DONE); }
 //ADC1CON2
-void Adc::vref_cfg(VCFG e){ Reg::clr(ADC1CON2, CFGCLR); Reg::set(ADC1CON2, e); }
+void Adc::vref_cfg(VCFG e){
+    Reg::clr(ADC1CON2, VCFGCLR);
+    Reg::set(ADC1CON2, e);
+}
 void Adc::offset_cal(bool tf){ Reg::set(ADC1CON2, OFFCAL, tf); }
 void Adc::buf_reg(bool tf){ Reg::set(ADC1CON2, BUFREGEN, tf); }
 void Adc::scan(bool tf){ Reg::set(ADC1CON2, CSCNA, tf); }
@@ -164,10 +164,7 @@ void Adc::scan_autoirq(ASINT e){
     Reg::clr(ADC1CON5, DETCOMP);
     Reg::set(ADC1CON5, e);
 }
-void Adc::write_mode(WM e){
-    Reg::clr(ADC1CON5, WMCLR);
-    Reg::set(ADC1CON5, e);
-}
+void Adc::write_mode(WM e){ Reg::clr(ADC1CON5, WMCLR); Reg::set(ADC1CON5, e); }
 void Adc::compare_mode(CM e){
     Reg::clr(ADC1CON5, OUTWIN);
     Reg::set(ADC1CON5, e);
@@ -178,9 +175,7 @@ void Adc::ch_sel(CH0SA e){ Reg::val8(ADC1CHS, e);}
 void Adc::ch_scan(CH0SA e, bool tf){ Reg::set(ADC1CSS, e, tf); }
 void Adc::ch_scan(CH0SA* e){
     Reg::val(ADC1CSS, 0); //clr all
-    for(; *e != END; e++){
-        Reg::set(ADC1CSS, 1<<*e); //set list
-    }
+    for(; *e != END; e++) Reg::set(ADC1CSS, 1<<*e); //set list
 }
 void Adc::ch_scan(uint32_t v){ Reg::val(ADC1CSS, v); }
 //ADC1CHIT

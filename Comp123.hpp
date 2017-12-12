@@ -16,7 +16,7 @@ class Comp123  {
     //event polarity
     enum EVPOL { ANY = 3<<6, HL = 2<<6, LH = 1<<6, OFF = 0 };
     //channel select
-    enum CCH { BGAP = 3, CXIND = 2, CXINC = 1, CXINB = 0 };
+    enum CCH { CXINB = 0, CXINC, CXIND, BGAP };
     //cref source
     enum CVREF { INT_BGAP = 0, EXT_CVREF };
 

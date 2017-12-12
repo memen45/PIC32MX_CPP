@@ -63,16 +63,12 @@ void Pmd::on(PMD e){
 //array of modules to disable/enable, END is end of array
 void Pmd::off(PMD* e){
     unlock();
-    for(; *e != END; e++){
-        Reg::set(PMD1_ADDR + 16*(*e/32), (1<<(*e%32)));
-    }
+    for(; *e != END; e++) Reg::set(PMD1_ADDR + 16*(*e/32), (1<<(*e%32)));
     lock();
 }
 void Pmd::on(PMD* e){
     unlock();
-    for(; *e != END; e++){
-        Reg::clr(PMD1_ADDR + 16*(*e/32), (1<<(*e%32)));
-    }
+    for(; *e != END; e++) Reg::clr(PMD1_ADDR + 16*(*e/32), (1<<(*e%32)));
     lock();
 }
 

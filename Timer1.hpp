@@ -12,13 +12,9 @@ class Timer1 {
     public:
 
     //clock prescale values
-    enum PRESCALE {
-        PS256 = 3<<4, PS64 = 2<<4, PS8 = 1<<4, PS1 = 0<<4,
-    };
+    enum PRESCALE { PS256 = 3<<4, PS64 = 2<<4, PS8 = 1<<4, PS1 = 0<<4 };
     //clock source
-    enum CLK {
-        EXT_SOSC = 2, EXT_T1CK = (1<<8)|2, EXT_LPRC = (2<<8)|2, INT_PBCLK = 0
-    };
+    enum CLK { EXT_SOSC = 2, EXT_T1CK = 258, EXT_LPRC = 514, INT_PBCLK = 0 };
 
     //public functions
     static void         timer           (uint16_t n);
@@ -37,12 +33,9 @@ class Timer1 {
     private:
 
     enum {
-        T1CON = 0xBF808000,
-        TMR1 = 0xBF808010,
-        PR1 = 0xBF808020,
+        T1CON = 0xBF808000, TMR1 = 0xBF808010, PR1 = 0xBF808020,
         ON = 1<<15, SIDL = 1<<13, TWDIS = 1<<12, TWIP = 1<<11,
-        TGATE = 1<<7, TSYNC = 1<<2,
-        CLK_CLR = (3<<8)|(1<<1)
+        TGATE = 1<<7, TSYNC = 1<<2, CLK_CLR = (3<<8)|(1<<1)
     };
 
 };

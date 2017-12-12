@@ -28,8 +28,8 @@ void Syskey::unlock()
 {
     bool irqstate = Irq::all_ison();                //get STATUS.IE
     Irq::disable_all();
-    bool dmasusp = Reg::is_set(DMACON, DMA_SUSPEND);//get DMA suspend bit
-    Reg::set(DMACON, DMA_SUSPEND);                  //DMA suspend
+    bool dmasusp = Reg::is_set(DMACON, DMASUSP);    //get DMA suspend bit
+    Reg::set(DMACON, DMASUSP);                      //DMA suspend
     //
     if(! unlock_count){                             //first time, unlock
         Reg::val(SYSKEY_ADDR, 0xAA996655);
@@ -37,6 +37,6 @@ void Syskey::unlock()
     }
     unlock_count++;                                 //inc unlock_count
     //
-    if(! dmasusp) Reg::clr(DMACON, DMA_SUSPEND);    //DMA resume
+    if(! dmasusp) Reg::clr(DMACON, DMASUSP);        //DMA resume
     if(irqstate) Irq::enable_all();                 //restore IE state
 }

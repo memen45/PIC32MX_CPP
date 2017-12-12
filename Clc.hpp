@@ -14,10 +14,7 @@ class Clc {
     //instantiate Clc with clc number
     enum CLC { CLC1 = 0, CLC2, CLC3, CLC4 };
     //logic function
-    enum MODE : uint8_t {
-        ANDOR = 0, ORXOR = 1, AND = 2, SR = 3,
-        DSR = 4, DR = 5, JKR = 6, LSR = 7
-    };
+    enum MODE : uint8_t { ANDOR = 0, ORXOR, AND, SR, DSR, DR, JKR, LSR };
     //gate polarity
     enum GXPOL { G4 = 1<<19, G3 = 1<<18, G2 = 1<<17, G1 = 1<<16 };
 

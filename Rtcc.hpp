@@ -22,15 +22,9 @@ class Rtcc {
         SECOND1 = 1<<24, HALFSEC = 0, AMASKCLR = 15<<24,
     };
     //rtcc pin output select
-    enum OUTSEL {
-        CLKSRC = 2<<4, CLKSEC = 1<<4, ALMEVT = 0<<4,
-        CLRSEL = 7<<4
-    };
+    enum OUTSEL { CLKSRC = 2<<4, CLKSEC = 1<<4, ALMEVT = 0<<4, CLRSEL = 7<<4 };
     //clock prescale
-    enum PRESCALE {
-        PRE256 = 3<<4, PRE64 = 2<<4,
-        PRE16 = 1<<4, PRE1 = 0<<4
-    };
+    enum PRESCALE { PRE256 = 3<<4, PRE64 = 2<<4, PRE16 = 1<<4, PRE1 = 0<<4 };
     //clock select
     enum CLKSEL { FCY = 3, PWRLPIN = 2, LPRC = 1, SOSC = 0 };
     //clock divide precomputed for 32khz (prescale default 1:1)
@@ -82,7 +76,8 @@ class Rtcc {
         ALARMEN = 1<<31, CHIME = 1<<30, ALMRPTCLR = 7<<16,
         ON = 1<<15, WRLOCK = 1<<11, PINON = 1<<7,
         ALMSTAT = 1<<5, SYSNCSTAT = 1<<2,
-        ALMSYNCSTAT = 1<<1, HALFSTAT = 1<<0
+        ALMSYNCSTAT = 1<<1, HALFSTAT = 1<<0,
+        FRDIVSHIFT = 11, FRDIVCLR = 31<<FRDIVSHIFT
     };
 };
 
@@ -105,8 +100,8 @@ void Rtcc::out(bool tf){ conset(RTCCON1, PINON, tf); }
 void Rtcc::pin_src(OUTSEL v){ conclr(RTCCON1, CLRSEL); conclr(RTCCON1, v); }
 void Rtcc::clk_div(uint16_t v){ unlock(); Reg::val16(RTCCON2+2, v); lock(); }
 void Rtcc::clk_frdiv(uint8_t v){
-    conclr(RTCCON2, 31<<11);
-    conset(RTCCON2, (v&31)<<11);
+    conclr(RTCCON2, FRDIVCLR);
+    conset(RTCCON2, (v&FRDIVCLR)<<FRDIVSHIFT);
 }
 void Rtcc::clk_pre(PRESCALE e){ conclr(RTCCON2, PRE256); conset(RTCCON2, e); }
 void Rtcc::clk_sel(CLKSEL e){ conclr(RTCCON2, FCY); conset(RTCCON2, e); }

@@ -11,7 +11,7 @@ class Cvref {
     public:
 
     //vref select
-    enum REFSEL { AVDD = 3, CVREF = 1, NONE = 0 };
+    enum REFSEL { NONE = 0, CVREF, AVDD };
 
     //public functions
     void    on      (bool);

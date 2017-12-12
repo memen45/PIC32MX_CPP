@@ -11,22 +11,22 @@ class Reg {
     public:
 
     //public functions
-    template <typename T> static void set(T, uint32_t);
-    template <typename T> static uint32_t set(T, uint32_t, bool);
-    template <typename T> static void clr(T, uint32_t);
-    template <typename T> static void inv(T, uint32_t);
-    template <typename T> static bool is_set(T, uint32_t);
-    template <typename T> static bool is_clr(T, uint32_t);
-    template <typename T> static uint32_t val(T);
-    template <typename T> static void val(T, uint32_t);
-    template <typename T> static void val16(T, uint16_t);
-    template <typename T> static uint16_t val16(T);
-    template <typename T> static void val8(T, uint8_t);
-    template <typename T> static uint8_t val8(T);
+    template <typename T> static void       set     (T, uint32_t);
+    template <typename T> static uint32_t   set     (T, uint32_t, bool);
+    template <typename T> static void       clr     (T, uint32_t);
+    template <typename T> static void       inv     (T, uint32_t);
+    template <typename T> static bool       is_set  (T, uint32_t);
+    template <typename T> static bool       is_clr  (T, uint32_t);
+    template <typename T> static uint32_t   val     (T);
+    template <typename T> static void       val     (T, uint32_t);
+    template <typename T> static void       val16   (T, uint16_t);
+    template <typename T> static uint16_t   val16   (T);
+    template <typename T> static void       val8    (T, uint8_t);
+    template <typename T> static uint8_t    val8    (T);
 
     private:
 
-    enum { CLR = 1, SET = 2, INV = 3 };
+    enum { CLR = 1, SET, INV };
 
 };
 

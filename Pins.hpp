@@ -12,16 +12,14 @@ class Pins {
     public:
 
     //instantiate Pins with the following pin name
-    enum PORTPIN : uint8_t
-    {
+    enum PORTPIN : uint8_t {
         A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,
         B0,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11,B13= 29,B14,B15,
         C0,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,
         D0,D1,D2,D3,D4
     };
     //pps_in peripheral names
-    enum PPSIN
-    {
+    enum PPSIN {
         //byte offset from RPINR1
         INT4 = 0,                                   //R1
         ICM1 = 6, ICM2 = 7,                         //R2
@@ -37,8 +35,7 @@ class Pins {
         CLCINA = 42, CLCINB = 43                    //R12
     };
     //pps_out peripheral names
-    enum PPSOUT : uint8_t
-    {
+    enum PPSOUT : uint8_t {
         PPSOFF = 0,
         C1OUT, C2OUT, C3OUT,
         U2TX, U2RTS, U3TX, U3RTS,
@@ -48,8 +45,7 @@ class Pins {
     };
     //pps_in/pps_out pin names (either RPn or RXn)
     //(can also instantiate Pins with these names)
-    enum RPN : uint16_t
-    {
+    enum RPN : uint16_t {
         // encode as- 0x000ppnnnn000rrrrr - | 000 PORT/PIN | 000 RPn |
         // pp = port A=0,B=1,C=2,D=3
         // nnnnn = pin = 0-15
@@ -122,8 +118,7 @@ class Pins {
         CNSTAT = 144>>2, CNEN1 = 160>>2, CNF = 176>>2
     };
 
-    enum
-    {
+    enum {
         ANSELA = 0xBF802BB0, ANSELX_SPACING = 64, //spacing in words
         ON = 1<<15, CNSTYLE = 1<<11,
         RPCON = 0xBF802A00, IOLOCK = 1<<11,

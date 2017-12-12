@@ -79,9 +79,7 @@ Resets::CAUSE Resets::cause(){
     return (CAUSE)ret;
 }
 //check if config bits error
-bool Resets::config_err(){
-    return boot_flags & (BCFGERR|BCFGFAIL|CMR);
-}
+bool Resets::config_err(){ return boot_flags & (BCFGERR|BCFGFAIL|CMR); }
 //RSWRST
 //
 //library version (uses asm, is ~30bytes smaller)
