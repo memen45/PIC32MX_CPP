@@ -19,7 +19,8 @@ class UsbOTG {
         ACTIVITY = 1<<4, /*no STAT*/
         SESSION = 1<<3, BVBUS = 1<<2, AVBUS = 1<<0
     };
-    static FLAGSOTG flags               ();
+
+    static uint8_t  flags               ();
     static bool     flag                (FLAGSOTG);
     static void     flag_clear          (FLAGSOTG);
     static void     flags_clear         ();
@@ -33,6 +34,7 @@ class UsbOTG {
         DPUP = 1<<7, DMUP = 1<<6, DPDN = 1<<5, DMDN = 1<<4,
         VBUSON = 1<<3, OTGON = 1<<2, VCHARGE = 1<<1, VDISCHARGE = 1<<0
     };
+
     static void     otg                 (OTG, bool);
 
 
@@ -42,7 +44,8 @@ class UsbOTG {
 
         //U1TOK
     enum TOKPID : uint8_t { SETUP = 13, IN = 9, OUT = 1 };
-    static TOKPID   tok_pid             ();
+
+    static uint8_t  tok_pid             ();
     static uint8_t  tok_ep              ();
     static void     tok_ep              (uint8_t);
 
@@ -51,6 +54,7 @@ class UsbOTG {
     enum SOFVALS : uint8_t {
         SOF64 = 74, SOF32 = 42, SOF16 = 26, SOF8 = 18
     };
+
     static void     sof_cnt             (SOFVALS);
 
 
@@ -85,7 +89,7 @@ void Usb::otg(OTG e, bool tf){ Reg::set(U1OTGCON, e, tf); }
 
 void Usb::low_speed(bool tf){ Reg::set(U1ADDR, LSEN, tf); }
 
-Usb::TOKPID Usb::tok_pid(){ return (Usb::TOKPID)(Reg::val8(U1TOK)>>4); }
+uint8_t Usb::tok_pid(){ return (Usb::TOKPID)(Reg::val8(U1TOK)>>4); }
 uint8_t Usb::tok_ep(){ return Reg::val8(U1TOK) & 15; }
 void Usb::tok_ep(uint8_t v){ Reg::clr(U1TOK, 15); Reg::set(U1TOK, v & 15); }
 
