@@ -17,6 +17,8 @@ class Reg {
     template <typename T> static void       inv     (T, uint32_t);
     template <typename T> static bool       is_set  (T, uint32_t);
     template <typename T> static bool       is_clr  (T, uint32_t);
+    template <typename T> static bool       is_set8 (T, uint8_t);//usb regs use
+    template <typename T> static bool       is_clr8 (T, uint8_t);//only 8bits
     template <typename T> static uint32_t   val     (T);
     template <typename T> static void       val     (T, uint32_t);
     template <typename T> static void       val16   (T, uint16_t);
@@ -54,6 +56,12 @@ template <typename T> bool Reg::is_set(T r, uint32_t v){
 }
 template <typename T> bool Reg::is_clr(T r, uint32_t v){
     return ! *(reinterpret_cast <volatile uint32_t*>(r)) & v;
+}
+template <typename T> bool Reg::is_set8(T r, uint8_t v){
+    return *(reinterpret_cast <volatile uint8_t*>(r)) & v;
+}
+template <typename T> bool Reg::is_clr8(T r, uint8_t v){
+    return ! *(reinterpret_cast <volatile uint8_t*>(r)) & v;
 }
 template <typename T> uint32_t Reg::val(T r){
     return *(reinterpret_cast <volatile uint32_t*>(r));

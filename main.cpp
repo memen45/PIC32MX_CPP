@@ -14,6 +14,7 @@
  Includes
 =============================================================================*/
 #include <cstdint>
+
 #include "Delay.hpp"
 #include "Pins.hpp"
 #include "Irq.hpp"
@@ -27,6 +28,8 @@
 #include "Clc.hpp"
 #include "Adc.hpp"
 #include "Resets.hpp"
+
+#include "Usb.hpp"
 
 
 
