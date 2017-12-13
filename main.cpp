@@ -109,6 +109,13 @@ int main(){
                                             //(will be EXTR mostly with pkob)
 
 
+    //usb- can't do much, just turn on eye test for a second
+    Usb::power(Usb::USBPWR, true);
+    Usb::config(Usb::EYETEST, true);
+    sw_dly.wait_ms(1000);
+    Usb::config(Usb::EYETEST, false);
+    Usb::power(Usb::USBPWR, false);
+
     //try adc - pot on curiosity board
     Adc::mode_12bit(true);
     Adc::trig_sel(Adc::AUTO);               //adc starts conversion

@@ -11,49 +11,32 @@ class Usb {
 
     public:
 
-    enum FLAGSOTG : uint8_t {
-        //U1OTGIR
-        ID = 1<<7, MSTIMER = 1<<6 /*no STAT*/, LINE_STABLE = 1<<5,
-        ACTIVITY = 1<<4/*no STAT*/, SESSION = 1<<3, BVBUS = 1<<2, AVBUS = 1<<0
-    };
-    static bool     flag                (FLAGSOTG);
-    static void     flag                (FLAGSOTG, bool);
-    static void     irq                 (FLAGSOTG, bool);
-    static bool     stat                (FLAGSOTG);
-
-
-
-    enum OTG : uint8_t {
-        DPUP = 1<<7, DMUP = 1<<6, DPDN = 1<<5, DMDN = 1<<4,
-        VBUSON = 1<<3, OTGON = 1<<2, VCHARGE = 1<<1, VDISCHARGE = 1<<0
-    };
-    static void     otg                 (OTG, bool);
-
-
-
     enum FLAGS : uint8_t {
-        //U1IR
+        //U1IR, U1IE
         STALL = 1<<7, ATTACH = 1<<6, RESUME = 1<<5, IDEL = 1<<4, TOKEN = 1<<3,
         SOF = 1<<2, ERR = 1<<1, RESET = 1<<0, DETACH = 1<<0
     };
+    static FLAGS    flags               ();
     static bool     flag                (FLAGS);
-    static void     flag                (FLAGS, bool);
+    static void     flag_clear          (FLAGS);
     static void     irq                 (FLAGS, bool);
 
 
 
     enum FLAGSERR : uint8_t {
-        //U1IR
+        //U1EIR, U1EIE
         BITSTUFF = 1<<7, BUSMATRIX = 1<<6, DMA = 1<<5, BUSTIMEOUT = 1<<4,
         DATASIZE = 1<<3, CRC16 = 1<<2, CRC5 = 1<<1, EOF = 1<<1, PID = 1<<0
     };
+    static FLAGSERR flags_err           ();
     static bool     flag                (FLAGSERR);
-    static void     flag                (FLAGSERR, bool);
+    static void     flag_clear          (FLAGSERR);
     static void     irq                 (FLAGSERR, bool);
 
 
 
     enum POWER : uint8_t {
+        //U1PWRC
         PENDING = 1<<7, SLEEPGUARD = 1<<4, BUSY = 1<<3,
         SUSPEND = 1<<1, USBPWR = 1<<0
     };
@@ -82,23 +65,9 @@ class Usb {
 
 
 
-    static void     low_speed           (bool);
     static uint8_t  address             ();
     static void     address             (uint8_t);
     static uint16_t frame               ();
-
-
-
-    enum TOKPID : uint8_t { SETUP = 13, IN = 9, OUT = 1 };
-    static TOKPID   tok_pid             ();
-    static uint8_t  tok_ep              ();
-    static void     tok_ep              (uint8_t);
-
-
-    enum SOFVALS : uint8_t {
-        SOF64 = 74, SOF32 = 42, SOF16 = 26, SOF8 = 18
-    };
-    static void     sof_cnt             (SOFVALS);
 
 
 
@@ -131,10 +100,6 @@ class Usb {
 
     //registers - all use only first 8bits
     enum {
-        U1OTGIR = 0xBF808440, //no SET, INV - all bits write-1-to-clear
-        U1OTGIE = 0xBF808450,
-        U1OTGSTAT = 0xBF808460,//no SET, INV, CLR
-        U1OTGCON = 0xBF808470,
         U1PWRC = 0xBF808480,
         U1IR = 0xBF808600,//no SET, INV
         U1IE = 0xBF808610,
@@ -143,12 +108,9 @@ class Usb {
         U1STAT = 0xBF808640,//no SET, INV, CLR
         U1CON = 0xBF808650,
         U1ADDR = 0xBF808660,
-            LSEN = 1<<7,
         U1BDTP1 = 0xBF808670,
         U1FRML = 0xBF808680, //no SET, INV, CLR
         U1FRMH = 0xBF808690, //no SET, INV, CLR
-        U1TOK = 0xBF8086A0,
-        U1SOF = 0xBF8086B0,
         U1BDTP2 = 0xBF806C0,
         U1BDTP3 = 0xBF806D0,
         U1CNFG1 = 0xBF8086E0,
@@ -162,20 +124,17 @@ class Usb {
  all functions inline
 =============================================================================*/
 
-bool Usb::flag(FLAGSOTG e){ return Reg::is_set8(U1OTGIR, e); }
-void Usb::flag(FLAGSOTG e, bool tf){ Reg::val8(U1OTGIR, 1); } //1 to clear
-void Usb::irq(FLAGSOTG e, bool tf){ Reg::set(U1OTGIR, e, tf); }
-bool Usb::stat(FLAGSOTG e){ return Reg::is_set8(U1OTGSTAT, e); }
-void Usb::otg(OTG e, bool tf){ Reg::set(U1OTGCON, e, tf); }
 bool Usb::power(POWER e){ Reg::is_set8(U1PWRC, e); }
 void Usb::power(POWER e, bool tf){ Reg::set(U1PWRC, e, tf); }
 
+Usb::FLAGS Usb::flags(){ return (Usb::FLAGS)Reg::val8(U1IR); }
 bool Usb::flag(FLAGS e){ return Reg::is_set8(U1IR, e); }
-void Usb::flag(FLAGS e, bool tf){ Reg::val8(U1IR, 1); } //1 to clear
+void Usb::flag_clear(FLAGS e){ Reg::val8(U1IR, 1); } //1 to clear
 void Usb::irq(FLAGS e, bool tf){ Reg::set(U1IE, e, tf); }
 
+Usb::FLAGSERR Usb::flags_err(){ return (Usb::FLAGSERR)Reg::val8(U1EIR); }
 bool Usb::flag(FLAGSERR e){ return Reg::is_set8(U1EIR, e); }
-void Usb::flag(FLAGSERR e, bool tf){ Reg::val8(U1EIR, 1); } //1 to clear
+void Usb::flag_clear(FLAGSERR e){ Reg::val8(U1EIR, 1); } //1 to clear
 void Usb::irq(FLAGSERR e, bool tf){ Reg::set(U1EIE, e, tf); }
 
 Usb::stat_t Usb::stat(){ Reg::val8(U1STAT)>>2; }
@@ -183,18 +142,10 @@ Usb::stat_t Usb::stat(){ Reg::val8(U1STAT)>>2; }
 bool Usb::control(CONTROL e){ Reg::is_set8(U1CON, e); }
 void Usb::control(CONTROL e, bool tf){ Reg::set(U1CON, e, tf); }
 
-void Usb::low_speed(bool tf){ Reg::set(U1ADDR, LSEN, tf); }
-
 uint8_t Usb::address(){ return Reg::val8(U1ADDR) & 127; }
 void Usb::address(uint8_t v){ Reg::val8(U1ADDR, v&127); }
 
 uint16_t Usb::frame(){ return (Reg::val8(U1FRMH)<<8) | Reg::val8(U1FRML); }
-
-Usb::TOKPID Usb::tok_pid(){ return (Usb::TOKPID)(Reg::val8(U1TOK)>>4); }
-uint8_t Usb::tok_ep(){ return Reg::val8(U1TOK) & 15; }
-void Usb::tok_ep(uint8_t v){ Reg::clr(U1TOK, 15); Reg::set(U1TOK, v & 15); }
-
-void Usb::sof_cnt(SOFVALS e){ Reg::val8(U1SOF, e); }
 
 void Usb::bdt_addr(uint32_t v){
     Reg::val8(U1BDTP1, v>>8); //512byte aligned (bit0 of this reg unused)
@@ -212,3 +163,11 @@ bool Usb::config(CONFIG e){ return Reg::is_set8(U1CNFG1, e); }
 
 void Usb::endp(EPN n, EP e, bool tf){ Reg::set(U1EP0+n*U1EP_SPACING, e, tf); }
 bool Usb::endp(EPN n, EP e){ return Reg::is_set8(U1EP0+n*U1EP_SPACING, e); }
+
+
+
+
+
+
+
+
