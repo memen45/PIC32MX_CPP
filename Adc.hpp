@@ -27,7 +27,6 @@ class Adc {
     };
     //vref config
     enum VCFG {
-
         EXTP_EXTN = 3<<13, EXTP_VSS = 2<<13, VDD_EXTN = 1<<13, VDD_VSS = 0<<13
     };
     //auto-scan interrupt mode
