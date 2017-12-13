@@ -110,6 +110,7 @@ int main(){
 
 
     //usb- can't do much, just turn on eye test for a second
+    //(no Osc.hpp yet, so pll output running at 24MHz, usb clock is then 12MHz)
     Usb u;
     u.power(u.USBPWR, true);
     u.config(u.EYETEST, true);
