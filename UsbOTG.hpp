@@ -13,12 +13,16 @@ class UsbOTG {
 
     enum FLAGSOTG : uint8_t {
         //U1OTGIR, U1OTGIE, U1OTGSTAT
-        ID = 1<<7, MSTIMER = 1<<6 /*no STAT*/, LINE_STABLE = 1<<5,
-        ACTIVITY = 1<<4/*no STAT*/, SESSION = 1<<3, BVBUS = 1<<2, AVBUS = 1<<0
+        ID = 1<<7,
+        MSTIMER = 1<<6, /*no STAT*/
+        LINE_STABLE = 1<<5,
+        ACTIVITY = 1<<4, /*no STAT*/
+        SESSION = 1<<3, BVBUS = 1<<2, AVBUS = 1<<0
     };
-    static FLAGSOTG flags_otg           ();
+    static FLAGSOTG flags               ();
     static bool     flag                (FLAGSOTG);
     static void     flag_clear          (FLAGSOTG);
+    static void     flags_clear         ();
     static void     irq                 (FLAGSOTG, bool);
     static bool     stat                (FLAGSOTG);
 
@@ -71,9 +75,10 @@ class UsbOTG {
  all functions inline
 =============================================================================*/
 
-Usb::FLAGSOTG Usb::flags_otg(){ (Usb::FLAGSOTG)Reg::val8(U1OTGIR); }
+Usb::FLAGSOTG Usb::flags(){ (Usb::FLAGSOTG)Reg::val8(U1OTGIR); }
 bool Usb::flag(FLAGSOTG e){ return Reg::is_set8(U1OTGIR, e); }
 void Usb::flag_clear(FLAGSOTG e){ Reg::val8(U1OTGIR, 1); } //1 to clear
+void Usb::flag_clear(){ Reg::val8(U1OTGIR, 255); } //clear all
 void Usb::irq(FLAGSOTG e, bool tf){ Reg::set(U1OTGIR, e, tf); }
 bool Usb::stat(FLAGSOTG e){ return Reg::is_set8(U1OTGSTAT, e); }
 void Usb::otg(OTG e, bool tf){ Reg::set(U1OTGCON, e, tf); }

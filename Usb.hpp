@@ -16,10 +16,13 @@ class Usb {
         STALL = 1<<7, ATTACH = 1<<6, RESUME = 1<<5, IDEL = 1<<4, TOKEN = 1<<3,
         SOF = 1<<2, ERR = 1<<1, RESET = 1<<0, DETACH = 1<<0
     };
+
     static FLAGS    flags               ();
     static bool     flag                (FLAGS);
+    static void     flags_clear         ();
     static void     flag_clear          (FLAGS);
     static void     irq                 (FLAGS, bool);
+    static void     irq                 (uint8_t);
 
 
 
@@ -28,10 +31,13 @@ class Usb {
         BITSTUFF = 1<<7, BUSMATRIX = 1<<6, DMA = 1<<5, BUSTIMEOUT = 1<<4,
         DATASIZE = 1<<3, CRC16 = 1<<2, CRC5 = 1<<1, EOF = 1<<1, PID = 1<<0
     };
+
     static FLAGSERR flags_err           ();
-    static bool     flag                (FLAGSERR);
-    static void     flag_clear          (FLAGSERR);
-    static void     irq                 (FLAGSERR, bool);
+    static bool     flag_err            (FLAGSERR);
+    static void     flags_errclear      ();
+    static void     flag_errclear       (FLAGSERR);
+    static void     irq_err             (FLAGSERR, bool);
+    static void     irq_err             (uint8_t);
 
 
 
@@ -40,6 +46,7 @@ class Usb {
         PENDING = 1<<7, SLEEPGUARD = 1<<4, BUSY = 1<<3,
         SUSPEND = 1<<1, USBPWR = 1<<0
     };
+
     static bool     power               (POWER);
     static void     power               (POWER, bool);
 
@@ -51,6 +58,7 @@ class Usb {
         uint8_t TX:1;
         uint8_t EPNUM:4;
     } stat_t;
+
     static stat_t   stat                ();
 
 
@@ -60,6 +68,7 @@ class Usb {
         USBRESET = 1<<4, HOSTEN = 1<<3, RESUMEN = 1<<2, PPRESET = 1<<1,
         USBEN = 1<<0, SOFEN = 1<<0
     };
+
     static bool     control             (CONTROL);
     static void     control             (CONTROL, bool);
 
@@ -80,8 +89,10 @@ class Usb {
         EYETEST = 1<<7, OEMON = 1<<6, SIDLE = 1<<4, LSDEV = 1<<3,
         AUTOSUSP = 1<<0
     };
+
     static void     config              (CONFIG, bool);
     static bool     config              (CONFIG);
+
 
 
     enum EPN {
@@ -93,9 +104,12 @@ class Usb {
         CTRLDIS = 1<<4, /*only when TXEN=1 && RXEN=1*/
         RXEN = 1<<3, TXEN = 1<<2, ESTALL = 1<<1, HSHAKE = 1<<0
     };
+
     static void     endp                (EPN, EP, bool);
     static bool     endp                (EPN, EP);
 
+
+    
     private:
 
     //registers - all use only first 8bits
@@ -129,13 +143,17 @@ void Usb::power(POWER e, bool tf){ Reg::set(U1PWRC, e, tf); }
 
 Usb::FLAGS Usb::flags(){ return (Usb::FLAGS)Reg::val8(U1IR); }
 bool Usb::flag(FLAGS e){ return Reg::is_set8(U1IR, e); }
+void Usb::flags_clear(){ Reg::val8(U1IR, 255); } //clear all
 void Usb::flag_clear(FLAGS e){ Reg::val8(U1IR, 1); } //1 to clear
 void Usb::irq(FLAGS e, bool tf){ Reg::set(U1IE, e, tf); }
+void Usb::irq(uint8_t v){ Reg::set(U1IE, v); }
 
 Usb::FLAGSERR Usb::flags_err(){ return (Usb::FLAGSERR)Reg::val8(U1EIR); }
-bool Usb::flag(FLAGSERR e){ return Reg::is_set8(U1EIR, e); }
-void Usb::flag_clear(FLAGSERR e){ Reg::val8(U1EIR, 1); } //1 to clear
-void Usb::irq(FLAGSERR e, bool tf){ Reg::set(U1EIE, e, tf); }
+bool Usb::flag_err(FLAGSERR e){ return Reg::is_set8(U1EIR, e); }
+void Usb::flags_errclear(){ Reg::val8(U1EIR, 255); } //clear all
+void Usb::flag_errclear(FLAGSERR e){ Reg::val8(U1EIR, 1); } //1 to clear
+void Usb::irq_err(FLAGSERR e, bool tf){ Reg::set(U1EIE, e, tf); }
+void Usb::irq_err(uint8_t v){ Reg::set(U1EIE, v); }
 
 Usb::stat_t Usb::stat(){ Reg::val8(U1STAT)>>2; }
 

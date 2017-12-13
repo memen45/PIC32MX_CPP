@@ -115,6 +115,7 @@ int main(){
     sw_dly.wait_ms(1000);
     Usb::config(Usb::EYETEST, false);
     Usb::power(Usb::USBPWR, false);
+    Usb::irq(Usb::STALL|Usb::SOF);
 
     //try adc - pot on curiosity board
     Adc::mode_12bit(true);
