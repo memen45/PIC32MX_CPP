@@ -17,7 +17,7 @@ class Usb {
         SOF = 1<<2, ERR = 1<<1, RESET = 1<<0, DETACH = 1<<0
     };
 
-    static FLAGS    flags               ();
+    static uint8_t  flags               ();
     static bool     flag                (FLAGS);
     static void     flags_clear         ();
     static void     flag_clear          (FLAGS);
@@ -32,7 +32,7 @@ class Usb {
         DATASIZE = 1<<3, CRC16 = 1<<2, CRC5 = 1<<1, EOF = 1<<1, PID = 1<<0
     };
 
-    static FLAGSERR flags_err           ();
+    static uint8_t  flags_err           ();
     static bool     flag_err            (FLAGSERR);
     static void     flags_errclear      ();
     static void     flag_errclear       (FLAGSERR);
@@ -109,7 +109,7 @@ class Usb {
     static bool     endp                (EPN, EP);
 
 
-    
+
     private:
 
     //registers - all use only first 8bits
@@ -141,14 +141,14 @@ class Usb {
 bool Usb::power(POWER e){ Reg::is_set8(U1PWRC, e); }
 void Usb::power(POWER e, bool tf){ Reg::set(U1PWRC, e, tf); }
 
-Usb::FLAGS Usb::flags(){ return (Usb::FLAGS)Reg::val8(U1IR); }
+uint8_t Usb::flags(){ return (Usb::FLAGS)Reg::val8(U1IR); }
 bool Usb::flag(FLAGS e){ return Reg::is_set8(U1IR, e); }
 void Usb::flags_clear(){ Reg::val8(U1IR, 255); } //clear all
 void Usb::flag_clear(FLAGS e){ Reg::val8(U1IR, 1); } //1 to clear
 void Usb::irq(FLAGS e, bool tf){ Reg::set(U1IE, e, tf); }
 void Usb::irq(uint8_t v){ Reg::set(U1IE, v); }
 
-Usb::FLAGSERR Usb::flags_err(){ return (Usb::FLAGSERR)Reg::val8(U1EIR); }
+uint8_t Usb::flags_err(){ return (Usb::FLAGSERR)Reg::val8(U1EIR); }
 bool Usb::flag_err(FLAGSERR e){ return Reg::is_set8(U1EIR, e); }
 void Usb::flags_errclear(){ Reg::val8(U1EIR, 255); } //clear all
 void Usb::flag_errclear(FLAGSERR e){ Reg::val8(U1EIR, 1); } //1 to clear
