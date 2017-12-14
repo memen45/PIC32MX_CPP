@@ -28,7 +28,6 @@
 #include "Clc.hpp"
 #include "Adc.hpp"
 #include "Resets.hpp"
-
 #include "Usb.hpp"
 
 
