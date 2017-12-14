@@ -20,12 +20,20 @@ class UsbOTG {
         SESSION = 1<<3, BVBUS = 1<<2, AVBUS = 1<<0
     };
 
-    static uint8_t  flags               ();
-    static bool     flag                (FLAGSOTG);
-    static void     flag_clear          (FLAGSOTG);
-    static void     flags_clear         ();
-    static void     irq                 (FLAGSOTG, bool);
-    static bool     stat                (FLAGSOTG);
+    static uint8_t  flags               ();                 //get all
+    static bool     flag                (FLAGSOTG);         //get one
+    static void     flags_clear         ();                 //clear all
+    static void     flags_clear         (uint8_t);          //clear one or more
+    static void     flag_clear          (FLAGSOTG);         //clear one
+
+    static uint16_t irqs                ();                 //get all
+    static bool     irq                 (FLAGSOTG);         //get one
+    static void     irqs_clear          ();                 //clear all
+    static void     irqs_clear          (uint8_t);          //clr one or more
+    static void     irq_clear           (FLAGS);            //clr one
+
+    static uint8_t  stat                ();                 //get all
+    static bool     stat                (FLAGSOTG);         //get one
 
 
 
@@ -79,12 +87,21 @@ class UsbOTG {
  all functions inline
 =============================================================================*/
 
-Usb::FLAGSOTG Usb::flags(){ (Usb::FLAGSOTG)Reg::val8(U1OTGIR); }
-bool Usb::flag(FLAGSOTG e){ return Reg::is_set8(U1OTGIR, e); }
-void Usb::flag_clear(FLAGSOTG e){ Reg::val8(U1OTGIR, 1); } //1 to clear
-void Usb::flag_clear(){ Reg::val8(U1OTGIR, 255); } //clear all
-void Usb::irq(FLAGSOTG e, bool tf){ Reg::set(U1OTGIR, e, tf); }
-bool Usb::stat(FLAGSOTG e){ return Reg::is_set8(U1OTGSTAT, e); }
+uint8_t Usb::flags(){ (Usb::FLAGSOTG)Reg::val8(U1OTGIR); } //get all
+bool Usb::flag(FLAGSOTG e){ return Reg::is_set8(U1OTGIR, e); } //get one
+void Usb::flags_clear(){ Reg::val8(U1OTGIR, 255); } //clear all
+void Usb::flags_clear(uint8_t v){ Reg::val8(U1OTGIR, v); } //clear one or more
+void Usb::flag_clear(FLAGSOTG e){ Reg::val8(U1OTGIR, e); } //clear one
+
+uint8_t Usb::irqs(){ Reg::val8(U1OTGIR); } //get all
+bool Usb::irq(FLAGSOTG e){ return Reg::is_set8(U1OTGIR, e); } //get one
+void Usb::irqs_clear(){ Reg::val8(U1OTGIR, 255); } //clear all
+void Usb::irqs_clear(uint8_t v){ Reg::val8(U1OTGIR, v); } //clear one or more
+void Usb::irq_clear(FLAGSOTG e){ Reg::val8(U1OTGIR, e); } //clear one
+
+uint8_t Usb::stat(){ return Reg::val8(U1OTGSTAT); } //get all
+bool Usb::stat(FLAGSOTG e){ return Reg::is_set8(U1OTGSTAT, e); } //get one
+
 void Usb::otg(OTG e, bool tf){ Reg::set(U1OTGCON, e, tf); }
 
 void Usb::low_speed(bool tf){ Reg::set(U1ADDR, LSEN, tf); }

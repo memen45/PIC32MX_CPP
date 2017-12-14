@@ -7,37 +7,41 @@
 #include <cstdint>
 #include "Reg.hpp"
 
+
+static const uint8_t maxn_endp = 4; //max number endpoint
+
+
+
 class Usb {
 
     public:
 
-    enum FLAGS : uint8_t {
+
+
+    enum FLAGS : uint16_t { //unite all flags, irq's - | err<<8 | reg |
         //U1IR, U1IE
         STALL = 1<<7, ATTACH = 1<<6, RESUME = 1<<5, IDEL = 1<<4, TOKEN = 1<<3,
-        SOF = 1<<2, ERR = 1<<1, RESET = 1<<0, DETACH = 1<<0
+        SOF = 1<<2, ERR = 1<<1, RESET = 1<<0, DETACH = 1<<0,
+
+        //U1EIR, U1EIE (+32bytes from U1IR, U1IE)
+        //these bits shifted up by 8
+        BITSTUFF = 1<<15, BUSMATRIX = 1<<14, DMA = 1<<13,
+        BUSTIMEOUT = 1<<12, DATASIZE = 1<<11, CRC16 = 1<<10,
+        CRC5 = 1<<9, EOF = 1<<9, PID = 1<<8
     };
 
-    static uint8_t  flags               ();
-    static bool     flag                (FLAGS);
-    static void     flags_clear         ();
-    static void     flag_clear          (FLAGS);
-    static void     irq                 (FLAGS, bool);
-    static void     irq                 (uint8_t);
+    static uint16_t flags               ();             //get all
+    static bool     flag                (FLAGS);        //get one
+    static void     flags_clear         ();             //clear all
+    static void     flags_clear         (uint16_t);     //clear one or more
+    static void     flag_clear          (FLAGS);        //clear one
 
+    static uint16_t irqs                ();             //get all
+    static bool     irq                 (FLAGS);        //get one
+    static void     irqs_clear          ();             //clear all
+    static void     irqs_clear          (uint16_t);     //clr one or more
+    static void     irq_clear           (FLAGS);        //clr one
 
-
-    enum FLAGSERR : uint8_t {
-        //U1EIR, U1EIE
-        BITSTUFF = 1<<7, BUSMATRIX = 1<<6, DMA = 1<<5, BUSTIMEOUT = 1<<4,
-        DATASIZE = 1<<3, CRC16 = 1<<2, CRC5 = 1<<1, EOF = 1<<1, PID = 1<<0
-    };
-
-    static uint8_t  flags_err           ();
-    static bool     flag_err            (FLAGSERR);
-    static void     flags_errclear      ();
-    static void     flag_errclear       (FLAGSERR);
-    static void     irq_err             (FLAGSERR, bool);
-    static void     irq_err             (uint8_t);
 
 
 
@@ -58,8 +62,9 @@ class Usb {
         uint8_t TX:1;
         uint8_t EPNUM:4;
     } stat_t;
+    // bdt_addr|(stat_t & 0xFC) = bd address
 
-    static stat_t   stat                ();
+    static stat_t   stat                (); //only valid when flag(TOKEN)=1
 
 
 
@@ -80,8 +85,13 @@ class Usb {
 
 
 
+    //address of 512byte BDT buffer (512byte aligned)
+    //(16bdt's * 2(in/out) * 2(odd/even) * 8bytes = 512)
     static void     bdt_addr            (uint32_t);
     static uint32_t bdt_addr            ();
+
+
+
 
 
 
@@ -109,6 +119,28 @@ class Usb {
     static bool     endp                (EPN, EP);
 
 
+     enum BDT {
+         UOWN = 1<<7, DATA01 = 1<<6, KEEP = 1<<5, NINC = 1<<4,
+         DTS = 1<<3, BSTALL = 1<<2
+     };
+
+    uint32_t        bdt_buf_addr        (uint8_t, bool, bool);
+    void            bdt_buf_addr        (uint8_t, bool, bool, uint32_t);
+    uint16_t        bdt_byte_count      (uint8_t, bool, bool);
+    void            bdt_byte_count      (uint8_t, bool, bool, uint16_t);
+    bool            bdt_uown            (uint8_t, bool, bool);
+    void            bdt_set             (uint8_t, bool, bool, BDT);
+    void            bdt_clr             (uint8_t, bool, bool, BDT);
+    uint8_t         bdt_pid             (uint8_t, bool, bool);
+
+
+    //vars
+    typedef struct { uint32_t dat; uint32_t addr; } Bdt_trx_t;
+    typedef struct { Bdt_trx_t rx[2]; Bdt_trx_t tx[2]; } Bdt_table_t;
+
+    static Bdt_table_t bdt_table[maxn_endp+1] __attribute__ ((aligned (512)));
+
+
 
     private:
 
@@ -131,6 +163,7 @@ class Usb {
         U1EP0 = 0xBF808700, U1EP_SPACING = 0x10
         //U1EP1 0xBF808710 - U1EP15 0xBF8087F0
      };
+
 };
 
 
@@ -141,21 +174,42 @@ class Usb {
 bool Usb::power(POWER e){ Reg::is_set8(U1PWRC, e); }
 void Usb::power(POWER e, bool tf){ Reg::set(U1PWRC, e, tf); }
 
-uint8_t Usb::flags(){ return (Usb::FLAGS)Reg::val8(U1IR); }
-bool Usb::flag(FLAGS e){ return Reg::is_set8(U1IR, e); }
-void Usb::flags_clear(){ Reg::val8(U1IR, 255); } //clear all
-void Usb::flag_clear(FLAGS e){ Reg::val8(U1IR, 1); } //1 to clear
-void Usb::irq(FLAGS e, bool tf){ Reg::set(U1IE, e, tf); }
-void Usb::irq(uint8_t v){ Reg::set(U1IE, v); }
+uint16_t Usb::flags(){ //get all
+    return Reg::val8(U1EIR)<<8 | Reg::val8(U1IR);
+}
+bool Usb::flag(FLAGS e){ //get one
+    return e < 256 ? Reg::is_set8(U1IR, e) : Reg::is_set8(U1EIR, e>>8);
+}
+void Usb::flags_clear(){ //clear all
+    Reg::val8(U1IR, 255); Reg::val8(U1EIR, 255);
+}
+void Usb::flags_clear(uint16_t v){ //clear one or more
+    Reg::val8(U1EIR, v>>8); Reg::val8(U1IR, v);
+}
+void Usb::flag_clear(FLAGS e){ //clear one
+    if(e < 256) Reg::val8(U1IR, e);
+    else Reg::val8(U1EIR, e>>8);
+}
 
-uint8_t Usb::flags_err(){ return (Usb::FLAGSERR)Reg::val8(U1EIR); }
-bool Usb::flag_err(FLAGSERR e){ return Reg::is_set8(U1EIR, e); }
-void Usb::flags_errclear(){ Reg::val8(U1EIR, 255); } //clear all
-void Usb::flag_errclear(FLAGSERR e){ Reg::val8(U1EIR, 1); } //1 to clear
-void Usb::irq_err(FLAGSERR e, bool tf){ Reg::set(U1EIE, e, tf); }
-void Usb::irq_err(uint8_t v){ Reg::set(U1EIE, v); }
+uint16_t Usb::irqs(){ //get all
+    return Reg::val8(U1EIE)<<8 | Reg::val8(U1IE);
+}
+bool Usb::irq(FLAGS e){ //get one
+    return e < 256 ? Reg::is_set8(U1IE, e) : Reg::is_set8(U1EIE, e>>8);
+}
+void Usb::irqs_clear(){ //clear all
+    Reg::val8(U1IE, 255); Reg::val8(U1EIE, 255);
+}
+void Usb::irqs_clear(uint16_t v){ //clear one or more
+    Reg::val8(U1EIE, v>>8); Reg::val8(U1IE, v);
+}
+void Usb::irq_clear(FLAGS e){ //clear one
+    if(e < 256) Reg::val8(U1IE, e);
+    else Reg::val8(U1EIE, e>>8);
+}
 
-Usb::stat_t Usb::stat(){ Reg::val8(U1STAT)>>2; }
+
+Usb::stat_t Usb::stat(){ Reg::val8(U1STAT) & 0xFC; }
 
 bool Usb::control(CONTROL e){ Reg::is_set8(U1CON, e); }
 void Usb::control(CONTROL e, bool tf){ Reg::set(U1CON, e, tf); }
@@ -183,8 +237,36 @@ void Usb::endp(EPN n, EP e, bool tf){ Reg::set(U1EP0+n*U1EP_SPACING, e, tf); }
 bool Usb::endp(EPN n, EP e){ return Reg::is_set8(U1EP0+n*U1EP_SPACING, e); }
 
 
-
-
+uint32_t Usb::bdt_buf_addr(uint8_t epn, bool tx, bool odd){
+    //return *(uint32_t*)&bdt_table[epn] + ((tx<<1)|odd);
+    return Reg::val(&bdt_table[epn] + ((tx<<3)|odd<<2));
+}
+void Usb::bdt_buf_addr(uint8_t epn, bool tx, bool odd, uint32_t v){
+    //*( (uint32_t*)(&bdt_table[epn]) + ((tx<<1)|odd) ) = v;
+    Reg::val(&bdt_table[epn] + ((tx<<3)|odd<<2), v);
+}
+uint16_t Usb::bdt_byte_count(uint8_t epn, bool tx, bool odd){
+    return Reg::val16(&bdt_table[epn] + ((tx<<3)|odd<<2) + 2) & 0x3FF;
+}
+void Usb::bdt_byte_count(uint8_t epn, bool tx, bool odd, uint16_t v){
+    Reg::val16(&bdt_table[epn] + ((tx<<3)|odd<<2) + 2, v & 0x3FF);
+}
+bool Usb::bdt_uown(uint8_t epn, bool tx, bool odd){
+    return Reg::is_set8(&bdt_table[epn] + ((tx<<3)|odd<<2), UOWN );
+}
+void Usb::bdt_set(uint8_t epn, bool tx, bool odd, BDT e){
+    uint8_t r = Reg::val8(&bdt_table[epn] + ((tx<<3)|odd<<2));
+    r |= e;
+    Reg::val8(&bdt_table[epn] + ((tx<<3)|odd<<2), r);
+}
+void Usb::bdt_clr(uint8_t epn, bool tx, bool odd, BDT e){
+    uint8_t r = Reg::val8(&bdt_table[epn] + ((tx<<3)|odd<<2));
+    r &= ~e;
+    Reg::val8(&bdt_table[epn] + ((tx<<3)|odd<<2), r);
+}
+uint8_t Usb::bdt_pid(uint8_t epn, bool tx, bool odd){
+    return (Reg::val8(&bdt_table[epn] + ((tx<<3)|odd<<2))>>2) & 15;
+}
 
 
 

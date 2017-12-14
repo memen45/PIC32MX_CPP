@@ -138,7 +138,7 @@ class Usb_CH9 {
         FORDEV = 0, FORIFACE = 1, FORENDP = 2, FOROTHER = 3
     } bmRequestTypeSETUP_t;
 
-    typedef enum { //uint16_t wRequest;
+    typedef enum { //uint16_t wRequest; (bmRequestType|bRequest<<8)
         DEV_GET_STATUS = 0x0080, DEV_CLEAR_FEATURE = 0x0100,
         DEV_SET_FEATURE = 0x0300, DEV_SET_ADDRESS = 0x0500,
         DEV_GET_DESCRIPTOR = 0x0680, DEV_SET_DESCRIPTOR = 0x0700,
@@ -167,16 +167,36 @@ class Usb_CH9 {
     //      EOP     SE0 for 2bit times, J 1 bit time
     //============================================================
 
-
-    //============================================================
-    // (Token) Setup Packet
-    //============================================================
-
     typedef enum {
         OUT = 0x1E, IN = 0x96, SOF = 0x5A, SETUP = 0xD2,        //Token
         DATA0 = 0x3C, DATA1 = 0xB4, DATA2 = 0x78, MDATA = 0xF0, //Data
         ACK = 0x2D, NAK = 0xA5, STALL = 0xE1, NYET = 0x69,      //Handshake
         PRE = 0xC3, ERR = 0xC3, SPLIT = 0x87, PING = 0x4B       //Special
-    } PidSETUP_t;
+    } Pid_t;
+
+    //============================================================
+    // Token Packet - IN, OUT, SETUP
+    //============================================================
+    // Sync PID	ADDR ENDP CRC5 EOP
+
+    //============================================================
+    // Token Packet - SOF
+    //============================================================
+    //Sync PID FrameNumber CRC5 EOP
+    //11bit Frame Number every 1ms for FS, every 125us for HS
+
+    //============================================================
+    // Data Packet - DATA0, DATA1 (HS DATA2, MDATA)
+    //============================================================
+    //Sync PID Data CRC16 EOP
+    //LS max 8bytes, FS max 1023bytes, HS max 1024bytes
+
+    //============================================================
+    // Handshake Packet - ACK, NAK, STALL
+    //============================================================
+    //Sync PID EOP
+
+
+
 
 };
