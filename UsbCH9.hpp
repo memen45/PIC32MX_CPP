@@ -156,6 +156,13 @@ class Usb_CH9 {
 
     //============================================================
     // USB Protocol -
+    // |FRAME|FRAME|FRAME|...
+    //    ^
+    //    SOF|TRANSACTION|TRANSACTION|TRANSACTION|...
+    //             ^
+    //             TOKEN|[DATA]|HANDSHAKE
+    //
+    //  Transation-
     //  Token packet, optional Data packet, Status packet
     //
     //  all packets-

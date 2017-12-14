@@ -1,52 +1,86 @@
 #pragma once
 
 /*=============================================================================
- USB
+ USB peripheral - pic32mmxxxxGPMxxx
 =============================================================================*/
 
 #include <cstdint>
 #include "Reg.hpp"
 
 
-
-
-
-
 class Usb {
 
     public:
 
+    /*=========================================================================
+     flags, interrupts
+        FLAGS enum contains all flag names, with error names shifted left 8bits
+            this enaum also doubles for irq names
+
+        flags();                -return val of all flags (uin16_t)
+        flag(FLAGS);            -get specified flag
+        flags_clr();            -clear all flags
+        flags_clr(uint16_t);    -clear flag(s) as bitmask (1=clear)
+        flag_clr(FLAGS);        -clear one flag
+
+        irqs();                 -return val of all irqs (uin16_t)
+        irq(FLAGS);             -get specified irq
+        irqs(uint16_t);         -set value (all)
+        irq(FLAGS, bool);       -one irq on/off (true=on)
+    =========================================================================*/
+
     enum FLAGS : uint16_t { //unite all flags, irq's - | err<<8 | reg |
         //U1IR, U1IE
-        STALL = 1<<7, ATTACH = 1<<6, RESUME = 1<<5, IDEL = 1<<4, TOKEN = 1<<3,
-        SOF = 1<<2, ERR = 1<<1, RESET = 1<<0, DETACH = 1<<0,
+        STALL = 1<<7,
+        ATTACH = 1<<6,
+        RESUME = 1<<5,
+        IDEL = 1<<4,
+        TOKEN = 1<<3,
+        SOF = 1<<2,
+        ERR = 1<<1,
+        RESET = 1<<0,
+        DETACH = 1<<0,
 
         //U1EIR, U1EIE (+32bytes from U1IR, U1IE)
         //these bits shifted up by 8
-        BITSTUFF = 1<<15, BUSMATRIX = 1<<14, DMA = 1<<13,
-        BUSTIMEOUT = 1<<12, DATASIZE = 1<<11, CRC16 = 1<<10,
-        CRC5 = 1<<9, EOF = 1<<9, PID = 1<<8
+        BITSTUFF = 1<<15,
+        BUSMATRIX = 1<<14,
+        DMA = 1<<13,
+        BUSTIMEOUT = 1<<12,
+        DATASIZE = 1<<11,
+        CRC16 = 1<<10,
+        CRC5 = 1<<9,
+        EOF = 1<<9,
+        PID = 1<<8
     };
 
     static uint16_t flags               ();             //get all
     static bool     flag                (FLAGS);        //get one
-    static void     flags_clear         ();             //clear all
-    static void     flags_clear         (uint16_t);     //clear one or more
-    static void     flag_clear          (FLAGS);        //clear one
+    static void     flags_clr           ();             //clear all
+    static void     flags_clr           (uint16_t);     //clear one or more
+    static void     flag_clr            (FLAGS);        //clear one
 
     static uint16_t irqs                ();             //get all
     static bool     irq                 (FLAGS);        //get one
-    static void     irqs_clear          ();             //clear all
-    static void     irqs_clear          (uint16_t);     //clr one or more
-    static void     irq_clear           (FLAGS);        //clr one
+    static void     irqs                (uint16_t);     //set value (all))
+    static void     irq                 (FLAGS, bool);  //irq on/off
 
 
+    /*=========================================================================
+     power
+        POWER enum contains all power names
 
+        power(POWER);           -return POWER bit is set
+        power(POWER, bool);     -set/clr specified POWER bit (true=on)
+    =========================================================================*/
 
     enum POWER : uint8_t {
         //U1PWRC
-        PENDING = 1<<7, SLEEPGUARD = 1<<4, BUSY = 1<<3,
-        SUSPEND = 1<<1, USBPWR = 1<<0
+        PENDING = 1<<7,
+        SLEEPGUARD = 1<<4,
+        BUSY = 1<<3,
+        SUSPEND = 1<<1,
+        USBPWR = 1<<0
     };
 
     static bool     power               (POWER);
@@ -67,9 +101,16 @@ class Usb {
 
 
     enum CONTROL : uint8_t {
-        JSTATE = 1<<7, SE0 = 1<<6, PKTDIS = 1<<5, TOKBUSY = 1<<5,
-        USBRESET = 1<<4, HOSTEN = 1<<3, RESUMEN = 1<<2, PPRESET = 1<<1,
-        USBEN = 1<<0, SOFEN = 1<<0
+        JSTATE = 1<<7,
+        SE0 = 1<<6,
+        PKTDIS = 1<<5,
+        TOKBUSY = 1<<5,
+        USBRESET = 1<<4,
+        HOSTEN = 1<<3,
+        RESUMEN = 1<<2,
+        PPRESET = 1<<1,
+        USBEN = 1<<0,
+        SOFEN = 1<<0
     };
 
     static bool     control             (CONTROL);
@@ -83,8 +124,8 @@ class Usb {
 
 
 
-    //address of 512byte BDT buffer (512byte aligned)
-    //(16bdt's * 2(in/out) * 2(odd/even) * 8bytes = 512)
+    //address of (up to)512byte BDT buffer (512byte aligned)
+    //(16bdt's * 2(in/out) * 2(odd/even) * 8bytes = 512bytes max)
     static void     bdt_addr            (uint32_t);
     static uint32_t bdt_addr            ();
 
@@ -94,7 +135,10 @@ class Usb {
 
 
     enum CONFIG : uint8_t {
-        EYETEST = 1<<7, OEMON = 1<<6, SIDLE = 1<<4, LSDEV = 1<<3,
+        EYETEST = 1<<7,
+        OEMON = 1<<6,
+        SIDLE = 1<<4,
+        LSDEV = 1<<3,
         AUTOSUSP = 1<<0
     };
 
@@ -108,9 +152,13 @@ class Usb {
         EP10, EP11, EP12, EP13, EP14, EP15
     };
     enum EP {
-        LS = 1<<7, RETRYDIS = 1<<6, /*these 2 HOST EP0 only*/
+        LS = 1<<7,
+        RETRYDIS = 1<<6, /*these 2 HOST EP0 only*/
         CTRLDIS = 1<<4, /*only when TXEN=1 && RXEN=1*/
-        RXEN = 1<<3, TXEN = 1<<2, ESTALL = 1<<1, HSHAKE = 1<<0
+        RXEN = 1<<3,
+        TXEN = 1<<2,
+        ESTALL = 1<<1,
+        HSHAKE = 1<<0
     };
 
     static void     endp                (EPN, EP, bool);
@@ -152,6 +200,8 @@ class Usb {
 
 bool Usb::power(POWER e){ Reg::is_set8(U1PWRC, e); }
 void Usb::power(POWER e, bool tf){ Reg::set(U1PWRC, e, tf); }
+
+
 //get all
 uint16_t Usb::flags(){ return Reg::val8(U1EIR)<<8 | Reg::val8(U1IR); }
 //get one
@@ -159,28 +209,26 @@ bool Usb::flag(FLAGS e){
     return e < 256 ? Reg::is_set8(U1IR, e) : Reg::is_set8(U1EIR, e>>8);
 }
 //clear all
-void Usb::flags_clear(){ Reg::val8(U1IR, 255); Reg::val8(U1EIR, 255); }
+void Usb::flags_clr(){ Reg::val8(U1IR, 255); Reg::val8(U1EIR, 255); }
 //clear one or more
-void Usb::flags_clear(uint16_t v){ Reg::val8(U1EIR, v>>8); Reg::val8(U1IR, v); }
+void Usb::flags_clr(uint16_t v){ Reg::val8(U1EIR, v>>8); Reg::val8(U1IR, v); }
 //clear one
-void Usb::flag_clear(FLAGS e){
+void Usb::flag_clr(FLAGS e){
     if(e < 256) Reg::val8(U1IR, e);
     else Reg::val8(U1EIR, e>>8);
 }
+
 //get all
 uint16_t Usb::irqs(){ return Reg::val8(U1EIE)<<8 | Reg::val8(U1IE); }
 //get one
 bool Usb::irq(FLAGS e){
     return e < 256 ? Reg::is_set8(U1IE, e) : Reg::is_set8(U1EIE, e>>8);
 }
-//clear all
-void Usb::irqs_clear(){ Reg::val8(U1IE, 255); Reg::val8(U1EIE, 255); }
-//clear one or more
-void Usb::irqs_clear(uint16_t v){ Reg::val8(U1EIE, v>>8); Reg::val8(U1IE, v); }
-//clear one
-void Usb::irq_clear(FLAGS e){
-    if(e < 256) Reg::val8(U1IE, e);
-    else Reg::val8(U1EIE, e>>8);
+//set value
+void Usb::irqs(uint16_t v){ Reg::val8(U1IE, v); Reg::val8(U1EIE, v>>8); }
+//one on/off
+void Usb::irq(FLAGS e, bool tf){
+    if(e < 256) Reg::set(U1IE, e); else Reg::set(U1EIE, e>>8);
 }
 
 
