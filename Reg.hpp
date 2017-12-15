@@ -15,6 +15,7 @@ class Reg {
     template <typename T> static void       set     (T, uint32_t, bool);
     template <typename T> static void       clr     (T, uint32_t);
     template <typename T> static void       inv     (T, uint32_t);
+
     //memory simulate SET/CLR/INV
     template <typename T, typename V>
                           static void       mset    (T, V);
@@ -35,6 +36,11 @@ class Reg {
     template <typename T> static uint16_t   val16   (T);
     template <typename T> static void       val8    (T, uint8_t);
     template <typename T> static uint8_t    val8    (T);
+
+    //physical to kseg0/1 addr, kseg to physical addr
+    template <typename T> static uint32_t   p2kseg1 (T);
+    template <typename T> static uint32_t   p2kseg0 (T);
+    template <typename T> static uint32_t   k2phys  (T);
 
     private:
 
@@ -108,4 +114,15 @@ template <typename T> void Reg::val8(T r, uint8_t v){
 }
 template <typename T> uint8_t Reg::val8(T r){
     return *(reinterpret_cast <volatile uint8_t*>(r));
+}
+
+    //physical to kseg0/1 addr, kseg to physical addr
+template <typename T> uint32_t p2kseg1(T r){
+    return (reinterpret_cast <uint32_t>(r)) | 0xA0000000;
+}
+template <typename T> uint32_t p2kseg0(T r){
+    return (reinterpret_cast <uint32_t>(r)) | 0x80000000;
+}
+template <typename T> uint32_t k2phys(T r){
+    return (reinterpret_cast <uint32_t>(r)) & 0x1FFFFFFF;
 }

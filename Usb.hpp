@@ -34,7 +34,7 @@ class Usb {
         STALL = 1<<7,
         ATTACH = 1<<6,
         RESUME = 1<<5,
-        IDEL = 1<<4,
+        IDLE = 1<<4,
         TOKEN = 1<<3,
         SOF = 1<<2,
         ERR = 1<<1,
@@ -65,6 +65,13 @@ class Usb {
     static void     irqs                (uint16_t);     //set value (all))
     static void     irq                 (FLAGS, bool);  //irq on/off
 
+
+/////////////////////////////////////////////////////////////
+static const uint16_t irq_list = (
+    STALL|IDLE|TOKEN|SOF|ERR|RESET |            //normal
+    BITSTUFF|BUSTIMEOUT|DATASIZE|CRC16|CRC5|PID //error
+);
+/////////////////////////////////////////////////////////////
 
     /*=========================================================================
      power
@@ -128,9 +135,17 @@ class Usb {
     //(16bdt's * 2(in/out) * 2(odd/even) * 8bytes = 512bytes max)
     static void     bdt_addr            (uint32_t);
     static uint32_t bdt_addr            ();
+    static void     bdt_clr             (); //clear all table entries
 
 
+/////////////////////////////////////////////////////////////
+static const uint8_t maxn_endp = 3; //0-3
+typedef union {
+    struct { uint32_t dat; uint32_t addr; }; uint64_t all;
+} Bdt_entry_t;
 
+static Bdt_entry_t bdt_table[(maxn_endp+1)*4] __attribute__ ((aligned (512)));
+/////////////////////////////////////////////////////////////
 
 
 
@@ -144,6 +159,7 @@ class Usb {
 
     static void     config              (CONFIG, bool);
     static bool     config              (CONFIG);
+    static void     config_clr          ();
 
 
 
@@ -163,6 +179,8 @@ class Usb {
 
     static void     endp                (EPN, EP, bool);
     static bool     endp                (EPN, EP);
+    static void     endp_clr            (EPN);
+    static void     endps_clr           ();
 
 
 
@@ -243,21 +261,32 @@ void Usb::address(uint8_t v){ Reg::val8(U1ADDR, v&127); }
 uint16_t Usb::frame(){ return (Reg::val8(U1FRMH)<<8) | Reg::val8(U1FRML); }
 
 void Usb::bdt_addr(uint32_t v){
+    v = Reg::k2phys(v); //physical address
     Reg::val8(U1BDTP1, v>>8); //512byte aligned (bit0 of this reg unused)
     Reg::val8(U1BDTP2, v>>16);
     Reg::val8(U1BDTP3, v>>24);
 }
 uint32_t Usb::bdt_addr(){
-    return  Reg::val8(U1BDTP1)<<8 |
-            Reg::val8(U1BDTP2)<<16 |
-            Reg::val8(U1BDTP3)<<24;
+    return  Reg::p2kseg0(
+                Reg::val8(U1BDTP1)<<8 |
+                Reg::val8(U1BDTP2)<<16 |
+                Reg::val8(U1BDTP3)<<24
+            ); //kseg0
 }
+void Usb::bdt_clr(){ for(auto& te : bdt_table ) te.all = 0; }
 
 void Usb::config(CONFIG e, bool tf){ Reg::set(U1CNFG1, e, tf); }
 bool Usb::config(CONFIG e){ return Reg::is_set8(U1CNFG1, e); }
+void Usb::config_clr(){ Reg::set(U1CNFG1, 0); }
 
 void Usb::endp(EPN n, EP e, bool tf){ Reg::set(U1EP0+n*U1EP_SPACING, e, tf); }
 bool Usb::endp(EPN n, EP e){ return Reg::is_set8(U1EP0+n*U1EP_SPACING, e); }
+void Usb::endp_clr(EPN n){ Reg::val8(U1EP0+n*U1EP_SPACING, 0); }
+void Usb::endps_clr(){
+    for( uint8_t e = EP0; e <= EP15; e++ ){
+        endp_clr((EPN)e);
+    }
+}
 
 
 
@@ -265,7 +294,24 @@ bool Usb::endp(EPN n, EP e){ return Reg::is_set8(U1EP0+n*U1EP_SPACING, e); }
 
 
 
+/*
+ void Usb::init(){
 
+    Irq::on(Irq::USB, false);   //usb irq off
+    flags_clear();              //clear all flags
+    endps_clr();                //clear all endpoints
+    config_clr();               //fast speed
+    irqs(irq_list);             //set irq_list to list of irqs to enable
+    power(USBPWR, true);        //usb on
+    bdt_addr(bdt_table);        //set bdt table address
+    bdt_clr();                  //clear all bdt entries
+    control(PPRESET, true);     //reset ping pong pointers
+    address(0);                 //set adddress to 0
+    control(PKTDIS, false);     //enable pkt processing
+    control(PPRESET, false);    //stop reset ping pong pointers
+ 
+ }
+ */
 
 /*
 
