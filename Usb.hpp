@@ -302,7 +302,6 @@ void Usb::endps_clr(){
     flags_clear();              //clear all flags
     endps_clr();                //clear all endpoints
     config_clr();               //fast speed
-    irqs(irq_list);             //set irq_list to list of irqs to enable
     power(USBPWR, true);        //usb on
     bdt_addr(bdt_table);        //set bdt table address
     bdt_clr();                  //clear all bdt entries
@@ -311,6 +310,7 @@ void Usb::endps_clr(){
     control(PKTDIS, false);     //enable pkt processing
     control(PPRESET, false);    //stop reset ping pong pointers
 
+    irqs(irq_list);             //set irq_list to list of irqs to enable
  }
  */
 
