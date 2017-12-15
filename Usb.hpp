@@ -144,7 +144,8 @@ typedef union {
     struct { uint32_t dat; uint32_t addr; }; uint64_t all;
 } Bdt_entry_t;
 
-static Bdt_entry_t bdt_table[(maxn_endp+1)*4] __attribute__ ((aligned (512)));
+static volatile Bdt_entry_t bdt_table[(maxn_endp+1)*4]
+    __attribute__ ((aligned (512)));
 /////////////////////////////////////////////////////////////
 
 
@@ -309,7 +310,7 @@ void Usb::endps_clr(){
     address(0);                 //set adddress to 0
     control(PKTDIS, false);     //enable pkt processing
     control(PPRESET, false);    //stop reset ping pong pointers
- 
+
  }
  */
 
