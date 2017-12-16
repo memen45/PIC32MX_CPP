@@ -95,15 +95,7 @@ static const uint16_t irq_list = (
 
 
 
-    typedef struct __attribute__ ((packed)) {
-        uint8_t:2;
-        uint8_t ODD:1;
-        uint8_t TX:1;
-        uint8_t EPNUM:4;
-    } stat_t;
-    // bdt_addr|(stat_t & 0xFC) = bd address
-
-    static stat_t   stat                (); //only valid when flag(TOKEN)=1
+    static uint8_t  stat                (); //only valid when flag(TOKEN)=1
 
 
 
@@ -130,6 +122,10 @@ static const uint16_t irq_list = (
     static uint16_t frame               ();
 
 
+    enum BD {
+         UOWN = 1<<7, DATA01 = 1<<6, KEEP = 1<<5, NINC = 1<<4,
+         DTS = 1<<3, BSTALL = 1<<2
+     };
 
     //address of (up to)512byte BDT buffer (512byte aligned)
     //(16bdt's * 2(in/out) * 2(odd/even) * 8bytes = 512bytes max)
@@ -137,14 +133,23 @@ static const uint16_t irq_list = (
     static uint32_t bdt_addr            ();
     static void     bdt_clr             (); //clear all table entries
 
+    static void     bd_control          (uint8_t, BD, bool);
+    static bool     bd_control          (uint8_t, BD);
+    static uint8_t  bd_pid              (uint8_t);
+    static void     bd_addr             (uint8_t, uint32_t);
+    static uint32_t bd_addr             (uint8_t);
+    static uint16_t bd_count            (uint8_t);
 
 /////////////////////////////////////////////////////////////
 static const uint8_t maxn_endp = 3; //0-3
-typedef union {
-    struct { uint32_t dat; uint32_t addr; }; uint64_t all;
+typedef union __attribute__((packed)) {
+    struct { unsigned :2; unsigned pid:4; unsigned :2; };
+    struct { unsigned :16; uint16_t count; };
+    struct { uint32_t dat; uint32_t addr; };
+    uint64_t all;
 } Bdt_entry_t;
 
-static volatile Bdt_entry_t bdt_table[(maxn_endp+1)*4]
+static volatile Bdt_entry_t bdt[(maxn_endp+1)*4]
     __attribute__ ((aligned (512)));
 /////////////////////////////////////////////////////////////
 
@@ -251,7 +256,7 @@ void Usb::irq(FLAGS e, bool tf){
 }
 
 
-Usb::stat_t Usb::stat(){ Reg::val8(U1STAT) & 0xFC; }
+uint8_t Usb::stat(){ Reg::val8(U1STAT); }
 
 bool Usb::control(CONTROL e){ Reg::is_set8(U1CON, e); }
 void Usb::control(CONTROL e, bool tf){ Reg::set(U1CON, e, tf); }
@@ -274,7 +279,23 @@ uint32_t Usb::bdt_addr(){
                 Reg::val8(U1BDTP3)<<24
             ); //kseg0
 }
-void Usb::bdt_clr(){ for(auto& te : bdt_table ) te.all = 0; }
+void Usb::bdt_clr(){ for(auto& b : bdt ) b.all = 0; }
+
+
+//for bd_x functions
+//caller needs to use correct n offset -> n+(TX/RX<<3)+(EVEN/ODD<<2)
+void Usb::bd_control(uint8_t n, BD e, bool tf){
+    Reg::mset(&bdt[n].dat, (uint32_t)e, tf);
+}
+bool Usb::bd_control(uint8_t n, BD e){
+    return Reg::is_set(&bdt[n].dat, (uint32_t)e);
+}
+uint8_t Usb::bd_pid(uint8_t n){ return bdt[n].pid; }
+void Usb::bd_addr(uint8_t n, uint32_t v){ bdt[n].addr = Reg::k2phys(v); }
+uint32_t Usb::bd_addr(uint8_t n){ return Reg::p2kseg0(bdt[n].addr); }
+uint16_t Usb::bd_count(uint8_t n){ return bdt[n].count; }
+
+
 
 void Usb::config(CONFIG e, bool tf){ Reg::set(U1CNFG1, e, tf); }
 bool Usb::config(CONFIG e){ return Reg::is_set8(U1CNFG1, e); }
@@ -284,9 +305,7 @@ void Usb::endp(EPN n, EP e, bool tf){ Reg::set(U1EP0+n*U1EP_SPACING, e, tf); }
 bool Usb::endp(EPN n, EP e){ return Reg::is_set8(U1EP0+n*U1EP_SPACING, e); }
 void Usb::endp_clr(EPN n){ Reg::val8(U1EP0+n*U1EP_SPACING, 0); }
 void Usb::endps_clr(){
-    for( uint8_t e = EP0; e <= EP15; e++ ){
-        endp_clr((EPN)e);
-    }
+    for( uint8_t e = EP0; e <= EP15; e++ ){ endp_clr((EPN)e); }
 }
 
 
@@ -299,9 +318,13 @@ void Usb::endps_clr(){
  void Usb::init(){
 
     Irq::on(Irq::USB, false);   //usb irq off
+
+    power(USBPWR, false);       //usb off
+    while(power(BUSY));         //wait for busy bit to clear
+
     flags_clear();              //clear all flags
     endps_clr();                //clear all endpoints
-    config_clr();               //fast speed
+    config_clr();               //(FS)
     power(USBPWR, true);        //usb on
     bdt_addr(bdt_table);        //set bdt table address
     bdt_clr();                  //clear all bdt entries
@@ -315,9 +338,6 @@ void Usb::endps_clr(){
  */
 
 /*
-
-     static const uint8_t maxn_endp = 3; //max endpoint number
-    static uint8_t buf_endp[(maxn_endp+1)*4][64];
 
 
       enum BDT {
@@ -335,11 +355,6 @@ void Usb::endps_clr(){
     uint8_t         bdt_pid             (uint8_t, bool, bool);
 
 
-    //vars
-    typedef struct { uint32_t dat; uint32_t addr; } Bdt_trx_t;
-    typedef struct { Bdt_trx_t rx[2]; Bdt_trx_t tx[2]; } Bdt_table_t;
-
-    static Bdt_table_t bdt_table[maxn_endp+1] __attribute__ ((aligned (512)));
 
 
 

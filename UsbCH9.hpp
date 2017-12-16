@@ -162,8 +162,8 @@ class Usb_CH9 {
     //             ^
     //             TOKEN|[DATA]|HANDSHAKE
     //
-    //  Transation-
-    //  Token packet, optional Data packet, Status packet
+    //  Transaction-
+    //  Token packet, [optional Data packet], Status packet
     //
     //  all packets-
     //      Sync    8bits (LS & FS)

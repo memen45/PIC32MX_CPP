@@ -37,6 +37,7 @@ class Comp123  {
     //constructor
     constexpr Comp123(CMX);
 
+
     private:
 
     enum {

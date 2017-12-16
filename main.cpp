@@ -118,12 +118,13 @@ int main(){
     u.power(u.USBPWR, false);
 
     //try adc - pot on curiosity board
-    Adc::mode_12bit(true);
-    Adc::trig_sel(Adc::AUTO);               //adc starts conversion
-    Adc::samp_time(31);                     //max sampling time- 31Tad
-    Adc::conv_time(Adc::PBCLK12BIT);        //if no arg,default is 4 (for 24MHz)
-    Adc::ch_sel(Adc::AN14);                 //pot- RC8/AN14 (default ANSEL/TRIS)
-    Adc::on(true);
+    Adc adc; Adc def; //<--notice can create multiple references (same thing)
+    Adc::mode_12bit(true); //<--or use directly (all the same)
+    def.trig_sel(adc.AUTO);                 //adc starts conversion
+    adc.samp_time(31);                      //max sampling time- 31Tad
+    adc.conv_time(adc.PBCLK12BIT);          //if no arg,default is 4 (for 24MHz)
+    adc.ch_sel(adc.AN14);                   //pot- RC8/AN14 (default ANSEL/TRIS)
+    def.on(true);
     //to get adc (polling, non-blocking)
     //Adc::samp(true);    //start sample, auto conversion
     //if(Adc::done()){    //check if done
@@ -138,30 +139,32 @@ int main(){
     Comp123 c2(Comp123::C2);
     c1.on(false);
     c2.on(false);
-    Comp123::stop_idle(true);
+    Comp123::stop_idle(true); //<--use Comp123:: for common function
     Comp123::cref_sel(Comp123::INT_BGAP);
+
 
     //try clc (does nothing)
     Clc clc1(Clc::CLC1);
     clc1.in_sel(1, 3);
     clc1.in_sel(4, 6);
     clc1.gate_sel(0x12345678);
-    clc1.mode(Clc::ORXOR);
+    clc1.mode(clc1.ORXOR);
 
     //test rtcc (somewhat)
-    Rtcc::clk_sel(Rtcc::SOSC);              //external sosc (curiosity board)
+    Rtcc rtcc;
+    rtcc.clk_sel(rtcc.SOSC);                //external sosc (curiosity board)
                                             //(soscen automatically set by rtcc)
-    Rtcc::clk_div(Rtcc::CLK_DIV_32KHZ);     //already calculated div for lprc
-    Rtcc::alarm_interval(Rtcc::MINUTE1);    //alarm every minute
-    Rtcc::chime(true);                      //repeating alarm
-    Rtcc::alarm(true);                      //turn on alarm
+    rtcc.clk_div(rtcc.CLK_DIV_32KHZ);       //already calculated div for lprc
+    rtcc.alarm_interval(rtcc.MINUTE1);      //alarm every minute
+    rtcc.chime(true);                       //repeating alarm
+    rtcc.alarm(true);                       //turn on alarm
 
     const uint32_t test_time = (2<<28 | 3<<24 | 4<<20 | 5<<16 | 0<<12 | 1<<8);
-    Rtcc::time(test_time);                  //23:45:01
-    if(Rtcc::time() != test_time){          //did write work?
+    rtcc.time(test_time);                   //23:45:01
+    if(rtcc.time() != test_time){           //did write work?
         while(1);                           //lockup if read/write not working
     }                                       //else syskey/wrlock working
-    Rtcc::on(true);                         //turn on, alarm is 00:00:00
+    rtcc.on(true);                          //turn on, alarm is 00:00:00
                                             //(alarm every 00 seconds match)
                                             //disable/enable core timer irq
                                             //every minute in rtcc isr

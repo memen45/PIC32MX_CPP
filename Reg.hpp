@@ -69,20 +69,20 @@ template <typename T> void Reg::inv(T r, uint32_t v){
 }
 ////SET/CLR/INV for memory
 template <typename T, typename V> void Reg::mset(T r, V v){
-    *(reinterpret_cast <volatile V*>(r)) |=
-            reinterpret_cast <V>(v);
+    *(reinterpret_cast <volatile uint32_t*>(r)) |=
+            reinterpret_cast <uint32_t>(v);
 }
 ////same name as set, but 3 args, last is true/false = set/clr
 template <typename T, typename V> void Reg::mset(T r, V v, bool sc){
     if( sc ) Reg::mset(r,v); else Reg::mclr(r,v);
 }
 template <typename T, typename V> void Reg::mclr(T r, V v){
-    *(reinterpret_cast <volatile V*>(r)) &=
-            ~reinterpret_cast <V>(v);
+    *(reinterpret_cast <volatile uint32_t*>(r)) &=
+            ~reinterpret_cast <uint32_t>(v);
 }
 template <typename T, typename V> void Reg::minv(T r, V v){
-    *(reinterpret_cast <volatile V*>(r)) ^=
-            reinterpret_cast <V>(v);
+    *(reinterpret_cast <volatile uint32_t*>(r)) ^=
+            reinterpret_cast <uint32_t>(v);
 }
 
 template <typename T> bool Reg::is_set(T r, uint32_t v){
