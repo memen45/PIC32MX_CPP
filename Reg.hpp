@@ -15,17 +15,6 @@ class Reg {
     template <typename T> static void       set     (T, uint32_t, bool);
     template <typename T> static void       clr     (T, uint32_t);
     template <typename T> static void       inv     (T, uint32_t);
-
-    //memory simulate SET/CLR/INV
-    template <typename T, typename V>
-                          static void       mset    (T, V);
-    template <typename T, typename V>
-                          static void       mset    (T, V, bool);
-    template <typename T, typename V>
-                          static void       mclr    (T, V);
-    template <typename T, typename V>
-                          static void       minv    (T, V);
-
     template <typename T> static bool       is_set  (T, uint32_t);
     template <typename T> static bool       is_clr  (T, uint32_t);
     template <typename T> static bool       is_set8 (T, uint8_t);//usb regs use
@@ -67,24 +56,6 @@ template <typename T> void Reg::clr(T r, uint32_t v){
 template <typename T> void Reg::inv(T r, uint32_t v){
     *(reinterpret_cast <volatile uint32_t*>(r)+INV) = v;
 }
-////SET/CLR/INV for memory
-template <typename T, typename V> void Reg::mset(T r, V v){
-    *(reinterpret_cast <volatile uint32_t*>(r)) |=
-            reinterpret_cast <uint32_t>(v);
-}
-////same name as set, but 3 args, last is true/false = set/clr
-template <typename T, typename V> void Reg::mset(T r, V v, bool sc){
-    if( sc ) Reg::mset(r,v); else Reg::mclr(r,v);
-}
-template <typename T, typename V> void Reg::mclr(T r, V v){
-    *(reinterpret_cast <volatile uint32_t*>(r)) &=
-            ~reinterpret_cast <uint32_t>(v);
-}
-template <typename T, typename V> void Reg::minv(T r, V v){
-    *(reinterpret_cast <volatile uint32_t*>(r)) ^=
-            reinterpret_cast <uint32_t>(v);
-}
-
 template <typename T> bool Reg::is_set(T r, uint32_t v){
     return *(reinterpret_cast <volatile uint32_t*>(r)) & v;
 }

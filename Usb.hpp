@@ -62,7 +62,7 @@ class Usb {
 
     static uint16_t irqs                ();             //get all
     static bool     irq                 (FLAGS);        //get one
-    static void     irqs                (uint16_t);     //set value (all))
+    static void     irqs                (uint16_t);     //set value (all)
     static void     irq                 (FLAGS, bool);  //irq on/off
 
 
@@ -139,6 +139,8 @@ static const uint16_t irq_list = (
     static void     bd_addr             (uint8_t, uint32_t);
     static uint32_t bd_addr             (uint8_t);
     static uint16_t bd_count            (uint8_t);
+    static void     bd_count            (uint8_t, uint16_t);
+
 
 /////////////////////////////////////////////////////////////
 static const uint8_t maxn_endp = 3; //0-3
@@ -151,6 +153,8 @@ typedef union __attribute__((packed)) {
 
 static volatile Bdt_entry_t bdt[(maxn_endp+1)*4]
     __attribute__ ((aligned (512)));
+
+
 /////////////////////////////////////////////////////////////
 
 
@@ -285,16 +289,14 @@ void Usb::bdt_clr(){ for(auto& b : bdt ) b.all = 0; }
 //for bd_x functions
 //caller needs to use correct n offset -> n+(TX/RX<<3)+(EVEN/ODD<<2)
 void Usb::bd_control(uint8_t n, BD e, bool tf){
-    Reg::mset(&bdt[n].dat, (uint32_t)e, tf);
+    if( tf ) bdt[n].dat |= e; else bdt[n].dat &= ~e;
 }
-bool Usb::bd_control(uint8_t n, BD e){
-    return Reg::is_set(&bdt[n].dat, (uint32_t)e);
-}
+bool Usb::bd_control(uint8_t n, BD e){ return bdt[n].dat & e; }
 uint8_t Usb::bd_pid(uint8_t n){ return bdt[n].pid; }
 void Usb::bd_addr(uint8_t n, uint32_t v){ bdt[n].addr = Reg::k2phys(v); }
 uint32_t Usb::bd_addr(uint8_t n){ return Reg::p2kseg0(bdt[n].addr); }
 uint16_t Usb::bd_count(uint8_t n){ return bdt[n].count; }
-
+void Usb::bd_count(uint8_t n, uint16_t v){ bdt[n].count = v; }
 
 
 void Usb::config(CONFIG e, bool tf){ Reg::set(U1CNFG1, e, tf); }
@@ -334,60 +336,8 @@ void Usb::endps_clr(){
     control(PPRESET, false);    //stop reset ping pong pointers
 
     irqs(irq_list);             //set irq_list to list of irqs to enable
+
+    control(USBEN, true);       //usb enable
  }
  */
 
-/*
-
-
-      enum BDT {
-         UOWN = 1<<7, DATA01 = 1<<6, KEEP = 1<<5, NINC = 1<<4,
-         DTS = 1<<3, BSTALL = 1<<2
-     };
-
-    uint32_t        bdt_buf_addr        (uint8_t, bool, bool);
-    void            bdt_buf_addr        (uint8_t, bool, bool, uint32_t);
-    uint16_t        bdt_byte_count      (uint8_t, bool, bool);
-    void            bdt_byte_count      (uint8_t, bool, bool, uint16_t);
-    bool            bdt_uown            (uint8_t, bool, bool);
-    void            bdt_set             (uint8_t, bool, bool, BDT);
-    void            bdt_clr             (uint8_t, bool, bool, BDT);
-    uint8_t         bdt_pid             (uint8_t, bool, bool);
-
-
-
-
-
-
- uint32_t Usb::bdt_buf_addr(uint8_t epn, bool tx, bool odd){
-    //return *(uint32_t*)&bdt_table[epn] + ((tx<<1)|odd);
-    return Reg::val(&bdt_table[epn] + ((tx<<3)|odd<<2));
-}
-void Usb::bdt_buf_addr(uint8_t epn, bool tx, bool odd, uint32_t v){
-    //*( (uint32_t*)(&bdt_table[epn]) + ((tx<<1)|odd) ) = v;
-    Reg::val(&bdt_table[epn] + ((tx<<3)|odd<<2), v);
-}
-uint16_t Usb::bdt_byte_count(uint8_t epn, bool tx, bool odd){
-    return Reg::val16(&bdt_table[epn] + ((tx<<3)|odd<<2) + 2) & 0x3FF;
-}
-void Usb::bdt_byte_count(uint8_t epn, bool tx, bool odd, uint16_t v){
-    Reg::val16(&bdt_table[epn] + ((tx<<3)|odd<<2) + 2, v & 0x3FF);
-}
-bool Usb::bdt_uown(uint8_t epn, bool tx, bool odd){
-    return Reg::is_set8(&bdt_table[epn] + ((tx<<3)|odd<<2), UOWN );
-}
-void Usb::bdt_set(uint8_t epn, bool tx, bool odd, BDT e){
-    uint8_t r = Reg::val8(&bdt_table[epn] + ((tx<<3)|odd<<2));
-    r |= e;
-    Reg::val8(&bdt_table[epn] + ((tx<<3)|odd<<2), r);
-}
-void Usb::bdt_clr(uint8_t epn, bool tx, bool odd, BDT e){
-    uint8_t r = Reg::val8(&bdt_table[epn] + ((tx<<3)|odd<<2));
-    r &= ~e;
-    Reg::val8(&bdt_table[epn] + ((tx<<3)|odd<<2), r);
-}
-uint8_t Usb::bdt_pid(uint8_t epn, bool tx, bool odd){
-    return (Reg::val8(&bdt_table[epn] + ((tx<<3)|odd<<2))>>2) & 15;
-}
-
- */
