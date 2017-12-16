@@ -92,6 +92,7 @@ class Adc {
 
     private:
 
+        
     enum {
         ADC1BUF0 = 0xBF802100, ADC1BUF_SPACING = 0x10, ADC1BUF_LAST = 21,
         ADC1CON1 = 0xBF802260,

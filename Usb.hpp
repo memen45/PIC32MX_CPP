@@ -7,6 +7,85 @@
 #include <cstdint>
 #include "Reg.hpp"
 
+// each entry in the BDT table has a class instance of Bdt, created in Usb class
+// (array of maxn_endp class instances)
+// each class instance handles its own entry (in bdt table), buffer (64 bytes),
+// and endpoint register control
+// for each endpoint there are 4 Bdt instances (rxeven, rxodd, txeven, txodd)
+// access to these instances is through Usb:: via bdt_handler[n]
+// where n = endpoint number<<2|trx>>1|evodd
+// for Usb::stat(), use Usb::bdt_handler[Usb::stat()>>2]
+class UsbBdt {
+
+    public:
+
+    enum BD {
+         UOWN = 1<<7, DATA01 = 1<<6, KEEP = 1<<5,
+         NINC = 1<<4, DTS = 1<<3, BSTALL = 1<<2
+     };
+
+    enum EP {
+        LS = 1<<7, /*HOST mode and U1EP0 only*/
+        RETRYDIS = 1<<6, /*HOST mode and U1EP0 only*/
+        CTRLDIS = 1<<4, /*only when TXEN=1 && RXEN=1*/
+        RXEN = 1<<3, TXEN = 1<<2, ESTALL = 1<<1, HSHAKE = 1<<0
+    };
+
+    void        init        (volatile uint32_t* entry_ptr, uint8_t n);
+    void        control     (uint8_t v, bool tf);
+    bool        control     (uint8_t v);
+    uint8_t     pid         ();
+    uint16_t    count       ();
+    void        count       (uint16_t v);
+    void        endp        (EP e, bool tf);
+    bool        endp        (EP e);
+    void        endp        (uint8_t);
+
+
+    private:
+
+    enum { U1EP0 = 0xBF808700, U1EP_SPACING = 0x10 };
+    //U1EP1 0xBF808710 - U1EP15 0xBF8087F0
+
+    uint8_t m_endp_num;
+    volatile uint8_t m_buffer[64]{0};
+    volatile uint8_t* m_entry_ptr;
+};
+
+//called by Usb to init this UsbBdt instance
+//get entry address, endpoint number
+//clear entry (4*16bits= 8bytes = 2x32bits)
+//clear buffer
+void UsbBdt::init(volatile uint32_t* entry_ptr, uint8_t n){
+    m_entry_ptr = (volatile uint8_t*)(entry_ptr+n*2);
+    m_endp_num = n/4; //4 entries per endpoint n
+    *(volatile uint64_t*)m_entry_ptr = 0;
+    for(auto& b : m_buffer) b = 0;
+    *(volatile uint32_t*)(m_entry_ptr+4) = Reg::k2phys(m_buffer);
+}
+
+void UsbBdt::control(uint8_t v, bool tf){
+    if( tf ) *m_entry_ptr |= v;
+    else *m_entry_ptr &= ~v;
+}
+bool UsbBdt::control(uint8_t v){ return *m_entry_ptr & v; }
+
+uint8_t UsbBdt::pid(){ return ((*m_entry_ptr) >> 2) & 15; }
+
+uint16_t UsbBdt::count(){ return *(uint16_t*)(m_entry_ptr+2); }
+void UsbBdt::count(uint16_t v){ *(uint16_t*)(m_entry_ptr+2) = v; }
+
+void UsbBdt::endp(EP e, bool tf){ Reg::set(U1EP0+m_endp_num*U1EP_SPACING, e, tf); }
+bool UsbBdt::endp(EP e){ return Reg::is_set8(U1EP0+m_endp_num*U1EP_SPACING, e); }
+void UsbBdt::endp(uint8_t v){ Reg::val8(U1EP0+m_endp_num*U1EP_SPACING, v); }
+
+
+
+
+
+
+
+
 
 class Usb {
 
@@ -124,54 +203,29 @@ class Usb {
     static uint16_t frame               ();
 
 
-    enum BD {
-         UOWN = 1<<7, DATA01 = 1<<6, KEEP = 1<<5, NINC = 1<<4,
-         DTS = 1<<3, BSTALL = 1<<2
-     };
+
 
     //address of (up to)512byte BDT buffer (512byte aligned)
     //(16bdt's * 2(in/out) * 2(odd/even) * 8bytes = 512bytes max)
+    //table
     static void     bdt_addr            (uint32_t);
     static uint32_t bdt_addr            ();
-    static void     bdt_clr             (); //clear all table entries
 
-    static void     bd_control          (uint8_t, BD, bool);
-    static bool     bd_control          (uint8_t, BD);
-    static uint8_t  bd_pid              (uint8_t);
-    static void     bd_addr             (uint8_t, uint32_t);
-    static uint32_t bd_addr             (uint8_t);
-    static uint16_t bd_count            (uint8_t);
-    static void     bd_count            (uint8_t, uint16_t);
+
 
 
 /////////////////////////////////////////////////////////////
-static const uint8_t maxn_endp = 3; //0-3
-
-static volatile uint16_t bdt[(maxn_endp+1)*16]
-    __attribute__ ((aligned (512)));
-
-//stat-> <ep0-15><dir><ppbi><unused>
-//          4      1     1    2
-//stat-> <ep0-15><dir><ppbi><unused>
-//          4      1     1    3  <----used by BDT Address Generator -1bit shift
-//hardware uses stat to calculate bdt entry address (8bytes per entry)
-//if we want to use stat for our use directly, will need to have bdt table
-//buffer in bytes*2 (uint16_t) so we get the left shift by 1 byte
-
-// bdt[stat()] = bd[ep<<4 + dir<<3 + ppbi<<2]
-// ep0-rx-odd = bd[0<<4 + 0<<3 + 1<<2] = bd[4] = bd[0]+8bytes (4*uint16_t)
-// ep0-rx-odd-addr = *(uint32_t*)&bd[4+2]
-// ep0-rx-odd-count = bd[4+1]
-// ep0-rx-odd-pid = ((*(uint8_t*)&bdt[4]) >> 2) & 15
-
-// ep1-rx-even = bd[1<<4 + 0<<3 + 0<<2] = bd[16]
-// ep15-tx-even = bd[15<<4 + 1<<3 + 0<<2] = bd[248]
-// ep15-tx-odd = bd[15<<4 + 1<<3 + 1<<2] = bd[252]
-
+static const uint8_t maxn_endp = 1; //0,1
 /////////////////////////////////////////////////////////////
 
+static volatile uint32_t bdt[(maxn_endp+1)*8]
+    __attribute__ ((aligned (512))); //8 words per endpoint
 
-    static uint8_t ep0_buf[64];
+ static UsbBdt bdt_handler[(maxn_endp+1)*4]; //4 per endpoint
+
+ static void bdt_handler_init();
+
+ 
 
 
     enum CONFIG : uint8_t {
@@ -185,30 +239,6 @@ static volatile uint16_t bdt[(maxn_endp+1)*16]
     static void     config              (CONFIG, bool); //set 1bit
     static bool     config              (CONFIG);       //get 1bit
     static void     config              (uint8_t);      //set reg val
-
-
-
-    enum EPN {
-        EP0 = 0, EP1, EP2, EP3, EP4, EP5, EP6, EP7, EP8, EP9,
-        EP10, EP11, EP12, EP13, EP14, EP15
-    };
-    enum EP {
-        LS = 1<<7,
-        RETRYDIS = 1<<6, /*these 2 HOST EP0 only*/
-        CTRLDIS = 1<<4, /*only when TXEN=1 && RXEN=1*/
-        RXEN = 1<<3,
-        TXEN = 1<<2,
-        ESTALL = 1<<1,
-        HSHAKE = 1<<0
-    };
-
-    static void     endp                (EPN, EP, bool);
-    static bool     endp                (EPN, EP);
-    static void     endp_clr            (EPN);
-    static void     endps_clr           ();
-
-
-
 
 
 
@@ -229,9 +259,7 @@ static volatile uint16_t bdt[(maxn_endp+1)*16]
         U1FRMH = 0xBF808690, //no SET, INV, CLR
         U1BDTP2 = 0xBF806C0,
         U1BDTP3 = 0xBF806D0,
-        U1CNFG1 = 0xBF8086E0,
-        U1EP0 = 0xBF808700, U1EP_SPACING = 0x10
-        //U1EP1 0xBF808710 - U1EP15 0xBF8087F0
+        U1CNFG1 = 0xBF8086E0
      };
 
 };
@@ -291,44 +319,18 @@ uint32_t Usb::bdt_addr(){
                 Reg::val8(U1BDTP3)<<24
             ); //kseg0
 }
-void Usb::bdt_clr(){ for(auto& b : bdt ) b = 0; }
-
-
-//for bd functions
-//caller needs to use correct n offset (designed for stat() )
-void Usb::bd_control(uint8_t n, BD e, bool tf){
-    if( tf ) *(uint8_t*)&bdt[n] |= e;
-    else *(uint8_t*)&bdt[n] &= ~e;
-}
-bool Usb::bd_control(uint8_t n, BD e){
-    return *(uint8_t*)&bdt[n] & e;
-}
-uint8_t Usb::bd_pid(uint8_t n){
-    return ((*(uint8_t*)&bdt[n]) >> 2) & 15;
-}
-void Usb::bd_addr(uint8_t n, uint32_t v){
-    *(uint32_t*)&bdt[n+2] = Reg::k2phys(v);
-}
-uint32_t Usb::bd_addr(uint8_t n){
-    return Reg::p2kseg0(*(uint32_t*)&bdt[n+2]);
-}
-uint16_t Usb::bd_count(uint8_t n){ return bdt[n+1]; }
-void Usb::bd_count(uint8_t n, uint16_t v){ bdt[n+1] = v; }
-
 
 void Usb::config(CONFIG e, bool tf){ Reg::set(U1CNFG1, e, tf); }
 bool Usb::config(CONFIG e){ return Reg::is_set8(U1CNFG1, e); }
 void Usb::config(uint8_t v){ Reg::val8(U1CNFG1, v); }
 
-void Usb::endp(EPN n, EP e, bool tf){ Reg::set(U1EP0+n*U1EP_SPACING, e, tf); }
-bool Usb::endp(EPN n, EP e){ return Reg::is_set8(U1EP0+n*U1EP_SPACING, e); }
-void Usb::endp_clr(EPN n){ Reg::val8(U1EP0+n*U1EP_SPACING, 0); }
-void Usb::endps_clr(){
-    for( uint8_t e = EP0; e <= EP15; e++ ){ endp_clr((EPN)e); }
+
+
+
+void Usb::bdt_handler_init(){
+    uint8_t n = 0;
+    for(auto& h : bdt_handler) h.init( bdt, n++ );
 }
-
-
-
 
 
 
@@ -345,13 +347,8 @@ void Usb::endps_clr(){
     endps_clr();                //clear all endpoints
     config(0);                  //(FS)
     power(USBPWR, true);        //usb on
-    bdt_clr();                  //clear all bdt entries
+    bdt_class_init();           //clear all bdt entries, init class (each entry)
     bdt_addr(bdt_table);        //set bdt table address
-
-    bd_addr[0<<4+0<<3+0<<2,ep0_buf]; //rx even
-    bd_addr[0<<4+0<<3+1<<2,ep0_buf]; //rx odd
-    bd_addr[0<<4+1<<3+0<<2,ep0_buf]; //tx even
-    bd_addr[0<<4+1<<3+1<<2,ep0_buf]; //tx odd
 
 
     control(PPRESET, true);     //reset ping pong pointers
@@ -363,6 +360,8 @@ void Usb::endps_clr(){
     eirqs(BITSTUFF|BUSTIMEOUT|DATASIZE|CRC16|CRC5|PID);
 
     control(USBEN, true);       //usb enable
+
+    Irq::init(Irq::Usb, 5, 0, true);
  }
  */
 
