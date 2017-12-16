@@ -171,6 +171,8 @@ static volatile uint16_t bdt[(maxn_endp+1)*16]
 /////////////////////////////////////////////////////////////
 
 
+    static uint8_t ep0_buf[64];
+
 
     enum CONFIG : uint8_t {
         EYETEST = 1<<7,
@@ -345,6 +347,13 @@ void Usb::endps_clr(){
     power(USBPWR, true);        //usb on
     bdt_clr();                  //clear all bdt entries
     bdt_addr(bdt_table);        //set bdt table address
+
+    bd_addr[0<<4+0<<3+0<<2,ep0_buf]; //rx even
+    bd_addr[0<<4+0<<3+1<<2,ep0_buf]; //rx odd
+    bd_addr[0<<4+1<<3+0<<2,ep0_buf]; //tx even
+    bd_addr[0<<4+1<<3+1<<2,ep0_buf]; //tx odd
+
+
     control(PPRESET, true);     //reset ping pong pointers
     address(0);                 //set adddress to 0
     control(PKTDIS, false);     //enable pkt processing
@@ -352,9 +361,6 @@ void Usb::endps_clr(){
 
     irqs(STALL|IDLE|TOKEN|SOF|ERR|RESET);
     eirqs(BITSTUFF|BUSTIMEOUT|DATASIZE|CRC16|CRC5|PID);
-);
-/////////////////////////////////////////////////////////////
-    irqs(irq_list);             //set irq_list to list of irqs to enable
 
     control(USBEN, true);       //usb enable
  }
