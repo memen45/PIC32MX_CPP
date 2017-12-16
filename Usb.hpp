@@ -75,13 +75,6 @@ class Usb {
     static void     eirq                (EFLAGS, bool); //eirq on/off
 
 
-/////////////////////////////////////////////////////////////
-static const uint16_t irq_list = (
-    STALL|IDLE|TOKEN|SOF|ERR|RESET |            //normal
-    BITSTUFF|BUSTIMEOUT|DATASIZE|CRC16|CRC5|PID //error
-);
-/////////////////////////////////////////////////////////////
-
     /*=========================================================================
      power
         POWER enum contains all power names
@@ -357,6 +350,10 @@ void Usb::endps_clr(){
     control(PKTDIS, false);     //enable pkt processing
     control(PPRESET, false);    //stop reset ping pong pointers
 
+    irqs(STALL|IDLE|TOKEN|SOF|ERR|RESET);
+    eirqs(BITSTUFF|BUSTIMEOUT|DATASIZE|CRC16|CRC5|PID);
+);
+/////////////////////////////////////////////////////////////
     irqs(irq_list);             //set irq_list to list of irqs to enable
 
     control(USBEN, true);       //usb enable
