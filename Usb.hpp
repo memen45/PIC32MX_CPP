@@ -187,9 +187,9 @@ static volatile uint16_t bdt[(maxn_endp+1)*16]
         AUTOSUSP = 1<<0
     };
 
-    static void     config              (CONFIG, bool);
-    static bool     config              (CONFIG);
-    static void     config_clr          ();
+    static void     config              (CONFIG, bool); //set 1bit
+    static bool     config              (CONFIG);       //get 1bit
+    static void     config              (uint8_t);      //set reg val
 
 
 
@@ -323,7 +323,7 @@ void Usb::bd_count(uint8_t n, uint16_t v){ bdt[n+1] = v; }
 
 void Usb::config(CONFIG e, bool tf){ Reg::set(U1CNFG1, e, tf); }
 bool Usb::config(CONFIG e){ return Reg::is_set8(U1CNFG1, e); }
-void Usb::config_clr(){ Reg::set(U1CNFG1, 0); }
+void Usb::config(uint8_t v){ Reg::val8(U1CNFG1, v); }
 
 void Usb::endp(EPN n, EP e, bool tf){ Reg::set(U1EP0+n*U1EP_SPACING, e, tf); }
 bool Usb::endp(EPN n, EP e){ return Reg::is_set8(U1EP0+n*U1EP_SPACING, e); }
@@ -348,10 +348,10 @@ void Usb::endps_clr(){
 
     flags_clear();              //clear all flags
     endps_clr();                //clear all endpoints
-    config_clr();               //(FS)
+    config(0);                  //(FS)
     power(USBPWR, true);        //usb on
-    bdt_addr(bdt_table);        //set bdt table address
     bdt_clr();                  //clear all bdt entries
+    bdt_addr(bdt_table);        //set bdt table address
     control(PPRESET, true);     //reset ping pong pointers
     address(0);                 //set adddress to 0
     control(PKTDIS, false);     //enable pkt processing
