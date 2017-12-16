@@ -14,22 +14,21 @@ class Usb {
 
     /*=========================================================================
      flags, interrupts
-        FLAGS enum contains all flag names, with error names shifted left 8bits
-            this enaum also doubles for irq names
+        FLAGS enum contains all flag/irq names
 
-        flags();                -return val of all flags (uin16_t)
+        flags();                -return val of all flags (uint8_t)
         flag(FLAGS);            -get specified flag
-        flags_clr();            -clear all flags
-        flags_clr(uint16_t);    -clear flag(s) as bitmask (1=clear)
-        flag_clr(FLAGS);        -clear one flag
+        flags_clr(uint8_t);     -clear flag(s) as bitmask (1=clear)
 
-        irqs();                 -return val of all irqs (uin16_t)
+        irqs();                 -return val of all irqs (uin8_t)
         irq(FLAGS);             -get specified irq
-        irqs(uint16_t);         -set value (all)
+        irqs(uint8t);           -set value (all)
         irq(FLAGS, bool);       -one irq on/off (true=on)
+
+        eflag, eirq functions mirror above but are for error flags
     =========================================================================*/
 
-    enum FLAGS : uint16_t { //unite all flags, irq's - | err<<8 | reg |
+    enum FLAGS : uint16_t {
         //U1IR, U1IE
         STALL = 1<<7,
         ATTACH = 1<<6,
@@ -40,30 +39,40 @@ class Usb {
         ERR = 1<<1,
         RESET = 1<<0,
         DETACH = 1<<0,
-
-        //U1EIR, U1EIE (+32bytes from U1IR, U1IE)
-        //these bits shifted up by 8
-        BITSTUFF = 1<<15,
-        BUSMATRIX = 1<<14,
-        DMA = 1<<13,
-        BUSTIMEOUT = 1<<12,
-        DATASIZE = 1<<11,
-        CRC16 = 1<<10,
-        CRC5 = 1<<9,
-        EOF = 1<<9,
-        PID = 1<<8
+        ALLFLAGS = 255
     };
 
-    static uint16_t flags               ();             //get all
-    static bool     flag                (FLAGS);        //get one
-    static void     flags_clr           ();             //clear all
-    static void     flags_clr           (uint16_t);     //clear one or more
-    static void     flag_clr            (FLAGS);        //clear one
+    enum EFLAGS : uint8_t {
+        //U1EIR, U1EIE
+        BITSTUFF = 1<<7,
+        BUSMATRIX = 1<<6,
+        DMA = 1<<5,
+        BUSTIMEOUT = 1<<4,
+        DATASIZE = 1<<3,
+        CRC16 = 1<<2,
+        CRC5 = 1<<1,
+        EOF = 1<<1,
+        PID = 1<<0,
+        ALLEFLAGS = 255
+    };
 
-    static uint16_t irqs                ();             //get all
+    static uint8_t  flags               ();             //get all
+    static bool     flag                (FLAGS);        //get one
+    static void     flags_clr           (uint8_t);      //clear one or more
+
+    static uint8_t  irqs                ();             //get all
     static bool     irq                 (FLAGS);        //get one
-    static void     irqs                (uint16_t);     //set value (all)
+    static void     irqs                (uint8_t);      //set value (all)
     static void     irq                 (FLAGS, bool);  //irq on/off
+
+    static uint8_t  eflags              ();             //get all
+    static bool     eflag               (EFLAGS);       //get one
+    static void     eflags_clr          (uint8_t);      //clear one or more
+
+    static uint8_t  eirqs               ();             //get all
+    static bool     eirq                (EFLAGS);       //get one
+    static void     eirqs               (uint8_t);      //set value (all)
+    static void     eirq                (EFLAGS, bool); //eirq on/off
 
 
 /////////////////////////////////////////////////////////////
@@ -95,7 +104,7 @@ static const uint16_t irq_list = (
 
 
 
-    static uint8_t  stat                (); //only valid when flag(TOKEN)=1
+    static uint8_t  stat                (); //only valid when TOKEN flag set
 
 
 
@@ -144,16 +153,27 @@ static const uint16_t irq_list = (
 
 /////////////////////////////////////////////////////////////
 static const uint8_t maxn_endp = 3; //0-3
-typedef union __attribute__((packed)) {
-    struct { unsigned :2; unsigned pid:4; unsigned :2; };
-    struct { unsigned :16; uint16_t count; };
-    struct { uint32_t dat; uint32_t addr; };
-    uint64_t all;
-} Bdt_entry_t;
 
-static volatile Bdt_entry_t bdt[(maxn_endp+1)*4]
+static volatile uint16_t bdt[(maxn_endp+1)*16]
     __attribute__ ((aligned (512)));
 
+//stat-> <ep0-15><dir><ppbi><unused>
+//          4      1     1    2
+//stat-> <ep0-15><dir><ppbi><unused>
+//          4      1     1    3  <----used by BDT Address Generator -1bit shift
+//hardware uses stat to calculate bdt entry address (8bytes per entry)
+//if we want to use stat for our use directly, will need to have bdt table
+//buffer in bytes*2 (uint16_t) so we get the left shift by 1 byte
+
+// bdt[stat()] = bd[ep<<4 + dir<<3 + ppbi<<2]
+// ep0-rx-odd = bd[0<<4 + 0<<3 + 1<<2] = bd[4] = bd[0]+8bytes (4*uint16_t)
+// ep0-rx-odd-addr = *(uint32_t*)&bd[4+2]
+// ep0-rx-odd-count = bd[4+1]
+// ep0-rx-odd-pid = ((*(uint8_t*)&bdt[4]) >> 2) & 15
+
+// ep1-rx-even = bd[1<<4 + 0<<3 + 0<<2] = bd[16]
+// ep15-tx-even = bd[15<<4 + 1<<3 + 0<<2] = bd[248]
+// ep15-tx-odd = bd[15<<4 + 1<<3 + 1<<2] = bd[252]
 
 /////////////////////////////////////////////////////////////
 
@@ -231,34 +251,27 @@ void Usb::power(POWER e, bool tf){ Reg::set(U1PWRC, e, tf); }
 
 
 //get all
-uint16_t Usb::flags(){ return Reg::val8(U1EIR)<<8 | Reg::val8(U1IR); }
+uint8_t Usb::flags(){ return Reg::val8(U1IR); }
+uint8_t Usb::eflags(){ return Reg::val8(U1EIR); }
 //get one
-bool Usb::flag(FLAGS e){
-    return e < 256 ? Reg::is_set8(U1IR, e) : Reg::is_set8(U1EIR, e>>8);
-}
-//clear all
-void Usb::flags_clr(){ Reg::val8(U1IR, 255); Reg::val8(U1EIR, 255); }
+bool Usb::flag(FLAGS e){ Reg::is_set8(U1IR, e); }
+bool Usb::eflag(EFLAGS e){ Reg::is_set8(U1EIR, e); }
 //clear one or more
-void Usb::flags_clr(uint16_t v){ Reg::val8(U1EIR, v>>8); Reg::val8(U1IR, v); }
-//clear one
-void Usb::flag_clr(FLAGS e){
-    if(e < 256) Reg::val8(U1IR, e);
-    else Reg::val8(U1EIR, e>>8);
-}
+void Usb::flags_clr(uint8_t v){ Reg::val8(U1IR, v); }
+void Usb::eflags_clr(uint8_t v){ Reg::val8(U1EIR, v); }
 
 //get all
-uint16_t Usb::irqs(){ return Reg::val8(U1EIE)<<8 | Reg::val8(U1IE); }
+uint8_t Usb::irqs(){ return Reg::val8(U1IE); }
+uint8_t Usb::eirqs(){ return Reg::val8(U1EIE); }
 //get one
-bool Usb::irq(FLAGS e){
-    return e < 256 ? Reg::is_set8(U1IE, e) : Reg::is_set8(U1EIE, e>>8);
-}
+bool Usb::irq(FLAGS e){ Reg::is_set8(U1IE, e); }
+bool Usb::eirq(EFLAGS e){ Reg::is_set8(U1EIE, e); }
 //set value
-void Usb::irqs(uint16_t v){ Reg::val8(U1IE, v); Reg::val8(U1EIE, v>>8); }
+void Usb::irqs(uint8_t v){ Reg::val8(U1IE, v); }
+void Usb::eirqs(uint8_t v){ Reg::val8(U1EIE, v); }
 //one on/off
-void Usb::irq(FLAGS e, bool tf){
-    if(e < 256) Reg::set(U1IE, e); else Reg::set(U1EIE, e>>8);
-}
-
+void Usb::irq(FLAGS e, bool tf){ Reg::set(U1IE, e); }
+void Usb::eirq(EFLAGS e, bool tf){ Reg::set(U1EIE, e); }
 
 uint8_t Usb::stat(){ Reg::val8(U1STAT); }
 
@@ -266,7 +279,7 @@ bool Usb::control(CONTROL e){ Reg::is_set8(U1CON, e); }
 void Usb::control(CONTROL e, bool tf){ Reg::set(U1CON, e, tf); }
 
 uint8_t Usb::address(){ return Reg::val8(U1ADDR) & 127; }
-void Usb::address(uint8_t v){ Reg::val8(U1ADDR, v&127); }
+void Usb::address(uint8_t v){ Reg::val8(U1ADDR, v & 127); }
 
 uint16_t Usb::frame(){ return (Reg::val8(U1FRMH)<<8) | Reg::val8(U1FRML); }
 
@@ -283,20 +296,29 @@ uint32_t Usb::bdt_addr(){
                 Reg::val8(U1BDTP3)<<24
             ); //kseg0
 }
-void Usb::bdt_clr(){ for(auto& b : bdt ) b.all = 0; }
+void Usb::bdt_clr(){ for(auto& b : bdt ) b = 0; }
 
 
-//for bd_x functions
-//caller needs to use correct n offset -> n+(TX/RX<<3)+(EVEN/ODD<<2)
+//for bd functions
+//caller needs to use correct n offset (designed for stat() )
 void Usb::bd_control(uint8_t n, BD e, bool tf){
-    if( tf ) bdt[n].dat |= e; else bdt[n].dat &= ~e;
+    if( tf ) *(uint8_t*)&bdt[n] |= e;
+    else *(uint8_t*)&bdt[n] &= ~e;
 }
-bool Usb::bd_control(uint8_t n, BD e){ return bdt[n].dat & e; }
-uint8_t Usb::bd_pid(uint8_t n){ return bdt[n].pid; }
-void Usb::bd_addr(uint8_t n, uint32_t v){ bdt[n].addr = Reg::k2phys(v); }
-uint32_t Usb::bd_addr(uint8_t n){ return Reg::p2kseg0(bdt[n].addr); }
-uint16_t Usb::bd_count(uint8_t n){ return bdt[n].count; }
-void Usb::bd_count(uint8_t n, uint16_t v){ bdt[n].count = v; }
+bool Usb::bd_control(uint8_t n, BD e){
+    return *(uint8_t*)&bdt[n] & e;
+}
+uint8_t Usb::bd_pid(uint8_t n){
+    return ((*(uint8_t*)&bdt[n]) >> 2) & 15;
+}
+void Usb::bd_addr(uint8_t n, uint32_t v){
+    *(uint32_t*)&bdt[n+2] = Reg::k2phys(v);
+}
+uint32_t Usb::bd_addr(uint8_t n){
+    return Reg::p2kseg0(*(uint32_t*)&bdt[n+2]);
+}
+uint16_t Usb::bd_count(uint8_t n){ return bdt[n+1]; }
+void Usb::bd_count(uint8_t n, uint16_t v){ bdt[n+1] = v; }
 
 
 void Usb::config(CONFIG e, bool tf){ Reg::set(U1CNFG1, e, tf); }
