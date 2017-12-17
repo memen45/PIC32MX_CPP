@@ -19,11 +19,6 @@ class UsbBdt {
 
     public:
 
-    enum BD {
-         UOWN = 1<<7, DATA01 = 1<<6, KEEP = 1<<5,
-         NINC = 1<<4, DTS = 1<<3, BSTALL = 1<<2
-     };
-
     enum EP {
         LS = 1<<7, /*HOST mode and U1EP0 only*/
         RETRYDIS = 1<<6, /*HOST mode and U1EP0 only*/
@@ -54,6 +49,7 @@ class UsbBdt {
     uint8_t     pid         ();
     uint16_t    count       ();
     void        count       (uint16_t v);
+    //U1EPn register
     void        endp        (EP e, bool tf);
     bool        endp        (EP e);
     void        endp        (uint8_t);
@@ -68,6 +64,7 @@ class UsbBdt {
     uint8_t m_entry_num;
     volatile uint8_t m_buffer[64]{0};
     volatile bdt_t* m_entry_ptr;
+    volatile uint32_t* m_u1epn;
 };
 
 //called by Usb to init this UsbBdt instance
@@ -79,6 +76,7 @@ void UsbBdt::init(volatile bdt_t* entry_ptr, uint8_t n){
     m_entry_num = n;
     m_endp_num = n/4; //4 entries per endpoint n
     m_entry_ptr->all = 0;
+    m_u1epn = (uint32_t*)(U1EP0+m_endp_num*U1EP_SPACING);
     for(auto& b : m_buffer) b = 0;
     m_entry_ptr->addr = Reg::k2phys(m_buffer);
 }
@@ -94,9 +92,9 @@ uint8_t UsbBdt::pid(){ return m_entry_ptr->pid; }
 uint16_t UsbBdt::count(){ return m_entry_ptr->count; }
 void UsbBdt::count(uint16_t v){ m_entry_ptr->count = v; }
 
-void UsbBdt::endp(EP e, bool tf){ Reg::set(U1EP0+m_endp_num*U1EP_SPACING, e, tf); }
-bool UsbBdt::endp(EP e){ return Reg::is_set8(U1EP0+m_endp_num*U1EP_SPACING, e); }
-void UsbBdt::endp(uint8_t v){ Reg::val8(U1EP0+m_endp_num*U1EP_SPACING, v); }
+void UsbBdt::endp(EP e, bool tf){ Reg::set(m_u1epn, e, tf); }
+bool UsbBdt::endp(EP e){ return Reg::is_set8(m_u1epn, e); }
+void UsbBdt::endp(uint8_t v){ Reg::val8(m_u1epn, v); }
 
 
 
