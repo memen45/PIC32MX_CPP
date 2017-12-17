@@ -31,7 +31,24 @@ class UsbBdt {
         RXEN = 1<<3, TXEN = 1<<2, ESTALL = 1<<1, HSHAKE = 1<<0
     };
 
-    void        init        (volatile uint32_t* entry_ptr, uint8_t n);
+    typedef union {
+        struct { uint32_t dat; uint32_t addr; };
+        struct { unsigned :16; uint16_t count; };
+        struct {
+            unsigned :2;
+            unsigned bstall:1;
+            unsigned dts:1;
+            unsigned ninc:1;
+            unsigned keep:1;
+            unsigned data01:1;
+            unsigned uown:1;
+        };
+        struct { unsigned :2; unsigned pid:4; };
+        uint8_t control;
+        uint64_t all;
+    } bdt_t;
+
+    void        init        (volatile bdt_t* entry_ptr, uint8_t n);
     void        control     (uint8_t v, bool tf);
     bool        control     (uint8_t v);
     uint8_t     pid         ();
@@ -48,32 +65,34 @@ class UsbBdt {
     //U1EP1 0xBF808710 - U1EP15 0xBF8087F0
 
     uint8_t m_endp_num;
+    uint8_t m_entry_num;
     volatile uint8_t m_buffer[64]{0};
-    volatile uint8_t* m_entry_ptr;
+    volatile bdt_t* m_entry_ptr;
 };
 
 //called by Usb to init this UsbBdt instance
 //get entry address, endpoint number
 //clear entry (4*16bits= 8bytes = 2x32bits)
 //clear buffer
-void UsbBdt::init(volatile uint32_t* entry_ptr, uint8_t n){
-    m_entry_ptr = (volatile uint8_t*)(entry_ptr+n*2);
+void UsbBdt::init(volatile bdt_t* entry_ptr, uint8_t n){
+    m_entry_ptr = &entry_ptr[n];
+    m_entry_num = n;
     m_endp_num = n/4; //4 entries per endpoint n
-    *(volatile uint64_t*)m_entry_ptr = 0;
+    m_entry_ptr->all = 0;
     for(auto& b : m_buffer) b = 0;
-    *(volatile uint32_t*)(m_entry_ptr+4) = Reg::k2phys(m_buffer);
+    m_entry_ptr->addr = Reg::k2phys(m_buffer);
 }
 
 void UsbBdt::control(uint8_t v, bool tf){
-    if( tf ) *m_entry_ptr |= v;
-    else *m_entry_ptr &= ~v;
+    if( tf ) m_entry_ptr->control |= v;
+    else m_entry_ptr->control &= ~v;
 }
-bool UsbBdt::control(uint8_t v){ return *m_entry_ptr & v; }
+bool UsbBdt::control(uint8_t v){ return m_entry_ptr->control & v; }
 
-uint8_t UsbBdt::pid(){ return ((*m_entry_ptr) >> 2) & 15; }
+uint8_t UsbBdt::pid(){ return m_entry_ptr->pid; }
 
-uint16_t UsbBdt::count(){ return *(uint16_t*)(m_entry_ptr+2); }
-void UsbBdt::count(uint16_t v){ *(uint16_t*)(m_entry_ptr+2) = v; }
+uint16_t UsbBdt::count(){ return m_entry_ptr->count; }
+void UsbBdt::count(uint16_t v){ m_entry_ptr->count = v; }
 
 void UsbBdt::endp(EP e, bool tf){ Reg::set(U1EP0+m_endp_num*U1EP_SPACING, e, tf); }
 bool UsbBdt::endp(EP e){ return Reg::is_set8(U1EP0+m_endp_num*U1EP_SPACING, e); }
@@ -218,14 +237,14 @@ class Usb {
 static const uint8_t maxn_endp = 1; //0,1
 /////////////////////////////////////////////////////////////
 
-static volatile uint32_t bdt[(maxn_endp+1)*8]
-    __attribute__ ((aligned (512))); //8 words per endpoint
+static volatile UsbBdt::bdt_t bdt[(maxn_endp+1)]
+    __attribute__ ((aligned (512)));
 
  static UsbBdt bdt_handler[(maxn_endp+1)*4]; //4 per endpoint
 
  static void bdt_handler_init();
 
- 
+
 
 
     enum CONFIG : uint8_t {
@@ -324,9 +343,7 @@ void Usb::config(CONFIG e, bool tf){ Reg::set(U1CNFG1, e, tf); }
 bool Usb::config(CONFIG e){ return Reg::is_set8(U1CNFG1, e); }
 void Usb::config(uint8_t v){ Reg::val8(U1CNFG1, v); }
 
-
-
-
+//init UsbBdt bdt_handler[n]
 void Usb::bdt_handler_init(){
     uint8_t n = 0;
     for(auto& h : bdt_handler) h.init( bdt, n++ );
@@ -350,11 +367,10 @@ void Usb::bdt_handler_init(){
     bdt_class_init();           //clear all bdt entries, init class (each entry)
     bdt_addr(bdt_table);        //set bdt table address
 
-
+    control(0);
     control(PPRESET, true);     //reset ping pong pointers
-    address(0);                 //set adddress to 0
-    control(PKTDIS, false);     //enable pkt processing
-    control(PPRESET, false);    //stop reset ping pong pointers
+    address(0);                 //set address to 0
+    control(0);                 //stop reset ping pong pointers
 
     irqs(STALL|IDLE|TOKEN|SOF|ERR|RESET);
     eirqs(BITSTUFF|BUSTIMEOUT|DATASIZE|CRC16|CRC5|PID);
