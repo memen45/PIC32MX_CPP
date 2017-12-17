@@ -21,12 +21,12 @@ static const uint8_t my_buffer_count = 8;  //number of buffers in buffer pool
 struct UsbBuf {
 //==============================================================================
 // all usb buffers come from here
-// 8 * 64byte buffers - ALL are 64bytes in length
+// my_buffer_count * my_buffer_size byte buffers - all same length
 // caller requests buffer via -
-//   volatile uint8_t* mybuf = UsbBuf::giveme();
+//   volatile uint8_t* mybuf = UsbBuf::get();
 //   if(!mybuf) no_free_buffers- try again
 // caller returns buffer when done
-//   UsbBuf::giveup(mybuf);
+//   UsbBuf::release(mybuf);
 // to reinit buffers (release all, and clear)-
 //   UsbBuf::reinit();
 //==============================================================================
@@ -335,6 +335,7 @@ class Usb {
     /*..........................................................................
      endp
         get/set endpoint n
+        clear all endpoint registers
     ..........................................................................*/
     enum EPV {
         LS = 1<<7,          /*HOST mode and U1EP0 only*/
@@ -347,7 +348,7 @@ class Usb {
     static void     endp                (uint8_t, EPV, bool);
     static bool     endp                (uint8_t, EPV);
     static void     endp                (uint8_t, uint8_t);
-
+    static void     endps_clr           ();
 
 
 
@@ -437,6 +438,11 @@ bool Usb::endp(uint8_t n, EPV e){
 void Usb::endp(uint8_t n, uint8_t v){
     Reg::val8(U1EP0+(n&15)*U1EP_SPACING, v);
 }
+void Usb::endps_clr(){
+    for(auto i = 0; i < 16; i++){
+        Reg::val8(U1EP0+i*U1EP_SPACING, 0);
+    }
+}
 //==============================================================================
 
 
@@ -447,6 +453,8 @@ void Usb::endp(uint8_t n, uint8_t v){
     UsbBdt ubdt;
 
     Irq::on(Irq::USB, false);   //usb irq off
+
+    //vbus/rb6 to input (should already be input on reset)
 
     power(USBPWR, false);       //usb off
     while(power(BUSY));         //wait for busy bit to clear
