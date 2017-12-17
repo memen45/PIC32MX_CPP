@@ -56,18 +56,20 @@ template <typename T> void Reg::clr(T r, uint32_t v){
 template <typename T> void Reg::inv(T r, uint32_t v){
     *(reinterpret_cast <volatile uint32_t*>(r)+INV) = v;
 }
+//is_set/is_clr can check multiple bits
 template <typename T> bool Reg::is_set(T r, uint32_t v){
-    return *(reinterpret_cast <volatile uint32_t*>(r)) & v;
+    return (*(reinterpret_cast <volatile uint32_t*>(r)) & v) == v;
 }
 template <typename T> bool Reg::is_clr(T r, uint32_t v){
-    return ! *(reinterpret_cast <volatile uint32_t*>(r)) & v;
+    return (*(reinterpret_cast <volatile uint32_t*>(r)) | ~v) == ~v;
 }
 template <typename T> bool Reg::is_set8(T r, uint8_t v){
-    return *(reinterpret_cast <volatile uint8_t*>(r)) & v;
+    return (*(reinterpret_cast <volatile uint8_t*>(r)) & v) == v;
 }
 template <typename T> bool Reg::is_clr8(T r, uint8_t v){
-    return ! *(reinterpret_cast <volatile uint8_t*>(r)) & v;
+    return ! (*(reinterpret_cast <volatile uint8_t*>(r)) | v) == v ;
 }
+
 template <typename T> uint32_t Reg::val(T r){
     return *(reinterpret_cast <volatile uint32_t*>(r));
 }

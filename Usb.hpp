@@ -7,25 +7,87 @@
 #include <cstdint>
 #include "Reg.hpp"
 
-// each entry in the BDT table has a class instance of Bdt, created in Usb class
-// (array of maxn_endp class instances)
-// each class instance handles its own entry (in bdt table), buffer (64 bytes),
-// and endpoint register control
-// for each endpoint there are 4 Bdt instances (rxeven, rxodd, txeven, txodd)
-// access to these instances is through Usb:: via bdt_handler[n]
-// where n = endpoint number<<2|trx>>1|evodd
-// for Usb::stat(), use Usb::bdt_handler[Usb::stat()>>2]
-class UsbBdt {
+///////////////////////////////////////////////////////////////////////////////
+/////// user provided data ////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+static const uint8_t my_last_endp = 1;     //last endpoint number used
+static const uint8_t my_n_endp = 2;        //number of endpoints used
+static const uint8_t my_buffer_size = 64;  //size of buffers (all same)
+static const uint8_t my_buffer_count = 8;  //number of buffers in buffer pool
+///////////////////////////////////////////////////////////////////////////////
 
-    public:
 
-    enum EP {
-        LS = 1<<7, /*HOST mode and U1EP0 only*/
-        RETRYDIS = 1<<6, /*HOST mode and U1EP0 only*/
-        CTRLDIS = 1<<4, /*only when TXEN=1 && RXEN=1*/
-        RXEN = 1<<3, TXEN = 1<<2, ESTALL = 1<<1, HSHAKE = 1<<0
-    };
 
+struct UsbBuf {
+//==============================================================================
+// all usb buffers come from here
+// 8 * 64byte buffers - ALL are 64bytes in length
+// caller requests buffer via -
+//   volatile uint8_t* mybuf = UsbBuf::giveme();
+//   if(!mybuf) no_free_buffers- try again
+// caller returns buffer when done
+//   UsbBuf::giveup(mybuf);
+// to reinit buffers (release all, and clear)-
+//   UsbBuf::reinit();
+//==============================================================================
+    static void                 reinit();
+    static volatile uint8_t*    get();
+    static void                 release(volatile uint8_t*);
+    static uint8_t              buf_len();
+
+    typedef struct {
+        bool inuse;
+        uint8_t buf[my_buffer_size];
+    } buf_t;
+};
+//==============================================================================
+// UsbBuf static functions, vars
+//==============================================================================
+static volatile UsbBuf::buf_t m_buffers[my_buffer_count] = {0};
+
+//clear buffers, clear inuse flag
+void UsbBuf::reinit(){
+    for(auto& i : m_buffers){
+        i.inuse = false;
+        for(auto& j : i.buf) j = 0;
+    }
+}
+//get an unused buffer (address), return 0 if none available (caller checks 0)
+volatile uint8_t* UsbBuf::get(){
+    for(auto& i : m_buffers){
+        if(i.inuse) continue;
+        i.inuse = true;
+        return i.buf;
+    }
+    return 0;
+}
+//return a buffer for use
+void UsbBuf::release(volatile uint8_t* p){
+    for(auto& i : m_buffers){
+        if(p!=i.buf) continue;
+        i.inuse = false;
+        return;
+    }
+}
+//size of buffer
+uint8_t UsbBuf::buf_len() { return my_buffer_size; }
+//==============================================================================
+
+
+
+
+
+
+
+struct UsbBdt {
+//==============================================================================
+// all BDT table functions
+// bdt table allocated here, Usb:: functions set address of bdt table
+// init functions also return address of table (init_all) or table entry (init)
+// something like-
+//  uint32_t* ba = UsbBdt::init_all();
+//  Usb::bdt_addr(ba);
+//==============================================================================
     enum CTRL {
         UOWN = 1<<7, DATA01 = 1<<6, KEEP = 1<<5,
         NINC = 1<<4, DTS = 1<<3, BSTALL = 1<<1
@@ -48,67 +110,61 @@ class UsbBdt {
         uint64_t all;
     } bdt_t;
 
-    void        init        (volatile bdt_t* entry_ptr, uint8_t n);
-    void        addr        (uint8_t*);
-    uint8_t*    addr        ();
-    uint8_t*    buf_addr    () const;
-    void        control     (uint8_t v, bool tf);
-    bool        control     (uint8_t v);
-    uint8_t     pid         ();
-    uint16_t    count       ();
-    void        count       (uint16_t v);
-    //U1EPn register
-    void        endp        (EP e, bool tf);
-    bool        endp        (EP e);
-    void        endp        (uint8_t);
+    void*       init        (uint8_t);
+    void*       init_all    ();
+    void        addr        (uint8_t, uint8_t*);
+    uint8_t*    addr        (uint8_t);
+    void        control     (uint8_t, CTRL, bool);
+    void        control     (uint8_t, uint8_t);
+    bool        control     (uint8_t, CTRL);
+    //control - specific functions
+    bool        uown        (uint8_t);
+    bool        data01      (uint8_t);
+    bool        uown        (uint8_t, bool);
+    bool        data01      (uint8_t, bool);
 
-
-    private:
-
-    enum { U1EP0 = 0xBF808700, U1EP_SPACING = 0x10 };
-    //U1EP1 0xBF808710 - U1EP15 0xBF8087F0
-
-    uint8_t m_endp_num;
-    uint8_t m_entry_num;
-    volatile uint8_t m_buffer[64]{0};
-    volatile bdt_t* m_entry_ptr;
-    volatile uint32_t* m_u1epn;
+    uint8_t     pid         (uint8_t);
+    uint16_t    count       (uint8_t);
+    void        count       (uint8_t, uint16_t);
 };
+//==============================================================================
+// UsbBdt static functions, vars
+//==============================================================================
+static volatile UsbBdt::bdt_t bdt[(my_last_endp+1)*4]
+    __attribute__ ((aligned (512)));
 
-//called by Usb to init this UsbBdt instance
-//get entry address, endpoint number
-//clear entry (4*16bits= 8bytes = 2x32bits)
-//clear buffer, address of buffer to table
-//set count to size of buffer
-void UsbBdt::init(volatile bdt_t* entry_ptr, uint8_t n){
-    m_entry_ptr = &entry_ptr[n];
-    m_entry_num = n;
-    m_endp_num = n/4; //4 entries per endpoint n
-    m_entry_ptr->all = 0;
-    m_u1epn = (uint32_t*)(U1EP0+m_endp_num*U1EP_SPACING);
-    for(auto& b : m_buffer) b = 0;
-    m_entry_ptr->addr = Reg::k2phys(m_buffer);
-    count(sizeof(m_buffer));
+//init single bdt table entry (epn<<3|dir<<1|pp)
+void* UsbBdt::init(uint8_t n){
+    if(n > (my_last_endp*4)) return 0; //n too high, do nothing
+    bdt[n].all = 0;
+    return (void*)&bdt[n];
+}
+//init all bdt table entries (4 per endpoint)
+void* UsbBdt::init_all(){
+    for(auto& i : bdt) i.all = 0;
+    return (void*)bdt;
 }
 
-void UsbBdt::addr(uint8_t* v){ m_entry_ptr->addr = Reg::k2phys(v); }
-uint8_t* UsbBdt::addr(){ return (uint8_t*)Reg::p2kseg0(m_entry_ptr->addr); }
-uint8_t* UsbBdt::buf_addr() const { return (uint8_t*)m_buffer; }
+void UsbBdt::addr(uint8_t n, uint8_t* v){ bdt[n].addr = Reg::k2phys(v); }
+uint8_t* UsbBdt::addr(uint8_t n){ return (uint8_t*)Reg::p2kseg0(bdt[n].addr); }
 
-void UsbBdt::control(uint8_t v, bool tf){
-    if( tf ) m_entry_ptr->control |= v;
-    else m_entry_ptr->control &= ~v;
+void UsbBdt::control(uint8_t n, CTRL e, bool tf){
+    if( tf ) bdt[n].control |= e;
+    else bdt[n].control &= ~e;
 }
-bool UsbBdt::control(uint8_t v){ return m_entry_ptr->control & v; }
+void UsbBdt::control(uint8_t n, uint8_t v){ bdt[n].control = v; }
+bool UsbBdt::control(uint8_t n, CTRL e){ return bdt[n].control & e; }
+bool UsbBdt::uown(uint8_t n){ return bdt[n].uown; }
+bool UsbBdt::data01(uint8_t n){ return bdt[n].data01; }
+bool UsbBdt::uown(uint8_t n, bool tf){ bdt[n].uown = tf; }
+bool UsbBdt::data01(uint8_t n, bool tf){ bdt[n].data01 = tf; }
 
-uint8_t UsbBdt::pid(){ return m_entry_ptr->pid; }
 
-uint16_t UsbBdt::count(){ return m_entry_ptr->count; }
-void UsbBdt::count(uint16_t v){ m_entry_ptr->count = v; }
+uint8_t UsbBdt::pid(uint8_t n){ return bdt[n].pid; }
 
-void UsbBdt::endp(EP e, bool tf){ Reg::set(m_u1epn, e, tf); }
-bool UsbBdt::endp(EP e){ return Reg::is_set8(m_u1epn, e); }
-void UsbBdt::endp(uint8_t v){ Reg::val8(m_u1epn, v); }
+uint16_t UsbBdt::count(uint8_t n){ return bdt[n].count; }
+void UsbBdt::count(uint8_t n, uint16_t v){ bdt[n].count = v; }
+
 
 
 
@@ -119,10 +175,12 @@ void UsbBdt::endp(uint8_t v){ Reg::val8(m_u1epn, v); }
 
 
 class Usb {
+//==============================================================================
 
+//==============================================================================
     public:
 
-    /*=========================================================================
+    /*..........................................................................
      flags, interrupts
         FLAGS enum contains all flag/irq names
 
@@ -136,7 +194,7 @@ class Usb {
         irq(FLAGS, bool);       -one irq on/off (true=on)
 
         eflag, eirq functions mirror above but are for error flags
-    =========================================================================*/
+    ..........................................................................*/
 
     enum FLAGS : uint16_t {
         //U1IR, U1IE
@@ -185,13 +243,13 @@ class Usb {
     static void     eirq                (EFLAGS, bool); //eirq on/off
 
 
-    /*=========================================================================
+    /*..........................................................................
      power
         POWER enum contains all power names
 
         power(POWER);           -return POWER bit is set
         power(POWER, bool);     -set/clr specified POWER bit (true=on)
-    =========================================================================*/
+    ..........................................................................*/
 
     enum POWER : uint8_t {
         //U1PWRC
@@ -205,12 +263,18 @@ class Usb {
     static bool     power               (POWER);
     static void     power               (POWER, bool);
 
+    /*..........................................................................
+     stat
+        only valid when TOKEN flag set
+    ..........................................................................*/
+
+    static uint8_t  stat                ();
 
 
-    static uint8_t  stat                (); //only valid when TOKEN flag set
+    /*..........................................................................
+     control
 
-
-
+    ..........................................................................*/
     enum CONTROL : uint8_t {
         JSTATE = 1<<7,
         SE0 = 1<<6,
@@ -228,37 +292,33 @@ class Usb {
     static void     control             (CONTROL, bool);
 
 
-
+    /*..........................................................................
+     address
+        usb device address get/set
+    ..........................................................................*/
     static uint8_t  address             ();
     static void     address             (uint8_t);
+
+
+    /*..........................................................................
+     frame
+        get frame number
+    ..........................................................................*/
     static uint16_t frame               ();
 
 
-
-
-    //address of (up to)512byte BDT buffer (512byte aligned)
-    //(16bdt's * 2(in/out) * 2(odd/even) * 8bytes = 512bytes max)
-    //table
+    /*..........................................................................
+     bdt_addr
+        get/set bdt table address
+    ..........................................................................*/
     static void     bdt_addr            (uint32_t);
     static uint32_t bdt_addr            ();
 
 
-
-
-/////////////////////////////////////////////////////////////
-static const uint8_t maxn_endp = 1; //0,1
-/////////////////////////////////////////////////////////////
-
-static volatile UsbBdt::bdt_t bdt[(maxn_endp+1)]
-    __attribute__ ((aligned (512)));
-
- static UsbBdt bdt_handler[(maxn_endp+1)*4]; //4 per endpoint
-
- static void bdt_handler_init();
-
-
-
-
+    /*..........................................................................
+     config
+        get/set config register
+    ..........................................................................*/
     enum CONFIG : uint8_t {
         EYETEST = 1<<7,
         OEMON = 1<<6,
@@ -272,10 +332,28 @@ static volatile UsbBdt::bdt_t bdt[(maxn_endp+1)]
     static void     config              (uint8_t);      //set reg val
 
 
+    /*..........................................................................
+     endp
+        get/set endpoint n
+    ..........................................................................*/
+    enum EPV {
+        LS = 1<<7,          /*HOST mode and U1EP0 only*/
+        RETRYDIS = 1<<6,    /*HOST mode and U1EP0 only*/
+        CTRLDIS = 1<<4,     /*only when TXEN=1 && RXEN=1*/
+        RXEN = 1<<3, TXEN = 1<<2,
+        ESTALL = 1<<1, HSHAKE = 1<<0
+    };
+
+    static void     endp                (uint8_t, EPV, bool);
+    static bool     endp                (uint8_t, EPV);
+    static void     endp                (uint8_t, uint8_t);
+
+
+
 
     private:
 
-    //registers - all use only first 8bits
+    //registers - all registers use only first 8bits
     enum {
         U1PWRC = 0xBF808480,
         U1IR = 0xBF808600,//no SET, INV
@@ -290,20 +368,16 @@ static volatile UsbBdt::bdt_t bdt[(maxn_endp+1)]
         U1FRMH = 0xBF808690, //no SET, INV, CLR
         U1BDTP2 = 0xBF806C0,
         U1BDTP3 = 0xBF806D0,
-        U1CNFG1 = 0xBF8086E0
+        U1CNFG1 = 0xBF8086E0,
+        U1EP0 = 0xBF808700, U1EP_SPACING = 0x10
      };
 
 };
-
-
-/*=============================================================================
- all functions inline
-=============================================================================*/
-
+//==============================================================================
+// Usb static functions, vars
+//==============================================================================
 bool Usb::power(POWER e){ Reg::is_set8(U1PWRC, e); }
 void Usb::power(POWER e, bool tf){ Reg::set(U1PWRC, e, tf); }
-
-
 //get all
 uint8_t Usb::flags(){ return Reg::val8(U1IR); }
 uint8_t Usb::eflags(){ return Reg::val8(U1EIR); }
@@ -313,7 +387,6 @@ bool Usb::eflag(EFLAGS e){ Reg::is_set8(U1EIR, e); }
 //clear one or more
 void Usb::flags_clr(uint8_t v){ Reg::val8(U1IR, v); }
 void Usb::eflags_clr(uint8_t v){ Reg::val8(U1EIR, v); }
-
 //get all
 uint8_t Usb::irqs(){ return Reg::val8(U1IE); }
 uint8_t Usb::eirqs(){ return Reg::val8(U1EIE); }
@@ -355,17 +428,23 @@ void Usb::config(CONFIG e, bool tf){ Reg::set(U1CNFG1, e, tf); }
 bool Usb::config(CONFIG e){ return Reg::is_set8(U1CNFG1, e); }
 void Usb::config(uint8_t v){ Reg::val8(U1CNFG1, v); }
 
-//init UsbBdt bdt_handler[n]
-void Usb::bdt_handler_init(){
-    uint8_t n = 0;
-    for(auto& h : bdt_handler) h.init( bdt, n++ );
+void Usb::endp(uint8_t n, EPV e, bool tf){
+    Reg::set(U1EP0+(n&15)*U1EP_SPACING, e, tf);
 }
-
+bool Usb::endp(uint8_t n, EPV e){
+    return Reg::is_set8(U1EP0+(n&15)*U1EP_SPACING, e);
+}
+void Usb::endp(uint8_t n, uint8_t v){
+    Reg::val8(U1EP0+(n&15)*U1EP_SPACING, v);
+}
+//==============================================================================
 
 
 
 /*
  void Usb::init(){
+
+    UsbBdt ubdt;
 
     Irq::on(Irq::USB, false);   //usb irq off
 
@@ -376,16 +455,16 @@ void Usb::bdt_handler_init(){
     endps_clr();                //clear all endpoints
     config(0);                  //(FS)
     power(USBPWR, true);        //usb on
-    bdt_class_init();           //clear all bdt entries, init class (each entry)
-    bdt_addr(bdt_table);        //set bdt table address
+                                //clear all bdt entries
+    bdt_addr(ubdt.init_all());  //and set bdt table address
 
     control(0);
     control(PPRESET, true);     //reset ping pong pointers
     address(0);                 //set address to 0
     control(0);                 //stop reset ping pong pointers
 
-    bdt_handler[0].endp(RXEN|TXEN|HSHK);
-    bdt_handler[0|0|0].control(UOWN|DATA01|BSTALL);
+    endp(0, RXEN|TXEN|HSHK);
+    ubdt.control(0|0|0, ubdt.UOWN|ubdt.DATA01|ubdt.BSTALL);
 
     irqs(STALL|IDLE|TOKEN|SOF|ERR|RESET);
     eirqs(BITSTUFF|BUSTIMEOUT|DATASIZE|CRC16|CRC5|PID);

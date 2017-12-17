@@ -107,6 +107,10 @@ int main(){
                                             //(will be EXTR mostly with pkob)
 
 
+    UsbBuf ub;
+    ub.reinit();
+    volatile uint8_t* ubuf = ub.get();
+
     //usb- can't do much, just turn on eye test for a second
     //(no Osc.hpp yet, so pll output running at 24MHz, usb clock is then 12MHz)
     Usb u;
