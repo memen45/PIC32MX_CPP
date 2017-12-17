@@ -26,6 +26,11 @@ class UsbBdt {
         RXEN = 1<<3, TXEN = 1<<2, ESTALL = 1<<1, HSHAKE = 1<<0
     };
 
+    enum CTRL {
+        UOWN = 1<<7, DATA01 = 1<<6, KEEP = 1<<5,
+        NINC = 1<<4, DTS = 1<<3, BSTALL = 1<<1
+    };
+
     typedef union {
         struct { uint32_t dat; uint32_t addr; };
         struct { unsigned :16; uint16_t count; };
@@ -44,6 +49,9 @@ class UsbBdt {
     } bdt_t;
 
     void        init        (volatile bdt_t* entry_ptr, uint8_t n);
+    void        addr        (uint8_t*);
+    uint8_t*    addr        ();
+    uint8_t*    buf_addr    () const;
     void        control     (uint8_t v, bool tf);
     bool        control     (uint8_t v);
     uint8_t     pid         ();
@@ -70,7 +78,8 @@ class UsbBdt {
 //called by Usb to init this UsbBdt instance
 //get entry address, endpoint number
 //clear entry (4*16bits= 8bytes = 2x32bits)
-//clear buffer
+//clear buffer, address of buffer to table
+//set count to size of buffer
 void UsbBdt::init(volatile bdt_t* entry_ptr, uint8_t n){
     m_entry_ptr = &entry_ptr[n];
     m_entry_num = n;
@@ -79,7 +88,12 @@ void UsbBdt::init(volatile bdt_t* entry_ptr, uint8_t n){
     m_u1epn = (uint32_t*)(U1EP0+m_endp_num*U1EP_SPACING);
     for(auto& b : m_buffer) b = 0;
     m_entry_ptr->addr = Reg::k2phys(m_buffer);
+    count(sizeof(m_buffer));
 }
+
+void UsbBdt::addr(uint8_t* v){ m_entry_ptr->addr = Reg::k2phys(v); }
+uint8_t* UsbBdt::addr(){ return (uint8_t*)Reg::p2kseg0(m_entry_ptr->addr); }
+uint8_t* UsbBdt::buf_addr() const { return (uint8_t*)m_buffer; }
 
 void UsbBdt::control(uint8_t v, bool tf){
     if( tf ) m_entry_ptr->control |= v;
@@ -369,6 +383,9 @@ void Usb::bdt_handler_init(){
     control(PPRESET, true);     //reset ping pong pointers
     address(0);                 //set address to 0
     control(0);                 //stop reset ping pong pointers
+
+    bdt_handler[0].endp(RXEN|TXEN|HSHK);
+    bdt_handler[0|0|0].control(UOWN|DATA01|BSTALL);
 
     irqs(STALL|IDLE|TOKEN|SOF|ERR|RESET);
     eirqs(BITSTUFF|BUSTIMEOUT|DATASIZE|CRC16|CRC5|PID);
