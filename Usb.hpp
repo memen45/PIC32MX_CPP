@@ -7,20 +7,27 @@
 #include <cstdint>
 #include "Reg.hpp"
 #include "UsbCh9.hpp"
+#include "Pins.hpp"
+
+
 
 ///////////////////////////////////////////////////////////////////////////////
 /////// user provided data ////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-static const uint8_t my_last_endp = 1;     //last endpoint number used
-static const uint8_t my_n_endp = 2;        //number of endpoints used
-static const uint8_t my_buffer_size = 64;  //size of buffers (all same)
-static const uint8_t my_buffer_count = 8;  //number of buffers in buffer pool
+static const uint8_t my_last_endp = 1;      //last endpoint number used
+static const uint8_t my_n_endp = 2;         //number of endpoints used
+static const uint8_t my_buffer_size = 64;   //size of buffers (all same)
+static const uint8_t my_buffer_count = 8;   //number of buffers in buffer pool
+static Pins vbus_pin(Pins::B6);             //Vbus pin
+///////////////////////////////////////////////////////////////////////////////
+/////// usb uses irq only, no polling /////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 
 
 struct UsbBuf {
-//==============================================================================
+//______________________________________________________________________________
+//
 // all usb buffers come from here
 // my_buffer_count * my_buffer_size byte buffers - all same length
 // caller requests buffer via -
@@ -30,7 +37,8 @@ struct UsbBuf {
 //   UsbBuf::release(mybuf);
 // to reinit buffers (release all, and clear)-
 //   UsbBuf::reinit();
-//==============================================================================
+//______________________________________________________________________________
+
     static void                 reinit();
     static volatile uint8_t*    get();
     static void                 release(volatile uint8_t*);
@@ -42,9 +50,9 @@ struct UsbBuf {
     } buf_t;
 
 };
-//==============================================================================
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 // UsbBuf static functions, vars
-//==============================================================================
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 static volatile UsbBuf::buf_t m_buffers[my_buffer_count] = {0};
 
 //clear buffers, clear inuse flag
@@ -73,8 +81,7 @@ void UsbBuf::release(volatile uint8_t* p){
 }
 //size of buffer
 uint8_t UsbBuf::buf_len() { return my_buffer_size; }
-//==============================================================================
-
+//______________________________________________________________________________
 
 
 
@@ -82,14 +89,16 @@ uint8_t UsbBuf::buf_len() { return my_buffer_size; }
 
 
 struct UsbBdt {
-//==============================================================================
+//______________________________________________________________________________
+//
 // all BDT table functions
 // bdt table allocated here, Usb:: functions set address of bdt table
 // init functions also return address of table (init_all) or table entry (init)
 // something like-
 //  uint32_t* ba = UsbBdt::init_all();
 //  Usb::bdt_addr(ba);
-//==============================================================================
+//______________________________________________________________________________
+
     enum CTRL {
         UOWN = 1<<7, DATA01 = 1<<6, KEEP = 1<<5,
         NINC = 1<<4, DTS = 1<<3, BSTALL = 1<<1
@@ -129,9 +138,10 @@ struct UsbBdt {
     static uint16_t    count       (uint8_t);
     static void        count       (uint8_t, uint16_t);
 };
-//==============================================================================
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 // UsbBdt static functions, vars
-//==============================================================================
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 static volatile UsbBdt::bdt_t bdt[(my_last_endp+1)*4]
     __attribute__ ((aligned (512)));
 
@@ -177,9 +187,10 @@ void UsbBdt::count(uint8_t n, uint16_t v){ bdt[n].count = v; }
 
 
 class Usb {
-//==============================================================================
+//______________________________________________________________________________
 
-//==============================================================================
+//______________________________________________________________________________
+
     public:
 
     /*..........................................................................
@@ -299,6 +310,7 @@ class Usb {
 
     static bool     control             (CONTROL);
     static void     control             (CONTROL, bool);
+    static void     control             (uint8_t);
 
 
     /*..........................................................................
@@ -360,6 +372,10 @@ class Usb {
     static void     endps_clr           ();
 
 
+    typedef enum {
+        DETACHED, ATTACHED
+    } state_t;
+    static state_t state;
 
     private:
 
@@ -383,9 +399,11 @@ class Usb {
      };
 
 };
-//==============================================================================
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 // Usb static functions, vars
-//==============================================================================
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+Usb::state_t state = Usb::DETACHED;
 bool Usb::power(POWER e){ Reg::is_set8(U1PWRC, e); }
 void Usb::power(POWER e, bool tf){ Reg::set(U1PWRC, e, tf); }
 //get all
@@ -414,6 +432,7 @@ uint8_t Usb::stat(){ Reg::val8(U1STAT); }
 
 bool Usb::control(CONTROL e){ Reg::is_set8(U1CON, e); }
 void Usb::control(CONTROL e, bool tf){ Reg::set(U1CON, e, tf); }
+void Usb::control(uint8_t v){ Reg::val8(U1CON, v); }
 
 uint8_t Usb::address(){ return Reg::val8(U1ADDR) & 127; }
 void Usb::address(uint8_t v){ Reg::val8(U1ADDR, v & 127); }
@@ -450,12 +469,16 @@ void Usb::endps_clr(){
         Reg::val8(U1EP0+i*U1EP_SPACING, 0);
     }
 }
-//==============================================================================
+//______________________________________________________________________________
 
 
 
 /*
- void Usb::init(){
+
+
+
+
+ void Usb::init(bool tf){
 
     UsbBdt ubdt;
 
@@ -472,7 +495,8 @@ void Usb::endps_clr(){
     endps_clr();                //clear all endpoints
     config(0);                  //(FS)
     power(USBPWR, true);        //usb on
-                                //clear all bdt entries
+
+    //clear all bdt entries
     bdt_addr(ubdt.init_all());  //and set bdt table address
 
     UsbBuf::reinit();           //clear all buffers, reset inuse
@@ -480,18 +504,22 @@ void Usb::endps_clr(){
     control(0);
     control(PPRESET, true);     //reset ping pong pointers
     address(0);                 //set address to 0
-    control(0);                 //stop reset ping pong pointers
+    control(PPRESET, false);    //stop reset ping pong pointers
 
+    //endpoint0 init
     endp(0, RXEN|TXEN|HSHK);
     ubdt.control(0|0|0, ubdt.UOWN|ubdt.DATA01|ubdt.BSTALL);
     ubdt.addr(0|0|0, UsbBuf::get());
     ubdt.count(0|0|0, UsbBuf::buf_len());
 
+    //enable irqs
     irqs(STALL|IDLE|TOKEN|SOF|ERR|RESET);
     eirqs(BITSTUFF|BUSTIMEOUT|DATASIZE|CRC16|CRC5|PID);
 
+    //enable usb
     control(USBEN, true);       //usb enable
 
+    //and usb irq
     Irq::init(Irq::Usb, 5, 0, true);
  }
  */
@@ -499,11 +527,16 @@ void Usb::endps_clr(){
 
 
 struct UsbHandlers {
-//==============================================================================
+//______________________________________________________________________________
+//
 // UsbHandlers - handle usb interrupt, call handlers
-//==============================================================================
+//______________________________________________________________________________
+
     static void     UsbISR              (void);
     static void     endp0_handler       (uint8_t);
+    //state handlers
+    static void     detach              (void);
+    static void     attach              (void);
 
     //rx even/odd buffers
     static volatile uint8_t* endp0_rx[2];
@@ -511,10 +544,12 @@ struct UsbHandlers {
     static uint8_t endp0_odd, endp0_data;
     //array of function pointers, 1 for each endpoint used
     static void (*handlers[my_n_endp])(uint8_t);
+
 };
-//==============================================================================
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 // UsbHandlers static functions, vars
-//==============================================================================
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 volatile uint8_t* UsbHandlers::endp0_rx[2] = { UsbBuf::get(), UsbBuf::get() };
 uint8_t UsbHandlers::endp0_odd;
 uint8_t UsbHandlers::endp0_data;
@@ -601,4 +636,33 @@ void UsbHandlers::endp0_handler(uint8_t idx){
         break;
 
     }
+}
+
+
+void UsbHandlers::detach(void){
+    Usb u;
+    //disable usb module, detach from bus
+    u.control(u.USBEN, false);
+    //all irqs off
+    u.irqs(0);
+    u.eirqs(0);
+
+    u.state = u.DETACHED;
+    //wait 100ms+ before attach again
+}
+
+void UsbHandlers::attach(void){
+    Usb u;
+    //run only from detached state, and if vbus is high
+    if(u.state != u.DETACHED || vbus_pin.isoff()) return;
+    //all off
+    u.control(0);
+    //enable irqs
+    u.irqs(u.STALL|u.IDLE|u.TOKEN|u.SOF|u.ERROR|u.RESET);
+    u.eirqs(u.BITSTUFF|u.BUSTIMEOUT|u.DATASIZE|u.CRC16|u.CRC5|u.PID);
+    Irq::on(Irq::USB, true);
+    //enable usb
+    u.control(u.USBEN, true);
+
+    u.state = u.ATTACHED;
 }
