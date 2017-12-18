@@ -6,7 +6,7 @@
 
 #include <cstdint>
 
-class Usb_CH9 {
+class UsbCh9 {
 
     public:
 

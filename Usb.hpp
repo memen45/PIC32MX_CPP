@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include "Reg.hpp"
+#include "UsbCh9.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
 /////// user provided data ////////////////////////////////////////////////////
@@ -562,18 +563,19 @@ void __attribute__((vector(29), interrupt(IPL5SOFT))) USbISR(){
 
 
 void UsbHandlers::endp0_handler(uint8_t idx){
-    static volatile uint8_t* last_setup;
     UsbBdt ub;
 
+    static UsbCh9::SetupPacket_t last_setup;
+
+
     idx = 0|idx;    //endpoint0|stat = bdt entry index
-                    //(not really needed here, just example for ep1-15)
+                    //(not really needed for ep0, just example for ep1-15)
 
     switch(ub.pid(idx)){
 
     case 13: //SETUP
         //extract the setup token
-        //last_setup = ub.addr(idx);
-        last_setup = endp0_rx[0];
+        last_setup = (UsbCh9::SetupPacket_t&)endp0_rx[idx&1];
 //
 //        //we are now done with the buffer
         //#define BDT_DESC(count, data)
@@ -600,14 +602,14 @@ void UsbHandlers::endp0_handler(uint8_t idx){
 //        USB0_CTL = USB_CTL_USBENSOFEN_MASK;
         break;
     case 9: //IN
-//        if (last_setup.wRequestAndType == 0x0500)
-//        {
-//            USB0_ADDR = last_setup.wValue;
-//        }
+        if (last_setup.wRequest == UsbCh9::DEV_SET_ADDRESS){
+            Usb::address(last_setup.wValue);
+        }
         break;
-    case 1:
-//        //nothing to do here..just give the buffer back
-//        bdt->desc = BDT_DESC(ENDP0_SIZE, 1);
+    case 1: //OUT
+        ub.count(my_buffer_size);
+        ub.uown(idx, true);
+        ub.data01(idx, true);
         break;
 
     }
