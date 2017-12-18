@@ -25,6 +25,9 @@ static const uint8_t usb_irq_subpri = 0;    //usb interrupt sub-priority
 //vector(n) will need to match USB vector number
 //if using shadow register for this priority, will have to set elsewhere
 //using Irq::shadow_set(pri, 1), then match the priority here and use IPLnSRS
+//declare here in C namespace so we can have in user data here,
+//then define in code below
+//(its in UsbHandler section, although not in any class)
 extern "C" {
     void __attribute__((vector(29), interrupt(IPL5SOFT))) UsbISR();
 }
