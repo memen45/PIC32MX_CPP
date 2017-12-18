@@ -60,7 +60,6 @@ struct UsbBuf {
         bool inuse;
         uint8_t buf[my_buffer_size];
     } buf_t;
-
 };
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 // UsbBuf static functions, vars
@@ -199,12 +198,10 @@ void UsbBdt::count(uint8_t n, uint16_t v){ bdt[n].count = v; }
 
 
 
-class Usb {
+struct Usb {
 //______________________________________________________________________________
 
 //______________________________________________________________________________
-
-    public:
 
     /*..........................................................................
      flags, interrupts
@@ -477,57 +474,6 @@ void Usb::endps_clr(){
 //______________________________________________________________________________
 
 
-
-/*
-
-
-
-
- void Usb::init(bool tf){
-
-    UsbBdt ubdt;
-
-    Irq::on(Irq::USB, false);   //usb irq off
-
-    //vbus/rb6 to input (should already be input on reset)
-
-    power(USBPWR, false);       //usb off
-    while(power(BUSY));         //wait for busy bit to clear
-
-    flags_clear(ALLFLAGS);      //clear all flags
-    eflags_clear(ALLEFLAGS);    //clear all error flags
-
-    endps_clr();                //clear all endpoints
-    config(0);                  //(FS)
-    power(USBPWR, true);        //usb on
-
-    //clear all bdt entries
-    bdt_addr(ubdt.init_all());  //and set bdt table address
-
-    UsbBuf::reinit();           //clear all buffers, reset inuse
-
-    control(0);
-    control(PPRESET, true);     //reset ping pong pointers
-    address(0);                 //set address to 0
-    control(PPRESET, false);    //stop reset ping pong pointers
-
-    //endpoint0 init
-    endp(0, RXEN|TXEN|HSHK);
-    ubdt.control(0|0|0, ubdt.UOWN|ubdt.DATA01|ubdt.BSTALL);
-    ubdt.addr(0|0|0, UsbBuf::get());
-    ubdt.count(0|0|0, UsbBuf::buf_len());
-
-    //enable irqs
-    irqs(STALL|IDLE|TOKEN|SOF|ERR|RESET);
-    eirqs(BITSTUFF|BUSTIMEOUT|DATASIZE|CRC16|CRC5|PID);
-
-    //enable usb
-    control(USBEN, true);       //usb enable
-
-    //and usb irq
-    Irq::init(Irq::Usb, 5, 0, true);
- }
- */
 
 
 
