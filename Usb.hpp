@@ -133,8 +133,9 @@ struct UsbBdt {
         uint64_t all;
     } bdt_t;
 
-    static void*       init        (uint8_t);
-    static void*       init_all    ();
+    static uint32_t    init        (uint8_t);
+    static uint32_t    init_all    ();
+
     static void        addr        (uint8_t, uint8_t*);
     static uint8_t*    addr        (uint8_t);
     static void        control     (uint8_t, CTRL, bool);
@@ -157,16 +158,16 @@ struct UsbBdt {
 static volatile UsbBdt::bdt_t bdt[(my_last_endp+1)*4]
     __attribute__ ((aligned (512)));
 
-//init single bdt table entry (epn<<3|dir<<1|pp)
-void* UsbBdt::init(uint8_t n){
+//init single bdt table entry (epn<<2|dir<<1|pp)
+uint32_t UsbBdt::init(uint8_t n){
     if(n > (my_last_endp*4)) return 0; //n too high, do nothing
     bdt[n].all = 0;
-    return (void*)&bdt[n];
+    return (uint32_t)&bdt[n];
 }
 //init all bdt table entries (4 per endpoint)
-void* UsbBdt::init_all(){
+uint32_t UsbBdt::init_all(){
     for(auto& i : bdt) i.all = 0;
-    return (void*)bdt;
+    return (uint32_t)&bdt[0];
 }
 
 void UsbBdt::addr(uint8_t n, uint8_t* v){ bdt[n].addr = Reg::k2phys(v); }
@@ -318,11 +319,11 @@ class Usb {
 
 
     /*..........................................................................
-     address
+     dev_addr
         usb device address get/set
     ..........................................................................*/
-    static uint8_t  address             ();
-    static void     address             (uint8_t);
+    static uint8_t  dev_addr            ();
+    static void     dev_addr            (uint8_t);
 
 
     /*..........................................................................
@@ -336,8 +337,8 @@ class Usb {
      bdt_addr
         get/set bdt table address
     ..........................................................................*/
-    static void     bdt_addr            (uint32_t);
-    static uint32_t bdt_addr            ();
+    static void         bdt_addr            (uint32_t);
+    static uint32_t     bdt_addr            ();
 
 
     /*..........................................................................
@@ -438,8 +439,8 @@ bool Usb::control(CONTROL e){ Reg::is_set8(U1CON, e); }
 void Usb::control(CONTROL e, bool tf){ Reg::set(U1CON, e, tf); }
 void Usb::control(uint8_t v){ Reg::val8(U1CON, v); }
 
-uint8_t Usb::address(){ return Reg::val8(U1ADDR) & 127; }
-void Usb::address(uint8_t v){ Reg::val8(U1ADDR, v & 127); }
+uint8_t Usb::dev_addr(){ return Reg::val8(U1ADDR) & 127; }
+void Usb::dev_addr(uint8_t v){ Reg::val8(U1ADDR, v & 127); }
 
 uint16_t Usb::frame(){ return (Reg::val8(U1FRMH)<<8) | Reg::val8(U1FRML); }
 
@@ -450,8 +451,8 @@ void Usb::bdt_addr(uint32_t v){
     Reg::val8(U1BDTP3, v>>24);
 }
 uint32_t Usb::bdt_addr(){
-    return  Reg::p2kseg0( (uint32_t)(
-    Reg::val8(U1BDTP1)<<8 | Reg::val8(U1BDTP2)<<16 | Reg::val8(U1BDTP3)<<24)
+    return  Reg::p2kseg0( (uint32_t)
+    Reg::val8(U1BDTP1)<<8 | Reg::val8(U1BDTP2)<<16 | Reg::val8(U1BDTP3)<<24
     ); //kseg0
 }
 
@@ -538,6 +539,7 @@ struct UsbHandlers {
 
     static void     UsbISR              (void);
     static void     endp0_handler       (uint8_t);
+    static void     init                ();
     //state handlers
     static void     detach              (void);
     static void     attach              (void);
@@ -630,7 +632,7 @@ void UsbHandlers::endp0_handler(uint8_t idx){
         break;
     case 9: //IN
         if (last_setup.wRequest == UsbCh9::DEV_SET_ADDRESS){
-            Usb::address(last_setup.wValue);
+            Usb::dev_addr(last_setup.wValue);
         }
         break;
     case 1: //OUT
@@ -645,29 +647,58 @@ void UsbHandlers::endp0_handler(uint8_t idx){
 
 void UsbHandlers::detach(void){
     Usb u;
-    //disable usb module, detach from bus
-    u.control(u.USBEN, false);
-    //all usb irqs off
-    Irq::on(Irq::USB, false);
-    u.irqs(0);
-    u.eirqs(0);
+    u.control(u.USBEN, false);  //disable usb module, detach from bus
+    Irq::on(Irq::USB, false);   //all usb irqs off
+    u.power(u.USBPWR, false);   //usb off
 
     u.state = u.DETACHED;
     //wait 100ms+ before attach again
 }
 
 void UsbHandlers::attach(void){
-    Usb u;
+    Usb u; UsbBdt ubdt; UsbBuf ubuf;
+
     //run only from detached state, and if vbus is high
     if(u.state != u.DETACHED || vbus_pin.isoff()) return;
-    //all control bits off
-    u.control(0);
+
+    while(u.power(u.BUSY));     //wait for busy bit to clear first
+    u.power(u.USBPWR, true);    //usb on (all regs should be reset now)
+
+    u.bdt_addr(ubdt.init_all());//clear all bdt entries
+                                //and set bdt table address
+
+    ubuf.reinit();              //clear all buffers, clear inuse flag
+    endp0_rx[0] = (volatile uint8_t*)ubuf.get(); //get buffers for
+    endp0_rx[1] = (volatile uint8_t*)ubuf.get(); //endp0 rx even/odd
+
+    u.dev_addr(0);              //set device address to 0 (should already be)
+
+    //endpoint0 init
+    u.endp(0, u.RXEN|u.TXEN|u.HSHAKE);
+    ubdt.control(0|0|0, ubdt.UOWN|ubdt.DATA01|ubdt.BSTALL);
+    ubdt.addr(0|0|0, (uint8_t*)ubuf.get());
+    ubdt.count(0|0|0, ubuf.buf_len());
+
     //enable irqs
     u.irqs(u.STALL|u.IDLE|u.TOKEN|u.SOF|u.ERROR|u.RESET);
     u.eirqs(u.BITSTUFF|u.BUSTIMEOUT|u.DATASIZE|u.CRC16|u.CRC5|u.PID);
     Irq::init(Irq::USB, usb_irq_pri, usb_irq_subpri, true);
+
     //enable usb
     u.control(u.USBEN, true);
 
     u.state = u.ATTACHED;
 }
+
+
+ void UsbHandlers::init(){
+    //USBEN=0, USBPWR=0, Irq::USB off, state = DETACHED
+    detach();
+
+    //vbus/rb6 to input (should already be input on reset)
+    //but do anyway
+    vbus_pin.digital_in();
+
+    //init all things (if vbus pin high)
+    attach();
+ }
