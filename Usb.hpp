@@ -292,14 +292,6 @@ class Usb {
      stat
         only valid when TOKEN flag set
     ..........................................................................*/
-    typedef union {
-        struct {
-            unsigned :2; unsigned ppbi:1; unsigned dir:1; unsigned endpt:4;
-        };
-        struct { unsigned :2; unsigned epidx:2; };
-        uint8_t val;
-    } stat_t;
-
     static uint8_t  stat                ();
 
 
@@ -570,12 +562,10 @@ void (*UsbHandlers::handlers[my_n_endp])(uint8_t) = {
     0
 };
 
-//declared in user constants
+//declared in user data at top of this file
 void  UsbISR(){
-
     Usb u;
     uint8_t flags = u.flags();
-    Usb::stat_t ustat = { u.stat() };
 
     if(flags & u.RESET){
         //Usb::init();
@@ -589,7 +579,11 @@ void  UsbISR(){
         u.flags_clr(u.SOF);
     }
     if (flags & u.TOKEN){
-        UsbHandlers::handlers[ustat.endpt](ustat.epidx);
+        //|endp<4>|dir<1>|ppbi<1>|unsed<2>|
+        uint8_t ustat = u.stat();
+        uint8_t endpt = ustat>>4;
+        uint8_t epidx = (ustat>>2) & 3;
+        UsbHandlers::handlers[endpt](epidx);
         u.flags_clr(u.TOKEN);
     }
     if (flags & u.ATTACH){
