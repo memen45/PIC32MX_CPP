@@ -581,12 +581,14 @@ void  UsbISR(){
         u.flags_clr(u.SOF);
     }
     if (flags & u.TOKEN){
+        do{ //get while TOKEN flag set (stat buffer is 4 deep)
         //|endp<4>|dir<1>|ppbi<1>|unsed<2>|
         uint8_t ustat = u.stat();
         uint8_t endpt = ustat>>4;
         uint8_t epidx = (ustat>>2) & 3;
         UsbHandlers::handlers[endpt](epidx);
         u.flags_clr(u.TOKEN);
+        } while(u.flag(u.TOKEN));
     }
     if (flags & u.ATTACH){
         u.flags_clr(u.ATTACH);
