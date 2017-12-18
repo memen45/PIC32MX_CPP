@@ -19,6 +19,15 @@ static const uint8_t my_n_endp = 2;         //number of endpoints used
 static const uint8_t my_buffer_size = 64;   //size of buffers (all same)
 static const uint8_t my_buffer_count = 8;   //number of buffers in buffer pool
 static Pins vbus_pin(Pins::B6);             //Vbus pin
+static const uint8_t usb_irq_pri = 5;       //usb interrupt priority
+static const uint8_t usb_irq_subpri = 0;    //usb interrupt sub-priority
+//IPLn will need to match usb_irq_pri,
+//vector(n) will need to match USB vector number
+//if using shadow register for this priority, will have to set elsewhere
+//using Irq::shadow_set(pri, 1), then match the priority here and use IPLnSRS
+extern "C" {
+    void __attribute__((vector(29), interrupt(IPL5SOFT))) UsbISR();
+}
 ///////////////////////////////////////////////////////////////////////////////
 /////// usb uses irq only, no polling /////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -558,8 +567,8 @@ void (*UsbHandlers::handlers[my_n_endp])(uint8_t) = {
     0
 };
 
-extern "C" {
-void __attribute__((vector(29), interrupt(IPL5SOFT))) USbISR(){
+//declared in user constants
+void  UsbISR(){
 
     Usb u;
     uint8_t flags = u.flags();
@@ -594,8 +603,6 @@ void __attribute__((vector(29), interrupt(IPL5SOFT))) USbISR(){
     }
 }
 
-} //extern "C"
-
 
 void UsbHandlers::endp0_handler(uint8_t idx){
     UsbBdt ub;
@@ -621,7 +628,7 @@ void UsbHandlers::endp0_handler(uint8_t idx){
         endp0_data = 1;
 
         //run the setup
-//        usb_endp0_handle_setup(&last_setup);
+//      endp0_hsetup(&last_setup);
 
         break;
     case 9: //IN
@@ -643,7 +650,8 @@ void UsbHandlers::detach(void){
     Usb u;
     //disable usb module, detach from bus
     u.control(u.USBEN, false);
-    //all irqs off
+    //all usb irqs off
+    Irq::on(Irq::USB, false);
     u.irqs(0);
     u.eirqs(0);
 
@@ -655,12 +663,12 @@ void UsbHandlers::attach(void){
     Usb u;
     //run only from detached state, and if vbus is high
     if(u.state != u.DETACHED || vbus_pin.isoff()) return;
-    //all off
+    //all control bits off
     u.control(0);
     //enable irqs
     u.irqs(u.STALL|u.IDLE|u.TOKEN|u.SOF|u.ERROR|u.RESET);
     u.eirqs(u.BITSTUFF|u.BUSTIMEOUT|u.DATASIZE|u.CRC16|u.CRC5|u.PID);
-    Irq::on(Irq::USB, true);
+    Irq::init(Irq::USB, usb_irq_pri, usb_irq_subpri, true);
     //enable usb
     u.control(u.USBEN, true);
 
