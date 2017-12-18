@@ -567,39 +567,27 @@ void UsbHandlers::endp0_handler(uint8_t idx){
 
     static UsbCh9::SetupPacket_t last_setup;
 
-
     idx = 0|idx;    //endpoint0|stat = bdt entry index
                     //(not really needed for ep0, just example for ep1-15)
 
     switch(ub.pid(idx)){
 
     case 13: //SETUP
-        //extract the setup token
-        last_setup = (UsbCh9::SetupPacket_t&)endp0_rx[idx&1];
-//
-//        //we are now done with the buffer
-        //#define BDT_DESC(count, data)
-        //    ((count << BDT_BC_SHIFT) | BDT_OWN_MASK | (data ? BDT_DATA1_MASK : 0x00) | BDT_DTS_MASK)
+        //extract the setup token (copies to our static struct)
+        last_setup = *(UsbCh9::SetupPacket_t*)endp0_rx[idx&1];
 
-//        bdt->desc = BDT_DESC(ENDP0_SIZE, 1);
-
+        //done with the buffer
         ub.count(my_buffer_size);
         ub.uown(idx, true);
         ub.data01(idx, true);
-//
-//        //clear any pending IN stuff
-//        table[BDT_INDEX(0, TX, EVEN)].desc = 0;
-//        table[BDT_INDEX(0, TX, ODD)].desc = 0;
-//        endp0_data = 1;
+        //clear any pending IN
         ub.control(0|2|0, 0);
         ub.control(0|2|1, 0);
         endp0_data = 1;
-//
-//        //run the setup
+
+        //run the setup
 //        usb_endp0_handle_setup(&last_setup);
-//
-//        //unfreeze this endpoint
-//        USB0_CTL = USB_CTL_USBENSOFEN_MASK;
+
         break;
     case 9: //IN
         if (last_setup.wRequest == UsbCh9::DEV_SET_ADDRESS){
@@ -613,6 +601,4 @@ void UsbHandlers::endp0_handler(uint8_t idx){
         break;
 
     }
-//
-//    USB0_CTL = USB_CTL_USBENSOFEN_MASK;
 }
