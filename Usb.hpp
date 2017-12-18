@@ -39,6 +39,7 @@ struct UsbBuf {
         bool inuse;
         uint8_t buf[my_buffer_size];
     } buf_t;
+
 };
 //==============================================================================
 // UsbBuf static functions, vars
@@ -110,22 +111,22 @@ struct UsbBdt {
         uint64_t all;
     } bdt_t;
 
-    void*       init        (uint8_t);
-    void*       init_all    ();
-    void        addr        (uint8_t, uint8_t*);
-    uint8_t*    addr        (uint8_t);
-    void        control     (uint8_t, CTRL, bool);
-    void        control     (uint8_t, uint8_t);
-    bool        control     (uint8_t, CTRL);
+    static void*       init        (uint8_t);
+    static void*       init_all    ();
+    static void        addr        (uint8_t, uint8_t*);
+    static uint8_t*    addr        (uint8_t);
+    static void        control     (uint8_t, CTRL, bool);
+    static void        control     (uint8_t, uint8_t);
+    static bool        control     (uint8_t, CTRL);
     //control - specific functions
-    bool        uown        (uint8_t);
-    bool        data01      (uint8_t);
-    bool        uown        (uint8_t, bool);
-    bool        data01      (uint8_t, bool);
+    static bool        uown        (uint8_t);
+    static bool        data01      (uint8_t);
+    static bool        uown        (uint8_t, bool);
+    static bool        data01      (uint8_t, bool);
 
-    uint8_t     pid         (uint8_t);
-    uint16_t    count       (uint8_t);
-    void        count       (uint8_t, uint16_t);
+    static uint8_t     pid         (uint8_t);
+    static uint16_t    count       (uint8_t);
+    static void        count       (uint8_t, uint16_t);
 };
 //==============================================================================
 // UsbBdt static functions, vars
@@ -204,7 +205,7 @@ class Usb {
         IDLE = 1<<4,
         TOKEN = 1<<3,
         SOF = 1<<2,
-        ERR = 1<<1,
+        ERROR = 1<<1,
         RESET = 1<<0,
         DETACH = 1<<0,
         ALLFLAGS = 255
@@ -267,6 +268,13 @@ class Usb {
      stat
         only valid when TOKEN flag set
     ..........................................................................*/
+    typedef union {
+        struct {
+            unsigned :2; unsigned ppbi:1; unsigned dir:1; unsigned endpt:4;
+        };
+        struct { unsigned :2; unsigned epidx:2; };
+        uint8_t val;
+    } stat_t;
 
     static uint8_t  stat                ();
 
@@ -418,11 +426,9 @@ void Usb::bdt_addr(uint32_t v){
     Reg::val8(U1BDTP3, v>>24);
 }
 uint32_t Usb::bdt_addr(){
-    return  Reg::p2kseg0(
-                Reg::val8(U1BDTP1)<<8 |
-                Reg::val8(U1BDTP2)<<16 |
-                Reg::val8(U1BDTP3)<<24
-            ); //kseg0
+    return  Reg::p2kseg0( (uint32_t)(
+    Reg::val8(U1BDTP1)<<8 | Reg::val8(U1BDTP2)<<16 | Reg::val8(U1BDTP3)<<24)
+    ); //kseg0
 }
 
 void Usb::config(CONFIG e, bool tf){ Reg::set(U1CNFG1, e, tf); }
@@ -459,12 +465,16 @@ void Usb::endps_clr(){
     power(USBPWR, false);       //usb off
     while(power(BUSY));         //wait for busy bit to clear
 
-    flags_clear();              //clear all flags
+    flags_clear(ALLFLAGS);      //clear all flags
+    eflags_clear(ALLEFLAGS);    //clear all error flags
+
     endps_clr();                //clear all endpoints
     config(0);                  //(FS)
     power(USBPWR, true);        //usb on
                                 //clear all bdt entries
     bdt_addr(ubdt.init_all());  //and set bdt table address
+
+    UsbBuf::reinit();           //clear all buffers, reset inuse
 
     control(0);
     control(PPRESET, true);     //reset ping pong pointers
@@ -473,6 +483,8 @@ void Usb::endps_clr(){
 
     endp(0, RXEN|TXEN|HSHK);
     ubdt.control(0|0|0, ubdt.UOWN|ubdt.DATA01|ubdt.BSTALL);
+    ubdt.addr(0|0|0, UsbBuf::get());
+    ubdt.count(0|0|0, UsbBuf::buf_len());
 
     irqs(STALL|IDLE|TOKEN|SOF|ERR|RESET);
     eirqs(BITSTUFF|BUSTIMEOUT|DATASIZE|CRC16|CRC5|PID);
@@ -483,3 +495,122 @@ void Usb::endps_clr(){
  }
  */
 
+
+
+struct UsbHandlers {
+//==============================================================================
+// UsbHandlers - handle usb interrupt, call handlers
+//==============================================================================
+    static void     UsbISR              (void);
+    static void     endp0_handler       (uint8_t);
+
+    //rx even/odd buffers
+    static volatile uint8_t* endp0_rx[2];
+    //flags for endpoint 0 transmit buffers
+    static uint8_t endp0_odd, endp0_data;
+    //array of function pointers, 1 for each endpoint used
+    static void (*handlers[my_n_endp])(uint8_t);
+};
+//==============================================================================
+// UsbHandlers static functions, vars
+//==============================================================================
+volatile uint8_t* UsbHandlers::endp0_rx[2] = { UsbBuf::get(), UsbBuf::get() };
+uint8_t UsbHandlers::endp0_odd;
+uint8_t UsbHandlers::endp0_data;
+void (*UsbHandlers::handlers[my_n_endp])(uint8_t) = {
+    UsbHandlers::endp0_handler,
+    0
+};
+
+extern "C" {
+void __attribute__((vector(29), interrupt(IPL5SOFT))) USbISR(){
+
+    Usb u;
+    uint8_t flags = u.flags();
+    Usb::stat_t ustat = { u.stat() };
+
+    if(flags & u.RESET){
+        //Usb::init();
+        return;
+    }
+    if (flags & u.ERROR){
+        u.eflags_clr(u.ALLEFLAGS);
+        u.flags_clr(u.ERROR);
+    }
+    if (flags & u.SOF){
+        u.flags_clr(u.SOF);
+    }
+    if (flags & u.TOKEN){
+        UsbHandlers::handlers[ustat.endpt](ustat.epidx);
+        u.flags_clr(u.TOKEN);
+    }
+    if (flags & u.ATTACH){
+        u.flags_clr(u.ATTACH);
+    }
+    if (flags & u.RESUME){
+        u.flags_clr(u.RESUME);
+    }
+    if (flags & u.IDLE){
+        u.flags_clr(u.IDLE);
+    }
+    if (flags & u.STALL){
+        u.flags_clr(u.STALL);
+    }
+}
+
+} //extern "C"
+
+
+void UsbHandlers::endp0_handler(uint8_t idx){
+    static volatile uint8_t* last_setup;
+    UsbBdt ub;
+
+    idx = 0|idx;    //endpoint0|stat = bdt entry index
+                    //(not really needed here, just example for ep1-15)
+
+    switch(ub.pid(idx)){
+
+    case 13: //SETUP
+        //extract the setup token
+        //last_setup = ub.addr(idx);
+        last_setup = endp0_rx[0];
+//
+//        //we are now done with the buffer
+        //#define BDT_DESC(count, data)
+        //    ((count << BDT_BC_SHIFT) | BDT_OWN_MASK | (data ? BDT_DATA1_MASK : 0x00) | BDT_DTS_MASK)
+
+//        bdt->desc = BDT_DESC(ENDP0_SIZE, 1);
+
+        ub.count(my_buffer_size);
+        ub.uown(idx, true);
+        ub.data01(idx, true);
+//
+//        //clear any pending IN stuff
+//        table[BDT_INDEX(0, TX, EVEN)].desc = 0;
+//        table[BDT_INDEX(0, TX, ODD)].desc = 0;
+//        endp0_data = 1;
+        ub.control(0|2|0, 0);
+        ub.control(0|2|1, 0);
+        endp0_data = 1;
+//
+//        //run the setup
+//        usb_endp0_handle_setup(&last_setup);
+//
+//        //unfreeze this endpoint
+//        USB0_CTL = USB_CTL_USBENSOFEN_MASK;
+        break;
+    case 9: //IN
+//        if (last_setup.wRequestAndType == 0x0500)
+//        {
+//            USB0_ADDR = last_setup.wValue;
+//        }
+        break;
+    case 1:
+//        //nothing to do here..just give the buffer back
+//        bdt->desc = BDT_DESC(ENDP0_SIZE, 1);
+        break;
+
+    }
+//
+//    USB0_CTL = USB_CTL_USBENSOFEN_MASK;
+}

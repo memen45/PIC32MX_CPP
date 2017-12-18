@@ -138,7 +138,7 @@ class Usb_CH9 {
         FORDEV = 0, FORIFACE = 1, FORENDP = 2, FOROTHER = 3
     } bmRequestTypeSETUP_t;
 
-    typedef enum { //uint16_t wRequest; (bmRequestType|bRequest<<8)
+    typedef enum { //uint16_t wRequest; (bRequest<<8|bmRequestType)
         DEV_GET_STATUS = 0x0080, DEV_CLEAR_FEATURE = 0x0100,
         DEV_SET_FEATURE = 0x0300, DEV_SET_ADDRESS = 0x0500,
         DEV_GET_DESCRIPTOR = 0x0680, DEV_SET_DESCRIPTOR = 0x0700,

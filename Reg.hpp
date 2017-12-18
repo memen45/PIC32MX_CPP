@@ -90,12 +90,12 @@ template <typename T> uint8_t Reg::val8(T r){
 }
 
     //physical to kseg0/1 addr, kseg to physical addr
-template <typename T> uint32_t p2kseg1(T r){
+template <typename T> uint32_t Reg::p2kseg1(T r){
     return (reinterpret_cast <uint32_t>(r)) | 0xA0000000;
 }
-template <typename T> uint32_t p2kseg0(T r){
-    return (reinterpret_cast <uint32_t>(r)) | 0x80000000;
+template <typename T> uint32_t Reg::p2kseg0(T r){
+    return (reinterpret_cast <uint32_t>(r) | 0x80000000);
 }
-template <typename T> uint32_t k2phys(T r){
+template <typename T> uint32_t Reg::k2phys(T r){
     return (reinterpret_cast <uint32_t>(r)) & 0x1FFFFFFF;
 }
