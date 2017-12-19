@@ -222,14 +222,14 @@ struct Usb {
     enum FLAGS : uint16_t {
         //U1IR, U1IE
         STALL = 1<<7,
-        ATTACH = 1<<6,
+        ATTACH = 1<<6, //host only
         RESUME = 1<<5,
         IDLE = 1<<4,
         TOKEN = 1<<3,
         SOF = 1<<2,
         ERROR = 1<<1,
         RESET = 1<<0,
-        DETACH = 1<<0,
+        DETACH = 1<<0, //host only
         ALLFLAGS = 255
     };
 
@@ -527,10 +527,12 @@ void  UsbISR(){
         return;
     }
     if (flags & u.ERROR){
+        //handle errors if needed
         u.eflags_clr(u.ALLEFLAGS);
         u.flags_clr(u.ERROR);
     }
     if (flags & u.SOF){
+        //handle SOF if needed
         u.flags_clr(u.SOF);
     }
     if (flags & u.TOKEN){
@@ -539,16 +541,16 @@ void  UsbISR(){
         u.flags_clr(u.TOKEN);
         } while(u.flag(u.TOKEN));
     }
-    if (flags & u.ATTACH){
-        u.flags_clr(u.ATTACH);
-    }
     if (flags & u.RESUME){
         u.flags_clr(u.RESUME);
     }
     if (flags & u.IDLE){
+        //idle detected >3ms
         u.flags_clr(u.IDLE);
+        //
     }
     if (flags & u.STALL){
+        //handle stall if needed
         u.flags_clr(u.STALL);
     }
 }
@@ -655,6 +657,8 @@ void UsbHandlers::attach(void){
     vbus_pin.digital_in();
     //pulldown when no vbus keeps pin low
     vbus_pin.pulldn(true);
+    //can also setup irq for vbus_pin state change
+    //which then calls detach/attach
 
     //init all things (if vbus pin high)
     attach();
