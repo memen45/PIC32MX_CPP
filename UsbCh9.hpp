@@ -175,10 +175,10 @@ class UsbCh9 {
     //============================================================
 
     typedef enum {
-        OUT = 0x1E, IN = 0x96, SOF = 0x5A, SETUP = 0xD2,        //Token
-        DATA0 = 0x3C, DATA1 = 0xB4, DATA2 = 0x78, MDATA = 0xF0, //Data
-        ACK = 0x2D, NAK = 0xA5, STALL = 0xE1, NYET = 0x69,      //Handshake
-        PRE = 0xC3, ERR = 0xC3, SPLIT = 0x87, PING = 0x4B       //Special
+        OUT = 1, IN = 9, SOF = 5, SETUP = 13,         //Token
+        DATA0 = 3, DATA1 = 11, DATA2 = 7, MDATA = 15, //Data
+        ACK = 2, NAK = 10, STALL = 14, NYET = 6,      //Handshake
+        PRE = 12, ERR = 12, SPLIT = 8, PING = 4       //Special
     } Pid_t;
 
     //============================================================

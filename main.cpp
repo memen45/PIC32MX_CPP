@@ -107,18 +107,11 @@ int main(){
                                             //(will be EXTR mostly with pkob)
 
 
-    UsbBuf ub;
-    ub.reinit();
-    volatile uint8_t* ubuf = ub.get();
 
-    //usb- can't do much, just turn on eye test for a second
+    //usb- can't do much
     //(no Osc.hpp yet, so pll output running at 24MHz, usb clock is then 12MHz)
-    Usb u;
-    u.power(u.USBPWR, true);
-    u.config(u.EYETEST, true);
-    sw_dly.wait_ms(1000);
-    u.config(u.EYETEST, false);
-    u.power(u.USBPWR, false);
+    UsbHandlers u;
+    u.init();
 
     //try adc - pot on curiosity board
     Adc adc; Adc def; //<--notice can create multiple references (same thing)
