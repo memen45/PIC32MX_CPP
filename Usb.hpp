@@ -507,10 +507,10 @@ struct UsbHandlers {
 
     static void     UsbISR              (void);
     static void     init                ();
+    //token complete dispatch
     static void     token               ();
     //token handlers
     static void     setup               (Usb::stat_t&);
-    static void     status              (Usb::stat_t&);
     static void     in                  (Usb::stat_t&);
     static void     out                 (Usb::stat_t&);
     //state handlers
@@ -526,7 +526,7 @@ struct UsbHandlers {
     //flags for endpoint 0 transmit buffers
     //static uint8_t endp0_odd, endp0_data;
 
-    enum { COMPLETE, IN, OUT, STATUS_IN, STATUS_OUT };
+    enum { COMPLETE, IN, OUT, STATUS };
     static uint8_t  setup_stage;
 
     static UsbCh9::SetupPacket_t setup_pkt;
@@ -640,7 +640,7 @@ void UsbHandlers::token(){
         //      ^        ^---rxbuffer
         //      ^---pid(=SETUP)
         //copy the setup data (rxbuffer) to our static struct
-        //setup packet always 8bytes
+        //setup packet always 8bytes (not checked)
         setup_pkt = *(UsbCh9::SetupPacket_t*)endp0_rx[s.eveodd];
 
         //done with the rx buffer, reset count, give back to usb
@@ -670,10 +670,10 @@ void UsbHandlers::token(){
 void UsbHandlers::setup(Usb::stat_t& s){
     Usb u; UsbBdt ub;
 
-    //ignore if not ep0
-    if(s.endpt) return;
+    //(setup only happens on ep0)
+    //if(s.endpt) return;
 
-    //no data stage
+    //requests with no data stage
     if(setup_pkt.wLength==0){
         switch(setup_pkt.wRequest){
         case UsbCh9::DEV_CLEAR_FEATURE:
@@ -682,17 +682,16 @@ void UsbHandlers::setup(Usb::stat_t& s){
         case UsbCh9::DEV_SET_FEATURE:
             //setup_pkt.wValue
             break;
-        case UsbCh9::DEV_SET_ADDRESS:
-            u.dev_addr(setup_pkt.wValue);
-            u.state = u.ADDRESS;
-            break;
+        //case UsbCh9::DEV_SET_ADDRESS:
+            //do after status
+            //break;
         case UsbCh9::DEV_SET_CONFIGURATION:
             //setup_pkt.wValue
             break;
         }
-        setup_stage = STATUS_IN;
-        ub.addr(0|1|0, (uint8_t*)endp0_tx[0]); //doesn't matter
-        ub.count(0|1|0, 0); //0 length packet
+        setup_stage = STATUS;
+        ub.addr(0|1|0, (uint8_t*)endp0_tx[0]); //doesn't matter, since
+        ub.count(0|1|0, 0); //its a 0 length packet
         ub.control(0|1|0, ub.UOWN|ub.DATA01); //data1, give to usb
         return;
     }
@@ -703,23 +702,32 @@ void UsbHandlers::setup(Usb::stat_t& s){
     //DEV_SET_DESCRIPTOR = 0x0700,
     //DEV_GET_CONFIGURATION = 0x0880,
 
-    setup_stage = setup_pkt.bmRequestType&0x80 ? IN : OUT;
+    setup_stage = setup_pkt.bmRequestType & 0x80 ? IN : OUT;
 
 }
-void UsbHandlers::status(Usb::stat_t& s){
 
-
-
-}
 void UsbHandlers::in(Usb::stat_t& s){
-    UsbBdt ub;
-    if(s.endpt == 0 && setup_stage == STATUS_IN){
-        setup_stage = COMPLETE;
-        //give back rx buffer to usb
-        ub.count(s.bdn, my_buffer_size);
-        ub.control(s.bdn, ub.UOWN);
-        return;
+    UsbBdt ub; Usb u;
+
+    //endpoint 0
+    if(s.endpt == 0){
+        //setup status stage IN complete
+        if(setup_stage == STATUS){
+            setup_stage = COMPLETE;
+            //give back rx buffer to usb
+            ub.count(s.bdn, my_buffer_size);
+            ub.control(s.bdn, ub.UOWN);
+            //if was set_address, do it now
+            if(setup_pkt.wRequest == UsbCh9::DEV_SET_ADDRESS){
+                u.dev_addr(setup_pkt.wValue); //device address
+                u.state = u.ADDRESS; //now have address, change usb state
+            }
+            return;
+        }
+        //endpoint 0 IN
+        
     }
+
     //handle other in's
 
 
@@ -728,11 +736,12 @@ void UsbHandlers::out(Usb::stat_t& s){
     //endpoint0 status stage received on data1
     //(not checked if was data1, or length was 0, will assume because
     // I don't know what to do if it is not)
-    if(s.endpt == 0 && setup_stage == STATUS_OUT){
+    if(s.endpt == 0 && setup_stage == STATUS){
         setup_stage = COMPLETE;
+        //nothing more to do
         return;
     }
-    //handle other in's
+    //handle other out's
 
 
 }
