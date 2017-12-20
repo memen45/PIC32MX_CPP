@@ -8,6 +8,7 @@
 #include "Reg.hpp"
 #include "UsbCh9.hpp"
 #include "Pins.hpp"
+#include "Adc.hpp"
 
 
 
@@ -143,8 +144,8 @@ struct UsbBdt {
     //control - specific functions
     static bool        uown        (uint8_t);
     static bool        data01      (uint8_t);
-    static bool        uown        (uint8_t, bool);
-    static bool        data01      (uint8_t, bool);
+    static void        uown        (uint8_t, bool);
+    static void        data01      (uint8_t, bool);
 
     static uint8_t     pid         (uint8_t);
     static uint16_t    count       (uint8_t);
@@ -180,8 +181,8 @@ void UsbBdt::control(uint8_t n, uint8_t v){ bdt[n].control = v; }
 bool UsbBdt::control(uint8_t n, CTRL e){ return bdt[n].control & e; }
 bool UsbBdt::uown(uint8_t n){ return bdt[n].uown; }
 bool UsbBdt::data01(uint8_t n){ return bdt[n].data01; }
-bool UsbBdt::uown(uint8_t n, bool tf){ bdt[n].uown = tf; }
-bool UsbBdt::data01(uint8_t n, bool tf){ bdt[n].data01 = tf; }
+void UsbBdt::uown(uint8_t n, bool tf){ bdt[n].uown = tf; }
+void UsbBdt::data01(uint8_t n, bool tf){ bdt[n].data01 = tf; }
 
 
 uint8_t UsbBdt::pid(uint8_t n){ return bdt[n].pid; }
@@ -294,7 +295,7 @@ struct Usb {
         struct {
         unsigned :2; unsigned eveodd:1; unsigned trx:1; unsigned endpt:4;
         };
-        struct { unsigned :2; unsigned bdtn:6; };
+        struct { unsigned :2; unsigned bdn:6; };
         uint8_t val;
     } stat_t;
     static uint8_t  stat                ();
@@ -381,9 +382,18 @@ struct Usb {
     static void     endp                (uint8_t, uint8_t);
     static void     endps_clr           ();
 
-
+    /*..........................................................................
+     state
+        usb bus state
+    ..........................................................................*/
     typedef enum {
-        DETACHED, ATTACHED
+        DETACHED,   //usb peripheral shut down (I made this state up)
+        ATTACHED,   //usb is init, but not powered
+        POWERED,    //vbus now has power, but no reset seen yet
+        DEFAULT,    //reset received, device address is 0 (default)
+        ADDRESS,    //now have unique device address
+        CONFIGURED, //now configured (and not in suspended state)
+        SUSPENDED   //no activity for >3ms
     } state_t;
 
     static state_t state;
@@ -496,16 +506,30 @@ struct UsbHandlers {
 //______________________________________________________________________________
 
     static void     UsbISR              (void);
-    static void     endp_handler        ();
     static void     init                ();
+    static void     token               ();
+    //token handlers
+    static void     setup               (Usb::stat_t&);
+    static void     status              (Usb::stat_t&);
+    static void     in                  (Usb::stat_t&);
+    static void     out                 (Usb::stat_t&);
     //state handlers
     static void     detach              (void);
     static void     attach              (void);
 
+
     //rx even/odd buffers
     static volatile uint8_t* endp0_rx[2];
+    //tx even/odd buffers (need not be volatile, but is easier if same as rx)
+    static volatile uint8_t* endp0_tx[2];
+
     //flags for endpoint 0 transmit buffers
     //static uint8_t endp0_odd, endp0_data;
+
+    enum { COMPLETE, IN, OUT, STATUS_IN, STATUS_OUT };
+    static uint8_t  setup_stage;
+
+    static UsbCh9::SetupPacket_t setup_pkt;
 
 };
 
@@ -513,104 +537,201 @@ struct UsbHandlers {
 // UsbHandlers static functions, vars
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 volatile uint8_t* UsbHandlers::endp0_rx[2] = { UsbBuf::get(), UsbBuf::get() };
+volatile uint8_t* UsbHandlers::endp0_tx[2] = { UsbBuf::get(), UsbBuf::get() };
 //uint8_t UsbHandlers::endp0_odd;
 //uint8_t UsbHandlers::endp0_data;
+uint8_t  UsbHandlers::setup_stage = UsbHandlers::COMPLETE;
+UsbCh9::SetupPacket_t UsbHandlers::setup_pkt = {0};
+
 
 
 //declared in user data at top of this file
 void  UsbISR(){
     Usb u;
+    static Usb::state_t last_state;
     uint8_t flags = u.flags();
 
-    if(flags & u.RESET){ //handle reset condition
-        if(u.state!=u.ATTACHED){ //if not in attached state
-            UsbHandlers::attach(); //attach (if vbus_pin high)
+    //ATTACHED->POWERED if vbus_pin high
+    if(u.state == u.ATTACHED){
+        if(vbus_pin.ison()) u.state = u.POWERED;
+        else { //no power, isr done
+            u.eflags_clr(u.ALLEFLAGS);
+            u.flags_clr(u.ERROR);
+            return;
         }
-        u.flags_clr(u.RESET);
+    }
+
+    //must be >= POWERED
+
+    //check if resume from SUSPENDED
+    if (flags & u.RESUME){
+        u.state = last_state; //back to previous state
+        u.flags_clr(u.RESUME);
         return;
     }
+
+    //check if need to suspend (idle detected >3ms)
+    if (flags & u.IDLE){
+        last_state = u.state; //save
+        u.state = u.SUSPENDED;
+        //do suspend- whatever is needed
+    }
+
+    //check if suspended- nothing more to do
+    if(u.state == u.SUSPENDED){
+        u.eflags_clr(u.ALLEFLAGS);
+        u.flags_clr(u.ERROR);
+        return;
+    }
+
+    //check reset
+    //POWERED->DEFAULT, or >=DEFAULT->ATTACHED
+    if(flags & u.RESET){ //handle reset condition
+        if(u.state == u.POWERED){
+            u.state = u.DEFAULT;
+            u.flags_clr(u.RESET);
+        }
+        else UsbHandlers::attach(); //attach
+        return;
+    }
+    //must be >= DEFAULT
+
+
+    //in state DEFAULT, ADDRESS, or CONFIGURED
+
     if (flags & u.ERROR){ //handle errors if needed
         u.eflags_clr(u.ALLEFLAGS);
         u.flags_clr(u.ERROR);
+        return;
     }
-    if (flags & u.SOF){ //handle SOF if needed
 
+    if (flags & u.STALL){ //handle stall if needed
+        u.flags_clr(u.STALL);
+    }
+
+    if (flags & u.SOF){ //handle SOF if needed
         u.flags_clr(u.SOF);
     }
+
     if (flags & u.TOKEN){
         do{ //get while TOKEN flag set (stat buffer is 4 deep)
-        UsbHandlers::endp_handler();
+        UsbHandlers::token();
         u.flags_clr(u.TOKEN);
         } while(u.flag(u.TOKEN));
     }
-    if (flags & u.RESUME){
-        //resume from suspend
-        u.flags_clr(u.RESUME);
-    }
-    if (flags & u.IDLE){ //idle detected >3ms
-        //enter suspend mode
-        u.flags_clr(u.IDLE);
-    }
-    if (flags & u.STALL){ //handle stall if needed
 
-        u.flags_clr(u.STALL);
-    }
+
 }
 
 
-void UsbHandlers::endp_handler(){
+//handle token processing complete flag
+void UsbHandlers::token(){
     UsbBdt ub;
     Usb u;
 
     //get stat (endpoint, tx/rx, dir)
-    Usb::stat_t s;
+    static Usb::stat_t s;
     u.stat(s);
 
-    //store setup packet
-    static UsbCh9::SetupPacket_t save_setup;
-
-    switch(ub.pid(s.bdtn)){
+    switch(ub.pid(s.bdn)){
 
     case UsbCh9::SETUP: //ep0 only
-        //extract the setup token (copies to our static struct)
+        //|setup-token|data0|ack|
+        //      ^        ^---rxbuffer
+        //      ^---pid(=SETUP)
+        //copy the setup data (rxbuffer) to our static struct
         //setup packet always 8bytes
-        save_setup = *(UsbCh9::SetupPacket_t*)endp0_rx[s.eveodd];
+        setup_pkt = *(UsbCh9::SetupPacket_t*)endp0_rx[s.eveodd];
 
-        //done with the rx buffer, reset count, give to usb
-        ub.count(s.bdtn, my_buffer_size);
-        ub.control(s.bdtn, ub.UOWN);
+        //done with the rx buffer, reset count, give back to usb
+        ub.count(s.bdn, my_buffer_size);
+        ub.control(s.bdn, ub.UOWN);
 
-
-        //clear any pending IN
+        //clear any ep0-tx
         ub.control(2, 0); //ep0-tx-even
         ub.control(3, 0); //ep0-tx-odd
 
-
-        //run the setup
-//      ctrl_setup(&last_setup);
+        setup(s);
 
         break;
 
     case UsbCh9::IN:
-        if (s.endpt == 0 && save_setup.wRequest == UsbCh9::DEV_SET_ADDRESS){
-            Usb::dev_addr(save_setup.wValue);
-        }
+        in(s);
         break;
 
     case UsbCh9::OUT:
-        ub.count(my_buffer_size);
-        ub.uown(s.bdtn, true);
-        ub.data01(s.bdtn, true);
+        out(s);
         break;
     }
 }
+
+
+//only endpoint 0 uses setup
+void UsbHandlers::setup(Usb::stat_t& s){
+    Usb u; UsbBdt ub;
+
+    //ignore if not ep0
+    if(s.endpt) return;
+
+    //no data stage
+    if(setup_pkt.wLength==0){
+        switch(setup_pkt.wRequest){
+        case UsbCh9::DEV_CLEAR_FEATURE:
+            //setup_pkt.wValue
+            break;
+        case UsbCh9::DEV_SET_FEATURE:
+            //setup_pkt.wValue
+            break;
+        case UsbCh9::DEV_SET_ADDRESS:
+            u.dev_addr(setup_pkt.wValue);
+            u.state = u.ADDRESS;
+            break;
+        case UsbCh9::DEV_SET_CONFIGURATION:
+            //setup_pkt.wValue
+            break;
+        }
+        setup_stage = STATUS_IN;
+        ub.addr(0|1|0, (uint8_t*)endp0_tx[0]); //doesn't matter
+        ub.count(0|1|0, 0); //0 length packet
+        ub.control(0|1|0, ub.UOWN|ub.DATA01); //data1, give to usb
+        return;
+    }
+    //data stage
+
+    //DEV_GET_STATUS = 0x0080,
+    //DEV_GET_DESCRIPTOR = 0x0680,
+    //DEV_SET_DESCRIPTOR = 0x0700,
+    //DEV_GET_CONFIGURATION = 0x0880,
+
+    setup_stage = setup_pkt.bmRequestType&0x80 ? IN : OUT;
+
+}
+void UsbHandlers::status(Usb::stat_t& s){
+
+
+
+}
+void UsbHandlers::in(Usb::stat_t& s){
+    if(s.endpt == 0 && setup_stage == STATUS_IN){
+        setup_stage = COMPLETE;
+    }
+    //handle other in's
+
+
+}
+void UsbHandlers::out(Usb::stat_t& s){
+
+
+}
+
 
 
 void UsbHandlers::detach(void){
     Usb u;
     u.control(u.USBEN, false);  //disable usb module, detach from bus
     Irq::on(Irq::USB, false);   //all usb irqs off
-    u.power(u.USBPWR, false);   //usb off
+    while(u.power(u.BUSY));     //wait for busy bit to clear first
+    u.power(u.USBPWR, true);    //usb module off
 
     u.state = u.DETACHED;
     //wait 100ms+ before attach again
@@ -619,10 +740,6 @@ void UsbHandlers::detach(void){
 void UsbHandlers::attach(void){
     Usb u; UsbBdt ub; UsbBuf ubuf;
 
-    //run only if vbus is high
-    if(vbus_pin.isoff()) return;
-
-    while(u.power(u.BUSY));     //wait for busy bit to clear first
     u.power(u.USBPWR, true);    //usb on (all regs should be reset now)
 
     u.bdt_addr(ub.init_all());//clear all bdt entries
@@ -644,9 +761,12 @@ void UsbHandlers::attach(void){
     //and set count
     ub.count(0|0|0, ubuf.buf_len());
     ub.count(0|0|1, ubuf.buf_len());
-    //give up ep0-rx-even to usb
+    //give up ep0-rx-even/odd to usb
     ub.control(0|0|0, ub.UOWN);
+    ub.control(0|0|1, ub.UOWN);
     //usb now has a buffer to rx first setup data
+
+    setup_stage = COMPLETE;
 
     //enable irqs
     u.irqs(u.STALL|u.IDLE|u.TOKEN|u.SOF|u.ERROR|u.RESET);
@@ -656,7 +776,9 @@ void UsbHandlers::attach(void){
     //enable usb
     u.control(u.USBEN, true);
 
-    u.state = u.ATTACHED;
+    //if vbus is high- in powered state
+    if(vbus_pin.ison()) u.state = u.POWERED;
+    else u.state = u.ATTACHED;
 }
 
 
@@ -672,6 +794,6 @@ void UsbHandlers::attach(void){
     //can also setup irq for vbus_pin state change
     //which then calls detach/attach
 
-    //init all things (if vbus pin high)
+    //init all things
     attach();
  }
