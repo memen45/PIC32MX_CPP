@@ -712,14 +712,27 @@ void UsbHandlers::status(Usb::stat_t& s){
 
 }
 void UsbHandlers::in(Usb::stat_t& s){
+    UsbBdt ub;
     if(s.endpt == 0 && setup_stage == STATUS_IN){
         setup_stage = COMPLETE;
+        //give back rx buffer to usb
+        ub.count(s.bdn, my_buffer_size);
+        ub.control(s.bdn, ub.UOWN);
+        return;
     }
     //handle other in's
 
 
 }
 void UsbHandlers::out(Usb::stat_t& s){
+    //endpoint0 status stage received on data1
+    //(not checked if was data1, or length was 0, will assume because
+    // I don't know what to do if it is not)
+    if(s.endpt == 0 && setup_stage == STATUS_OUT){
+        setup_stage = COMPLETE;
+        return;
+    }
+    //handle other in's
 
 
 }
