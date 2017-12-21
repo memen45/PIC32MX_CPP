@@ -8,6 +8,7 @@
 #include "Reg.hpp"
 #include "UsbCh9.hpp"
 #include "Pins.hpp"
+#include "Irq.hpp"
 
 
 
@@ -172,7 +173,7 @@ uint32_t UsbBdt::init(uint8_t n){
 //init all bdt table entries (4 per endpoint)
 uint32_t UsbBdt::init_all(){
     for(auto& i : bdt) i.all = 0;
-    return (uint32_t)&bdt[0];
+    return (uint32_t)bdt;
 }
 
 void UsbBdt::esetup(uint8_t n, uint8_t* a, uint16_t c, uint8_t f){
@@ -426,8 +427,8 @@ struct Usb {
         U1BDTP1 = 0xBF808670,
         U1FRML = 0xBF808680, //no SET, INV, CLR
         U1FRMH = 0xBF808690, //no SET, INV, CLR
-        U1BDTP2 = 0xBF806C0,
-        U1BDTP3 = 0xBF806D0,
+        U1BDTP2 = 0xBF8086C0,
+        U1BDTP3 = 0xBF8086D0,
         U1CNFG1 = 0xBF8086E0,
         U1EP0 = 0xBF808700, U1EP_SPACING = 0x10
      };
@@ -558,9 +559,10 @@ UsbCh9::SetupPacket_t UsbHandlers::setup_pkt = {0};
 
 //declared in user data at top of this file
 void  UsbISR(){
-    Usb u;
+    Usb u; Irq ir;
     static Usb::state_t last_state;
     uint8_t flags = u.flags();
+    ir.flagclear(ir.USB);
 
     //ATTACHED->POWERED if vbus_pin high
     if(u.state == u.ATTACHED){
@@ -697,9 +699,10 @@ void UsbHandlers::setup(Usb::stat_t& s){
         //setup_pkt.wValue
         break;
     case UsbCh9::DEV_GET_STATUS:
-        //2bytes- byte0 = self-powered?, byte1=remote wakeup?
-        endp0_tx[0][0] = my_self_powered;
-        endp0_tx[0][1] = my_remote_wakeup;
+        //2bytes- byte0/bit0 = self-powered?, byte0/bit1=remote wakeup?
+        endp0_tx[0][0] = my_self_powered<<0;
+        endp0_tx[0][0] |= my_remote_wakeup<<1;
+        endp0_tx[0][1] = 0;
         break;
     case UsbCh9::DEV_GET_DESCRIPTOR:
         //
@@ -788,6 +791,7 @@ void UsbHandlers::attach(void){
 
     u.bdt_addr(ubdt.init_all());//clear all bdt entries
                                 //and set bdt table address
+
 
     ubuf.reinit();              //clear all buffers, clear inuse flag
     endp0_rx[0] = (uint8_t*)ubuf.get(); //get buffers for
