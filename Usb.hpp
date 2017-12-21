@@ -15,10 +15,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 /////// user provided data ////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+static const bool my_self_powered = 1;      //self-powered=1, bus-powered=0
+static bool my_remote_wakeup = 1;           //remote wakeup enabled=1
 static const uint8_t my_last_endp = 1;      //last endpoint number used
 static const uint8_t my_n_endp = 2;         //number of endpoints used
 static const uint8_t my_buffer_size = 64;   //size of buffers (all same)
 static const uint8_t my_buffer_count = 8;   //number of buffers in buffer pool
+
 static Pins vbus_pin(Pins::B6);             //Vbus pin
 static const uint8_t usb_irq_pri = 5;       //usb interrupt priority
 static const uint8_t usb_irq_subpri = 0;    //usb interrupt sub-priority
@@ -136,6 +139,8 @@ struct UsbBdt {
     static uint32_t    init        (uint8_t);
     static uint32_t    init_all    ();
 
+    static void        esetup      (uint8_t, uint8_t*, uint16_t, uint8_t);
+
     static void        addr        (uint8_t, uint8_t*);
     static uint8_t*    addr        (uint8_t);
     static void        control     (uint8_t, CTRL, bool);
@@ -168,6 +173,12 @@ uint32_t UsbBdt::init(uint8_t n){
 uint32_t UsbBdt::init_all(){
     for(auto& i : bdt) i.all = 0;
     return (uint32_t)&bdt[0];
+}
+
+void UsbBdt::esetup(uint8_t n, uint8_t* a, uint16_t c, uint8_t f){
+    addr(n, a);
+    count(n, c);
+    control(n, f);
 }
 
 void UsbBdt::addr(uint8_t n, uint8_t* v){ bdt[n].addr = Reg::k2phys(v); }
@@ -626,14 +637,14 @@ void  UsbISR(){
 
 //handle token processing complete flag
 void UsbHandlers::token(){
-    UsbBdt ub;
+    UsbBdt ubdt;
     Usb u;
 
     //get stat (endpoint, tx/rx, dir)
     static Usb::stat_t s;
     u.stat(s);
 
-    switch(ub.pid(s.bdn)){
+    switch(ubdt.pid(s.bdn)){
 
     case UsbCh9::SETUP: //ep0 only
         //|setup-token|data0|ack|
@@ -644,12 +655,12 @@ void UsbHandlers::token(){
         setup_pkt = *(UsbCh9::SetupPacket_t*)endp0_rx[s.eveodd];
 
         //done with the rx buffer, reset count, give back to usb
-        ub.count(s.bdn, my_buffer_size);
-        ub.control(s.bdn, ub.UOWN);
+        ubdt.count(s.bdn, my_buffer_size);
+        ubdt.control(s.bdn, ubdt.UOWN);
 
         //clear any ep0-tx
-        ub.control(2, 0); //ep0-tx-even
-        ub.control(3, 0); //ep0-tx-odd
+        ubdt.control(2, 0); //ep0-tx-even
+        ubdt.control(3, 0); //ep0-tx-odd
 
         setup(s);
 
@@ -668,7 +679,7 @@ void UsbHandlers::token(){
 
 //only endpoint 0 uses setup
 void UsbHandlers::setup(Usb::stat_t& s){
-    Usb u; UsbBdt ub;
+    Usb u; UsbBdt ubdt;
 
     //(setup only happens on ep0)
     //if(s.endpt) return;
@@ -690,24 +701,36 @@ void UsbHandlers::setup(Usb::stat_t& s){
             break;
         }
         setup_stage = STATUS;
-        ub.addr(0|1|0, (uint8_t*)endp0_tx[0]); //doesn't matter, since
-        ub.count(0|1|0, 0); //its a 0 length packet
-        ub.control(0|1|0, ub.UOWN|ub.DATA01); //data1, give to usb
+        //setup for the IN packet for status stage
+        //doesn't matter what buffer, since 0 bytes used
+        //tx endpoints already 'taken' in token() (where we just came from)
+        //ep0-tx-even, tx buffer even, 0bytes, to usb|data1
+        ubdt.esetup(0|1|0, (uint8_t*)endp0_tx[0], 0, ubdt.UOWN|ubdt.DATA01);
+
         return;
     }
     //data stage
 
-    //DEV_GET_STATUS = 0x0080,
+    //DEV_GET_STATUS = 0x0080
+        //2bytes- byte0 = self-powered?, byte1=remote wakeup?
     //DEV_GET_DESCRIPTOR = 0x0680,
     //DEV_SET_DESCRIPTOR = 0x0700,
-    //DEV_GET_CONFIGURATION = 0x0880,
+    //DEV_GET_CONFIGURATION = 0x0880
+        //return 1 byte- 0=not configured
 
-    setup_stage = setup_pkt.bmRequestType & 0x80 ? IN : OUT;
+    if(setup_pkt.bmRequestType & 0x80){
+        setup_stage = IN;
+
+    } else {
+        setup_stage = OUT;
+        //rx buffer alreadt setup in token()
+    }
+
 
 }
 
 void UsbHandlers::in(Usb::stat_t& s){
-    UsbBdt ub; Usb u;
+    UsbBdt ubdt; Usb u;
 
     //endpoint 0
     if(s.endpt == 0){
@@ -715,8 +738,9 @@ void UsbHandlers::in(Usb::stat_t& s){
         if(setup_stage == STATUS){
             setup_stage = COMPLETE;
             //give back rx buffer to usb
-            ub.count(s.bdn, my_buffer_size);
-            ub.control(s.bdn, ub.UOWN);
+            ubdt.count(s.bdn, my_buffer_size);
+            ubdt.control(s.bdn, ubdt.UOWN);
+
             //if was set_address, do it now
             if(setup_pkt.wRequest == UsbCh9::DEV_SET_ADDRESS){
                 u.dev_addr(setup_pkt.wValue); //device address
@@ -725,7 +749,7 @@ void UsbHandlers::in(Usb::stat_t& s){
             return;
         }
         //endpoint 0 IN
-        
+
     }
 
     //handle other in's
@@ -733,13 +757,18 @@ void UsbHandlers::in(Usb::stat_t& s){
 
 }
 void UsbHandlers::out(Usb::stat_t& s){
-    //endpoint0 status stage received on data1
-    //(not checked if was data1, or length was 0, will assume because
-    // I don't know what to do if it is not)
-    if(s.endpt == 0 && setup_stage == STATUS){
-        setup_stage = COMPLETE;
-        //nothing more to do
-        return;
+    //endpoint 0
+    if(s.endpt == 0){
+        //endpoint0 status stage received on data1
+        //(not checked if was data1, or length was 0, will assume because
+        // I don't know what to do yet if it is not)
+        if(setup_stage == STATUS){
+            setup_stage = COMPLETE;
+            //nothing more to do
+            return;
+        }
+        //endpoint 0 out
+
     }
     //handle other out's
 
@@ -760,11 +789,11 @@ void UsbHandlers::detach(void){
 }
 
 void UsbHandlers::attach(void){
-    Usb u; UsbBdt ub; UsbBuf ubuf;
+    Usb u; UsbBdt ubdt; UsbBuf ubuf;
 
     u.power(u.USBPWR, true);    //usb on (all regs should be reset now)
 
-    u.bdt_addr(ub.init_all());//clear all bdt entries
+    u.bdt_addr(ubdt.init_all());//clear all bdt entries
                                 //and set bdt table address
 
     ubuf.reinit();              //clear all buffers, clear inuse flag
@@ -778,14 +807,14 @@ void UsbHandlers::attach(void){
     u.endp(0, u.RXEN|u.TXEN|u.HSHAKE);
     //both ep0 rx address set to buffers
     //should be able to leave these alone from now on
-    ub.addr(0|0|0, (uint8_t*)endp0_rx[0]);
-    ub.addr(0|0|1, (uint8_t*)endp0_rx[1]);
+    ubdt.addr(0|0|0, (uint8_t*)endp0_rx[0]);
+    ubdt.addr(0|0|1, (uint8_t*)endp0_rx[1]);
     //and set count
-    ub.count(0|0|0, ubuf.buf_len());
-    ub.count(0|0|1, ubuf.buf_len());
+    ubdt.count(0|0|0, ubuf.buf_len());
+    ubdt.count(0|0|1, ubuf.buf_len());
     //give up ep0-rx-even/odd to usb
-    ub.control(0|0|0, ub.UOWN);
-    ub.control(0|0|1, ub.UOWN);
+    ubdt.control(0|0|0, ubdt.UOWN);
+    ubdt.control(0|0|1, ubdt.UOWN);
     //usb now has a buffer to rx first setup data
 
     setup_stage = COMPLETE;
