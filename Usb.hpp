@@ -627,7 +627,7 @@ void  UsbISR(){
     if (flags & u.TOKEN){
         do{ //get while TOKEN flag set (stat buffer is 4 deep)
         UsbHandlers::token();
-        u.flags_clr(u.TOKEN);
+        u.flags_clr(u.TOKEN); //do after, stat fifo advances when cleared
         } while(u.flag(u.TOKEN));
     }
 
