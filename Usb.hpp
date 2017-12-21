@@ -663,6 +663,8 @@ void UsbHandlers::token(){
         ubdt.control(3, 0); //ep0-tx-odd
 
         setup(s);
+        //clear PKDIS (set when SETUP transaction received)
+        u.control(u.PKTDIS, false);
 
         break;
 
@@ -681,12 +683,10 @@ void UsbHandlers::token(){
 void UsbHandlers::setup(Usb::stat_t& s){
     Usb u; UsbBdt ubdt;
 
-    //(setup only happens on ep0)
-    //if(s.endpt) return;
-
     //requests with no data stage
     if(setup_pkt.wLength==0){
         switch(setup_pkt.wRequest){
+
         case UsbCh9::DEV_CLEAR_FEATURE:
             //setup_pkt.wValue
             break;
@@ -709,10 +709,22 @@ void UsbHandlers::setup(Usb::stat_t& s){
 
         return;
     }
-    //data stage
+    //with data stage
+    else {
+        endp0_tx[0][0] = 0;
+        endp0_tx[0][1] = 0;
+        switch(setup_pkt.wRequest){
 
-    //DEV_GET_STATUS = 0x0080
-        //2bytes- byte0 = self-powered?, byte1=remote wakeup?
+        case UsbCh9::DEV_GET_STATUS:
+            //2bytes- byte0 = self-powered?, byte1=remote wakeup?
+            endp0_tx[0][0] = my_self_powered;
+            endp0_tx[0][1] = my_remote_wakeup;
+            break;
+        }
+        ubdt.esetup(0|1|0, (uint8_t*)endp0_tx[0], setup_pkt.wLength, ubdt.UOWN);
+    }
+
+
     //DEV_GET_DESCRIPTOR = 0x0680,
     //DEV_SET_DESCRIPTOR = 0x0700,
     //DEV_GET_CONFIGURATION = 0x0880
@@ -720,10 +732,9 @@ void UsbHandlers::setup(Usb::stat_t& s){
 
     if(setup_pkt.bmRequestType & 0x80){
         setup_stage = IN;
-
     } else {
         setup_stage = OUT;
-        //rx buffer alreadt setup in token()
+        //rx buffer already setup in token()
     }
 
 
