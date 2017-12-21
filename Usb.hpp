@@ -678,67 +678,49 @@ void UsbHandlers::token(){
     }
 }
 
-
 //only endpoint 0 uses setup
 void UsbHandlers::setup(Usb::stat_t& s){
     Usb u; UsbBdt ubdt;
 
-    //requests with no data stage
-    if(setup_pkt.wLength==0){
-        switch(setup_pkt.wRequest){
+    switch(setup_pkt.wRequest){
 
-        case UsbCh9::DEV_CLEAR_FEATURE:
-            //setup_pkt.wValue
-            break;
-        case UsbCh9::DEV_SET_FEATURE:
-            //setup_pkt.wValue
-            break;
-        //case UsbCh9::DEV_SET_ADDRESS:
-            //do after status
-            //break;
-        case UsbCh9::DEV_SET_CONFIGURATION:
-            //setup_pkt.wValue
-            break;
-        }
-        setup_stage = STATUS;
-        //setup for the IN packet for status stage
-        //doesn't matter what buffer, since 0 bytes used
-        //tx endpoints already 'taken' in token() (where we just came from)
-        //ep0-tx-even, tx buffer even, 0bytes, to usb|data1
-        ubdt.esetup(0|1|0, (uint8_t*)endp0_tx[0], 0, ubdt.UOWN|ubdt.DATA01);
-
-        return;
-    }
-    //with data stage
-    else {
-        endp0_tx[0][0] = 0;
-        endp0_tx[0][1] = 0;
-        switch(setup_pkt.wRequest){
-
-        case UsbCh9::DEV_GET_STATUS:
-            //2bytes- byte0 = self-powered?, byte1=remote wakeup?
-            endp0_tx[0][0] = my_self_powered;
-            endp0_tx[0][1] = my_remote_wakeup;
-            break;
-        }
-        ubdt.esetup(0|1|0, (uint8_t*)endp0_tx[0], setup_pkt.wLength, ubdt.UOWN);
-    }
-
-
-    //DEV_GET_DESCRIPTOR = 0x0680,
-    //DEV_SET_DESCRIPTOR = 0x0700,
-    //DEV_GET_CONFIGURATION = 0x0880
+    case UsbCh9::DEV_CLEAR_FEATURE:
+        //setup_pkt.wValue
+        break;
+    case UsbCh9::DEV_SET_FEATURE:
+        //setup_pkt.wValue
+        break;
+    //case UsbCh9::DEV_SET_ADDRESS:
+        //do after status
+        //break;
+    case UsbCh9::DEV_SET_CONFIGURATION:
+        //setup_pkt.wValue
+        break;
+    case UsbCh9::DEV_GET_STATUS:
+        //2bytes- byte0 = self-powered?, byte1=remote wakeup?
+        endp0_tx[0][0] = my_self_powered;
+        endp0_tx[0][1] = my_remote_wakeup;
+        break;
+    case UsbCh9::DEV_GET_DESCRIPTOR:
+        //
+        break;
+    case UsbCh9::DEV_SET_DESCRIPTOR:
+        //
+        break;
+    case UsbCh9::DEV_GET_CONFIGURATION:
         //return 1 byte- 0=not configured
-
-    if(setup_pkt.bmRequestType & 0x80){
-        setup_stage = IN;
-    } else {
-        setup_stage = OUT;
-        //rx buffer already setup in token()
+        //
+        break;
     }
 
+    if(setup_pkt.wLength == 0) setup_stage = STATUS;
+    else setup_stage = setup_pkt.bmRequestType & 0x80 ? IN : OUT;
+
+    ubdt.esetup(0|1|0, (uint8_t*)endp0_tx[0], setup_pkt.wLength,
+        ubdt.UOWN|setup_stage == STATUS ? ubdt.DATA01 : 0);
 
 }
+
 
 void UsbHandlers::in(Usb::stat_t& s){
     UsbBdt ubdt; Usb u;
