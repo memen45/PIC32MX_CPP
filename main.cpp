@@ -103,11 +103,22 @@ Pmd::PMD pmd_list[] = {                      //list of modules to disable
 =============================================================================*/
 int main(){
 
+    //pic32mm curiosity board, Fluke 101 (not TrueRMS), test
+    //    DelayCP0 tmr;
+    //    Pins rc0(Pins::C0); Pins rc2(Pins::C2);
+    //    rc0.digital_out(); rc2.digital_out();
+    //    rc2.high(); rc0.low();
+    //    for(;;rc0.invert(),rc2.invert(),tmr.wait_us(8333) );
+    // 3.64vac 60hz
+    //for(;;rc0.invert(),rc2.invert(),tmr.wait_ms(5000) );
+    // +3.29vdc , -3.29vdc
+
     Resets::CAUSE cause = Resets::cause();  //use cause result somewhere
                                             //(will be EXTR mostly with pkob)
 
     //usb- can't do much
     //(no Osc.hpp yet, so pll output running at 24MHz, usb clock is then 12MHz)
+    UsbEndpt ep0(0,3);
     UsbHandlers u;
     u.init();
 

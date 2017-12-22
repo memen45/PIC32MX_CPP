@@ -589,25 +589,21 @@ void UsbHandlers::setup(Usb::stat_t& s){
 void UsbHandlers::in(Usb::stat_t& s){
     UsbBdt ubdt; Usb u;
 
-    //endpoint 0
-    if(s.endpt == 0){
-        //setup status stage IN complete
-        if(setup_stage == STATUS){
-            setup_stage = COMPLETE;
-            //give back rx buffer to usb
-            ubdt.count(s.bdn, my_buffer_size);
-            ubdt.control(s.bdn, ubdt.UOWN);
+    //setup status stage IN complete
+    if(setup_stage == STATUS){
+        setup_stage = COMPLETE;
+        //give back rx buffer to usb
+        ubdt.count(s.bdn, my_buffer_size);
+        ubdt.control(s.bdn, ubdt.UOWN);
 
-            //if was set_address, do it now
-            if(setup_pkt.wRequest == UsbCh9::DEV_SET_ADDRESS){
-                u.dev_addr(setup_pkt.wValue); //device address
-                u.state = u.ADDRESS; //now have address, change usb state
-            }
-            return;
+        //if was set_address, do it now
+        if(setup_pkt.wRequest == UsbCh9::DEV_SET_ADDRESS){
+            u.dev_addr(setup_pkt.wValue); //device address
+            u.state = u.ADDRESS; //now have address, change usb state
         }
-        //endpoint 0 IN
-
+        return;
     }
+
 
     //handle other in's
 
@@ -619,19 +615,16 @@ void UsbHandlers::in(Usb::stat_t& s){
 
 ..............................................................................*/
 void UsbHandlers::out(Usb::stat_t& s){
-    //endpoint 0
-    if(s.endpt == 0){
-        //endpoint0 status stage received on data1
-        //(not checked if was data1, or length was 0, will assume because
-        // I don't know what to do yet if it is not)
-        if(setup_stage == STATUS){
-            setup_stage = COMPLETE;
-            //nothing more to do
-            return;
-        }
-        //endpoint 0 out
 
+    //status stage received on data1
+    //(not checked if was data1, or length was 0, will assume because
+    // I don't know what to do yet if it is not)
+    if(setup_stage == STATUS){
+        setup_stage = COMPLETE;
+        //nothing more to do
+        return;
     }
+
     //handle other out's
 
 
@@ -729,8 +722,168 @@ void UsbHandlers::attach(void){
 
 
 
+/*______________________________________________________________________________
+
+    endpoint class
+    handles all functions for an endpoint
+
+    UsbEndpt ep0(0,3); //endpoint 0 with rx+tx
+    UsbEndpt ep1rx(1,1); //endpoint 1 with rx only
+    UsbEndpt ep2tx(2,2); //endpoint 1 with rx only
+        endpoint descriptors (4) for endpoint cleared
+        endpoint register cleared
+        buffer addresses received from UsbBuf (as needed for tx/rx, 2 for each)
+        endpoint descriptors init (as needed for tx/rx, count 0)
 
 
+    ep0.deinit(); //give up buffers, turn off endpoint
+    ep0.reinit(); deinit, then run constructor
+        (cannot change n or rx/tx properties)
+
+    ep0.on(true); //turn on endpoint with handshake
+    ep0.on(false); //turn off endpoint
+    ep1rx.on(ep1rx.RXEN|ep1rx.CTRLDIS); //turn on with specific options
+
+
+______________________________________________________________________________*/
+class UsbEndpt {
+
+    private:
+
+    typedef union {
+        struct { uint32_t dat; uint32_t addr; };
+        struct { unsigned :16; uint16_t count; };
+        struct {
+            unsigned :2;
+            unsigned bstall:1;
+            unsigned dts:1;
+            unsigned ninc:1;
+            unsigned keep:1;
+            unsigned data01:1;
+            unsigned uown:1;
+        };
+        struct { unsigned :2; unsigned pid:4; };
+        uint8_t control;
+        uint64_t all;
+    } bdt_t;
+
+    enum { U1EP0 = 0xBF808700, U1EP_SPACING = 0x10 };
+
+    public:
+
+    enum U1EP {
+        LS = 1<<7,          /*HOST mode and U1EP0 only*/
+        RETRYDIS = 1<<6,    /*HOST mode and U1EP0 only*/
+        CTRLDIS = 1<<4,     /*only when TXEN=1 && RXEN=1*/
+        RXEN = 1<<3, TXEN = 1<<2,
+        ESTALL = 1<<1, HSHAKE = 1<<0
+    };
+
+    enum CTRL {
+        UOWN = 1<<7, DATA01 = 1<<6, KEEP = 1<<5,
+        NINC = 1<<4, DTS = 1<<3, BSTALL = 1<<1
+    };
+
+    UsbEndpt(uint8_t, uint8_t); //n, rx/tx/rx+tx (2,1,3)
+    void deinit(); //manual 'destructor'
+    void reinit(); //deinit, then run constructor
+    void on(bool); //enable/disable endpoint ([tx],[rx],handshake)
+    void on(uint8_t); //enable endpoint with U1EP reg bits
+
+    private:
+
+    void control(volatile bdt_t*, uint8_t);
+    volatile uint8_t control(volatile bdt_t*);
+    volatile uint16_t count(volatile bdt_t*);
+    void count(volatile bdt_t*, uint16_t v);
+    volatile uint8_t pid(volatile bdt_t* bp) const;
+    void addr(volatile bdt_t* bp, uint8_t* v);
+    uint8_t* addr(volatile bdt_t* bp) const;
+    volatile bool uown(volatile bdt_t*) const;
+    volatile bool data01(volatile bdt_t*) const;
+    volatile bool stall(volatile bdt_t*) const;
+    void uown(volatile bdt_t*, bool);
+    void data01(volatile bdt_t*, bool);
+    void stall(volatile bdt_t*, bool);
+    void bd_setup(volatile bdt_t*, volatile uint8_t*, uint16_t, uint8_t);
+    void epreg(U1EP, bool tf);
+    volatile bool epreg(U1EP);
+    void epreg(uint8_t);
+    void bd_init();
+
+
+    const uint8_t m_endpt_n; //0-15
+    const uint8_t m_endpt_tr; //2=rx,1=tx,3=tx+rx
+    volatile uint8_t* m_endp_reg; //U1EPn sfr register
+    volatile uint8_t* m_buf_rx[2]; //pointers to rx even/odd buffers
+    volatile uint8_t* m_buf_tx[2]; //pointers to txx even/odd buffers
+    const uint16_t m_buf_len; //fixed length from UsbBuf
+    bool m_tx_idx; //current tx buffer (0/1)
+    volatile bdt_t* m_bd_rx[2]; //rx buffer descriptor even/odd
+    volatile bdt_t* m_bd_tx[2]; //tx buffer descriptor even/odd
+};
+
+UsbEndpt::UsbEndpt(uint8_t n, uint8_t tr) :
+    m_tx_idx(0),
+    m_endpt_n(n&15),
+    m_endpt_tr(tr&3),
+    m_bd_rx{(volatile bdt_t*)UsbBdt::init(n),
+            (volatile bdt_t*)UsbBdt::init(n+1)},
+    m_bd_tx{(volatile bdt_t*)UsbBdt::init(n+2),
+            (volatile bdt_t*)UsbBdt::init(n+3)},
+    m_endp_reg((volatile uint8_t*)U1EP0+n*U1EP_SPACING),
+    m_buf_len(UsbBuf::buf_len())
+    {
+    //clear endpoint register
+    epreg(0);
+    //get buffers as needed
+    if(tr&2){ m_buf_rx[0] = UsbBuf::get(); m_buf_rx[1] = UsbBuf::get();}
+    if(tr&1){ m_buf_tx[0] = UsbBuf::get(); m_buf_tx[1] = UsbBuf::get();}
+    //all entries set to buffer addresses, 0 count, all control flags cleared
+    bd_init();
+}
+void UsbEndpt::deinit(){
+    //endpoint register- all off
+    epreg(0);
+    //release all buffers back to UsbBuf::
+    for(auto i = 0; i < 2; i++){
+        if(m_endpt_tr&2) UsbBuf::release(m_buf_rx[i]);
+        if(m_endpt_tr&1) UsbBuf::release(m_buf_tx[i]);
+    }
+}
+void UsbEndpt::reinit(){ deinit(); UsbEndpt(m_endpt_n,m_endpt_tr); }
+void UsbEndpt::control(volatile bdt_t* bp, uint8_t v){ bp->control = v; }
+volatile uint8_t UsbEndpt::control(volatile bdt_t* bp){ return bp->control; }
+volatile uint16_t UsbEndpt::count(volatile bdt_t* bp){ return bp->count; }
+void UsbEndpt::count(volatile bdt_t* bp, uint16_t v){ bp->count -= v; }
+volatile uint8_t UsbEndpt::pid(volatile bdt_t* bp) const { return bp->pid; }
+void UsbEndpt::addr(volatile bdt_t* bp, uint8_t* v){
+    bp->addr = Reg::k2phys(v);
+}
+uint8_t* UsbEndpt::addr(volatile bdt_t* bp) const {
+    return (uint8_t*)Reg::p2kseg0(bp->addr);
+}
+volatile bool UsbEndpt::uown(volatile bdt_t* bp) const { return bp->uown; }
+volatile bool UsbEndpt::data01(volatile bdt_t* bp) const { return bp->data01; }
+volatile bool UsbEndpt::stall(volatile bdt_t* bp) const { return bp->bstall; }
+void UsbEndpt::uown(volatile bdt_t* bp, bool tf){ bp->uown = tf; }
+void UsbEndpt::data01(volatile bdt_t* bp, bool tf){ bp->data01 = tf; }
+void UsbEndpt::stall(volatile bdt_t* bp, bool tf){ bp->bstall = tf; }
+void UsbEndpt::bd_setup(
+    volatile bdt_t* bp, volatile uint8_t* a, uint16_t c, uint8_t f){
+    addr(bp, (uint8_t*)a); count(bp, c); control(bp, f);
+}
+void UsbEndpt::epreg(U1EP e, bool tf){ Reg::set(m_endp_reg, e, tf); }
+volatile bool UsbEndpt::epreg(U1EP e){ return Reg::is_set8(m_endp_reg, e); }
+void UsbEndpt::epreg(uint8_t v){ Reg::val8(m_endp_reg, v); }
+void UsbEndpt::bd_init(){
+    for(auto i = 0; i < 2; i++){
+        if(m_endpt_tr&2) bd_setup(m_bd_rx[i], m_buf_rx[i], 0, 0);
+        if(m_endpt_tr&1) bd_setup(m_bd_tx[i], m_buf_tx[i], 0, 0);
+    }
+}
+void UsbEndpt::on(bool tf){ if(tf) epreg(m_endpt_tr<<2|HSHAKE); else epreg(0); }
+void UsbEndpt::on(uint8_t v){ epreg(v); }
 
 
 

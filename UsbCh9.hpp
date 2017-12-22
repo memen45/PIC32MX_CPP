@@ -154,102 +154,134 @@ class UsbCh9 {
 
     typedef enum { OUT = 1, IN = 9, SETUP = 13 } Pid_t; //Token
 
-
-
-
-    //============================================================
-    // HS stuff not for us in these smaller micros - but may be
-    // referenced to below
-    //
-    // USB Protocol -
-    // |FRAME|FRAME|FRAME|...
-    //    ^
-    //    SOF|TRANSACTION|TRANSACTION|TRANSACTION|...
-    //             ^
-    //             TOKEN|[DATA]|HANDSHAKE
-    //
-    //  Transaction-
-    //  Token packet, [optional Data packet], Handshake packet
-    //
-    //============================================================
-
-    //============================================================
-    // Token Packet - IN(pid 9), OUT(pid 1), SETUP(pid 13)
-    //============================================================
-    // Sync PID	ADDR ENDP CRC5 EOP
-    //
-    //  packets in/out/setup-
-    //      Sync    8bits (LS & FS)
-    //      ................................................
-    //      PID     4bits pid, 4bits npid
-    //      ADDR    7bits (0-127)
-    //      ENDP    4bits (LS only 2bits used)
-    //      CRC     5bits
-    //      ................................................
-    //      EOP     SE0 for 2bit times, J 1 bit time
-
-    //============================================================
-    // Token Packet - SOF(pid 5)
-    // every 1ms for FS, every 125us for HS
-    //============================================================
-    //Sync PID FrameNumber CRC5 EOP
-    //
-    //      Sync    8bits (LS & FS)
-    //      ................................................
-    //      PID     4bits pid, 4bits npid
-    //      FRAME   11bits (0-2047)
-    //      CRC     5bits
-    //      ................................................
-    //      EOP     SE0 for 2bit times, J 1 bit time
-
-    //============================================================
-    // Data Packet - DATA0(pid 3), DATA1(11) (HS DATA2, MDATA)
-    //============================================================
-    //Sync PID Data CRC16 EOP
-    //
-    //      Sync    8bits (LS & FS)
-    //      ................................................
-    //      PID     4bits pid, 4bits npid
-    //      DATA    data bytes (0- 8 LS, 1023 FS)
-    //      CRC     16bits
-    //      ................................................
-    //      EOP     SE0 for 2bit times, J 1 bit time
-
-    //============================================================
-    // Handshake Packet - ACK, NAK, STALL
-    //============================================================
-    //Sync PID EOP
-    //
-    //      Sync    8bits (LS & FS)
-    //      ................................................
-    //      PID     4bits pid, 4bits npid
-    //      ................................................
-    //      EOP     SE0 for 2bit times, J 1 bit time
-
-
-    //============================================================
-    // PID decoding- 4bits 0b0000 - 0b1111
-    //
-    // 0bxx00 = Special
-    //      0b0000 unused
-    //      0b0100 PING(HS)     4
-    //      0b1000 SPLIT(HS)    8
-    //      0b1100 PRE,ERR(HS)  12
-    // 0bxx01 = Token
-    //      0b0001 OUT          1
-    //      0b0101 SOF          5
-    //      0b1001 IN           9
-    //      0b1101 SETUP        13
-    // 0bxx10 = Handshake
-    //      0b0010 ACK          2
-    //      0b0110 NYET (HS)    6
-    //      0b1010 NAK          10
-    //      0b1110 STALL        14
-    // 0bxx11 = Data
-    //      0b0011 DATA0        3
-    //      0b0111 DATA2 (HS)   7
-    //      0b1011 DATA1        11
-    //      0b1111 MDATA (HS)   15
-    //============================================================
-
 };
+
+/*
+
+============================================================
+ HS stuff not for us - but may be referenced below
+
+ USB Protocol -
+ |FRAME|FRAME|FRAME|...
+    ^
+    SOF|TRANSACTION|TRANSACTION|TRANSACTION|...
+             ^
+             TOKEN|[DATA]|HANDSHAKE
+
+  Transaction-
+  Token packet, [optional Data packet], Handshake packet
+
+============================================================
+
+
+============================================================
+ Token Packet - IN(pid 9), OUT(pid 1), SETUP(pid 13)
+============================================================
+ Sync PID	ADDR ENDP CRC5 EOP
+
+  packets in/out/setup-
+      Sync    8bits (LS & FS)
+      ................................................
+      PID     4bits pid, 4bits npid
+      ADDR    7bits (0-127)
+      ENDP    4bits (LS only 2bits used)
+      CRC     5bits
+      ................................................
+      EOP     SE0 for 2bit times, J 1 bit time
+
+============================================================
+ Token Packet - SOF(pid 5)
+ every 1ms for FS, every 125us for HS
+============================================================
+Sync PID FrameNumber CRC5 EOP
+
+      Sync    8bits (LS & FS)
+      ................................................
+      PID     4bits pid, 4bits npid
+      FRAME   11bits (0-2047)
+      CRC     5bits
+      ................................................
+      EOP     SE0 for 2bit times, J 1 bit time
+
+============================================================
+ Data Packet - DATA0(pid 3), DATA1(11) (HS DATA2, MDATA)
+============================================================
+    Sync PID Data CRC16 EOP
+
+    Sync    8bits (LS & FS)
+    ................................................
+    PID     4bits pid, 4bits npid
+    DATA    data bytes (0- 8 LS, 1023 FS)
+    CRC     16bits
+    ................................................
+    EOP     SE0 for 2bit times, J 1 bit time
+
+============================================================
+ Handshake Packet - ACK, NAK, STALL
+============================================================
+    Sync PID EOP
+
+    Sync    8bits (LS & FS)
+    ................................................
+    PID     4bits pid, 4bits npid
+    ................................................
+    EOP     SE0 for 2bit times, J 1 bit time
+
+
+============================================================
+    PID decoding- 4bits 0b0000 - 0b1111
+============================================================
+
+    0bxx00 = Special
+         0b0000 unused
+         0b0100 PING(HS)     4
+         0b1000 SPLIT(HS)    8
+         0b1100 PRE,ERR(HS)  12
+    0bxx01 = Token
+         0b0001 OUT          1
+         0b0101 SOF          5
+         0b1001 IN           9
+         0b1101 SETUP        13
+    0bxx10 = Handshake
+         0b0010 ACK          2
+         0b0110 NYET (HS)    6
+         0b1010 NAK          10
+         0b1110 STALL        14
+    0bxx11 = Data
+         0b0011 DATA0        3
+         0b0111 DATA2 (HS)   7
+         0b1011 DATA1        11
+         0b1111 MDATA (HS)   15
+============================================================
+
+
+============================================================
+ Control transfer
+============================================================
+ endpoint 0 must support, others optional
+ both in/out of endpoint is used
+ 2-3 stages of every control transfer- setup,[data],status
+
+ control write transfer, (setup transaction)-
+    setup,data(data0),ack (all hardware)
+    data=8bytes
+
+ control write transfer, (data transaction)-
+    out,data(out,data0,data1,...),ack/nak/stall
+
+ control write transfer, (status transaction)-
+    in,data(in,data1-0bytes),ack
+
+
+
+ control read transfer, (setup transaction)-
+    setup,data(data0),ack (all hardware)
+    data=8bytes
+
+ control read transfer, (data transaction)-
+    in,data(in,data1,data0,...),ack
+
+ control read transfer, (status transaction)-
+    out,data(out,data1-0bytes),ack/nak/stall
+
+ */
