@@ -727,9 +727,9 @@ void UsbHandlers::attach(void){
     endpoint class
     handles all functions for an endpoint
 
-    UsbEndpt ep0(0,3); //endpoint 0 with rx+tx
-    UsbEndpt ep1rx(1,1); //endpoint 1 with rx only
-    UsbEndpt ep2tx(2,2); //endpoint 1 with rx only
+    UsbEndpt ep0(0,3); //endpoint 0 with rx+tx (3=tx+rx, 2=rx, 1=tx)
+    UsbEndpt ep1rx(1,1); //endpoint 1 with tx only
+    UsbEndpt ep2tx(2,2); //endpoint 2 with rx only
         endpoint descriptors (4) for endpoint cleared
         endpoint register cleared
         buffer addresses received from UsbBuf (as needed for tx/rx, 2 for each)
@@ -737,7 +737,7 @@ void UsbHandlers::attach(void){
 
 
     ep0.deinit(); //give up buffers, turn off endpoint
-    ep0.reinit(); deinit, then run constructor
+    ep0.reinit(); //deinit, then run constructor (init)
         (cannot change n or rx/tx properties)
 
     ep0.on(true); //turn on endpoint with handshake
