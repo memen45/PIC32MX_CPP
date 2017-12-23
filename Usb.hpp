@@ -322,8 +322,8 @@ struct UsbHandlers {
 void  UsbISR(){
     Usb u;
     static Usb::state_t last_state; //keep track of usb state for resumes
-    uint8_t flags = u.flags();  //get all flags
-    Irq::flagclear(Irq::USB);   //clear irq flag before any early returns
+    uint8_t flags = u.flags();      //get all flags
+    Irq::flagclear(Irq::USB);       //clear irq flag before any early returns
 
     //ATTACHED->POWERED if vbus_pin high
     if(u.state == u.ATTACHED){
@@ -336,17 +336,21 @@ void  UsbISR(){
     }
 
     //must be >= POWERED
-
-    //check if resume from SUSPENDED
-    //(if resume irq enabled from previous idle)
-    if ((flags & u.RESUME) && u.irq(u.RESUME)){
-        u.state = last_state; //back to previous state
-        u.irq(u.RESUME, false); //disable resume irq
-        u.eflags_clr(u.ALLEFLAGS);
-        u.flags_clr(u.ALLFLAGS);
-        return;
-    }
     
+    //if SUSPENDED, check for resume or reset
+    if(u.state == u.SUSPENDED){
+        if(flags & u.RESUME){           //resume
+            u.state = last_state;       //back to previous state
+            u.irq(u.RESUME, false);     //disable resume irq
+            u.irq(u.IDLE, true);        //enable idle (?)
+            u.flags_clr(u.RESUME|u.IDLE); //also clear idle (?)
+        } else if(!(flags & u.RESET)){  //if not reset,
+            u.eflags_clr(u.ALLEFLAGS);  //clear all flags
+            u.flags_clr(u.ALLFLAGS);    //(not sure how we get here)         
+            return;                     //still suspended
+        }
+        //reset or resume, continue below
+    }
 
     //check if need to suspend (idle detected >3ms)
     if (flags & u.IDLE){
@@ -355,6 +359,7 @@ void  UsbISR(){
         u.eflags_clr(u.ALLEFLAGS);
         u.flags_clr(u.ALLFLAGS);
         u.irq(u.RESUME, true); //enable resume irq
+        u.irq(u.IDLE, false); //disable idle (?)
         //do suspend- whatever is needed
         return;
     }
@@ -366,23 +371,14 @@ void  UsbISR(){
             u.state = u.DEFAULT;
             u.flags_clr(u.RESET);
         }
-        else UsbHandlers::attach(); //from >=DEFAULT, so attach
-        return;
+        else {
+            UsbHandlers::attach(); //from >=DEFAULT, so attach
+            return;
+        }
     }
-
-    //check if suspended- then nothing more to do
-    if(u.state == u.SUSPENDED){
-        //not sure which flags would get us here
-        //if not reset,resume which is previoulsy checked
-        //clear them all
-        u.eflags_clr(u.ALLEFLAGS);
-        u.flags_clr(u.ALLFLAGS);
-        return;
-    }
-
 
     //in state DEFAULT, ADDRESS, or CONFIGURED
-    //set to ADDRESS in other code responding to SETUP tokens
+    //(ADDRESS, CONFIGURED set in non-isr code)
 
     if(flags & u.ERROR){ //handle errors
         u.eflags_clr(u.ALLEFLAGS);
@@ -497,8 +493,8 @@ to perform a remote-wakeup (if my_remote_wakeup = 1)
 
  stall
     setting bstall in descriptor also causes epstall (U1EPn) to set
-    stalling the endpoint
-    to clear the stall, clear epstall, then clear bstall (I think)
+    stalling the endpoint (both tx/rx)
+    to clear the stall, clear bstall, then clear epstall (I think)
 
  control read transfer
     if data sent in (tx) is less than requested AND the size sent is equal
