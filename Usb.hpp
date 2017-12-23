@@ -321,12 +321,9 @@ struct UsbHandlers {
 ..............................................................................*/
 void  UsbISR(){
     Usb u;
-    //keep track of usb state for resumes
-    static Usb::state_t last_state;
-    //get all flags
-    uint8_t flags = u.flags();
-    //clear irq flag now (before any early returns)
-    Irq::flagclear(Irq::USB);
+    static Usb::state_t last_state; //keep track of usb state for resumes
+    uint8_t flags = u.flags();  //get all flags
+    Irq::flagclear(Irq::USB);   //clear irq flag before any early returns
 
     //ATTACHED->POWERED if vbus_pin high
     if(u.state == u.ATTACHED){
@@ -342,18 +339,24 @@ void  UsbISR(){
 
     //check if resume from SUSPENDED
     //(if resume irq enabled from previous idle)
-    if (flags & u.RESUME){
+    if ((flags & u.RESUME) && u.irq(u.RESUME)){
         u.state = last_state; //back to previous state
         u.irq(u.RESUME, false); //disable resume irq
-        u.flags_clr(u.RESUME);
+        u.eflags_clr(u.ALLEFLAGS);
+        u.flags_clr(u.ALLFLAGS);
+        return;
     }
+    
 
     //check if need to suspend (idle detected >3ms)
     if (flags & u.IDLE){
         last_state = u.state; //save
         u.state = u.SUSPENDED;
+        u.eflags_clr(u.ALLEFLAGS);
+        u.flags_clr(u.ALLFLAGS);
         u.irq(u.RESUME, true); //enable resume irq
         //do suspend- whatever is needed
+        return;
     }
 
     //check reset

@@ -14,13 +14,13 @@ class UsbEndpt {
     UsbEndpt ep2tx(2,UsbEndpt::RX); //endpoint 2 with rx only
         endpoint descriptors (4) for endpoint cleared
         endpoint register cleared
-        buffer addresses received from UsbBuf (as needed for tx/rx, 2 for each)
-        endpoint descriptors init (as needed for tx/rx, count 0)
+        rxbuffer addresses received from UsbBuf (if endpoint has rx)
+        endpoint descriptors init
 
 
-    ep0.deinit(); //give up buffers, turn off endpoint
+    ep0.deinit(); //give up any buffers, turn off endpoint
     ep0.reinit(); //deinit, then run constructor (init)
-        (cannot change n or rx/tx properties)
+        (cannot change endpoint number or rx/tx properties)
 
     ep0.on(true); //turn on endpoint with handshake
     ep0.on(false); //turn off endpoint
@@ -43,11 +43,12 @@ ______________________________________________________________________________*/
 
     //public functions
     UsbEndpt(uint8_t, TR); //n, TX|RX|TRX
-    void deinit(); //'destructor'-like
-    void reinit(); //deinit, then run constructor
-    void on(bool); //enable/disable endpoint ([tx],[rx],handshake)
-    void on(uint8_t); //enable endpoint with specified U1EP reg bits
-    void token(uint8_t); //process transaction complete, called by isr
+
+    void deinit ();         //'destructor'-like
+    void reinit ();         //deinit, then run constructor
+    void on     (bool);     //enable/disable endpoint ([tx],[rx],handshake)
+    void on     (uint8_t);  //enable endpoint with specified U1EP reg bits
+    void token  (uint8_t);  //process transaction complete, called by isr
 
     //public static function
     static uint32_t bdt_addr(); //to get bdt address (for Usb::bdt_addr() use)
@@ -84,46 +85,46 @@ ______________________________________________________________________________*/
     };
 
     //private functions
-    void bd_ctrl(uint8_t);
-    volatile uint8_t bd_ctrl();
-    volatile uint16_t bd_count();
-    void bd_count(uint16_t v);
-    volatile uint8_t bd_pid() const;
-    void bd_addr(uint8_t* v);
-    uint8_t* bd_addr() const;
-    volatile bool bd_uown() const;
-    volatile bool bd_data01() const;
-    volatile bool bd_stall() const;
-    void bd_uown(bool);
-    void bd_data01(bool);
-    void bd_stall(bool);
-    void bd_setup(volatile uint8_t*, uint16_t, uint8_t);
-    void epreg(U1EP, bool tf);
-    volatile bool epreg(U1EP);
-    void epreg(uint8_t);
-    void bd_init();
-    void setup_token();
-    void in_token();
-    void out_token();
-    void rx_giveup();
-    void tx_cancel();
+    void                bd_ctrl     (uint8_t);
+    volatile uint8_t    bd_ctrl     ();
+    volatile uint16_t   bd_count    ();
+    void                bd_count    (uint16_t);
+    volatile uint8_t    bd_pid      () const;
+    void                bd_addr     (volatile uint8_t*);
+    uint8_t*            bd_addr     () const;
+    volatile bool       bd_uown     () const;
+    volatile bool       bd_data01   () const;
+    volatile bool       bd_stall    () const;
+    void                bd_uown     (bool);
+    void                bd_data01   (bool);
+    void                bd_stall    (bool);
+    void                bd_setup    (volatile uint8_t*, uint16_t, uint8_t);
+    void                epreg       (U1EP, bool);
+    volatile bool       epreg       (U1EP) const;
+    void                epreg       (uint8_t);
+    void                bd_init     ();
+    void                setup_token ();
+    void                in_token    ();
+    void                out_token   ();
+    void                rx_giveup   ();
+    void                tx_cancel   ();
 
     //in/out matches setup_pkt.dir- 0=from host,1=to host
     enum SETUPXFER { COMPLETE = 3, IN = 1, OUT = 0, STATUS = 2 };
 
-    static bdt_t m_bdt[(my_last_endp+1)*4] __attribute__ ((aligned (512)));
-    uint8_t m_endpt_n; //0-15
-    TR m_endpt_tr; //TX|RX|TRX (aligned for U1EPn <<2)
-    volatile uint8_t* m_endpt_reg; //U1EPn sfr register
-    volatile uint8_t* m_rxbuf[2]; //pointers to rx-even/odd
-    uint16_t m_buf_len; //fixed length from UsbBuf (64)
-    uint8_t m_tx_ep; //current tx endpoint (2/3)
-    volatile bdt_t* m_bd[4]; //rx/tx buffer descriptor even/odd
-    UsbCh9::SetupPacket_t setup_pkt; //copy of setup data packet (8bytes)
-    SETUPXFER setup_stage; //setup transaction stages
-    uint8_t m_bd_idx; //current idx into bd (used in functions)
-    uint8_t m_data01; //tx data0/data1, uses bit6 (toggle bit6)
-    volatile uint8_t* m_tx_ptr; //pointer to tx data
+    static bdt_t        m_bdt[(my_last_endp+1)*4] __attribute__((aligned(512)));
+    uint8_t             m_endpt_n;      //0-15
+    TR                  m_endpt_tr;     //TX|RX|TRX (aligned for U1EPn <<2)
+    volatile uint8_t*   m_endpt_reg;    //U1EPn sfr register
+    volatile uint8_t*   m_rxbuf[2];     //pointers to rx-even/odd buffers
+    uint16_t            m_buf_len;      //fixed length from UsbBuf (64)
+    uint8_t             m_tx_ep;        //current tx endpoint (2/3)
+    volatile bdt_t*     m_bd[4];        //rx/tx buffer descriptor even/odd
+    UsbCh9::SetupPacket_t setup_pkt;    //copy of setup data packet (8bytes)
+    SETUPXFER           setup_stage;    //setup transaction stages
+    uint8_t             m_bd_idx;       //current bd idx (used in functions)
+    uint8_t             m_data01;       //tx data0/data1, uses bit6 (toggle bit6)
+    volatile uint8_t*   m_tx_ptr;       //pointer to tx data
 };
 
 
@@ -135,8 +136,7 @@ ______________________________________________________________________________*/
 UsbEndpt::bdt_t UsbEndpt::m_bdt[(my_last_endp+1)*4] = {0};
 uint32_t UsbEndpt::bdt_addr(){ return (uint32_t)m_bdt; }
 
-
-
+//public
 UsbEndpt::UsbEndpt(uint8_t n, TR tr) :
     m_tx_ep(2),
     m_endpt_n(n&15),
@@ -149,23 +149,16 @@ UsbEndpt::UsbEndpt(uint8_t n, TR tr) :
     m_bd_idx(0),
     m_data01(0),
     m_rxbuf{0,0}
-    {
-    //clear endpoint register
+{
     epreg(0);
-    //get rx buffers if needed
     if(tr&RX){ m_rxbuf[0] = UsbBuf::get(); m_rxbuf[1] = UsbBuf::get();}
-    //all entries set to buffer addresses (or 0 for tx),
-    //0 count, all control flags cleared
     bd_init();
 }
 //UsbEndpt::UsbEndpt(uint8_t n, TR tr){}
 void UsbEndpt::deinit(){
-    //endpoint register- all off
     epreg(0);
-    //release rx buffers back to UsbBuf::
     UsbBuf::release(m_rxbuf[0]);
     UsbBuf::release(m_rxbuf[1]);
-    //release any tx buffers (from addresses in bd)
     tx_cancel();
 }
 void UsbEndpt::reinit(){ deinit(); UsbEndpt(m_endpt_n,m_endpt_tr); }
@@ -174,11 +167,11 @@ volatile uint8_t UsbEndpt::bd_ctrl(){ return m_bd[m_bd_idx]->control; }
 volatile uint16_t UsbEndpt::bd_count(){ return m_bd[m_bd_idx]->count; }
 void UsbEndpt::bd_count(uint16_t v){ m_bd[m_bd_idx]->count = v; }
 volatile uint8_t UsbEndpt::bd_pid() const { return m_bd[m_bd_idx]->pid; }
-void UsbEndpt::bd_addr(uint8_t* v){
-    m_bd[m_bd_idx]->addr = Reg::k2phys(v); //needs physical address
+void UsbEndpt::bd_addr(volatile uint8_t* v){
+    m_bd[m_bd_idx]->addr = Reg::k2phys(v);
 }
 uint8_t* UsbEndpt::bd_addr() const {
-    return (uint8_t*)Reg::p2kseg0(m_bd[m_bd_idx]->addr); //return kseg0 address
+    return (uint8_t*)Reg::p2kseg0(m_bd[m_bd_idx]->addr);
 }
 volatile bool UsbEndpt::bd_uown() const { return m_bd[m_bd_idx]->uown; }
 volatile bool UsbEndpt::bd_data01() const { return m_bd[m_bd_idx]->data01; }
@@ -186,35 +179,31 @@ volatile bool UsbEndpt::bd_stall() const { return m_bd[m_bd_idx]->bstall; }
 void UsbEndpt::bd_uown(bool tf){ m_bd[m_bd_idx]->uown = tf; }
 void UsbEndpt::bd_data01(bool tf){ m_bd[m_bd_idx]->data01 = tf; }
 void UsbEndpt::bd_stall(bool tf){ m_bd[m_bd_idx]->bstall = tf; }
-void UsbEndpt::bd_setup(
-    volatile uint8_t* a, uint16_t c, uint8_t f){
-    bd_addr((uint8_t*)a); bd_count(c); bd_ctrl(f);
+void UsbEndpt::bd_setup(volatile uint8_t* a, uint16_t c, uint8_t f){
+    bd_addr(a); bd_count(c); bd_ctrl(f);
 }
 void UsbEndpt::epreg(U1EP e, bool tf){ Reg::set(m_endpt_reg, e, tf); }
-volatile bool UsbEndpt::epreg(U1EP e){ return Reg::is_set8(m_endpt_reg, e); }
+volatile bool UsbEndpt::epreg(U1EP e) const {
+    return Reg::is_set8(m_endpt_reg, e);
+}
 void UsbEndpt::epreg(uint8_t v){ Reg::val8(m_endpt_reg, v); }
 void UsbEndpt::bd_init(){
-    for(auto i = 0; i < 4; i++){
+    for(auto i = 3; i >= 0; i--){
         m_bd_idx = i;
         bd_setup(0, 0, 0);
-        //if rx and bd[0]|bd[1], set address to rx buffers
-        if(m_endpt_tr&RX && i<2) bd_addr((uint8_t*)m_rxbuf[i]);
+        if((m_endpt_tr & RX) && (i < 2)) bd_addr(m_rxbuf[i]);
     }
-    m_bd_idx = 0;
 }
 void UsbEndpt::on(bool tf){ if(tf) epreg(m_endpt_tr|HSHAKE); else epreg(0); }
 void UsbEndpt::on(uint8_t v){ epreg(v); }
 void UsbEndpt::rx_giveup(){ bd_count(m_buf_len); bd_uown(true); }
 void UsbEndpt::tx_cancel(){
-    //clear any pending tx
-    uint8_t idx = m_bd_idx; //save first
-    //release any tx buffers (from addresses in bd)
-    for(m_bd_idx = 2; m_bd_idx<4; m_bd_idx++){
+    uint8_t idx = m_bd_idx;
+    for(m_bd_idx = 2; m_bd_idx < 4; m_bd_idx++){
         if(bd_uown()) m_tx_ep ^= 1; //toggle, since uown 1->0
         bd_ctrl(0);
         UsbBuf::release(bd_addr());
     }
-    //release our tx ptr (probably duplicate of above)
     UsbBuf::release(m_tx_ptr);
     m_tx_ptr = 0;
     m_bd_idx = idx; //restore
