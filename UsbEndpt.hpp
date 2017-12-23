@@ -272,7 +272,7 @@ void UsbEndpt::setup_token(){
     uint8_t typ = setup_pkt.type;
     uint8_t recip = setup_pkt.recip;
 
-    if(!m_tx_ptr) m_tx_ptr = UsbBuf::get();
+    m_tx_ptr = UsbBuf::get();
     if(!m_tx_ptr){} //do something if can't get buffer- stall?
 
     //standard requests
