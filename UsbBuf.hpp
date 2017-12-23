@@ -1,3 +1,6 @@
+
+#include "Reg.hpp"
+
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // DO NOT INCLUDE THIS FILE (except in Usb.hpp) - used inline in Usb.hpp
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -50,6 +53,9 @@ volatile uint8_t* UsbBuf::get(){
 }
 //return a buffer for use
 void UsbBuf::release(volatile uint8_t* p){
+    //in case was physical address from bdt
+    //convert to kseg0
+    p = (uint8_t*)Reg::p2kseg0(p);
     for(auto& i : m_buffers){
         if(p!=i.buf) continue;
         i.inuse = false;

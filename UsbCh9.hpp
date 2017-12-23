@@ -124,6 +124,12 @@ class UsbCh9 {
         uint8_t packet[8];
         uint16_t wRequest;
         struct {
+            unsigned recip:2;   //0=device,1=iface,2=endpt,3=other
+            unsigned :3;        //unused bits for recip
+            unsigned type:2;    //0=std,1=class,2=vendor
+            unsigned dir:1;     //data phase, 1=to host, 0=from host
+        };
+        struct {
             uint8_t bmRequestType;
             uint8_t bRequest;
             uint16_t wValue;
@@ -132,11 +138,6 @@ class UsbCh9 {
         };
     } SetupPacket_t;
 
-    typedef enum  {
-        DAT2DEV = 0<<7, DAT2HOST = 1<<7,
-        TYPSTD = 0<<5, TYPCLASS = 1<<5, TYPVEND = 2<<5,
-        FORDEV = 0, FORIFACE = 1, FORENDP = 2, FOROTHER = 3
-    } bmRequestTypeSETUP_t;
 
     typedef enum { //uint16_t wRequest; (bRequest<<8|bmRequestType)
         DEV_GET_STATUS = 0x0080, DEV_CLEAR_FEATURE = 0x0100,
@@ -150,6 +151,18 @@ class UsbCh9 {
 
         EP_GET_STATUS = 0x0082, EP_CLEAR_FEATURE = 0x0102,
         EP_SET_FEATURE = 0x0302, EP_SYNC_HFRAME = 0x1202
+    } wRequestStdSETUP_t;
+
+    typedef enum { //uint8_t bRequest
+        GET_STATUS = 0x00, CLEAR_FEATURE = 0x01,
+        SET_FEATURE = 0x03, SET_ADDRESS = 0x05,
+        GET_DESCRIPTOR = 0x06, SET_DESCRIPTOR = 0x07,
+        GET_CONFIGURATION = 0x08, SET_CONFIGURATION = 0x09,
+
+        GET_IFACE = 0x0A,
+        SET_IFACE = 0x11,
+
+        SYNC_HFRAME = 0x1202
     } bRequestStdSETUP_t;
 
     typedef enum { OUT = 1, IN = 9, SETUP = 13 } Pid_t; //Token

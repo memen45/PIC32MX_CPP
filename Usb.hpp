@@ -445,6 +445,8 @@ void UsbHandlers::attach(void){
 
     //init (reinit) each UsbEndpt
     for(auto& i : ep) i.reinit();
+    //and enable endpoint 0
+    ep[0].on(true);
 
     //enable irqs
     u.irqs(u.STALL|u.IDLE|u.TOKEN|u.SOF|u.ERROR|u.RESET);
