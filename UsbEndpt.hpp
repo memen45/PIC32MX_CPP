@@ -3,14 +3,15 @@
 #include "Usb.hpp"
 
 
+class UsbEndpt {
 /*______________________________________________________________________________
 
     endpoint class
     handles all functions for an endpoint
 
-    UsbEndpt ep0(0,3); //endpoint 0 with rx+tx (3=tx+rx, 2=rx, 1=tx)
-    UsbEndpt ep1rx(1,1); //endpoint 1 with tx only
-    UsbEndpt ep2tx(2,2); //endpoint 2 with rx only
+    UsbEndpt ep0(0,UsbEndpt::TRX); //endpoint 0 with rx+tx
+    UsbEndpt ep1rx(1,UsbEndpt::TX); //endpoint 1 with tx only
+    UsbEndpt ep2tx(2,UsbEndpt::RX); //endpoint 2 with rx only
         endpoint descriptors (4) for endpoint cleared
         endpoint register cleared
         buffer addresses received from UsbBuf (as needed for tx/rx, 2 for each)
@@ -27,8 +28,6 @@
 
 
 ______________________________________________________________________________*/
-class UsbEndpt {
-
     public:
 
     //capabilities
@@ -36,29 +35,28 @@ class UsbEndpt {
 
     //endpoint control register bits
     enum U1EP {
-        //LS = 1<<7,          /*HOST mode and U1EP0 only*/
-        //RETRYDIS = 1<<6,    /*HOST mode and U1EP0 only*/
-        CTRLDIS = 1<<4,     /*only when TXEN=1 && RXEN=1*/
-        RXEN = 1<<3, TXEN = 1<<2,
-        ESTALL = 1<<1, HSHAKE = 1<<0
+        //LS = 1<<7,            /*HOST mode and U1EP0 only*/
+        //RETRYDIS = 1<<6,      /*HOST mode and U1EP0 only*/
+        CTRLDIS = 1<<4,         /*only when TXEN=1 && RXEN=1*/
+        RXEN = 1<<3, TXEN = 1<<2, ESTALL = 1<<1, HSHAKE = 1<<0
     };
-
 
     //public functions
     UsbEndpt(uint8_t, TR); //n, TX|RX|TRX
-    //void init(uint8_t, TR); //n, TX|RX|TRX
-    void deinit(); //manual 'destructor'
+    void deinit(); //'destructor'-like
     void reinit(); //deinit, then run constructor
     void on(bool); //enable/disable endpoint ([tx],[rx],handshake)
-    void on(uint8_t); //enable endpoint with U1EP reg bits
-    void token(uint8_t); //process transaction complete
+    void on(uint8_t); //enable endpoint with specified U1EP reg bits
+    void token(uint8_t); //process transaction complete, called by isr
 
-    static uint32_t bdt_addr(); //for Usb:: to get bdt address
+    //public static function
+    static uint32_t bdt_addr(); //to get bdt address (for Usb::bdt_addr() use)
 
 
 
     private:
 
+    //bd entry struct
     typedef union {
         struct { uint32_t dat; uint32_t addr; };
         struct { unsigned :16; uint16_t count; };
@@ -123,6 +121,7 @@ class UsbEndpt {
     UsbCh9::SetupPacket_t setup_pkt; //copy of setup data packet (8bytes)
     SETUPTFER setup_stage; //setup transaction stages
     uint8_t m_bd_idx; //current idx into bd (used in functions)
+    bool m_data01;
 };
 
 
@@ -145,7 +144,8 @@ UsbEndpt::UsbEndpt(uint8_t n, TR tr) :
     m_buf_len(UsbBuf::buf_len()),
     setup_pkt{0},
     setup_stage(COMPLETE),
-    m_bd_idx(0)
+    m_bd_idx(0),
+    m_data01(0)
     {
     //clear endpoint register
     epreg(0);
@@ -207,41 +207,38 @@ void UsbEndpt::on(uint8_t v){ epreg(v); }
 void UsbEndpt::rx_giveup(){ count(m_buf_len); uown(true); }
 void UsbEndpt::tx_cancel(){
     //clear any pending tx
-    uint8_t idx = m_bd_idx;
-    m_bd_idx = m_tx_idx; control(0);
-    m_bd_idx = m_tx_idx^1; control(0);
-    m_bd_idx = idx;
+    uint8_t idx = m_bd_idx; //save first
+    m_bd_idx = m_tx_idx; control(0); //current tx
+    m_bd_idx = m_tx_idx^1; control(0); //other tx
+    m_bd_idx = idx; //restore
 }
 
 
 /*..............................................................................
  process transaction complete
-    called from ISR with stat_t (endpt,dir,ppbi)
+    called from ISR with index into this endpoint
+    (0-3, rx-even,rx-odd,tx-even,tx-odd)
 ..............................................................................*/
 void UsbEndpt::token(uint8_t idx){
     //check if we even have an endpoint in use
-    if(m_endpt_tr = NONE){
-        //endpoint should be off
-        on(false);
-        return;
-    }
+    //if this is an unused endpoint below a higher used endpoint
+    //turn off (should already be off, and shouldn't be here)
+    if(m_endpt_tr = NONE){ on(false); return; }
 
-    //which bd entry
+    //which bd entry was used for this TRNIF
     m_bd_idx = idx;
 
-    uint8_t p = pid();
+    //pid from bd entry (should only see 1,9,13)
+    switch(pid()){
 
-    switch(p){
         case UsbCh9::SETUP:
+            //save setup data packet for later
             setup_pkt = *(UsbCh9::SetupPacket_t*)&m_buf[m_bd_idx];
-            //done with rx (must be rx)
             rx_giveup();
-            //clear any pending tx
             tx_cancel();
-            //do something
+            m_data01 = 0;
             setup_token();
-            //clear PKTDIS to continue from setup token
-            Usb::control(Usb::PKTDIS, false);
+            Usb::control(Usb::PKTDIS, false); //continue control transfer
             break;
 
         case UsbCh9::IN:
@@ -250,13 +247,9 @@ void UsbEndpt::token(uint8_t idx){
 
         case UsbCh9::OUT:
             out_token();
-            //done with rx (out must be rx)
             rx_giveup();
             break;
-
     }
-
-
 }
 
 /*..............................................................................
@@ -264,45 +257,46 @@ void UsbEndpt::token(uint8_t idx){
 ..............................................................................*/
 void UsbEndpt::setup_token(){
     switch(setup_pkt.wRequest){
-
-    case UsbCh9::DEV_CLEAR_FEATURE:
-        //setup_pkt.wValue
-        break;
-    case UsbCh9::DEV_SET_FEATURE:
-        //setup_pkt.wValue
-        break;
-    //case UsbCh9::DEV_SET_ADDRESS:
-        //do after status
-        //break;
-    case UsbCh9::DEV_SET_CONFIGURATION:
-        //setup_pkt.wValue
-        break;
-    case UsbCh9::DEV_GET_STATUS:
-        //setup_pkt.wLength should = 2
-        //2bytes- byte0/bit0 = self-powered?, byte0/bit1=remote wakeup?
-        m_buf[m_tx_idx][0] = my_self_powered<<0;
-        m_buf[m_tx_idx][0] |= my_remote_wakeup<<1;
-        m_buf[m_tx_idx][1] = 0;
-        break;
-    case UsbCh9::DEV_GET_DESCRIPTOR:
-        //
-        break;
-    case UsbCh9::DEV_SET_DESCRIPTOR:
-        //
-        break;
-    case UsbCh9::DEV_GET_CONFIGURATION:
-        //return 1 byte- 0=not configured
-        //
-        break;
+        case UsbCh9::DEV_CLEAR_FEATURE:
+            //setup_pkt.wValue
+            break;
+        case UsbCh9::DEV_SET_FEATURE:
+            //setup_pkt.wValue
+            break;
+        //case UsbCh9::DEV_SET_ADDRESS:
+            //do after status
+            //break;
+        case UsbCh9::DEV_SET_CONFIGURATION:
+            //setup_pkt.wValue
+            break;
+        case UsbCh9::DEV_GET_STATUS:
+            //setup_pkt.wLength should = 2
+            //2bytes- byte0/bit0 = self-powered?, byte0/bit1=remote wakeup?
+            m_buf[m_tx_idx][0] = my_self_powered<<0;
+            m_buf[m_tx_idx][0] |= my_remote_wakeup<<1;
+            m_buf[m_tx_idx][1] = 0;
+            break;
+        case UsbCh9::DEV_GET_DESCRIPTOR:
+            //
+            break;
+        case UsbCh9::DEV_SET_DESCRIPTOR:
+            //
+            break;
+        case UsbCh9::DEV_GET_CONFIGURATION:
+            //return 1 byte- 0=not configured
+            //
+            break;
     }
 
-    if(setup_pkt.wLength == 0) setup_stage = STATUS;
+    if(setup_pkt.wLength == 0){
+        setup_stage = STATUS;
+        m_data01 = 1;
+    }
     else setup_stage = setup_pkt.bmRequestType & 0x80 ? IN : OUT;
 
-    //changing m_current_bd - should be ok, will exit shortly
+    //changing m_bd_idx - should be ok, will exit shortly
     m_bd_idx = m_tx_idx;
-    bd_setup(m_buf[m_tx_idx], setup_pkt.wLength,
-        UOWN|setup_stage == STATUS ? DATA01 : 0);
+    bd_setup(m_buf[m_tx_idx], setup_pkt.wLength, UOWN|m_data01);
     m_tx_idx ^= 1;
 }
 /*..............................................................................

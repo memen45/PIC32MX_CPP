@@ -1,7 +1,7 @@
 #pragma once
 
 /*=============================================================================
- USB peripheral - pic32mmxxxxGPMxxx
+ USB peripheral - PIC32MM0256GPM064
 =============================================================================*/
 
 #include <cstdint>
@@ -41,23 +41,22 @@ extern "C" {
 
 
 
-
+//simple way to separate classes/structs for now
 //__inline include______________________________________________________________
 
 #include "UsbBuf.hpp"
+
 //______________________________________________________________________________
-
-
-
-
-
 
 
 
 struct Usb {
-//______________________________________________________________________________
+/*______________________________________________________________________________
 
-//______________________________________________________________________________
+    Usb hardware functions
+    ( UsbOTG:: handles OTG registers )
+    ( endpoint registers U1EPn handled by UsbEndpt:: )
+______________________________________________________________________________*/
 
     /*..........................................................................
      flags, interrupts
@@ -77,29 +76,15 @@ struct Usb {
 
     enum FLAGS : uint8_t {
         //U1IR, U1IE
-        STALL = 1<<7,
-        ATTACH = 1<<6, //host only
-        RESUME = 1<<5,
-        IDLE = 1<<4,
-        TOKEN = 1<<3,
-        SOF = 1<<2,
-        ERROR = 1<<1,
-        RESET = 1<<0,
-        DETACH = 1<<0, //host only
-        ALLFLAGS = 255
+        STALL = 1<<7, ATTACH = 1<<6 /*host only*/, RESUME = 1<<5, IDLE = 1<<4,
+        TOKEN = 1<<3, SOF = 1<<2, ERROR = 1<<1, RESET = 1<<0,
+        DETACH = 1<<0 /*host only*/,  ALLFLAGS = 255
     };
 
     enum EFLAGS : uint8_t {
         //U1EIR, U1EIE
-        BITSTUFF = 1<<7,
-        BUSMATRIX = 1<<6,
-        DMA = 1<<5,
-        BUSTIMEOUT = 1<<4,
-        DATASIZE = 1<<3,
-        CRC16 = 1<<2,
-        CRC5 = 1<<1,
-        EOF = 1<<1,
-        PID = 1<<0,
+        BITSTUFF = 1<<7, BUSMATRIX = 1<<6, DMA = 1<<5, BUSTIMEOUT = 1<<4,
+        DATASIZE = 1<<3, CRC16 = 1<<2, CRC5 = 1<<1, EOF = 1<<1, PID = 1<<0,
         ALLEFLAGS = 255
     };
 
@@ -132,10 +117,7 @@ struct Usb {
 
     enum POWER : uint8_t {
         //U1PWRC
-        PENDING = 1<<7,
-        SLEEPGUARD = 1<<4,
-        BUSY = 1<<3,
-        SUSPEND = 1<<1,
+        PENDING = 1<<7, SLEEPGUARD = 1<<4, BUSY = 1<<3, SUSPEND = 1<<1,
         USBPWR = 1<<0
     };
 
@@ -154,6 +136,7 @@ struct Usb {
         struct { unsigned :2; unsigned bdn:6; };
         uint8_t val;
     } stat_t;
+
     static volatile uint8_t stat                ();
     static void             stat                (stat_t&);
 
@@ -163,16 +146,9 @@ struct Usb {
 
     ..........................................................................*/
     enum CONTROL : uint8_t {
-        JSTATE = 1<<7,
-        SE0 = 1<<6,
-        PKTDIS = 1<<5,
-        TOKBUSY = 1<<5,
-        USBRESET = 1<<4,
-        HOSTEN = 1<<3,
-        RESUMEEN = 1<<2,
-        PPRESET = 1<<1,
-        USBEN = 1<<0,
-        SOFEN = 1<<0
+        JSTATE = 1<<7, SE0 = 1<<6, PKTDIS = 1<<5, TOKBUSY = 1<<5,
+        USBRESET = 1<<4, HOSTEN = 1<<3, RESUMEEN = 1<<2, PPRESET = 1<<1,
+        USBEN = 1<<0, SOFEN = 1<<0
     };
 
     static volatile bool    control             (CONTROL);
@@ -208,11 +184,8 @@ struct Usb {
         get/set config register
     ..........................................................................*/
     enum CONFIG : uint8_t {
-        EYETEST = 1<<7,
-        OEMON = 1<<6,
-        SIDLE = 1<<4,
-        LSDEV = 1<<3,
-        AUTOSUSP = 1<<0
+        EYETEST = 1<<7, OEMON = 1<<6, SIDLE = 1<<4,
+        LSDEV = 1<<3, AUTOSUSP = 1<<0
     };
 
     static void             config              (CONFIG, bool); //set 1bit
@@ -236,6 +209,8 @@ struct Usb {
     } state_t;
 
     static state_t state;
+
+
 
     private:
 
@@ -264,46 +239,30 @@ struct Usb {
 // Usb static functions, vars
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 Usb::state_t Usb::state = Usb::DETACHED;
-
 bool Usb::power(POWER e){ return Reg::is_set8(U1PWRC, e); }
 void Usb::power(POWER e, bool tf){ Reg::set(U1PWRC, e, tf); }
-//get all
 volatile uint8_t Usb::flags(){ return Reg::val8(U1IR); }
 volatile uint8_t Usb::eflags(){ return Reg::val8(U1EIR); }
-//get one
 volatile bool Usb::flag(FLAGS e){ return Reg::is_set8(U1IR, e); }
 volatile bool Usb::eflag(EFLAGS e){ return Reg::is_set8(U1EIR, e); }
-//clear one or more
 void Usb::flags_clr(uint8_t v){ Reg::val8(U1IR, v); }
 void Usb::eflags_clr(uint8_t v){ Reg::val8(U1EIR, v); }
-//get all
 uint8_t Usb::irqs(){ return Reg::val8(U1IE); }
 uint8_t Usb::eirqs(){ return Reg::val8(U1EIE); }
-//get one
 bool Usb::irq(FLAGS e){ return Reg::is_set8(U1IE, e); }
 bool Usb::eirq(EFLAGS e){ return Reg::is_set8(U1EIE, e); }
-//set value
 void Usb::irqs(uint8_t v){ Reg::val8(U1IE, v); }
 void Usb::eirqs(uint8_t v){ Reg::val8(U1EIE, v); }
-//one on/off
 void Usb::irq(FLAGS e, bool tf){ Reg::set(U1IE, e); }
 void Usb::eirq(EFLAGS e, bool tf){ Reg::set(U1EIE, e); }
-
 volatile uint8_t Usb::stat(){ return Reg::val8(U1STAT); }
 void Usb::stat(stat_t& s){ s.val = Reg::val8(U1STAT); }
-
 volatile bool Usb::control(CONTROL e){ return Reg::is_set8(U1CON, e); }
 void Usb::control(CONTROL e, bool tf){ Reg::set(U1CON, e, tf); }
 void Usb::control(uint8_t v){ Reg::val8(U1CON, v); }
-
 uint8_t Usb::dev_addr(){ return Reg::val8(U1ADDR) & 127; }
-void Usb::dev_addr(uint8_t v){
-    Reg::clr(U1ADDR, 0x7F); //clear addr
-    Reg::set(U1ADDR, v); //set ddr
-}
-
+void Usb::dev_addr(uint8_t v){ Reg::clr(U1ADDR, 0x7F); Reg::set(U1ADDR, v); }
 uint16_t Usb::frame(){ return (Reg::val8(U1FRMH)<<8) | Reg::val8(U1FRML); }
-
 void Usb::bdt_addr(uint32_t v){
     v = Reg::k2phys(v); //physical address
     Reg::val8(U1BDTP1, v>>8); //512byte aligned (bit0 of this reg unused)
@@ -315,40 +274,27 @@ uint32_t Usb::bdt_addr(){
     Reg::val8(U1BDTP1)<<8 | Reg::val8(U1BDTP2)<<16 | Reg::val8(U1BDTP3)<<24
     ); //kseg0
 }
-
 void Usb::config(CONFIG e, bool tf){ Reg::set(U1CNFG1, e, tf); }
 bool Usb::config(CONFIG e){ return Reg::is_set8(U1CNFG1, e); }
 void Usb::config(uint8_t v){ Reg::val8(U1CNFG1, v); }
-
-//void Usb::endp(uint8_t n, EPV e, bool tf){
-//    Reg::set(U1EP0+(n&15)*U1EP_SPACING, e, tf);
-//}
-//bool Usb::endp(uint8_t n, EPV e){
-//    return Reg::is_set8(U1EP0+(n&15)*U1EP_SPACING, e);
-//}
-//void Usb::endp(uint8_t n, uint8_t v){
-//    Reg::val8(U1EP0+(n&15)*U1EP_SPACING, v);
-//}
-//void Usb::endps_clr(){
-//    for(auto i = 0; i < 16; i++){
-//        Reg::val8(U1EP0+i*U1EP_SPACING, 0);
-//    }
-//}
 //______________________________________________________________________________
 
 
 //__inline include______________________________________________________________
 
 #include "UsbEndpt.hpp"
+
 //______________________________________________________________________________
-    UsbEndpt ep[my_last_endp+1] = {
-        {0,UsbEndpt::TRX},
-        {1,UsbEndpt::TX},
-        {2,UsbEndpt::RX},
-        {3,UsbEndpt::NONE},
-        {4,UsbEndpt::RX}
-    };
-//    UsbEndpt& ep0 = ep[0];
+//put here for now
+UsbEndpt ep[my_last_endp+1] = {
+    {0,UsbEndpt::TRX}, //endpoint 0
+    {1,UsbEndpt::TX},
+    {2,UsbEndpt::RX},
+    {3,UsbEndpt::NONE},
+    {4,UsbEndpt::RX}
+};
+//can create names, like-
+// UsbEndpt& ep0 = ep[0];
 
 
 
@@ -358,15 +304,12 @@ struct UsbHandlers {
 //
 // UsbHandlers - handle usb interrupt, call handlers
 //______________________________________________________________________________
-
     static void     UsbISR              (void);
     static void     init                ();
-
     //state handlers
     static void     detach              (void);
     static void     attach              (void);
 };
-
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 // UsbHandlers static functions, vars
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -380,10 +323,8 @@ void  UsbISR(){
     Usb u;
     //keep track of usb state for resumes
     static Usb::state_t last_state;
-
     //get all flags
     uint8_t flags = u.flags();
-
     //clear irq flag now (before any early returns)
     Irq::flagclear(Irq::USB);
 
@@ -466,21 +407,7 @@ void  UsbISR(){
             u.flags_clr(u.TOKEN);
         } while(u.flag(u.TOKEN));
     }
-
 }
-
-
-/*..............................................................................
-
-
-..............................................................................*/
-
-
-/*..............................................................................
-
-
-..............................................................................*/
-
 
 /*..............................................................................
     detach
@@ -494,12 +421,11 @@ void UsbHandlers::detach(void){
     u.power(u.USBPWR, true);    //usb module off
 
     u.state = u.DETACHED;
-    //wait 100ms+ before attach again
-    //(if was previously in >= DEFAULT state)
-    //maybe, if we are doing the detaching its a good idea to wait,
-    //but if was a usb reset that caused the attach function to run
+    //wait 100ms+ before attach again (if we are cause of reset/detach and
+    //was previously in >= DEFAULT state)
+    //if was a usb reset that caused the attach function to run (and this)
     //then the usb host already is in reset and a quick attach will cause no
-    //problems
+    //problems (I think that's correct)
 }
 
 /*..............................................................................
@@ -512,11 +438,12 @@ void UsbHandlers::attach(void){
 
     detach();
     u.power(u.USBPWR, true);    //usb on
+
     //(all regs should be reset now (since was off from detach)
     u.bdt_addr(UsbEndpt::bdt_addr());//set bdt address
     ubuf.reinit();              //clear all buffers, clear in-use flag
 
-    //init each UsbEndpt
+    //init (reinit) each UsbEndpt
     for(auto& i : ep) i.reinit();
 
     //enable irqs
@@ -526,6 +453,8 @@ void UsbHandlers::attach(void){
 
     //enable usb
     u.control(u.USBEN, true);
+
+    //isr takes over
 }
 
 /*..............................................................................
