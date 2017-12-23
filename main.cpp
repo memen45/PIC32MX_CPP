@@ -118,9 +118,7 @@ int main(){
 
     //usb- can't do much
     //(no Osc.hpp yet, so pll output running at 24MHz, usb clock is then 12MHz)
-    UsbEndpt ep0(0,3);
-    UsbHandlers u;
-    u.init();
+
 
     //try adc - pot on curiosity board
     Adc adc; Adc def; //<--notice can create multiple references (same thing)

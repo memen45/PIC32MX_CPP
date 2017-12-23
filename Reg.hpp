@@ -33,7 +33,7 @@ class Reg {
 
     private:
 
-    enum { CLR = 1, SET, INV };
+    enum { CLR = 1, SET, INV, CLRB = 5, SETB, INVB };
 
 };
 
@@ -69,7 +69,9 @@ template <typename T> bool Reg::is_set8(T r, uint8_t v){
 template <typename T> bool Reg::is_clr8(T r, uint8_t v){
     return ! (*(reinterpret_cast <volatile uint8_t*>(r)) | v) == v ;
 }
-
+//val (typename template not used for values, so value can be
+//specified by function name in case value is different size
+//(else have to cast in call instead)
 template <typename T> uint32_t Reg::val(T r){
     return *(reinterpret_cast <volatile uint32_t*>(r));
 }
@@ -91,11 +93,11 @@ template <typename T> uint8_t Reg::val8(T r){
 
     //physical to kseg0/1 addr, kseg to physical addr
 template <typename T> uint32_t Reg::p2kseg1(T r){
-    return (reinterpret_cast <uint32_t>(r)) | 0xA0000000;
+    return (reinterpret_cast <uint32_t>(r)) | 0xA0000000; //A0=0b1010_0000
 }
 template <typename T> uint32_t Reg::p2kseg0(T r){
-    return (reinterpret_cast <uint32_t>(r) | 0x80000000);
+    return (reinterpret_cast <uint32_t>(r) | 0x80000000); //80=0b1000_0000
 }
 template <typename T> uint32_t Reg::k2phys(T r){
-    return (reinterpret_cast <uint32_t>(r)) & 0x1FFFFFFF;
+    return (reinterpret_cast <uint32_t>(r)) & 0x1FFFFFFF; //1F=0b0001_1111
 }
