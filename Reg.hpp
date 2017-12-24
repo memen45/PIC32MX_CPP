@@ -33,7 +33,7 @@ class Reg {
 
     private:
 
-    enum { CLR = 1, SET, INV, CLRB = 5, SETB, INVB };
+    enum { CLR = 1, SET, INV };
 
 };
 
