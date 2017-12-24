@@ -136,7 +136,7 @@ class UsbCh9 {
             uint16_t wIndex;
             uint16_t wLength;
         };
-    } SetupPacket_t;
+    } SetupPkt_t;
 
 
     typedef enum { //uint16_t wRequest; (bRequest<<8|bmRequestType)
@@ -190,7 +190,7 @@ class UsbCh9 {
 ============================================================
  Token Packet - IN(pid 9), OUT(pid 1), SETUP(pid 13)
 ============================================================
- Sync PID	ADDR ENDP CRC5 EOP
+ Sync PID ADDR ENDP CRC5 EOP
 
   packets in/out/setup-
       Sync    8bits (LS & FS)
@@ -230,7 +230,7 @@ Sync PID FrameNumber CRC5 EOP
     EOP     SE0 for 2bit times, J 1 bit time
 
 ============================================================
- Handshake Packet - ACK, NAK, STALL
+ Handshake Packet - ACK(pid 2), NAK(pid 10), STALL(pid 14)
 ============================================================
     Sync PID EOP
 
@@ -280,7 +280,7 @@ Sync PID FrameNumber CRC5 EOP
     data=8bytes
 
  control write transfer, (data transaction)-
-    out,data(out,data0,data1,...),ack/nak/stall
+    out,data(out,data1,data0,...),ack/nak/stall
 
  control write transfer, (status transaction)-
     in,data(in,data1-0bytes),ack

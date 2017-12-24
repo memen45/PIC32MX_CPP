@@ -287,11 +287,11 @@ void Usb::config(uint8_t v){ Reg::val8(U1CNFG1, v); }
 //______________________________________________________________________________
 //put here for now
 UsbEndpt ep[my_last_endp+1] = {
-    {0,UsbEndpt::TRX}, //endpoint 0
-    {1,UsbEndpt::TX},
-    {2,UsbEndpt::RX},
-    {3,UsbEndpt::NONE},
-    {4,UsbEndpt::RX}
+    {0,UsbEndpt::TRX, 64}, //endpoint 0
+    {1,UsbEndpt::TX, 64},
+    {2,UsbEndpt::RX, 64},
+    {3,UsbEndpt::NONE, 0},
+    {4,UsbEndpt::RX, 64}
 };
 //can create names, like-
 // UsbEndpt& ep0 = ep[0];
@@ -336,7 +336,7 @@ void  UsbISR(){
     }
 
     //must be >= POWERED
-    
+
     //if SUSPENDED, check for resume or reset
     if(u.state == u.SUSPENDED){
         if(flags & u.RESUME){           //resume
@@ -346,7 +346,7 @@ void  UsbISR(){
             u.flags_clr(u.RESUME|u.IDLE); //also clear idle (?)
         } else if(!(flags & u.RESET)){  //if not reset,
             u.eflags_clr(u.ALLEFLAGS);  //clear all flags
-            u.flags_clr(u.ALLFLAGS);    //(not sure how we get here)         
+            u.flags_clr(u.ALLFLAGS);    //(not sure how we get here)
             return;                     //still suspended
         }
         //reset or resume, continue below
@@ -437,7 +437,7 @@ void UsbHandlers::attach(void){
 
     detach();                       //all off (regs will reset from off->on)
     u.power(u.USBPWR, true);        //usb on (all regs now reset)
-    
+
     u.bdt_addr(UsbEndpt::bdt_addr());//set bdt address
     ubuf.reinit();                  //clear all buffers, clear in-use flag
 
