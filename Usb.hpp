@@ -435,25 +435,21 @@ void UsbHandlers::detach(void){
 void UsbHandlers::attach(void){
     Usb u; UsbBuf ubuf;
 
-    detach();
-    u.power(u.USBPWR, true);    //usb on
-
-    //(all regs should be reset now (since was off from detach)
+    detach();                       //all off (regs will reset from off->on)
+    u.power(u.USBPWR, true);        //usb on (all regs now reset)
+    
     u.bdt_addr(UsbEndpt::bdt_addr());//set bdt address
-    ubuf.reinit();              //clear all buffers, clear in-use flag
+    ubuf.reinit();                  //clear all buffers, clear in-use flag
 
-    //init (reinit) each UsbEndpt
-    for(auto& i : ep) i.reinit();
-    //and enable endpoint 0
-    ep[0].on(true);
+    for(auto& i : ep) i.reinit();   //init (reinit) each UsbEndpt
+    ep[0].on(true);                 //and enable endpoint 0
 
     //enable irqs
     u.irqs(u.STALL|u.IDLE|u.TOKEN|u.SOF|u.ERROR|u.RESET);
     u.eirqs(u.BITSTUFF|u.BUSTIMEOUT|u.DATASIZE|u.CRC16|u.CRC5|u.PID);
     Irq::init(Irq::USB, usb_irq_pri, usb_irq_subpri, true);
 
-    //enable usb
-    u.control(u.USBEN, true);
+    u.control(u.USBEN, true);       //enable usb
 
     //isr takes over
 }
@@ -463,14 +459,10 @@ void UsbHandlers::attach(void){
         call once to init usb
 ..............................................................................*/
  void UsbHandlers::init(){
-    //USBEN=0, USBPWR=0, Irq::USB off, state = DETACHED
-    detach();
-    //vbus/rb6 to input
-    vbus_pin.digital_in();
-    //pulldown when no vbus keeps pin low
-    vbus_pin.pulldn(true);
-    //init all things
-    attach();
+    detach();               //resets all usb registers
+    vbus_pin.digital_in();  //vbus/rb6 to input
+    vbus_pin.pulldn(true);  //pulldown when no vbus keeps pin low
+    attach();               //init all things
  }
 
 
