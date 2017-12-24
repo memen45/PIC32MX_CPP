@@ -119,6 +119,7 @@ ______________________________________________________________________________*/
     volatile uint8_t*   m_rxbuf[2];     //pointers to rx-even/odd buffers
     uint16_t            m_buf_len;      //fixed length from UsbBuf (64)
     uint8_t             m_tx_ep;        //current tx endpoint (2=even/3=odd)
+    uint8_t             m_rx_ep;        //current rx endpoint (0=even/1=odd)    
     volatile bdt_t*     m_bd[4];        //rx/tx buffer descriptor even/odd
     UsbCh9::SetupPacket_t setup_pkt;    //copy of setup data packet (8bytes)
     SETUPXFER           setup_stage;    //setup transaction stages
@@ -140,6 +141,7 @@ uint32_t UsbEndpt::bdt_addr(){ return (uint32_t)m_bdt; }
 //public
 UsbEndpt::UsbEndpt(uint8_t n, TR tr) :
     m_tx_ep(2),
+    m_rx_ep(0),    
     m_ep_n(n&15),
     m_ep_trx(tr),
     m_bd{&m_bdt[n*4],&m_bdt[n*4+1],&m_bdt[n*4+2],&m_bdt[n*4+3]},
@@ -230,6 +232,9 @@ void UsbEndpt::token(uint8_t idx){
     //which bd entry was used for this TRNIF
     //m_idx backup copy, when we need to temp change m_bdi
     m_bdi = m_idx = idx;
+    
+    //when tx, toggle m_tx_ep after a tx bd_setup
+    //when rx, toggle m_rx_ep in setup/out
 
     //pid from bd entry (should only see 1,9,13)
     switch(bd_pid()){
@@ -238,19 +243,20 @@ void UsbEndpt::token(uint8_t idx){
             //save setup data packet for later
             setup_pkt = *(UsbCh9::SetupPacket_t*)&m_rxbuf[m_bdi];
             rx_giveup(); //done with rx buffer
+            m_rx_ep ^= 1; //rx endpoint toggled, keep track
             tx_cancel(); //anything in tx, cancel
             setup_token(); //process
             u.control(u.PKTDIS, false); //enable packets in control transfer
             break;
 
         case UsbCh9::IN:
-            m_tx_ep ^= 1; //tx endpoint toggled, keep track
-            in_token();
+             in_token();
             break;
 
         case UsbCh9::OUT:
             out_token();
             rx_giveup(); //done with rx buffer
+            m_rx_ep ^= 1; //rx endpoint toggled, keep track            
             break;
     }
 }
