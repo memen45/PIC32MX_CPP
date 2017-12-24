@@ -118,7 +118,7 @@ ______________________________________________________________________________*/
     volatile uint8_t*   m_ep_reg;       //U1EPn sfr register
     volatile uint8_t*   m_rxbuf[2];     //pointers to rx-even/odd buffers
     uint16_t            m_buf_len;      //fixed length from UsbBuf (64)
-    uint8_t             m_tx_ep;        //current tx endpoint (2/3)
+    uint8_t             m_tx_ep;        //current tx endpoint (2=even/3=odd)
     volatile bdt_t*     m_bd[4];        //rx/tx buffer descriptor even/odd
     UsbCh9::SetupPacket_t setup_pkt;    //copy of setup data packet (8bytes)
     SETUPXFER           setup_stage;    //setup transaction stages
@@ -201,7 +201,7 @@ void UsbEndpt::on(uint8_t v){ epreg(v); }
 void UsbEndpt::rx_giveup(){ bd_count(m_buf_len); bd_uown(true); }
 void UsbEndpt::tx_cancel(){
     for(m_bdi = 2; m_bdi < 4; m_bdi++){
-        if(bd_uown()) m_tx_ep ^= 1; //toggle, since uown 1->0 (?)
+        if(bd_uown()) m_tx_ep ^= 1; //toggle, since tx uown 1->0 (?)
         bd_ctrl(0);
         UsbBuf::release(bd_addr());
     }
@@ -244,6 +244,7 @@ void UsbEndpt::token(uint8_t idx){
             break;
 
         case UsbCh9::IN:
+            m_tx_ep ^= 1; //tx endpoint toggled, keep track
             in_token();
             break;
 
