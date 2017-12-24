@@ -27,7 +27,7 @@ class Reg {
     template <typename T> static uint8_t    val8    (T);
 
     //physical to kseg0/1 addr, kseg to physical addr
-    template <typename T> static uint32_t   p2kseg1 (T);
+    template <typename T> static uint32_t   p2kseg1 (T); //unused in PIC32MM
     template <typename T> static uint32_t   p2kseg0 (T);
     template <typename T> static uint32_t   k2phys  (T);
 
