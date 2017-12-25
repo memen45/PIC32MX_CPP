@@ -114,15 +114,18 @@ int main(){
     //for(;;rc0.invert(),rc2.invert(),tmr.wait_ms(5000) );
     // +3.29vdc , -3.29vdc
 
+    //__________________________________________________________________________
     Resets::CAUSE cause = Resets::cause();  //use cause result somewhere
                                             //(will be EXTR mostly with pkob)
 
+    //__________________________________________________________________________
     //usb- can't do much
     //(no Osc.hpp yet, so pll output running at 24MHz, usb clock is then 12MHz)
     //just run something usb to prevent compiler from optimizing away
     //usb code, so can see if have (bad) code (compile errors)
     UsbHandlers::init();
 
+    //__________________________________________________________________________
     //try adc - pot on curiosity board
     Adc adc; Adc def; //<--notice can create multiple references (same thing)
     Adc::mode_12bit(true); //<--or use directly (all the same)
@@ -138,8 +141,7 @@ int main(){
     //  Adc::samp(true);  //and restart (done bit cleared when samp=1)
     //}
 
-
-
+    //__________________________________________________________________________
     //try some compare functions (does nothing)
     Comp123 c1(Comp123::C1);
     Comp123 c2(Comp123::C2);
@@ -148,7 +150,7 @@ int main(){
     Comp123::stop_idle(true); //<--use Comp123:: for common function
     Comp123::cref_sel(Comp123::INT_BGAP);
 
-
+    //__________________________________________________________________________
     //try clc (does nothing)
     Clc clc1(Clc::CLC1);
     clc1.in_sel(1, 3);
@@ -156,6 +158,7 @@ int main(){
     clc1.gate_sel(0x12345678);
     clc1.mode(clc1.ORXOR);
 
+    //__________________________________________________________________________
     //test rtcc (somewhat)
     Rtcc rtcc;
     rtcc.clk_sel(rtcc.SOSC);                //external sosc (curiosity board)
@@ -167,7 +170,7 @@ int main(){
 
     const uint32_t test_time = (2<<28 | 3<<24 | 4<<20 | 5<<16 | 0<<12 | 1<<8);
     rtcc.time(test_time);                   //23:45:01
-    if(rtcc.time() != test_time){           //did write work?
+    if(rtcc.time() != test_time){           //did write work? (testing)
         while(1);                           //lockup if read/write not working
     }                                       //else syskey/wrlock working
     rtcc.on(true);                          //turn on, alarm is 00:00:00
@@ -175,6 +178,7 @@ int main(){
                                             //disable/enable core timer irq
                                             //every minute in rtcc isr
 
+    //__________________________________________________________________________
     //peripheral module disable
     Pmd::off(pmd_list);                     //test Pmd disable (T1/2/3 disabled)
                                             //can verify T1,T2,T3 no longer work
@@ -182,6 +186,7 @@ int main(){
 
     Pmd::on(pmd_list);                      //test Pmd enable- all back on again
 
+    //__________________________________________________________________________
     //see if pps code works (does nothing)
     //(do before pins setup below, as out will clear tris)
     Pins::pps_in(Pins::U2RX, Pins::RP1);
@@ -189,12 +194,14 @@ int main(){
     Pins::pps_out(Pins::U2TX, Pins::RA0);
     Pins::pps_off(Pins::RA0);
 
+    //__________________________________________________________________________
     //init sw pins
     for(auto& s : sw){
         s.digital_in();
         s.pullup(true);
     }
 
+    //__________________________________________________________________________
     //init leds
     for(auto& l : leds){
         l.digital_out();
@@ -204,6 +211,7 @@ int main(){
         l.off();                            //then off
     }
 
+    //__________________________________________________________________________
     //init timers
     Timer1::prescale(Timer1::PS256);        //prescale 1:256
     Timer1::on(true);                       //turn on timer1
@@ -212,10 +220,12 @@ int main(){
     timer3.prescale(Timer23::PS32);         //prescale 1:32
     timer3.on(true);                        //turn on timer3
 
+    //__________________________________________________________________________
     //cp0 compare timeout (default sysfreq 24MHz)
     Cp0::compare_ms(200);
 
 
+    //__________________________________________________________________________
     //nested function
     auto rotate_delays = [ & ](){           //init delays or rotate delays
         static uint8_t start = 0;
@@ -226,6 +236,7 @@ int main(){
     };
     rotate_delays();                        //initialize delays
 
+    //__________________________________________________________________________
     //nested function
     auto irq_blinkrate = [ & ](int16_t n){  //sw1/2 adjust cp0 irq rate +/-
         static uint16_t rate = 200;
@@ -237,17 +248,23 @@ int main(){
         Irq::enable_all();
     };
 
+    //__________________________________________________________________________
     //irq's init/enable
     Irq::init(irqlist);                     //init all irq's
     Irq::shadow_set(5, 1);                  //priority5 (usb) using shadow set
     Irq::enable_all();                      //global irq enable
 
+    //__________________________________________________________________________
     //start first adc sample on AN14
     Adc::samp(true);
 
+    //__________________________________________________________________________
     //watchdog timer
     Wdt::on(true);                          //try the watchdog
                                             //RWDTPS = PS8192, so 8ms timeout
+
+
+    //<><><><><><><><><><><><><><><<><><><><><><><><><><><><><><><><><><><><><><
     //here we go
     for (;;){
         Wdt::reset();                       //comment out to test wdt reset
