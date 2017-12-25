@@ -6,9 +6,7 @@
 
 #include <cstdint>
 
-class Reg {
-
-    public:
+struct Reg {
 
     //public functions
     template <typename T> static void       set     (T, uint32_t);

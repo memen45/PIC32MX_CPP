@@ -118,8 +118,9 @@ int main(){
 
     //usb- can't do much
     //(no Osc.hpp yet, so pll output running at 24MHz, usb clock is then 12MHz)
-    //just trying things to prevent compiler from optimizing away (bad) code
-    //UsbHandlers::init();
+    //just run something usb to prevent compiler from optimizing away
+    //usb code, so can see if have (bad) code (compile errors)
+    UsbHandlers::init();
 
     //try adc - pot on curiosity board
     Adc adc; Adc def; //<--notice can create multiple references (same thing)

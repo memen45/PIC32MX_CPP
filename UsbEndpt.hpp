@@ -193,7 +193,7 @@ bool UsbEndptTRx::start(uint8_t* buf, uint16_t n, bool d01, bool bstall){
     }
     setup(n1);
     if(n2 && bstall == 0) setup(n2);
-    m_options &= ~(1<<2); //clear bstall in m_options
+    m_options &= ~(1<<2); //clear bstall in m_options, only needed temporarily
     return true;
 }
 
@@ -226,11 +226,12 @@ void UsbEndptTRx::stop(){
 
 /*______________________________________________________________________________
 
- get stall status
+ get stall status (stalled if either buffer stalled)
  if a setup packet received on this endpoint, bstall automatically cleared
 ______________________________________________________________________________*/
 bool UsbEndptTRx::stalled(){
-    return m_bd[m_eveodd]->uown && m_bd[m_eveodd]->bstall;
+    return ((m_bd[0]->uown && m_bd[0]->bstall) ||
+             m_bd[1]->uown && m_bd[1]->bstall);
 }
 
 

@@ -417,7 +417,7 @@ void UsbHandlers::detach(void){
     u.control(u.USBEN, false);  //disable usb module, detach from bus
     Irq::on(Irq::USB, false);   //all usb irqs off
     while(u.power(u.BUSY));     //wait for busy bit to clear first
-    u.power(u.USBPWR, true);    //usb module off
+    u.power(u.USBPWR, false);   //usb module off
 
     u.state = u.DETACHED;
     //wait 100ms+ before attach again (if we are cause of reset/detach and
@@ -459,7 +459,6 @@ void UsbHandlers::attach(void){
         call once to init usb
 ..............................................................................*/
  void UsbHandlers::init(){
-    detach();               //resets all usb registers
     vbus_pin.digital_in();  //vbus/rb6 to input
     vbus_pin.pulldn(true);  //pulldown when no vbus keeps pin low
     attach();               //init all things
