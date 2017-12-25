@@ -76,6 +76,7 @@ Timer23 timer3(Timer23::T3);
 
 /*=============================================================================
  Irq's
+ (letting USB code take care of setting up/enabling USB irq)
 =============================================================================*/
 Irq::irq_list_t irqlist[] = {               //list of irq's to init/enable
     //vector#           pri sub enable
@@ -238,7 +239,7 @@ int main(){
 
     //irq's init/enable
     Irq::init(irqlist);                     //init all irq's
-    Irq::shadow_set(7, 1);                  //priority7 using shadow set
+    Irq::shadow_set(5, 1);                  //priority5 (usb) using shadow set
     Irq::enable_all();                      //global irq enable
 
     //start first adc sample on AN14
@@ -311,11 +312,11 @@ int main(){
  first isr below-
  Irq::CORE_TIMER init to irq priority 7 in main code
  CORE_TIMER lookup shows vector number is 0, so use vector(0)
- Irq::shadow_set(7, 1) in main code, so use interrupt(IPL7SRS)
+ Irq::shadow_set(5, 1) in main code, so use interrupt(IPL7SOFT)
  (isr function name used not important to compiler)
 =============================================================================*/
 extern "C" {
-    void __attribute__((vector(0), interrupt(IPL7SRS))) CoreTimerISR(){
+    void __attribute__((vector(0), interrupt(IPL7SOFT))) CoreTimerISR(){
         Cp0::compare_reload();
         led2.invert();
         Irq::flagclear(Irq::CORE_TIMER);
