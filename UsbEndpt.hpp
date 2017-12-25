@@ -6,12 +6,13 @@
 
 /*______________________________________________________________________________
 
+ using .hpp mostly for now
+
+
  common typedefs
  (move to better spot later)
 ______________________________________________________________________________*/
 typedef union {
-    struct { uint32_t dat; uint32_t addr; };
-    struct { unsigned :16; uint16_t count; };
     struct {
         unsigned :2;
         unsigned bstall:1;
@@ -20,6 +21,10 @@ typedef union {
         unsigned keep:1;
         unsigned data01:1;
         unsigned uown:1;
+        unsigned :8;
+        unsigned count:10;
+        unsigned :6;
+        unsigned addr:32;
     };
     struct { unsigned :2; unsigned pid:4; };
     uint8_t ctrl;
@@ -37,7 +42,8 @@ class UsbEndptTRx {
     UsbEndpt uses this class for RX or TX operations
     UsbEndpt in charge of U1EPn
 
-    constructor needs the bdt address of endpoint n, and max packet size
+    constructor needs the bdt address of endpoint n (and+1 if tx),
+    and max packet size
     (if max packet size set to 0, this RX or TX is not used-
      start() will always return false)
 
@@ -49,9 +55,10 @@ class UsbEndptTRx {
         -sets bd control bits to use other than UOWN and DATA01
         -(KEEP, NINC, DTS, BSTALL), use correct bit positions
 
-    start(*buf,count,[d01=0])
+    start(*buf,count,[d01=0],[bstall=0])
         -starts a rx into buf or tx from buf, for count bytes
-        -optionally set data01 (default is data0, mainly for tx use)
+        -optionally set data01 (default is data0)
+        -optionally set bstall (default 0)
         -returns true if started, false if cannot (any buffer busy)
 
     check()
@@ -73,19 +80,23 @@ class UsbEndptTRx {
 
 
 ______________________________________________________________________________*/
+
     public:
                 UsbEndptTRx (bdt_t*, uint16_t);
     void        reinit      ();
     void        options     (uint8_t);
-    bool        start       (uint8_t*, uint16_t, bool = 0);
+    bool        start       (uint8_t*, uint16_t, bool = 0, bool = 0);
     uint16_t    check       ();
     void        stop        ();
+    bool        stalled     ();
+
+
 
     private:
 
     void        setup       (uint16_t n);
 
-    bdt_t*              m_bd[2];        //even/odd bd entry pointers
+    bdt_t* const        m_bd[2];        //even/odd bd entry pointers
     uint8_t             m_options;      //extra control options (not UOWN)
     const uint16_t      m_max_count;    //max data packet size
     uint32_t            m_bufptr;       //current buffer pointer (phys address)
@@ -120,11 +131,12 @@ void UsbEndptTRx::reinit(){
 
 /*______________________________________________________________________________
 
- set DATA01, KEEP, NINC, DTS, BSTALL option(s)
+ set DATA01, KEEP, NINC, DTS option(s)
  (provide bits in correct bit position)
+ BSTALL, UOWN unchanged
 ______________________________________________________________________________*/
 void UsbEndptTRx::options(uint8_t v){
-    m_options = (v & 0x7C); //bits x65432xx
+    m_options = (v & 0x78); //bits x6543xxx
 }
 
 /*______________________________________________________________________________
@@ -161,15 +173,16 @@ uint16_t UsbEndptTRx::check(){
 
 /*______________________________________________________________________________
 
- start a rx/tx transfer- from buf[] for n bytes, [default data01 = 0]
- if rx/tx still busy (any buffer), return false (caller tries again later)
- if started, return true
+ start a rx/tx transfer- from buf[] for n bytes, [d01 = 0], [bstall = 0]
+ if rx/tx still busy (any buffer) or stalled, return false
+ (caller tries again later), else return true
  (if RX/TX not used, m_max_count will be 0- return false always)
  if n > max packet size, also get second buffer ready now
 ______________________________________________________________________________*/
-bool UsbEndptTRx::start(uint8_t* buf, uint16_t n, bool d01){
-    if(m_bufn || m_max_count == 0) return false;
-    m_options &= ~(1<<6); m_options |= (d01<<6);
+bool UsbEndptTRx::start(uint8_t* buf, uint16_t n, bool d01, bool bstall){
+    if(m_bufn || m_max_count == 0 || stalled()) return false;
+    m_options &= ~(1<<6);
+    m_options |= (d01<<6)|(bstall<<2);
     m_bufptr = Reg::k2phys((uint32_t)buf);
     m_count = n;
     uint16_t n1 = n, n2 = 0;
@@ -179,21 +192,22 @@ bool UsbEndptTRx::start(uint8_t* buf, uint16_t n, bool d01){
         n2 = n > m_max_count ? m_max_count : n;
     }
     setup(n1);
-    if(n2) setup(n2);
+    if(n2 && bstall == 0) setup(n2);
+    m_options &= ~(1<<2); //clear bstall in m_options
     return true;
 }
 
 /*______________________________________________________________________________
 
- setup an rx/tx for n bytes (only called by 'start')
+ setup an rx/tx for n bytes (called by start() and check() )
  m_bufptr incremented by n, m_bufn count incremented, m_eveodd toggled,
  m_options bit6 (data01) toggled (all for for next time)
 ______________________________________________________________________________*/
 void UsbEndptTRx::setup(uint16_t n){
     m_bd[m_eveodd]->addr = m_bufptr;    //set address of buf
     m_bd[m_eveodd]->count = n;          //set count
-    m_bd[m_eveodd]->ctrl = m_options;   //options other than uown
-    m_bd[m_eveodd]->uown = 1;           //give
+    m_bd[m_eveodd]->ctrl = m_options;   //options other than UOWN and BSTALL
+    m_bd[m_eveodd]->uown = 1;           //give to usb hardware
     m_bufptr += n;                      //adjust for next time
     m_bufn++;                           //1 buffer in use
     m_eveodd ^= 1;                      //toggle even/odd
@@ -212,9 +226,12 @@ void UsbEndptTRx::stop(){
 
 /*______________________________________________________________________________
 
-
+ get stall status
+ if a setup packet received on this endpoint, bstall automatically cleared
 ______________________________________________________________________________*/
-
+bool UsbEndptTRx::stalled(){
+    return m_bd[m_eveodd]->uown && m_bd[m_eveodd]->bstall;
+}
 
 
 
@@ -255,6 +272,7 @@ class UsbEndpt {
 
 
 ______________________________________________________________________________*/
+////////////////////////////////////////////////////////////////////////////////
     public:
 
     //capabilities (shifted into U1EPn bit positions)
@@ -279,6 +297,7 @@ ______________________________________________________________________________*/
 
     //public static function
     static uint32_t bdt_addr(); //to get bdt address (for Usb::bdt_addr() use)
+////////////////////////////////////////////////////////////////////////////////
 
     private:
 
@@ -292,30 +311,13 @@ ______________________________________________________________________________*/
     };
 
     //private functions
-    void                bd_ctrl     (uint8_t);
-    volatile uint8_t    bd_ctrl     ();
-    volatile uint16_t   bd_count    ();
-    void                bd_count    (uint16_t);
-    volatile uint8_t    bd_pid      () const;
-    void                bd_addr     (volatile uint8_t*);
-    uint8_t*            bd_addr     () const;
-    volatile bool       bd_uown     () const;
-    volatile bool       bd_data01   () const;
-    volatile bool       bd_stall    () const;
-    void                bd_uown     (bool);
-    void                bd_data01   (bool);
-    void                bd_stall    (bool);
-    void                bd_setup    (volatile uint8_t*, uint16_t, uint8_t);
     void                epreg       (U1EP, bool);
     volatile bool       epreg       (U1EP) const;
     void                epreg       (uint8_t);
-    void                bd_init     ();
     void                setup_token ();
     void                in_token    ();
     void                out_token   ();
-    void                rx_giveup   ();
-    void                tx_cancel   ();
-    void                tx_zlp      ();
+
 
     //in/out matches setup_pkt.dir- 0=from host,1=to host
     enum SETUPXFER { COMPLETE = 3, IN = 1, OUT = 0, STATUS = 2 };
@@ -328,14 +330,12 @@ ______________________________________________________________________________*/
     volatile uint8_t*   m_ep_reg;       //U1EPn sfr register
     volatile uint8_t*   m_rxbuf[2];     //pointers to rx-even/odd buffers
     uint16_t            m_buf_len;      //fixed length from UsbBuf (64)
-    uint8_t             m_tx_ep;        //current tx endpoint (2=even/3=odd)
-    uint8_t             m_rx_ep;        //current rx endpoint (0=even/1=odd)
+
+
     bdt_t*              m_bd[4];        //rx/tx buffer descriptor even/odd
     UsbCh9::SetupPkt_t  m_setup_pkt;    //copy of setup data packet (8bytes)
     SETUPXFER           m_setup_stage;  //setup transaction stages
-    uint8_t             m_bdi;          //current bd index (used in functions)
-    uint8_t             m_idx;          //save idx (from isr call)
-    uint8_t             m_data01;       //tx data0/data1, uses bit6 (toggle bit6)
+
     volatile uint8_t*   m_tx_ptr;       //pointer to tx data
 
     class UsbEndptTRx    m_RX;          //RX endpoint class
@@ -353,8 +353,6 @@ uint32_t UsbEndpt::bdt_addr(){ return (uint32_t)m_bdt; }
 
 //public
 UsbEndpt::UsbEndpt(uint8_t n, TR tr, uint16_t max) :
-    m_tx_ep(2),
-    m_rx_ep(0),
     m_ep_n(n&15),
     m_ep_trx(tr),
     m_bd{&m_bdt[n*4],&m_bdt[n*4+1],&m_bdt[n*4+2],&m_bdt[n*4+3]},
@@ -362,76 +360,43 @@ UsbEndpt::UsbEndpt(uint8_t n, TR tr, uint16_t max) :
     m_buf_len(UsbBuf::buf_len()),
     m_setup_pkt{0},
     m_setup_stage(COMPLETE),
-    m_bdi(0),
-    m_idx(0),
-    m_data01(0),
-    m_rxbuf{0,0},
-
+    m_rxbuf{tr&RX?UsbBuf::get():0,tr&RX?UsbBuf::get():0},
     m_RX(&m_bdt[n*4], tr & RX ? max : 0),
     m_TX(&m_bdt[n*4+2], tr & TX ? max : 0)
 {
     epreg(0);
-    if(tr&RX){ m_rxbuf[0] = UsbBuf::get(); m_rxbuf[1] = UsbBuf::get(); }
-    bd_init();
 }
 //UsbEndpt::UsbEndpt(uint8_t n, TR tr){}
 void UsbEndpt::deinit(){
     epreg(0);
     UsbBuf::release(m_rxbuf[0]);
     UsbBuf::release(m_rxbuf[1]);
-    tx_cancel();
+    m_TX.stop();
+    m_RX.stop();
 }
-void UsbEndpt::reinit(){ deinit(); UsbEndpt(m_ep_n,m_ep_trx, m_buf_len); }
-void UsbEndpt::bd_ctrl(uint8_t v){ m_bd[m_bdi]->ctrl = v; }
-volatile uint8_t UsbEndpt::bd_ctrl(){ return m_bd[m_bdi]->ctrl; }
-volatile uint16_t UsbEndpt::bd_count(){ return m_bd[m_bdi]->count; }
-void UsbEndpt::bd_count(uint16_t v){ m_bd[m_bdi]->count = v; }
-volatile uint8_t UsbEndpt::bd_pid() const { return m_bd[m_bdi]->pid; }
-void UsbEndpt::bd_addr(volatile uint8_t* v){
-    m_bd[m_bdi]->addr = Reg::k2phys(v);
+void UsbEndpt::reinit(){
+    deinit();
+    UsbEndpt(m_ep_n,m_ep_trx, m_buf_len);
+    m_RX.reinit();
+    m_TX.reinit();
 }
-uint8_t* UsbEndpt::bd_addr() const {
-    return (uint8_t*)Reg::p2kseg0(m_bd[m_bdi]->addr);
+void UsbEndpt::epreg(U1EP e, bool tf){
+    Reg::set(m_ep_reg, e, tf);
 }
-volatile bool UsbEndpt::bd_uown() const { return m_bd[m_bdi]->uown; }
-volatile bool UsbEndpt::bd_data01() const { return m_bd[m_bdi]->data01; }
-volatile bool UsbEndpt::bd_stall() const { return m_bd[m_bdi]->bstall; }
-void UsbEndpt::bd_uown(bool tf){ m_bd[m_bdi]->uown = tf; }
-void UsbEndpt::bd_data01(bool tf){ m_bd[m_bdi]->data01 = tf; }
-void UsbEndpt::bd_stall(bool tf){ m_bd[m_bdi]->bstall = tf; }
-void UsbEndpt::bd_setup(volatile uint8_t* a, uint16_t c, uint8_t f){
-    bd_addr(a); bd_count(c); bd_ctrl(f);
-}
-void UsbEndpt::epreg(U1EP e, bool tf){ Reg::set(m_ep_reg, e, tf); }
 volatile bool UsbEndpt::epreg(U1EP e) const {
     return Reg::is_set8(m_ep_reg, e);
 }
-void UsbEndpt::epreg(uint8_t v){ Reg::val8(m_ep_reg, v); }
-void UsbEndpt::bd_init(){
-    for(auto i = 3; i >= 0; i--){
-        m_bdi = i;
-        bd_setup(0, 0, 0);
-        if((m_ep_trx & RX) && (i < 2)) bd_addr(m_rxbuf[i]);
-    }
+void UsbEndpt::epreg(uint8_t v){
+    Reg::val8(m_ep_reg, v);
 }
-void UsbEndpt::on(bool tf){ if(tf) epreg(m_ep_trx|HSHAKE); else epreg(0); }
-void UsbEndpt::on(uint8_t v){ epreg(v); }
-void UsbEndpt::rx_giveup(){ bd_count(m_buf_len); bd_uown(true); }
-void UsbEndpt::tx_cancel(){
-    for(m_bdi = 2; m_bdi < 4; m_bdi++){
-        if(bd_uown()) m_tx_ep ^= 1; //toggle, since tx uown 1->0 (?)
-        bd_ctrl(0);
-        UsbBuf::release(bd_addr());
-    }
-    UsbBuf::release(m_tx_ptr);
-    m_tx_ptr = 0;
-    m_bdi = m_idx; //restore
+void UsbEndpt::on(bool tf){
+    if(tf) epreg(m_ep_trx|HSHAKE);
+    else epreg(0);
 }
-void UsbEndpt::tx_zlp(){
-    m_bdi = m_tx_ep; //set bd to match tx endpoint
-    bd_setup(0, 0, UOWN|DATA1);
-    m_bdi = m_idx; //restore
+void UsbEndpt::on(uint8_t v){
+    epreg(v);
 }
+
 
 /*..............................................................................
  process transaction complete
@@ -450,35 +415,28 @@ void UsbEndpt::token(uint8_t idx){
     }
 
     //which bd entry was used for this TRNIF
-    //m_idx backup copy, when we need to temp change m_bdi
-    m_bdi = m_idx = idx;
-
-    //when tx, toggle m_tx_ep after a tx bd_setup
-    //when rx, toggle m_rx_ep in setup/out
 
     //pid from bd entry (should only see 1,9,13)
-    switch(bd_pid()){
+    switch(m_bd[idx]->pid){
 
         case UsbCh9::SETUP:
-            m_setup_pkt = *(UsbCh9::SetupPkt_t*)&m_rxbuf[m_bdi]; //save data
-            rx_giveup();        //done with rx buffer
-            m_rx_ep ^= 1;       //rx endpoint toggled, keep track
-            tx_cancel();        //anything in tx, cancel
-            m_data01 = DATA1;   //first data (or status) is data1
+            //m_setup_pkt
+
+            m_TX.stop();        //anything in tx, cancel
+
             setup_token();      //process
             u.control(u.PKTDIS, false); //continue control transfer
             break;
 
         case UsbCh9::IN:
-            m_tx_ep ^= 1;
-            m_data01 ^= DATA01;
+
             in_token();
             break;
 
         case UsbCh9::OUT:
-            m_rx_ep ^= 1; //rx endpoint toggled, keep track (?)
+
             out_token();
-            rx_giveup(); //done with rx buffer
+
             break;
     }
 }
@@ -535,12 +493,13 @@ void UsbEndpt::setup_token(){
     m_setup_stage = (SETUPXFER)dir; //0=out,1=in
     if(m_setup_pkt.wLength == 0){   //if no data stage
         m_setup_stage = STATUS;     //in status stage
-        tx_zlp();                   //set for 0byte status
-    }
-    else if(dir == IN){
-        m_bdi = m_tx_ep; //set bd to match tx endpoint
-        bd_setup(m_tx_ptr, m_setup_pkt.wLength, UOWN|m_data01);
-        m_bdi = m_idx; //restore
+        m_TX.start(0,0,1);          //set for 0byte status
+    } else if(dir == IN) {
+        //need to check buffer size vs wLength
+        m_TX.start((uint8_t*)m_tx_ptr, m_setup_pkt.wLength, 1);
+    } else {
+        //need to check buffer size vs wLength
+        m_RX.start((uint8_t*)m_rxbuf[0], m_setup_pkt.wLength, 1);
     }
 
     //if no data stage,

@@ -1,16 +1,14 @@
 #pragma once
 
-#include "Irq.hpp"
-
 /*=============================================================================
  Coprocessor0  Count, Compare
 =============================================================================*/
 
 #include <cstdint>
+#include "Irq.hpp"
+#include "Reg.hpp"
 
-class Cp0 {
-
-    public:
+struct Cp0 {
 
     //public functions
     static uint32_t     count           ();
@@ -21,6 +19,9 @@ class Cp0 {
     static void         compare_us      (uint32_t);
     static void         compare_ms      (uint16_t);
 
+    private:
+
+    static Irq ir;
 };
 
 /*=============================================================================
@@ -40,8 +41,8 @@ void Cp0::compare(uint32_t v){ __builtin_mtc0(11,0,v); } //set
 void Cp0::compare_reload(bool tf){
     compare(count() + m_compare_count);
     if(tf){
-        Irq::flagclear(Irq::CORE_TIMER);
-        Irq::on(Irq::CORE_TIMER, true);
+        ir.flagclear(ir.CORE_TIMER);
+        ir.on(ir.CORE_TIMER, true);
     }
 }
 void Cp0::compare_us(uint32_t us){

@@ -40,9 +40,18 @@ class Reg {
 /*=============================================================================
  all functions inline
 =============================================================================*/
-//all register values cast to volatile uint32_t*
-//so can use enum values as register argument
+//reg values cast to volatile uint32_t*,uint16_t* or uint8_t*
+//specified in function name- no number=32bit, val16=16bit, set8=8bit
+
+//templates not used in v values so specific functions can be used by name
+//instead of v type (prevent wrong type passed, then using wrong function)-
+//if I want v treated as an 8bit value, I can specify by function name
+//rather than having to typecast in call or specify template parameter
+
+//templates used so can use enum values (or uint32_t) as register argument
 //SET/CLR/INV offsets will be calculated in words (4 bytes)
+
+//32bit
 template <typename T> void Reg::set(T r, uint32_t v){
     *(reinterpret_cast <volatile uint32_t*>(r)+SET) = v;
 }
@@ -63,26 +72,29 @@ template <typename T> bool Reg::is_set(T r, uint32_t v){
 template <typename T> bool Reg::is_clr(T r, uint32_t v){
     return (*(reinterpret_cast <volatile uint32_t*>(r)) | ~v) == ~v;
 }
-template <typename T> bool Reg::is_set8(T r, uint8_t v){
-    return (*(reinterpret_cast <volatile uint8_t*>(r)) & v) == v;
-}
-template <typename T> bool Reg::is_clr8(T r, uint8_t v){
-    return ! (*(reinterpret_cast <volatile uint8_t*>(r)) | v) == v ;
-}
-//val (typename template not used for values, so value can be
-//specified by function name in case value is different size
-//(else have to cast in call instead)
 template <typename T> uint32_t Reg::val(T r){
     return *(reinterpret_cast <volatile uint32_t*>(r));
 }
 template <typename T> void Reg::val(T r, uint32_t v){
     *(reinterpret_cast <volatile uint32_t*>(r)) = v;
 }
+
+
+//16bit
 template <typename T> void Reg::val16(T r, uint16_t v){
     *(reinterpret_cast <volatile uint16_t*>(r)) = v;
 }
 template <typename T> uint16_t Reg::val16(T r){
     return *(reinterpret_cast <volatile uint16_t*>(r));
+}
+
+
+//8bit
+template <typename T> bool Reg::is_set8(T r, uint8_t v){
+    return (*(reinterpret_cast <volatile uint8_t*>(r)) & v) == v;
+}
+template <typename T> bool Reg::is_clr8(T r, uint8_t v){
+    return ! (*(reinterpret_cast <volatile uint8_t*>(r)) | v) == v ;
 }
 template <typename T> void Reg::val8(T r, uint8_t v){
     *(reinterpret_cast <volatile uint8_t*>(r)) = v;
@@ -91,7 +103,10 @@ template <typename T> uint8_t Reg::val8(T r){
     return *(reinterpret_cast <volatile uint8_t*>(r));
 }
 
-    //physical to kseg0/1 addr, kseg to physical addr
+
+
+//physical to kseg0/1 addr, kseg to physical addr
+//(kseg1 not used in PIC32MM- no cache)
 template <typename T> uint32_t Reg::p2kseg1(T r){
     return (reinterpret_cast <uint32_t>(r)) | 0xA0000000; //A0=0b1010_0000
 }

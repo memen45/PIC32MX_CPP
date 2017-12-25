@@ -1,6 +1,4 @@
 #include "Syskey.hpp"
-#include "Irq.hpp"
-#include "Reg.hpp"
 
 //syskey lock/unlock
 //keep track of unlock count- do not lock until unlock_count is 0
@@ -16,27 +14,26 @@ static uint8_t unlock_count;
 //could be called in irq
 void Syskey::lock(){
     bool irqstate = Irq::all_ison();                //get STATUS.IE
-    Irq::disable_all();
+    ir.disable_all();
     //
     if(unlock_count) unlock_count--;                //dec counter
-    if(unlock_count == 0) Reg::val(SYSKEY_ADDR, 0); //if 0, lock
+    if(unlock_count == 0) r.val(SYSKEY_ADDR, 0);    //if 0, lock
     //
-    if(irqstate) Irq::enable_all();                 //restore IE state
+    if(irqstate) ir.enable_all();                   //restore IE state
 }
 
-void Syskey::unlock()
-{
-    bool irqstate = Irq::all_ison();                //get STATUS.IE
-    Irq::disable_all();
-    bool dmasusp = Reg::is_set(DMACON, DMASUSP);    //get DMA suspend bit
-    Reg::set(DMACON, DMASUSP);                      //DMA suspend
+void Syskey::unlock(){
+    bool irqstate = ir.all_ison();                  //get STATUS.IE
+    ir.disable_all();
+    bool dmasusp = r.is_set(DMACON, DMASUSP);       //get DMA suspend bit
+    r.set(DMACON, DMASUSP);                         //DMA suspend
     //
     if(! unlock_count){                             //first time, unlock
-        Reg::val(SYSKEY_ADDR, 0xAA996655);
-        Reg::val(SYSKEY_ADDR, 0x556699AA);
+        r.val(SYSKEY_ADDR, MAGIC1);
+        r.val(SYSKEY_ADDR, MAGIC2);
     }
     unlock_count++;                                 //inc unlock_count
     //
-    if(! dmasusp) Reg::clr(DMACON, DMASUSP);        //DMA resume
-    if(irqstate) Irq::enable_all();                 //restore IE state
+    if(! dmasusp) r.clr(DMACON, DMASUSP);           //DMA resume
+    if(irqstate) ir.enable_all();                   //restore IE state
 }

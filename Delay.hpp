@@ -5,6 +5,7 @@
 =============================================================================*/
 
 #include <cstdint>
+#include "Cp0.hpp"
 
 class DelayCP0 {
 
@@ -21,7 +22,9 @@ class DelayCP0 {
     //constructor
     constexpr DelayCP0(uint8_t = 24);
 
-private:
+    private:
+
+    static Cp0 cp0;
 
     //private functions
     void    reset       (uint32_t);

@@ -8,9 +8,7 @@
 #include "Reg.hpp"
 #include "Syskey.hpp"
 
-class Pmd {
-
-    public:
+struct Pmd {
 
     //bit shift amount into 7 registers (PMD1-PMD7, 224 possible values)
     enum PMD {
@@ -36,6 +34,9 @@ class Pmd {
 
     private:
 
+    static Reg r;
+    static Syskey sk;
+
     //private functions
     static void     unlock  ();
     static void     lock    ();
@@ -48,27 +49,27 @@ class Pmd {
  all functions inline
 =============================================================================*/
 
-void Pmd::unlock(){ Syskey::unlock(); Reg::clr(PMDCON, PMDLOCK); }
-void Pmd::lock(){ Reg::set(PMDCON, PMDLOCK); Syskey::lock(); }
+void Pmd::unlock(){ sk.unlock(); r.clr(PMDCON, PMDLOCK); }
+void Pmd::lock(){ r.set(PMDCON, PMDLOCK); sk.lock(); }
 void Pmd::off(PMD e){
     unlock();
-    Reg::set(PMD1_ADDR + 16*(e/32), (1<<(e%32)));
+    r.set(PMD1_ADDR + 16*(e/32), (1<<(e%32)));
     lock();
 }
 void Pmd::on(PMD e){
     unlock();
-    Reg::clr(PMD1_ADDR + 16*(e/32), (1<<(e%32)));
+    r.clr(PMD1_ADDR + 16*(e/32), (1<<(e%32)));
     lock();
 }
 //array of modules to disable/enable, END is end of array
 void Pmd::off(PMD* e){
     unlock();
-    for(; *e != END; e++) Reg::set(PMD1_ADDR + 16*(*e/32), (1<<(*e%32)));
+    for(; *e != END; e++) r.set(PMD1_ADDR + 16*(*e/32), (1<<(*e%32)));
     lock();
 }
 void Pmd::on(PMD* e){
     unlock();
-    for(; *e != END; e++) Reg::clr(PMD1_ADDR + 16*(*e/32), (1<<(*e%32)));
+    for(; *e != END; e++) r.clr(PMD1_ADDR + 16*(*e/32), (1<<(*e%32)));
     lock();
 }
 

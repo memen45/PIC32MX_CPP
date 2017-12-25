@@ -22,21 +22,23 @@ class Timer23 {
     enum CLK { EXT_T2CK = 1<<1, INT_PBCLK = 0 };
 
     //public functions
-    void        timer       (uint16_t);
-    uint16_t    timer       ();
-    void        pr          (uint16_t);
-    uint16_t    pr          ();
-    void        on          (bool);
-    void        stop_idle   (bool);
-    void        tgate       (bool);
-    void        prescale    (PRESCALE);
-    void        t32bit      (bool); //T2 only (harmless for T3)
-    void        clk_src     (CLK);
+    void        timer       (uint16_t) const;
+    uint16_t    timer       () const;
+    void        pr          (uint16_t) const;
+    uint16_t    pr          () const;
+    void        on          (bool) const;
+    void        stop_idle   (bool) const;
+    void        tgate       (bool) const;
+    void        prescale    (PRESCALE) const;
+    void        t32bit      (bool) const; //T2 only (harmless for T3)
+    void        clk_src     (CLK) const;
 
     //constructor
     constexpr Timer23(TMR23);
 
     private:
+
+    static Reg r;
 
     enum {
         TMRX = 4, PRX = 8, //word offsets

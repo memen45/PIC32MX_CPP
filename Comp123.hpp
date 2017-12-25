@@ -7,9 +7,7 @@
  Compare1/2/3 functions
 =============================================================================*/
 
-class Comp123  {
-
-    public:
+struct Comp123  {
 
     //instantiate Comp123 with comparator number
     enum CMX { C1 = 0, C2, C3 };
@@ -40,6 +38,8 @@ class Comp123  {
 
     private:
 
+    static Reg r;
+
     enum {
         ON = 1<<15, COE = 1<<14, CPOL = 1<<13,
         CEVT = 1<<9, COUT = 1<<8, CREF = 1<<4,
@@ -60,15 +60,15 @@ class Comp123  {
 constexpr Comp123::Comp123(CMX e)
     : m_pt((volatile uint32_t*)CM1CON+(e*CMXCON_SPACING)){}
 
-void Comp123::on(bool tf){ Reg::set(m_pt, ON, tf); }
-void Comp123::out(bool tf){ Reg::set(m_pt, COE, tf); }
-void Comp123::out_inv(bool tf){ Reg::set(m_pt, CPOL, tf); }
-bool Comp123::event_bit(){ return Reg::is_set(m_pt, CEVT); }
-bool Comp123::out_bit(){ return Reg::is_set(m_pt, COUT); }
-void Comp123::event_sel(EVPOL e){ Reg::clr(m_pt, ANY); Reg::set(m_pt, e); }
-void Comp123::cref_cxina(bool tf){ Reg::set(m_pt, CREF, !tf); }
-void Comp123::ch_sel(CCH e){ Reg::clr(m_pt, BGAP); Reg::set(m_pt, e); }
+void Comp123::on(bool tf){ r.set(m_pt, ON, tf); }
+void Comp123::out(bool tf){ r.set(m_pt, COE, tf); }
+void Comp123::out_inv(bool tf){ r.set(m_pt, CPOL, tf); }
+bool Comp123::event_bit(){ return r.is_set(m_pt, CEVT); }
+bool Comp123::out_bit(){ return r.is_set(m_pt, COUT); }
+void Comp123::event_sel(EVPOL e){ r.clr(m_pt, ANY); r.set(m_pt, e); }
+void Comp123::cref_cxina(bool tf){ r.set(m_pt, CREF, !tf); }
+void Comp123::ch_sel(CCH e){ r.clr(m_pt, BGAP); r.set(m_pt, e); }
 
 //common static functions
-void Comp123::stop_idle(bool tf){ Reg::set(CMSTAT, SIDL, tf); }
-void Comp123::cref_sel(CVREF e){ Reg::set(CMSTAT, CVREFSEL, e); }
+void Comp123::stop_idle(bool tf){ r.set(CMSTAT, SIDL, tf); }
+void Comp123::cref_sel(CVREF e){ r.set(CMSTAT, CVREFSEL, e); }

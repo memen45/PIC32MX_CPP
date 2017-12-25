@@ -7,9 +7,7 @@
  Resets functions
 =============================================================================*/
 
-class Resets {
-
-    public:
+struct Resets {
 
     //reset cause
     enum CAUSE : uint8_t {
@@ -33,10 +31,13 @@ class Resets {
     static void     nmi_wdtclr      ();
     //PWRCON
     static void     bor             (bool);
-    static void     retention       (bool);
-    static void     vreg_standby    (bool);
+    static void     reten           (bool);
+    static void     vregs           (bool);
 
     private:
+
+    static Reg r;
+    static Syskey sk;
 
     enum {
         RCON = 0xBF8026E0,
@@ -64,8 +65,8 @@ Resets::CAUSE Resets::cause(){
     //boot_flags var will be 0 on any reset as c runtime will clear
     //before this function can run (I think)
     if(!boot_flags){
-        boot_flags = Reg::val(RCON);  //save
-        Reg::val(RCON, 0);            //then clear all flags
+        boot_flags = r.val(RCON);  //save
+        r.val(RCON, 0);            //then clear all flags
     }
     //check for por first- specific combo
     if(boot_flags == (PORIO|PORCORE|BOR|POR)) return POR;
@@ -91,33 +92,17 @@ bool Resets::config_err(){ return boot_flags & (BCFGERR|BCFGFAIL|CMR); }
 //    } //extern C
 //
 //just use our version, works fine, looks nicer, less library
-void Resets::swreset(){
-    Syskey::unlock();
-    Reg::set(RSWRST, SWRST);
-    Reg::val(RSWRST);
-    //resets after read
-}
+//resets after read
+void Resets::swreset(){ sk.unlock(); r.set(RSWRST, SWRST); r.val(RSWRST); }
 //RNMICON
-bool Resets::nmi_wdt(){ return Reg::is_set(RNMICON, WDTR); }
-bool Resets::nmi_sw(){ return Reg::is_set(RNMICON, SWNMI); }
-bool Resets::nmi_gen(){ return Reg::is_set(RNMICON, GNMI); }
-bool Resets::nmi_clkf(){ return Reg::is_set(RNMICON, CF); }
-bool Resets::nmi_wdts(){ return Reg::is_set(RNMICON, WDTS); }
-void Resets::nmi_wdtcount(uint16_t v){ Reg::val16(RNMICON, v); }
-void Resets::nmi_wdtclr(){ Reg::clr(RNMICON, WDTR); }
+bool Resets::nmi_wdt(){ return r.is_set(RNMICON, WDTR); }
+bool Resets::nmi_sw(){ return r.is_set(RNMICON, SWNMI); }
+bool Resets::nmi_gen(){ return r.is_set(RNMICON, GNMI); }
+bool Resets::nmi_clkf(){ return r.is_set(RNMICON, CF); }
+bool Resets::nmi_wdts(){ return r.is_set(RNMICON, WDTS); }
+void Resets::nmi_wdtcount(uint16_t v){ r.val16(RNMICON, v); }
+void Resets::nmi_wdtclr(){ r.clr(RNMICON, WDTR); }
 //PWRCON
-void Resets::bor(bool tf){
-    Syskey::unlock();
-    Reg::set(PWRCON, SBOREN, tf);
-    Syskey::lock();
-}
-void Resets::retention(bool tf){
-    Syskey::unlock();
-    Reg::set(PWRCON,RETEN, tf);
-    Syskey::lock();
-}
-void Resets::vreg_standby(bool tf){
-    Syskey::unlock();
-    Reg::set(PWRCON,VREGS, tf);
-    Syskey::lock();
-}
+void Resets::bor(bool tf){ sk.unlock(); r.set(PWRCON, SBOREN, tf); sk.lock(); }
+void Resets::reten(bool tf){ sk.unlock(); r.set(PWRCON,RETEN, tf); sk.lock(); }
+void Resets::vregs(bool tf){ sk.unlock(); r.set(PWRCON,VREGS, tf); sk.lock(); }

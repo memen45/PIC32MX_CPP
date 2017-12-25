@@ -6,34 +6,34 @@
 =============================================================================*/
 
 void Pins::lowison(bool tf){ m_lowison = tf; }
-void Pins::digital_in(){ Reg::set(m_pt+TRIS, m_pn); Reg::clr(m_pt, m_pn); }
-void Pins::analog_in(){ Reg::set(m_pt+TRIS, m_pn); Reg::set(m_pt, m_pn); }
-void Pins::digital_out(){ Reg::clr(m_pt+TRIS, m_pn); Reg::clr(m_pt, m_pn); }
-void Pins::odrain(bool tf){ Reg::set(m_pt+ODC, m_pn, tf); }
-void Pins::pullup(bool tf){ Reg::set(m_pt+CNPU, m_pn, tf); }
-void Pins::pulldn(bool tf){ Reg::set(m_pt+CNPD, m_pn, tf); }
-void Pins::icn(bool tf){ Reg::set(m_pt+CNCON, ON, tf); }
-void Pins::icn_rising(){
-    Reg::set(m_pt+CNCON, CNSTYLE);
-    Reg::set(m_pt+CNEN0, m_pn);
-    Reg::clr(m_pt+CNEN1, m_pn);
+void Pins::digital_in() const { r.set(m_pt+TRIS, m_pn); r.clr(m_pt, m_pn); }
+void Pins::analog_in() const { r.set(m_pt+TRIS, m_pn); r.set(m_pt, m_pn); }
+void Pins::digital_out() const { r.clr(m_pt+TRIS, m_pn); r.clr(m_pt, m_pn); }
+void Pins::odrain(bool tf) const { r.set(m_pt+ODC, m_pn, tf); }
+void Pins::pullup(bool tf) const { r.set(m_pt+CNPU, m_pn, tf); }
+void Pins::pulldn(bool tf) const { r.set(m_pt+CNPD, m_pn, tf); }
+void Pins::icn(bool tf) const { r.set(m_pt+CNCON, ON, tf); }
+void Pins::icn_rising() const {
+    r.set(m_pt+CNCON, CNSTYLE);
+    r.set(m_pt+CNEN0, m_pn);
+    r.clr(m_pt+CNEN1, m_pn);
 }
-void Pins::icn_risefall(){
-    Reg::set(m_pt+CNCON, CNSTYLE);
-    Reg::set(m_pt+CNEN0, m_pn);
-    Reg::clr(m_pt+CNEN1, m_pn);
+void Pins::icn_risefall() const {
+    r.set(m_pt+CNCON, CNSTYLE);
+    r.set(m_pt+CNEN0, m_pn);
+    r.clr(m_pt+CNEN1, m_pn);
 }
-void Pins::icn_falling(){
-    Reg::set(m_pt+CNCON, CNSTYLE);
-    Reg::set(m_pt+CNEN1, m_pn);
-    Reg::clr(m_pt+CNEN0, m_pn);
+void Pins::icn_falling() const {
+    r.set(m_pt+CNCON, CNSTYLE);
+    r.set(m_pt+CNEN1, m_pn);
+    r.clr(m_pt+CNEN0, m_pn);
 }
-void Pins::icn_mismatch(){
-    Reg::set(m_pt+CNEN0, m_pn);
-    Reg::clr(m_pt+CNCON, CNSTYLE);
+void Pins::icn_mismatch() const {
+    r.set(m_pt+CNEN0, m_pn);
+    r.clr(m_pt+CNCON, CNSTYLE);
 }
-bool Pins::icn_flag(){ return Reg::is_set(m_pt+CNF, m_pn); }
-bool Pins::icn_stat(){ return Reg::is_set(m_pt+CNSTAT, m_pn); }
+bool Pins::icn_flag() const { return r.is_set(m_pt+CNF, m_pn); }
+bool Pins::icn_stat() const { return r.is_set(m_pt+CNSTAT, m_pn); }
 
 /*=============================================================================
  Pins functions - static

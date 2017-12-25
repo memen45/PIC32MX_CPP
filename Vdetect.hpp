@@ -4,9 +4,10 @@
  High/Low-Voltage Detect functions
 =============================================================================*/
 
-class Vdetect {
+#include <cstdint>
+#include "Reg.hpp"
 
-    public:
+struct Vdetect {
 
     //voltage level limits
     enum HLVDL {
@@ -25,6 +26,8 @@ class Vdetect {
 
     private:
 
+    static Reg r;
+
     enum {
         HLVDCON = 0xBF802920, HLVDCONCLR = 0xBF802924, HLVDCONSET = 0xBF802928,
         ON = 1<<15, SIDL = 1<<13, VDIR = 1<<11,
@@ -36,10 +39,10 @@ class Vdetect {
  all functions inline
 =============================================================================*/
 
-void Vdetect::on(bool tf){ Reg::set(HLVDCON, ON, tf); }
-void Vdetect::stop_idle(bool tf){ Reg::set(HLVDCON, SIDL, tf); }
-void Vdetect::trip_above(bool tf){ Reg::set(HLVDCON, VDIR, tf); }
-bool Vdetect::bgap_stable(){ return Reg::is_set(HLVDCON, BGVST); }
-bool Vdetect::iref_stable(){ return Reg::is_set(HLVDCON, IRVST); }
-bool Vdetect::tripped(){ return Reg::is_set(HLVDCON, HLEVT); }
-void Vdetect::limit(HLVDL e){ Reg::clr(HLVDCON, VEXT); Reg::set(HLVDCON, e); }
+void Vdetect::on(bool tf){ r.set(HLVDCON, ON, tf); }
+void Vdetect::stop_idle(bool tf){ r.set(HLVDCON, SIDL, tf); }
+void Vdetect::trip_above(bool tf){ r.set(HLVDCON, VDIR, tf); }
+bool Vdetect::bgap_stable(){ return r.is_set(HLVDCON, BGVST); }
+bool Vdetect::iref_stable(){ return r.is_set(HLVDCON, IRVST); }
+bool Vdetect::tripped(){ return r.is_set(HLVDCON, HLEVT); }
+void Vdetect::limit(HLVDL e){ r.clr(HLVDCON, VEXT); r.set(HLVDCON, e); }

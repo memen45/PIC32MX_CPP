@@ -4,9 +4,10 @@
  Watchdog timer functions
 =============================================================================*/
 
-class Wdt {
+#include <cstdint>
+#include "Reg.hpp"
 
-    public:
+struct Wdt {
 
     //public functions
     static void     reset       ();
@@ -14,6 +15,8 @@ class Wdt {
     static void     window_on   (bool);
 
     private:
+
+    static Reg r;
 
     enum {
         WDTCON = 0xBF803990, CLRKEY = 0x5743,
@@ -31,6 +34,6 @@ class Wdt {
 //16bit write to upper 16bits of WDTCON
 //add 2 bytes to base to get the correct address for the 16bit write
 //(using enum values for WDTCON, so is normal byte addition)
-void Wdt::reset(){ Reg::val16(WDTCON+2, CLRKEY); }
-void Wdt::on(bool tf){ Reg::set(WDTCON, ON, tf); }
-void Wdt::window_on(bool tf){ Reg::set(WDTCON, WINEN, tf); }
+void Wdt::reset(){ r.val16(WDTCON+2, CLRKEY); }
+void Wdt::on(bool tf){ r.set(WDTCON, ON, tf); }
+void Wdt::window_on(bool tf){ r.set(WDTCON, WINEN, tf); }

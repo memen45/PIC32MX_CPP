@@ -5,10 +5,9 @@
 =============================================================================*/
 
 #include <cstdint>
+#include "Reg.hpp"
 
-class Cvref {
-
-    public:
+struct Cvref {
 
     //vref select
     enum REFSEL { NONE = 0, CVREF, AVDD };
@@ -21,6 +20,8 @@ class Cvref {
 
     private:
 
+    static Reg r;
+
     enum { DAC1CON = 0xBF802380, ON = 1<<15, DACOE = 1<<8, REFSELCLR = 3 };
 
 };
@@ -29,13 +30,13 @@ class Cvref {
  all functions inline
 =============================================================================*/
 
-void Cvref::on(bool tf){ Reg::set(DAC1CON, ON, tf);
-void Cvref::out(bool tf){ Reg::set(DAC1CON, DACOE, tf);
+void Cvref::on(bool tf){ r.set(DAC1CON, ON, tf);
+void Cvref::out(bool tf){ r.set(DAC1CON, DACOE, tf);
 void Cvref::refsel(REFSEL e){
-    Reg::clr(DAC1CON, REFSELCLR);
-    Reg::set(DAC1CON, e & REFSELCLR);
+    r.clr(DAC1CON, REFSELCLR);
+    r.set(DAC1CON, e & REFSELCLR);
 }
 //dac level 0-31, using Reg::val16 to change value
 //(only DACDAT in upper 16bits, so can just write dat which
 //will also mask off invalid bits, if dat >31)
-void Cvref::dacdat(uint8_t n){ Reg::val16(DAC1CON+2, n); }
+void Cvref::dacdat(uint8_t n){ r.val16(DAC1CON+2, n); }
