@@ -9,7 +9,7 @@
  using .hpp mostly for now
 
 
- common typedefs
+ common typedef
  (move to better spot later)
 ______________________________________________________________________________*/
 typedef union {
@@ -433,33 +433,26 @@ void UsbEndpt::token(uint8_t idx){
     switch(m_bd[idx]->pid){
 
         case UsbCh9::SETUP:
-            //m_setup_pkt
-
-            m_TX.stop();        //anything in tx, cancel
-
-            setup_token();      //process
-            u.control(u.PKTDIS, false); //continue control transfer
+            m_TX.stop();            //anything in tx, cancel
+            if(m_RX.check() != 8){} //something wrong, assume ok for now
+            setup_token();          //process m_setup_pkt
+            u.control(u.PKTDIS, false); //and continue control transfer
             break;
 
         case UsbCh9::IN:
-
             in_token();
             break;
 
         case UsbCh9::OUT:
-
             out_token();
-
             break;
     }
 }
 
 /*..............................................................................
     SETUP token received (with 8byte data)
-        m_setup_pkt already contains the 8bytes (copied from buffer)
-        any tx was cancelled (and any buffers from UsbBuf released)
-        m_tx_ptr was cleared
-        m_data01 is 1
+        m_setup_pkt already contains the 8bytes
+        any tx was cancelled
 ..............................................................................*/
 void UsbEndpt::setup_token(){
 
@@ -509,10 +502,12 @@ void UsbEndpt::setup_token(){
         m_TX.start(0,0,1);          //set for 0byte status
     } else if(dir == IN) {
         //need to check buffer size vs wLength
-        m_TX.start((uint8_t*)m_tx_ptr, m_setup_pkt.wLength, 1);
+        //assume <= 64 for now
+        m_TX.start((uint8_t*)m_tx_ptr, m_setup_pkt.wLength, 1); //d01=1
     } else {
         //need to check buffer size vs wLength
-        m_RX.start((uint8_t*)m_rxbuf[0], m_setup_pkt.wLength, 1);
+        //assume <= 64 for now
+        m_RX.start((uint8_t*)m_rxbuf[0], m_setup_pkt.wLength, 1); //d01=1
     }
 
     //if no data stage,
@@ -553,7 +548,7 @@ void UsbEndpt::out_token(){
     }
     if(m_setup_stage == OUT){
     //rx more, or go to STATUS stage,
-    //and call tx_zlp()
+    //(tx already set for STATUS)
     }
     if(m_setup_stage == IN){
     //problem, was expecting an IN -stall
