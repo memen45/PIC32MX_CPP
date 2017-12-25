@@ -61,12 +61,12 @@ static uint32_t boot_flags;
 //RCON
 //save flags, clear flags, return reset cause
 Resets::CAUSE Resets::cause(){
-    //save flags only not already saved
+    //save flags only if not already saved
     //boot_flags var will be 0 on any reset as c runtime will clear
-    //before this function can run (I think)
-    if(!boot_flags){
+    //before this function can run
+    if(boot_flags == 0){
         boot_flags = r.val(RCON);  //save
-        r.val(RCON, 0);            //then clear all flags
+        r.val(RCON, 0);            //then clear all flags (for next reset)
     }
     //check for por first- specific combo
     if(boot_flags == (PORIO|PORCORE|BOR|POR)) return POR;
@@ -82,16 +82,6 @@ Resets::CAUSE Resets::cause(){
 //check if config bits error
 bool Resets::config_err(){ return boot_flags & (BCFGERR|BCFGFAIL|CMR); }
 //RSWRST
-//
-//library version (uses asm, is ~30bytes smaller)
-//    extern "C" {
-//    void Resets::swreset(){
-//        void __pic32_software_reset();  //declare
-//        __pic32_software_reset();       //do
-//    }
-//    } //extern C
-//
-//just use our version, works fine, looks nicer, less library
 //resets after read
 void Resets::swreset(){ sk.unlock(); r.set(RSWRST, SWRST); r.val(RSWRST); }
 //RNMICON
