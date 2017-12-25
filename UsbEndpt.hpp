@@ -4,7 +4,11 @@
 #include "Reg.hpp"
 
 
+/*______________________________________________________________________________
 
+ common typedefs
+ (move to better spot later)
+______________________________________________________________________________*/
 typedef union {
     struct { uint32_t dat; uint32_t addr; };
     struct { unsigned :16; uint16_t count; };
@@ -18,35 +22,47 @@ typedef union {
         unsigned uown:1;
     };
     struct { unsigned :2; unsigned pid:4; };
-    uint8_t control;
+    uint8_t ctrl;
     uint64_t all;
 } bdt_t;
 
 
 
 
-class UsbEndptRx {
+class UsbEndptTRx {
 /*______________________________________________________________________________
 
- RX endpoint class
-    handles only RX endpoints in specific endpoint
-    UsbEndpt uses this class for RX operations
+ RX/TX endpoint class
+    handles only RX or TX endpoints in specific endpoint
+    UsbEndpt uses this class for RX or TX operations
     UsbEndpt in charge of U1EPn
 
-    constructor needs the bdt base address, endpoint n, and max packet size
-    (if max packet size set to 0, this RX is not used- start() will always
-     return false)
+    constructor needs the bdt address of endpoint n, and max packet size
+    (if max packet size set to 0, this RX or TX is not used-
+     start() will always return false)
 
     reinit()
         -clears all private data, bd entries (also used in constructor)
         -no return value
-    start(*buf,count)
-        -starts a rx into buf, for count bytes
+
+    options(opt)
+        -sets bd control bits to use other than UOWN and DATA01
+        -(KEEP, NINC, DTS, BSTALL), use correct bit positions
+
+    start(*buf,count,[d01=0])
+        -starts a rx into buf or tx from buf, for count bytes
+        -optionally set data01 (default is data0, mainly for tx use)
         -returns true if started, false if cannot (any buffer busy)
+
     check()
-        -after an OUT/SETUP irq, checks if any more data to receive from start()
-        -if not complete, returns bytes left to rx
+        -after an IN/OUT/SETUP irq, checks if any more data to receive or
+         send from previous start()
+        -if not complete, returns bytes left to rx or tx
         -if completed, returns 0
+
+    stop()
+        -take back ownership of rx or tx endpoint (both even,odd)
+
 
     to ready endpoint 0 for a setup (in UsbEndpt::)-
         m_ep_rx.start(my_buf, 8);
@@ -58,41 +74,42 @@ class UsbEndptRx {
 
 ______________________________________________________________________________*/
     public:
-                UsbEndptRx  (bdt_t*, uint8_t, uint16_t);
+                UsbEndptTRx (bdt_t*, uint16_t);
     void        reinit      ();
-    bool        start       (uint8_t*, uint16_t);
+    void        options     (uint8_t);
+    bool        start       (uint8_t*, uint16_t, bool = 0);
     uint16_t    check       ();
+    void        stop        ();
 
     private:
-    void        rx_setup    (uint16_t n);
-    void        rx_stop     ();
 
-    private:
+    void        setup       (uint16_t n);
+
     bdt_t*              m_bd[2];        //even/odd bd entry pointers
+    uint8_t             m_options;      //extra control options (not UOWN)
     const uint16_t      m_max_count;    //max data packet size
     uint32_t            m_bufptr;       //current buffer pointer (phys address)
     uint8_t             m_bufn;         //how many buffers in use (0,1,2)
-    uint8_t             m_eveodd;       //even/odd entry to use next
-    int16_t             m_count;        //keep track of rx count
-                                        //int16_t so can do 0-1023
-                                        //and also see if <0 (too much rx)
+    bool                m_eveodd;       //even/odd entry to use next
+    uint16_t            m_count;        //keep track of rx count
+                                        //uint16_t so can do 0-1023
 };
 
 /*______________________________________________________________________________
 
- init (constructor) or reinit rx endpoint
- set bd rx addresses (even/odd) of endpoint n (constructor only)
- (passed in via bdt_t* which points to bdt, we want first two from computed
-  index into bdt, which are both rx)
+ init (constructor) or reinit rx/tx endpoint
+ set bd rx/tx addresses (even/odd) of endpoint n (constructor only)
+ (passed in via bdt_t* which points to position of rx or tx of endpoint n)
  also need to know max packet size (constructor only)
  all vars reset, bd entries cleared
 ______________________________________________________________________________*/
-UsbEndptRx::UsbEndptRx(bdt_t* b, uint8_t n, uint16_t max)
-    : m_bd{&b[n*4], &b[n*4+1]}, m_max_count(max)
+UsbEndptTRx::UsbEndptTRx(bdt_t* b, uint16_t max)
+    : m_bd{b, b+1}, m_max_count(max)
 {
     reinit();
 }
-void UsbEndptRx::reinit(){
+void UsbEndptTRx::reinit(){
+    m_options = 0;
     m_bufptr = 0;
     m_bufn = 0;
     m_eveodd = 0;
@@ -103,64 +120,84 @@ void UsbEndptRx::reinit(){
 
 /*______________________________________________________________________________
 
- check if still receiving data- return bytes remaining, or 0 if done
- called only from UsbEndpt:: when TRNIF and token type is OUT/SETUP
- use U1STAT to check which buffer (even/odd) caused the irq
- (must be a buffer returned back to us from usb, so dec m_bufn)
- (also reset m_bufn, m_eveodd to known values now, since a transfer is done
-  it also means the buffer that caused the last irq was the last to be used-
-  I think this is correct, as we prevent a new 'start' if any buffer in use)
+ set DATA01, KEEP, NINC, DTS, BSTALL option(s)
+ (provide bits in correct bit position)
 ______________________________________________________________________________*/
-uint16_t UsbEndptRx::check(){
-    enum { U1STAT = 0xBF808640, PPBI = 1<<2 };
-    bool eo = Reg::is_set8(U1STAT, PPBI);   //get PPBI
-    m_count -= m_bd[eo]->count;     //subtract actual byte count received
-    m_bufn--;                       //one less buffer in use
-    if(m_count == 0){               //all done
-        m_bufn = 0;                 //should already be 0, but now we know
-        m_eveodd = eo ^ 1;          //next one to be used
-        return 0;                   //done here, data is ready
-    }
-    if(m_count > 0){                //more to do
-        rx_setup(m_count > m_max_count ? m_max_count : m_count);
-    }
-    return m_count;                 // >0,, not done
+void UsbEndptTRx::options(uint8_t v){
+    m_options = (v & 0x7C); //bits x65432xx
 }
 
 /*______________________________________________________________________________
 
- start a rx transfer- from buf[] for n bytes
- if rx still busy (any buffer), return false (caller tries again later)
- if started, return true
+ check rx/tx status- return bytes remaining, or 0 if done
+ called only from UsbEndpt:: when TRNIF and token type is IN (for TX) or
+ OUT/SETUP (for RX)
+ use U1STAT to check which buffer (even/odd) caused the irq
+ (must be a buffer returned back to us from usb, so dec m_bufn)
+ (if done, also reset m_bufn, m_eveodd to known values now, since a transfer
+  is done, it also means the buffer that caused the last irq was the last to be
+  used- I think this is correct, as we prevent a new 'start' if any buffer in
+  use)
+ (if host sends a less than full packet AND is now less than expected number
+  of bytes received, host shorted us and is done, if we sent less than full
+  packet for some reason AND still remaining bytes to send, we shorted the
+  host- either case is considered done here)
 ______________________________________________________________________________*/
-bool UsbEndptRx::start(uint8_t* buf, uint16_t n){
-    if(m_bufn || !m_max_count) return false;
+uint16_t UsbEndptTRx::check(){
+    enum { U1STAT = 0xBF808640, PPBI = 1<<2 };
+    bool eo = Reg::is_set8(U1STAT, PPBI);   //get PPBI
+    uint16_t c = m_bd[eo]->count;   //get actual count rx/tx
+    m_count -= c;                   //subtract from saved count
+    m_bufn--;                       //one less buffer in use
+    if(m_count == 0 || c < m_max_count){ //0 = all done, c < max =short packet
+        m_count = 0;                //clear m_count in case we were shorted,
+        m_bufn = 0;                 //should already be 0, but now we know
+        m_eveodd = eo ^ 1;          //next one to be used is not this one
+    } else {
+        setup(m_count > m_max_count ? m_max_count : m_count);
+    }
+    return m_count;                 // 0=done, >0=not done
+}
+
+/*______________________________________________________________________________
+
+ start a rx/tx transfer- from buf[] for n bytes, [default data01 = 0]
+ if rx/tx still busy (any buffer), return false (caller tries again later)
+ if started, return true
+ (if RX/TX not used, m_max_count will be 0- return false always)
+ if n > max packet size, also get second buffer ready now
+______________________________________________________________________________*/
+bool UsbEndptTRx::start(uint8_t* buf, uint16_t n, bool d01){
+    if(m_bufn || m_max_count == 0) return false;
+    m_options &= ~(1<<6); m_options |= (d01<<6);
     m_bufptr = Reg::k2phys((uint32_t)buf);
-    m_count = n;    //store count
+    m_count = n;
     uint16_t n1 = n, n2 = 0;
     if(n > m_max_count){
         n1 = m_max_count;
         n -= m_max_count;
         n2 = n > m_max_count ? m_max_count : n;
     }
-    rx_setup(n1);
-    if(n2) rx_setup(n2);
+    setup(n1);
+    if(n2) setup(n2);
     return true;
 }
 
 /*______________________________________________________________________________
 
- setup an rx for n bytes (only called by 'check' and 'start')
- m_bufptr incremented by n, m_bufn count incremented, m_eveodd toggled
- (all for for next time)
+ setup an rx/tx for n bytes (only called by 'start')
+ m_bufptr incremented by n, m_bufn count incremented, m_eveodd toggled,
+ m_options bit6 (data01) toggled (all for for next time)
 ______________________________________________________________________________*/
-void UsbEndptRx::rx_setup(uint16_t n){
+void UsbEndptTRx::setup(uint16_t n){
     m_bd[m_eveodd]->addr = m_bufptr;    //set address of buf
     m_bd[m_eveodd]->count = n;          //set count
+    m_bd[m_eveodd]->ctrl = m_options;   //options other than uown
     m_bd[m_eveodd]->uown = 1;           //give
     m_bufptr += n;                      //adjust for next time
     m_bufn++;                           //1 buffer in use
     m_eveodd ^= 1;                      //toggle even/odd
+    m_options ^= 1<<6;                  //toggle data01
 }
 
 /*______________________________________________________________________________
@@ -168,10 +205,24 @@ void UsbEndptRx::rx_setup(uint16_t n){
  take ownership of both buffers if not already owned
  (toggle m_eveodd if we caused a 1->0)
 ______________________________________________________________________________*/
-void UsbEndptRx::rx_stop(){
+void UsbEndptTRx::stop(){
     if(m_bd[0]->uown){ m_eveodd ^= 1; m_bd[0]->uown = 0; }
     if(m_bd[1]->uown){ m_eveodd ^= 1; m_bd[1]->uown = 0; }
 }
+
+/*______________________________________________________________________________
+
+
+______________________________________________________________________________*/
+
+
+
+
+
+
+
+
+
 
 
 
@@ -185,9 +236,9 @@ class UsbEndpt {
     endpoint class
     handles all functions for an endpoint
 
-    UsbEndpt ep0(0,UsbEndpt::TRX); //endpoint 0 with rx+tx
-    UsbEndpt ep1rx(1,UsbEndpt::TX); //endpoint 1 with tx only
-    UsbEndpt ep2tx(2,UsbEndpt::RX); //endpoint 2 with rx only
+    UsbEndpt ep0(0, UsbEndpt::TRX, 64);  //endpoint 0 with rx+tx, 64byte max
+    UsbEndpt ep1rx(1, UsbEndpt::TX, 64); //endpoint 1 with tx only, 64byte max
+    UsbEndpt ep2tx(2, UsbEndpt::RX, 64); //endpoint 2 with rx only, 64byte max
         endpoint descriptors (4) for endpoint cleared
         endpoint register cleared
         rxbuffer addresses received from UsbBuf (if endpoint has rx)
@@ -228,24 +279,6 @@ ______________________________________________________________________________*/
 
     //public static function
     static uint32_t bdt_addr(); //to get bdt address (for Usb::bdt_addr() use)
-
-    //bd entry struct
-//    typedef union {
-//        struct { uint32_t dat; uint32_t addr; };
-//        struct { unsigned :16; uint16_t count; };
-//        struct {
-//            unsigned :2;
-//            unsigned bstall:1;
-//            unsigned dts:1;
-//            unsigned ninc:1;
-//            unsigned keep:1;
-//            unsigned data01:1;
-//            unsigned uown:1;
-//        };
-//        struct { unsigned :2; unsigned pid:4; };
-//        uint8_t control;
-//        uint64_t all;
-//    } bdt_t;
 
     private:
 
@@ -305,7 +338,8 @@ ______________________________________________________________________________*/
     uint8_t             m_data01;       //tx data0/data1, uses bit6 (toggle bit6)
     volatile uint8_t*   m_tx_ptr;       //pointer to tx data
 
-    class UsbEndptRx    m_ep_rx;        //RX endpoint class
+    class UsbEndptTRx    m_RX;          //RX endpoint class
+    class UsbEndptTRx    m_TX;          //TX endpoint class
 };
 
 
@@ -315,7 +349,6 @@ ______________________________________________________________________________*/
 //static
 //UsbHandlers::attach will get bdt address, and set the address in the sfr reg
 bdt_t UsbEndpt::m_bdt[(my_last_endp+1)*4] = {0};
-//UsbEndpt::bdt_t UsbEndpt::m_bdt[(my_last_endp+1)*4] = {0};
 uint32_t UsbEndpt::bdt_addr(){ return (uint32_t)m_bdt; }
 
 //public
@@ -334,7 +367,8 @@ UsbEndpt::UsbEndpt(uint8_t n, TR tr, uint16_t max) :
     m_data01(0),
     m_rxbuf{0,0},
 
-    m_ep_rx(m_bdt, n, tr & RX ? max : 0)
+    m_RX(&m_bdt[n*4], tr & RX ? max : 0),
+    m_TX(&m_bdt[n*4+2], tr & TX ? max : 0)
 {
     epreg(0);
     if(tr&RX){ m_rxbuf[0] = UsbBuf::get(); m_rxbuf[1] = UsbBuf::get(); }
@@ -348,8 +382,8 @@ void UsbEndpt::deinit(){
     tx_cancel();
 }
 void UsbEndpt::reinit(){ deinit(); UsbEndpt(m_ep_n,m_ep_trx, m_buf_len); }
-void UsbEndpt::bd_ctrl(uint8_t v){ m_bd[m_bdi]->control = v; }
-volatile uint8_t UsbEndpt::bd_ctrl(){ return m_bd[m_bdi]->control; }
+void UsbEndpt::bd_ctrl(uint8_t v){ m_bd[m_bdi]->ctrl = v; }
+volatile uint8_t UsbEndpt::bd_ctrl(){ return m_bd[m_bdi]->ctrl; }
 volatile uint16_t UsbEndpt::bd_count(){ return m_bd[m_bdi]->count; }
 void UsbEndpt::bd_count(uint16_t v){ m_bd[m_bdi]->count = v; }
 volatile uint8_t UsbEndpt::bd_pid() const { return m_bd[m_bdi]->pid; }
