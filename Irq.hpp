@@ -262,14 +262,16 @@ void Irq::shadow_set(uint8_t pri, bool tf){
 ////////////////////////////////////////////////////////////////////////////////
 // here are the macros (need to expand args, so ISR 'calls' _ISR)
 ////////////////////////////////////////////////////////////////////////////////
-#define _ISR(vn,nam,pri,typ,...) \
+//the real work done here
+#define _ISR(vn, nam, pri, typ, ...) \
     extern "C" {\
-        void __attribute__((vector(vn),interrupt(IPL##pri##typ)))\
+        void __attribute__(( vector(vn), interrupt(IPL##pri##typ) ))\
         nam##_ISR();\
     }\
     void nam##_ISR()
 
-#define ISR(vn,pri,...) _ISR(vn##_VN,vn,pri,##__VA_ARGS__,SOFT)
+//we use this one
+#define ISR(vn, pri, ...) _ISR(vn##_VN, vn, pri, ##__VA_ARGS__, SOFT)
 
 ////////////////////////////////////////////////////////////////////////////////
 // description of macros
@@ -302,7 +304,9 @@ void __attribute__((vector(0), interrupt(IPL7SOFT))) CoreTimerISR(){
 
 
  the 'manual' way is not too hard, but is a little cumbersome with the
- attributes, so defines/macros are used to help
+ attributes- we have to lookup the vector number when we lookup the name which
+ can lead to using incorrect vector number, so defines/macros are used to help
+ where we only need to come up with correct name
 
 
  here is what the same irq above looks like with the ISR macro-
@@ -334,7 +338,8 @@ names in Irq::IRQ_VN, since the enums are inside a class and are specified
 by class when used)
 
 
-NOTE- ## is macro string concatenation (except before __VA_ARGS__)
+NOTE- ## is macro string concatenation (except before __VA_ARGS__, which
+      indicates we want the preceeding comma removed if empty)
 
 first-
 #define ISR(vn,pri,...) _ISR(vn##_VN,vn,pri,##__VA_ARGS__,SOFT)
@@ -342,17 +347,17 @@ first-
  the ISR macro takes 3 arguments-
     vn is vector name
     pri is priority level 0-7
-    variadic... is empty, SOFT, SRS, or AUTO
+    ... is empty, SOFT, SRS, or AUTO
 
     something like  ISR(CORE_TIMER, 7, SOFT) or
                     ISR(CORE_TIMER, 7, SRS) or
-                    ISR(CORE_TIMER, 7) default SOFT
+                    ISR(CORE_TIMER, 7) default SOFT, as ... is empty
 
  the ISR then 'calls' _ISR with the arguments-
     vn##_VN, which is- CORE_TIMER_VN
     vn, which is CORE_TIMER
     pri, which is PRI7
-    variadic..., which is SOFT -UNLESS specified
+    ..., which is SOFT  !UNLESS! specified
     (becomes SRS, SOFT  or SOFT  or SOFT, SOFT  or AUTO, SOFT)
     (the ##__VA_ARGS__ will be 'nothing' if no argument, which moves
      the default argument into the 'first' position of the following
@@ -369,21 +374,21 @@ second-
 
  the _ISR macro runs with 'expanded' values
     CORE_TIMER_VN is now 0 (since we have a define with that name)
-    CORE_TIMER is unchanged
-    7 is unchanged
-    the typ is either the specified previous value, or SOFT
+    CORE_TIMER is unchanged (we will use for name)
+    7 is unchanged (priority)
+    the typ is either the specified value, or SOFT
     (the ... is there to 'consume' the default argument if not used)
 
-    so we have _ISR(0,CORE_TIMER,7,SOFT)
+    so we now have _ISR(0,CORE_TIMER,7,SOFT)
 
  we first declare our function in the C namespace with the attributes set-
-    vector(0),interrupt(IPL7SOFT), and the function name is CORE_TIMER_ISR
-    (function name is not really important, except when looking at disassembled
-     code, we can see by the name what that function is for)
+ vector(0),interrupt(IPL7SOFT), and the function name is CORE_TIMER_ISR
+ (function name is not really important, except when looking at disassembled
+  code we can see by the name what that function is for)
 
  now that the function is declared, we can get out of the "C" namespace and
- simply start the function definition with our declared name, we simply need
- to only add the opening brace, our code, and the closing brace
+ simply start the function definition with our declared name, we need to only
+ add the opening brace, our code, and the closing brace
 
  simple.
 
