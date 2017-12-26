@@ -1,5 +1,0 @@
-{
-    "terminal.integrated.env.linux": {
-        "PATH": "/home/owner/.platformio/penv/bin:/home/owner/bin:/home/owner/.local/bin:/home/owner/bin:/home/owner/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
-    }
-}
