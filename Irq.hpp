@@ -162,7 +162,7 @@ void Irq::shadow_set(uint8_t pri, bool tf){
 
 
 
-
+//YUCK - DEFINES/MACROS
 
 ////////////////////////////////////////////////////////////////////////////////
 // ISR MACROS - the only (easy) way to 'automate' isr creation a little bit,
