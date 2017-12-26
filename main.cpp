@@ -324,29 +324,34 @@ int main(){
  see Irq.hpp (end of file) for ISR details
 =============================================================================*/
 ISR(CORE_TIMER, 7){
-    Cp0::compare_reload();
+    Irq ir; Cp0 cp; //not needed, but like to use .func instead of IrQ::func
+    cp.compare_reload();
     led2.invert();
-    Irq::flagclear(Irq::CORE_TIMER);
+    ir.flagclear(ir.CORE_TIMER);
 }
 ISR(TIMER_1, 1){
+    Irq ir;
     led1.invert();
-    Irq::flagclear(Irq::TIMER_1);
+    ir.flagclear(ir.TIMER_1);
 }
 ISR(TIMER_2, 1){
+    Irq ir;
     led1.invert();
-    Irq::flagclear(Irq::TIMER_2);
+    ir.flagclear(ir.TIMER_2);
 }
 ISR(TIMER_3, 1){
+    Irq ir;
     led1.invert();
-    Irq::flagclear(Irq::TIMER_3);
+    ir.flagclear(ir.TIMER_3);
 }
 ISR(RTCC, 1){
+    Irq ir; Cp0 cp;
     static bool b = false;
     if(b = !b){ //toggle and check
-        Irq::on(Irq::CORE_TIMER, false); //core timer irq disable
+        ir.on(Irq::CORE_TIMER, false); //core timer irq disable
         led2.off();
     } else {
-        Cp0::compare_reload(true); //true = clear flag, core timer irq on
+        cp.compare_reload(true); //true = clear flag, core timer irq on
     }
-    Irq::flagclear(Irq::RTCC);
+    ir.flagclear(ir.RTCC);
 }
