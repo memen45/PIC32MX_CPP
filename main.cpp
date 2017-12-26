@@ -316,33 +316,33 @@ int main(){
 
 /*=============================================================================
  Interrupt code
- irq's need to be set in other code for the priority-
- priority set has to match priority used in ISR definition
+ irq's need to be set in other code for the priority (Irq::init) -
+    priority has to match priority used in ISR definition
  if shadow register set used, Irq::shadow_set() has to be set to the same
- priority level
- see Irq.hpp for ISR details
+    priority level
+ if not specified, the type is SOFT (options AUTO, SRS, SOFT)
+ see Irq.hpp (end of file) for ISR details
 =============================================================================*/
-ISR(CORE_TIMER, 7, SOFT){
+ISR(CORE_TIMER, 7){
     Cp0::compare_reload();
     led2.invert();
     Irq::flagclear(Irq::CORE_TIMER);
 }
-ISR(TIMER_1, 1, SOFT){
+ISR(TIMER_1, 1){
     led1.invert();
     Irq::flagclear(Irq::TIMER_1);
 }
-ISR(TIMER_2, 1, SOFT){
+ISR(TIMER_2, 1){
     led1.invert();
     Irq::flagclear(Irq::TIMER_2);
 }
-ISR(TIMER_3, 1, SOFT){
+ISR(TIMER_3, 1){
     led1.invert();
     Irq::flagclear(Irq::TIMER_3);
 }
-ISR(RTCC, 1, SOFT){
+ISR(RTCC, 1){
     static bool b = false;
-    b = !b;
-    if(b){
+    if(b = !b){ //toggle and check
         Irq::on(Irq::CORE_TIMER, false); //core timer irq disable
         led2.off();
     } else {

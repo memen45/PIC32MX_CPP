@@ -167,10 +167,12 @@ void Irq::shadow_set(uint8_t pri, bool tf){
 ////////////////////////////////////////////////////////////////////////////////
 // ISR MACROS - the only (easy) way to 'automate' isr creation a little bit,
 //              is to use defines/macros, as the __attribute__ options need
-//              constants that cannot be computed except by the preprocessor
+//              constants that cannot be computed except by simple substitution
+//              by the preprocessor
 ////////////////////////////////////////////////////////////////////////////////
 // these names for the isr are similar to IRQ_VN enum names, appending _VN
-// BUT, use the IRQ_VN name, the macro will expand to use these defines
+// BUT, you need to use the IRQ_VN name in the ISR macro, which will be
+// converted to use these defines
 ////////////////////////////////////////////////////////////////////////////////
 #define CORE_TIMER_VN 0
 #define CORE_SOFTWARE_0_VN 1
@@ -257,16 +259,19 @@ void Irq::shadow_set(uint8_t pri, bool tf){
 ////////////////////////////////////////////////////////////////////////////////
 // Type SRS, SOFT, AUTO (just use soft instead)
 // just use these type names, no defines needed
+// SOFT is default if not specified (instead of AUTO)
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 // here are the macros (need to expand args, so ISR 'calls' _ISR)
 ////////////////////////////////////////////////////////////////////////////////
-#define _ISR(vn,nam,pri,typ) \
+#define _ISR(vn,nam,pri,typ,...) \
     extern "C" {\
-        void __attribute__((vector(vn),interrupt(IPL##pri##typ))) nam##_ISR();\
+        void __attribute__((vector(vn),interrupt(IPL##pri##typ)))\
+        nam##_ISR();\
     }\
     void nam##_ISR()
-#define ISR(vn,pri,typ) _ISR(vn##_VN,vn,pri,typ)
+
+#define ISR(vn,pri,...) _ISR(vn##_VN,vn,pri,##__VA_ARGS__,SOFT)
 
 ////////////////////////////////////////////////////////////////////////////////
 // description of macros
@@ -310,6 +315,14 @@ void __attribute__((vector(0), interrupt(IPL7SOFT))) CoreTimerISR(){
     Irq::flagclear(Irq::CORE_TIMER);
  }
 
+ or (using default of SOFT)
+
+ ISR(CORE_TIMER, 7){
+    Cp0::compare_reload();
+    led2.invert();
+    Irq::flagclear(Irq::CORE_TIMER);
+ }
+
 NOTE- the priority level has to match the priority level previously set in
       other code for the specified irq, in this case the priority level is 7
       the SRS option can only be used if other code also sets this priority
@@ -323,27 +336,33 @@ names in Irq::IRQ_VN, since the enums are inside a class and are specified
 by class when used)
 
 
-NOTE- ## is macro string concatenation
+NOTE- ## is macro string concatenation (except before __VA_ARGS__)
 
 first-
-#define ISR(vn,pri,typ) _ISR(vn##_VN,vn,pri,typ)
+#define ISR(vn,pri,...) _ISR(vn##_VN,vn,pri,##__VA_ARGS__,SOFT)
 
  the ISR macro takes 3 arguments-
     vn is vector name
     pri is priority level 0-7
-    typ is SOFT,SRS, or AUTO
+    variadic... is empty, SOFT, SRS, or AUTO
 
-    something like ISR(CORE_TIMER, PRI7, SOFT)
+    something like  ISR(CORE_TIMER, 7, SOFT) or
+                    ISR(CORE_TIMER, 7, SRS) or
+                    ISR(CORE_TIMER, 7) default SOFT
 
  the ISR then 'calls' _ISR with the arguments-
     vn##_VN, which is- CORE_TIMER_VN
     vn, which is CORE_TIMER
     pri, which is PRI7
-    typ, which is SOFT
+    variadic..., which is SOFT -UNLESS specified
+    (becomes SRS, SOFT  or SOFT  or SOFT, SOFT  or AUTO, SOFT)
+    (the ##__VA_ARGS__ will be 'nothing' if no argument, which moves
+     the default argument into the 'first' position of the following
+     variadic... in _ISR)
 
 
 second-
- _ISR(vn,nam,pri,typ) \
+ _ISR(vn,nam,pri,typ,...) \
     extern "C" {\
         void __attribute__((vector(vn),interrupt(IPL##pri##typ))) nam##_ISR();\
     }\
@@ -353,8 +372,9 @@ second-
  the _ISR macro runs with 'expanded' values
     CORE_TIMER_VN is now 0 (since we have a define with that name)
     CORE_TIMER is unchanged
-    PRI7 is now 7 (since we have a define with that name)
-    SOFT is unchanged
+    7 is unchanged
+    the typ is either the specified previous value, or SOFT
+    (the ... is there to 'consume' the default argument if not used)
 
     so we have _ISR(0,CORE_TIMER,7,SOFT)
 
