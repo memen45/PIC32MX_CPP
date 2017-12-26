@@ -7,6 +7,7 @@
 #include <cstdint>
 #include "Reg.hpp"
 
+
 struct Irq {
 
     //irq vector numbers
@@ -155,3 +156,218 @@ void Irq::shadow_set(uint8_t pri, bool tf){
     pri &= 7; pri <<= 2; //0*4=0 1*4=4, 7*4=28
     r.set(PRISS, 1<<pri, tf);
 }
+
+
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// ISR MACROS - the only (easy) way to 'automate' isr creation a little bit,
+//              is to use defines/macros, as the __attribute__ options need
+//              constants that cannot be computed except by the preprocessor
+////////////////////////////////////////////////////////////////////////////////
+// these names for the isr are similar to IRQ_VN enum names, appending _VN
+// BUT, use the IRQ_VN name, the macro will expand to use these defines
+////////////////////////////////////////////////////////////////////////////////
+#define CORE_TIMER_VN 0
+#define CORE_SOFTWARE_0_VN 1
+#define CORE_SOFTWARE_1_VN 2
+#define EXTERNAL_0_VN 3
+#define EXTERNAL_1_VN 4
+#define EXTERNAL_2_VN 5
+#define EXTERNAL_3_VN 6
+#define EXTERNAL_4_VN 7
+#define CHANGE_NOTICE_A_VN 8
+#define CHANGE_NOTICE_B_VN 9
+#define CHANGE_NOTICE_C_VN 10
+#define CHANGE_NOTICE_D_VN 11
+#define TIMER_1_VN 17
+#define TIMER_2_VN 18
+#define TIMER_3_VN 19
+#define COMPARATOR_1_VN 23
+#define COMPARATOR_2_VN 24
+#define COMPARATOR_3_VN 25
+#define USB_VN 29
+#define RTCC_VN 32
+#define ADC_VN 33
+#define HLVD_VN 36
+#define CLC1_VN 37
+#define CLC2_VN 38
+#define CLC3_VN 39
+#define CLC4_VN 40
+#define SPI1_ERR_VN 41
+#define SPI1_TX_VN 42
+#define SPI1_RX_VN 43
+#define SPI2_ERR_VN 44
+#define SPI2_TX_VN 45
+#define SPI2_RX_VN 46
+#define SPI3_ERR_VN 47
+#define SPI3_TX_VN 48
+#define SPI3_RX_VN 49
+#define UART1_RX_VN 53
+#define UART1_TX_VN 54
+#define UART1_ERR_VN 55
+#define UART2_RX_VN 56
+#define UART2_TX_VN 57
+#define UART2_ERR_VN 58
+#define UART3_RX_VN 59
+#define UART3_TX_VN 60
+#define UART3_ERR_VN 61
+#define I2C1_SLAVE_VN 65
+#define I2C1_MASTER_VN 66
+#define I2C1_BUS_VN 67
+#define I2C2_SLAVE_VN 68
+#define I2C2_MASTER_VN 69
+#define I2C2_BUS_VN 70
+#define I2C3_SLAVE_VN 71
+#define I2C3_MASTER_VN 72
+#define I2C3_BUS_VN 73
+#define CCP1_VN 74
+#define CCT1_VN 75
+#define CCP2_VN 76
+#define CCT2_VN 77
+#define CCP3_VN 78
+#define CCT3_VN 79
+#define CCP4_VN 80
+#define CCT4_VN 81
+#define CCP5_VN 82
+#define CCT5_VN 83
+#define CCP6_VN 84
+#define CCT6_VN 85
+#define CCP7_VN 86
+#define CCT7_VN 87
+#define CCP8_VN 88
+#define CCT8_VN 89
+#define CCP9_VN 90
+#define CCT9_VN 91
+#define FRC_TUNE_VN 92
+#define NVM_VN 94
+#define PERFORMANCE_COUNTER_VN 95
+#define ECCSB_ERR_VN 97
+#define DMA0_VN 98
+#define DMA1_VN 99
+#define DMA2_VN 100
+#define DMA3_VN 101
+////////////////////////////////////////////////////////////////////////////////
+// Priority 0-7 (0=off, 7=highest)
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+// Type SRS, SOFT, AUTO (just use soft instead)
+// just use these type names, no defines needed
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+// here are the macros (need to expand args, so ISR 'calls' _ISR)
+////////////////////////////////////////////////////////////////////////////////
+#define _ISR(vn,nam,pri,typ) \
+    extern "C" {\
+        void __attribute__((vector(vn),interrupt(IPL##pri##typ))) nam##_ISR();\
+    }\
+    void nam##_ISR()
+#define ISR(vn,pri,typ) _ISR(vn##_VN,vn,pri,typ)
+
+////////////////////////////////////////////////////////////////////////////////
+// description of macros
+////////////////////////////////////////////////////////////////////////////////
+/*
+
+here is the 'manual' way to create an isr function (without macro help)
+
+extern "C" {
+void __attribute__((vector(0), interrupt(IPL7SOFT))) CoreTimerISR(){
+    Cp0::compare_reload();
+    led2.invert();
+    Irq::flagclear(Irq::CORE_TIMER);
+}
+}
+
+ we first have to use 'extern "C" {}' to get the isr name into C namespace
+ or else the linker cannot find it
+
+ then the attributes to the function need to be defined-
+ vector(0) will override the weak function __vector_dispatch_0, where a jump
+ to our isr is placed instead of one to _DefaultInterrupt
+ IPL7SOFT tells the compiler to create interrupt backup/restore registers code
+ for the specified priority level and type
+
+ NOTE- the priority level has to match the priority level previously set in
+       other code for the specified irq, in this case the priority level is 7
+       the SRS option can only be used if other code also sets this priority
+       level to use the shadow register set
+
+
+ the 'manual' way is not too hard, but is a little cumbersome with the
+ attributes, so defines/macros are used to help
+
+
+ here is what the same irq above looks like with the ISR macro-
+
+ ISR(CORE_TIMER, 7, SOFT){
+    Cp0::compare_reload();
+    led2.invert();
+    Irq::flagclear(Irq::CORE_TIMER);
+ }
+
+NOTE- the priority level has to match the priority level previously set in
+      other code for the specified irq, in this case the priority level is 7
+      the SRS option can only be used if other code also sets this priority
+      level to use the shadow register set
+
+
+the ISR names from Irq::IRQ_VN are used in the ISR macro (same as datasheet)
+with _VN appended to keep defines from possibly colliding with others- in
+the ISR macro, use the Irq::IRQ_VN name (which will not collide with same
+names in Irq::IRQ_VN, since the enums are inside a class and are specified
+by class when used)
+
+
+NOTE- ## is macro string concatenation
+
+first-
+#define ISR(vn,pri,typ) _ISR(vn##_VN,vn,pri,typ)
+
+ the ISR macro takes 3 arguments-
+    vn is vector name
+    pri is priority level 0-7
+    typ is SOFT,SRS, or AUTO
+
+    something like ISR(CORE_TIMER, PRI7, SOFT)
+
+ the ISR then 'calls' _ISR with the arguments-
+    vn##_VN, which is- CORE_TIMER_VN
+    vn, which is CORE_TIMER
+    pri, which is PRI7
+    typ, which is SOFT
+
+
+second-
+ _ISR(vn,nam,pri,typ) \
+    extern "C" {\
+        void __attribute__((vector(vn),interrupt(IPL##pri##typ))) nam##_ISR();\
+    }\
+    void nam##_ISR()
+
+
+ the _ISR macro runs with 'expanded' values
+    CORE_TIMER_VN is now 0 (since we have a define with that name)
+    CORE_TIMER is unchanged
+    PRI7 is now 7 (since we have a define with that name)
+    SOFT is unchanged
+
+    so we have _ISR(0,CORE_TIMER,7,SOFT)
+
+ we first declare our function in the C namespace with the attributes set-
+    vector(0),interrupt(IPL7SOFT), and the function name is CORE_TIMER_ISR
+    (function name is not really important, except when looking at disassembled
+     code, we can see by the name what that function is for)
+
+ now that the function is declared, we can get out of the "C" namespace and
+ simply start the function definition with our declared name, we simply need
+ to only add the opening brace, our code, and the closing brace
+
+ simple.
+
+
+*/

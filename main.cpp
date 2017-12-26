@@ -114,6 +114,7 @@ int main(){
     //for(;;rc0.invert(),rc2.invert(),tmr.wait_ms(5000) );
     // +3.29vdc , -3.29vdc
 
+
     //__________________________________________________________________________
     Resets::CAUSE cause = Resets::cause();  //use cause result somewhere
                                             //(will be EXTR mostly with pkob)
@@ -310,56 +311,42 @@ int main(){
             sw_dly.set_ms(100);             //sw debounce (use for all switches)
         }
     }
+
 }
 
 /*=============================================================================
  Interrupt code
- manually specify vector attribute- irq number 0-101
- and interrupt attribute- IPLpSRS|IPLpSOFT|IPLpAUTO (p=0-7, 0=disabled)
- (no way to set these without using defines- and I want to stay away from
-  defines- just manually set them, its not that hard)
-
- 1. irq priority p [+enable] set in code for vector vn- Irq::init()
- 2. lookup number for vector (in Irq.hpp), set vector(vn) attribute
- 3. use same priority p in step 1 for IPLp,
- 4. use IPLpSOFT unless using SRS,
-    if using SRS, set in code first- Irq::shadow_set(p, 1)
-    set interrupt attribute to IPLpSRS
-
- first isr below-
- Irq::CORE_TIMER init to irq priority 7 in main code
- CORE_TIMER lookup shows vector number is 0, so use vector(0)
- Irq::shadow_set(5, 1) in main code, so use interrupt(IPL7SOFT)
- (isr function name used not important to compiler)
+ irq's need to be set in other code for the priority-
+ priority set has to match priority used in ISR definition
+ if shadow register set used, Irq::shadow_set() has to be set to the same
+ priority level
+ see Irq.hpp for ISR details
 =============================================================================*/
-extern "C" {
-    void __attribute__((vector(0), interrupt(IPL7SOFT))) CoreTimerISR(){
-        Cp0::compare_reload();
-        led2.invert();
-        Irq::flagclear(Irq::CORE_TIMER);
-    }
-    void __attribute__((vector(17), interrupt(IPL1SOFT))) Timer1ISR(){
-        led1.invert();
-        Irq::flagclear(Irq::TIMER_1);
-    }
-    void __attribute__((vector(18), interrupt(IPL1SOFT))) Timer2ISR(){
-        led1.invert();
-        Irq::flagclear(Irq::TIMER_2);
-    }
-    void __attribute__((vector(19), interrupt(IPL1SOFT))) Timer3ISR(){
-        led1.invert();
-        Irq::flagclear(Irq::TIMER_3);
-    }
-    void __attribute__((vector(32), interrupt(IPL1SOFT))) RtccISR(){
-        static bool b = false;
-        b = !b;
-        if(b){
-            Irq::on(Irq::CORE_TIMER, false); //core timer irq disable
-            led2.off();
-        } else {
-            Cp0::compare_reload(true); //true = clear flag, core timer irq on
-        }
-        Irq::flagclear(Irq::RTCC);
-    }
+ISR(CORE_TIMER, 7, SOFT){
+    Cp0::compare_reload();
+    led2.invert();
+    Irq::flagclear(Irq::CORE_TIMER);
 }
-
+ISR(TIMER_1, 1, SOFT){
+    led1.invert();
+    Irq::flagclear(Irq::TIMER_1);
+}
+ISR(TIMER_2, 1, SOFT){
+    led1.invert();
+    Irq::flagclear(Irq::TIMER_2);
+}
+ISR(TIMER_3, 1, SOFT){
+    led1.invert();
+    Irq::flagclear(Irq::TIMER_3);
+}
+ISR(RTCC, 1, SOFT){
+    static bool b = false;
+    b = !b;
+    if(b){
+        Irq::on(Irq::CORE_TIMER, false); //core timer irq disable
+        led2.off();
+    } else {
+        Cp0::compare_reload(true); //true = clear flag, core timer irq on
+    }
+    Irq::flagclear(Irq::RTCC);
+}
