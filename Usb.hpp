@@ -318,10 +318,10 @@ struct UsbHandlers {
     declared in user data at top of this file
 ..............................................................................*/
 void USB_ISR(){
-    Usb u;
+    Usb u; Irq ir;
     static Usb::state_t last_state; //keep track of usb state for resumes
-    uint8_t flags = u.flags();      //get all irq flags
-    Irq::flagclear(Irq::USB);       //clear usb irq flag before early returns
+    uint8_t flags = u.flags();      //get all usb specific irq flags
+    ir.flag_clr(ir.USB);            //clear usb irq flag before early returns
 
     //ATTACHED->POWERED if vbus_pin high
     if(u.state == u.ATTACHED){

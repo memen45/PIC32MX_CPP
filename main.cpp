@@ -327,22 +327,22 @@ ISR(CORE_TIMER, 7){
     Irq ir; Cp0 cp; //not needed, but like to use .func instead of IrQ::func
     cp.compare_reload();
     led2.invert();
-    ir.flagclear(ir.CORE_TIMER);
+    ir.flag_clr(ir.CORE_TIMER);
 }
 ISR(TIMER_1, 1){
     Irq ir;
     led1.invert();
-    ir.flagclear(ir.TIMER_1);
+    ir.flag_clr(ir.TIMER_1);
 }
 ISR(TIMER_2, 1){
     Irq ir;
     led1.invert();
-    ir.flagclear(ir.TIMER_2);
+    ir.flag_clr(ir.TIMER_2);
 }
 ISR(TIMER_3, 1){
     Irq ir;
     led1.invert();
-    ir.flagclear(ir.TIMER_3);
+    ir.flag_clr(ir.TIMER_3);
 }
 ISR(RTCC, 1){
     Irq ir; Cp0 cp;
@@ -353,5 +353,5 @@ ISR(RTCC, 1){
     } else {
         cp.compare_reload(true); //true = clear flag, core timer irq on
     }
-    ir.flagclear(ir.RTCC);
+    ir.flag_clr(ir.RTCC);
 }

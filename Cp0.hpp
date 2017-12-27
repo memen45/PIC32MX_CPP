@@ -41,7 +41,7 @@ void Cp0::compare(uint32_t v){ __builtin_mtc0(11,0,v); } //set
 void Cp0::compare_reload(bool tf){
     compare(count() + m_compare_count);
     if(tf){
-        ir.flagclear(ir.CORE_TIMER);
+        ir.flag_clr(ir.CORE_TIMER);
         ir.on(ir.CORE_TIMER, true);
     }
 }
