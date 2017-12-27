@@ -346,7 +346,6 @@ struct UsbHandlers {
 void USB_ISR(){
     Usb u; Irq ir;
     static Usb::state_t last_state; //keep track of usb state for resumes
-
     Usb::flags_t flags;
     Usb::eflags_t eflags;
     Usb::stat_t stat;
@@ -354,14 +353,16 @@ void USB_ISR(){
     flags.all = u.flags();          //get all usb specific irq flags
     eflags.all = u.eflags();        //get all usb specific irq error flags
     stat.all = u.stat();            //get stat reg BEFORE flags cleared
+
     u.flags_clr(flags.all);         //clear only what we got (1=clear)
     u.eflags_clr(eflags.all);       //clear only what we got (1=clear)
     ir.flag_clr(ir.USB);            //clear usb irq flag
 
+
     //ATTACHED->POWERED if vbus_pin high
     if(u.state == u.ATTACHED){
         if(vbus_pin.ison()) u.state = u.POWERED;
-        else return; //no power (not sure how we get here)
+        else return; //no power (not sure how we would get here)
     }
 
     //must be >= POWERED
