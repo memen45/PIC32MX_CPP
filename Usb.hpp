@@ -327,8 +327,8 @@ void USB_ISR(){
     uint8_t eflags = u.eflags();    //get all usb specific irq error flags
     Usb::stat_t stat;               //get stat reg BEFORE flags cleared
     u.stat(stat);                   //pass by reference
-    u.flags_clr(flags);             //clear what we got (1=clear)
-    u.eflags_clr(eflags);           //clear what we got (1=clear)
+    u.flags_clr(flags);             //clear only what we got (1=clear)
+    u.eflags_clr(eflags);           //clear only what we got (1=clear)
     ir.flag_clr(ir.USB);            //clear usb irq flag
 
     //ATTACHED->POWERED if vbus_pin high
