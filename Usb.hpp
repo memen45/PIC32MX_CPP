@@ -326,7 +326,7 @@ void USB_ISR(){
     //ATTACHED->POWERED if vbus_pin high
     if(u.state == u.ATTACHED){
         if(vbus_pin.ison()) u.state = u.POWERED;
-        else { //no power (not sure how we would get irq with no vbus)
+        else { //no power (not sure how we would get here with no vbus)
             u.eflags_clr(u.ALLEFLAGS);
             u.flags_clr(u.ERROR);
             return;
