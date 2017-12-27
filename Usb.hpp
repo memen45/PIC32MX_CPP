@@ -321,14 +321,17 @@ void USB_ISR(){
     Usb u; Irq ir;
     static Usb::state_t last_state; //keep track of usb state for resumes
     uint8_t flags = u.flags();      //get all usb specific irq flags
+    uint8_t eflags = u.eflags();    //get all usb specific irq error flags
+    Usb::stat_t stat;               //get stat reg BEFORE flags cleared
+    u.stat(stat);                   //pass by reference
+    u.flags_clr(flags);             //clear what we got (1=clear)
+    u.eflags_clr(eflags);           //clear what we got (1=clear)
     ir.flag_clr(ir.USB);            //clear usb irq flag before early returns
 
     //ATTACHED->POWERED if vbus_pin high
     if(u.state == u.ATTACHED){
         if(vbus_pin.ison()) u.state = u.POWERED;
         else { //no power (not sure how we would get here with no vbus)
-            u.eflags_clr(u.ALLEFLAGS);
-            u.flags_clr(u.ERROR);
             return;
         }
     }
@@ -341,10 +344,7 @@ void USB_ISR(){
             u.state = last_state;       //back to previous state
             u.irq(u.RESUME, false);     //disable resume irq
             u.irq(u.IDLE, true);        //enable idle (?)
-            u.flags_clr(u.RESUME|u.IDLE); //also clear idle (?)
         } else if(!(flags & u.RESET)){  //if not reset,
-            u.eflags_clr(u.ALLEFLAGS);  //clear all flags
-            u.flags_clr(u.ALLFLAGS);    //(not sure how we get here)
             return;                     //still suspended
         }
         //reset or resume, continue below
@@ -354,8 +354,6 @@ void USB_ISR(){
     if (flags & u.IDLE){
         last_state = u.state; //save
         u.state = u.SUSPENDED;
-        u.eflags_clr(u.ALLEFLAGS);
-        u.flags_clr(u.ALLFLAGS);
         u.irq(u.RESUME, true); //enable resume irq
         u.irq(u.IDLE, false); //disable idle (?)
         //do suspend- whatever is needed
@@ -365,10 +363,7 @@ void USB_ISR(){
     //check reset
     //POWERED->DEFAULT, or >=DEFAULT->ATTACHED
     if(flags & u.RESET){ //handle reset condition
-        if(u.state == u.POWERED){
-            u.state = u.DEFAULT;
-            u.flags_clr(u.RESET);
-        }
+        if(u.state == u.POWERED) u.state = u.DEFAULT;
         else {
             UsbHandlers::attach(); //from >=DEFAULT, so attach
             return;
@@ -379,30 +374,19 @@ void USB_ISR(){
     //(ADDRESS, CONFIGURED set in non-isr code)
 
     if(flags & u.ERROR){ //handle errors
-        u.eflags_clr(u.ALLEFLAGS);
-        u.flags_clr(u.ERROR);
-        return;
     }
 
     if(flags & u.STALL){ //handle stall
-        u.flags_clr(u.STALL);
     }
 
     if(flags & u.SOF){ //handle SOF
-        u.flags_clr(u.SOF);
     }
 
     if(flags & u.TOKEN){
-        do{ //get while TOKEN flag set (stat buffer is 4 deep)
-            //get stat reg, so we can determine which endpoint to call
-            Usb::stat_t s;
-            //pass s struct to get value (instead of getting uint8_t)
-            u.stat(s);
-            //call only if an endpoint range we are using
-            if(s.endpt <= my_last_endp) ep[s.endpt].token((uint8_t)s.bdidx);
-            //clear flag after, stat fifo advances when cleared
-            u.flags_clr(u.TOKEN);
-        } while(u.flag(u.TOKEN));
+        //call only if an endpoint range we are using
+        if(stat.endpt <= my_last_endp){
+            ep[stat.endpt].token((uint8_t)stat.bdidx);
+        }
     }
 }
 

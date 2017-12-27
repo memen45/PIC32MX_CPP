@@ -15,8 +15,8 @@ struct Reg {
     template <typename T> static void       inv     (T, uint32_t);
     template <typename T> static bool       is_set  (T, uint32_t);
     template <typename T> static bool       is_clr  (T, uint32_t);
-    template <typename T> static bool       is_set8 (T, uint8_t);//usb regs use
-    template <typename T> static bool       is_clr8 (T, uint8_t);//only 8bits
+    template <typename T> static bool       is_set8 (T, uint8_t);
+    template <typename T> static bool       is_clr8 (T, uint8_t);
     template <typename T> static uint32_t   val     (T);
     template <typename T> static void       val     (T, uint32_t);
     template <typename T> static void       val16   (T, uint16_t);
@@ -53,7 +53,7 @@ struct Reg {
 template <typename T> void Reg::set(T r, uint32_t v){
     *(reinterpret_cast <volatile uint32_t*>(r)+SET) = v;
 }
-//same name as set, but 3 args, last is true/false = set/clr
+//same name as set, but 3 args, last is true/false = set/clr (clr+1=set)
 template <typename T> void Reg::set(T r, uint32_t v, bool sc){
     *(reinterpret_cast <volatile uint32_t*>(r)+CLR+sc) = v;
 }
