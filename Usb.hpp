@@ -79,12 +79,40 @@ ______________________________________________________________________________*/
         DETACH = 1<<0 /*host only*/,  ALLFLAGS = 255
     };
 
+    typedef union {
+        struct {
+        unsigned reset:1;
+        unsigned error:1;
+        unsigned sof:1;
+        unsigned token:1;
+        unsigned idle:1;
+        unsigned resume:1;
+        unsigned attach:1;
+        unsigned stall:1;
+        };
+        uint8_t all;
+    } flags_t;
+
     enum EFLAGS : uint8_t {
         //U1EIR, U1EIE
-        BITSTUFF = 1<<7, BUSMATRIX = 1<<6, DMA = 1<<5, BUSTIMEOUT = 1<<4,
-        DATASIZE = 1<<3, CRC16 = 1<<2, CRC5 = 1<<1, EOF = 1<<1, PID = 1<<0,
+        BSTUFF = 1<<7, BMATRIX = 1<<6, DMA = 1<<5, BTMOUT = 1<<4,
+        DATSIZ = 1<<3, CRC16 = 1<<2, CRC5 = 1<<1, EOF = 1<<1, PID = 1<<0,
         ALLEFLAGS = 255
     };
+
+    typedef union {
+        struct {
+        unsigned pid:1;
+        unsigned crc5:1;
+        unsigned crc16:1;
+        unsigned datsiz:1;
+        unsigned btmout:1;
+        unsigned dma:1;
+        unsigned bmatrix:1;
+        unsigned bstuff:1;
+        };
+        uint8_t all;
+    } eflags_t;
 
     static volatile uint8_t flags       ();             //get all
     static volatile bool    flag        (FLAGS);        //get one
@@ -132,11 +160,10 @@ ______________________________________________________________________________*/
         };
         struct { unsigned :2; unsigned bdidx:2; unsigned :4; };
         struct { unsigned :2; unsigned bdn:6; };
-        uint8_t val;
+        uint8_t all;
     } stat_t;
 
     static volatile uint8_t stat                ();
-    static void             stat                (stat_t&);
 
 
     /*..........................................................................
@@ -254,7 +281,6 @@ void Usb::eirqs(uint8_t v){ Reg::val8(U1EIE, v); }
 void Usb::irq(FLAGS e, bool tf){ Reg::set(U1IE, e); }
 void Usb::eirq(EFLAGS e, bool tf){ Reg::set(U1EIE, e); }
 volatile uint8_t Usb::stat(){ return Reg::val8(U1STAT); }
-void Usb::stat(stat_t& s){ s.val = Reg::val8(U1STAT); }
 volatile bool Usb::control(CONTROL e){ return Reg::is_set8(U1CON, e); }
 void Usb::control(CONTROL e, bool tf){ Reg::set(U1CON, e, tf); }
 void Usb::control(uint8_t v){ Reg::val8(U1CON, v); }
@@ -321,78 +347,75 @@ void USB_ISR(){
     Usb u; Irq ir;
     static Usb::state_t last_state; //keep track of usb state for resumes
 
-    for( ; ir.flag(ir.USB); ){      //keep processing until no more usb irq
+    Usb::flags_t flags;
+    Usb::eflags_t eflags;
+    Usb::stat_t stat;
 
-    uint8_t flags = u.flags();      //get all usb specific irq flags
-    uint8_t eflags = u.eflags();    //get all usb specific irq error flags
-    Usb::stat_t stat;               //get stat reg BEFORE flags cleared
-    u.stat(stat);                   //pass by reference
-    u.flags_clr(flags);             //clear only what we got (1=clear)
-    u.eflags_clr(eflags);           //clear only what we got (1=clear)
+    flags.all = u.flags();          //get all usb specific irq flags
+    eflags.all = u.eflags();        //get all usb specific irq error flags
+    stat.all = u.stat();            //get stat reg BEFORE flags cleared
+    u.flags_clr(flags.all);         //clear only what we got (1=clear)
+    u.eflags_clr(eflags.all);       //clear only what we got (1=clear)
     ir.flag_clr(ir.USB);            //clear usb irq flag
 
     //ATTACHED->POWERED if vbus_pin high
     if(u.state == u.ATTACHED){
         if(vbus_pin.ison()) u.state = u.POWERED;
-        else { //no power (not sure how we would get here with no vbus)
-            continue;
-        }
+        else return; //no power (not sure how we get here)
     }
 
     //must be >= POWERED
 
     //if SUSPENDED, check for resume or reset
     if(u.state == u.SUSPENDED){
-        if(flags & u.RESUME){           //resume
+        if(flags.resume){               //resume
             u.state = last_state;       //back to previous state
             u.irq(u.RESUME, false);     //disable resume irq
             u.irq(u.IDLE, true);        //enable idle (?)
-        } else if(!(flags & u.RESET)){  //if not reset,
-            continue;                   //still suspended
+        } else if(! flags.reset){       //if not reset,
+            return;                     //still suspended
         }
         //reset or resume, continue below
     }
 
     //check if need to suspend (idle detected >3ms)
-    if (flags & u.IDLE){
+    if (flags.idle){
         last_state = u.state; //save
         u.state = u.SUSPENDED;
         u.irq(u.RESUME, true); //enable resume irq
         u.irq(u.IDLE, false); //disable idle (?)
         //do suspend- whatever is needed
-        continue;
+        return;
     }
 
     //check reset
     //POWERED->DEFAULT, or >=DEFAULT->ATTACHED
-    if(flags & u.RESET){ //handle reset condition
+    if(flags.reset){ //handle reset condition
         if(u.state == u.POWERED) u.state = u.DEFAULT;
         else {
             UsbHandlers::attach(); //from >=DEFAULT, so attach
-            continue;
+            return;
         }
     }
 
     //in state DEFAULT, ADDRESS, or CONFIGURED
     //(ADDRESS, CONFIGURED set in non-isr code)
 
-    if(flags & u.ERROR){ //handle errors
+    if(flags.error){ //handle errors
     }
 
-    if(flags & u.STALL){ //handle stall
+    if(flags.stall){ //handle stall
     }
 
-    if(flags & u.SOF){ //handle SOF
+    if(flags.sof){ //handle SOF
     }
 
-    if(flags & u.TOKEN){
+    if(flags.token){
         //call only if an endpoint range we are using
         if(stat.endpt <= my_last_endp){
             ep[stat.endpt].token((uint8_t)stat.bdidx);
         }
     }
-
-    } //for loop
 }
 
 /*..............................................................................
@@ -400,9 +423,9 @@ void USB_ISR(){
         power down usb module, usb irq's off
 ..............................................................................*/
 void UsbHandlers::detach(void){
-    Usb u;
+    Usb u; Irq ir;
     u.control(u.USBEN, false);  //disable usb module, detach from bus
-    Irq::on(Irq::USB, false);   //all usb irqs off
+    ir.on(ir.USB, false);       //all usb irqs off
     while(u.power(u.BUSY));     //wait for busy bit to clear first
     u.power(u.USBPWR, false);   //usb module off
 
@@ -420,7 +443,7 @@ void UsbHandlers::detach(void){
         called from isr (from >=DEFAULT back to ATTACHED)
 ..............................................................................*/
 void UsbHandlers::attach(void){
-    Usb u; UsbBuf ubuf;
+    Usb u; UsbBuf ubuf; Irq ir;
 
     detach();                       //all off (regs will reset from off->on)
     u.power(u.USBPWR, true);        //usb on (all regs now reset)
@@ -433,8 +456,8 @@ void UsbHandlers::attach(void){
 
     //enable irqs
     u.irqs(u.STALL|u.IDLE|u.TOKEN|u.SOF|u.ERROR|u.RESET);
-    u.eirqs(u.BITSTUFF|u.BUSTIMEOUT|u.DATASIZE|u.CRC16|u.CRC5|u.PID);
-    Irq::init(Irq::USB, usb_irq_pri, usb_irq_subpri, true);
+    u.eirqs(u.BSTUFF|u.BTMOUT|u.DATSIZ|u.CRC16|u.CRC5|u.PID);
+    ir.init(ir.USB, usb_irq_pri, usb_irq_subpri, true);
 
     u.control(u.USBEN, true);       //enable usb
 
