@@ -125,7 +125,7 @@ void Irq::flag_clr(IRQ_VN irqvn){
     r.clr(IFS_BASE + ((irqvn/32)*16), 1<<(irqvn%32));
 }
 bool Irq::flag(IRQ_VN irqvn){
-    r.is_set(IFS_BASE + ((irqvn/32)*16), 1<<(irqvn%32));
+    return r.is_set(IFS_BASE + ((irqvn/32)*16), 1<<(irqvn%32));
 }
 void Irq::on(IRQ_VN irqvn, bool tf){
     r.set(IEC_BASE + ((irqvn/32)*16), 1<<(irqvn%32), tf);

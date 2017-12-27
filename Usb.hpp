@@ -320,19 +320,22 @@ struct UsbHandlers {
 void USB_ISR(){
     Usb u; Irq ir;
     static Usb::state_t last_state; //keep track of usb state for resumes
+
+    for( ; ir.flag(ir.USB); ){      //keep processing until no more usb irq
+
     uint8_t flags = u.flags();      //get all usb specific irq flags
     uint8_t eflags = u.eflags();    //get all usb specific irq error flags
     Usb::stat_t stat;               //get stat reg BEFORE flags cleared
     u.stat(stat);                   //pass by reference
     u.flags_clr(flags);             //clear what we got (1=clear)
     u.eflags_clr(eflags);           //clear what we got (1=clear)
-    ir.flag_clr(ir.USB);            //clear usb irq flag before early returns
+    ir.flag_clr(ir.USB);            //clear usb irq flag
 
     //ATTACHED->POWERED if vbus_pin high
     if(u.state == u.ATTACHED){
         if(vbus_pin.ison()) u.state = u.POWERED;
         else { //no power (not sure how we would get here with no vbus)
-            return;
+            continue;
         }
     }
 
@@ -345,7 +348,7 @@ void USB_ISR(){
             u.irq(u.RESUME, false);     //disable resume irq
             u.irq(u.IDLE, true);        //enable idle (?)
         } else if(!(flags & u.RESET)){  //if not reset,
-            return;                     //still suspended
+            continue;                   //still suspended
         }
         //reset or resume, continue below
     }
@@ -357,7 +360,7 @@ void USB_ISR(){
         u.irq(u.RESUME, true); //enable resume irq
         u.irq(u.IDLE, false); //disable idle (?)
         //do suspend- whatever is needed
-        return;
+        continue;
     }
 
     //check reset
@@ -366,7 +369,7 @@ void USB_ISR(){
         if(u.state == u.POWERED) u.state = u.DEFAULT;
         else {
             UsbHandlers::attach(); //from >=DEFAULT, so attach
-            return;
+            continue;
         }
     }
 
@@ -388,6 +391,8 @@ void USB_ISR(){
             ep[stat.endpt].token((uint8_t)stat.bdidx);
         }
     }
+
+    } //for loop
 }
 
 /*..............................................................................
