@@ -317,7 +317,7 @@ struct UsbHandlers {
     USB ISR
     declared in user data at top of this file
 ..............................................................................*/
-void  USB_ISR(){
+void USB_ISR(){
     Usb u;
     static Usb::state_t last_state; //keep track of usb state for resumes
     uint8_t flags = u.flags();      //get all irq flags
