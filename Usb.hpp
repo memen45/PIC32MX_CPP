@@ -28,16 +28,11 @@ static Pins vbus_pin(Pins::B6);             //Vbus pin
 //---interrupt------------------------------------------------------------------
 static const uint8_t usb_irq_pri = 5;       //usb interrupt priority
 static const uint8_t usb_irq_subpri = 0;    //usb interrupt sub-priority
-//IPLn will need to match usb_irq_pri,
-//vector(n) will need to match USB vector number
-//if using shadow register for this priority, will have to set elsewhere
-//using Irq::shadow_set(pri, 1), then match the priority here and use IPLnSRS
-//declare here in C namespace so we can have in user data here,
-//then define in code below
-//(its in UsbHandler section, although not in any class)
-extern "C" {
-    void __attribute__((vector(29), interrupt(IPL5SRS))) UsbISR();
-}
+//priority will need to be set in Irq::init(), and if using shadow register
+//also need to set to this priority using Irq::shadow_set()
+//(isr function is in UsbHandler section, although not in any class can be
+// anywhere)
+ISR(USB, 5, SRS); //declared only, defined later in this file
 ///////////////////////////////////////////////////////////////////////////////
 /////// usb uses irq only, no polling /////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -322,11 +317,11 @@ struct UsbHandlers {
     USB ISR
     declared in user data at top of this file
 ..............................................................................*/
-void  UsbISR(){
+void  USB_ISR(){
     Usb u;
     static Usb::state_t last_state; //keep track of usb state for resumes
-    uint8_t flags = u.flags();      //get all flags
-    Irq::flagclear(Irq::USB);       //clear irq flag before any early returns
+    uint8_t flags = u.flags();      //get all irq flags
+    Irq::flagclear(Irq::USB);       //clear usb irq flag before early returns
 
     //ATTACHED->POWERED if vbus_pin high
     if(u.state == u.ATTACHED){

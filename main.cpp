@@ -346,7 +346,7 @@ ISR(TIMER_3, 1){
 }
 ISR(RTCC, 1){
     Irq ir; Cp0 cp;
-    static bool b = false;
+    static bool b;
     if(b = !b){ //toggle and check
         ir.on(Irq::CORE_TIMER, false); //core timer irq disable
         led2.off();
