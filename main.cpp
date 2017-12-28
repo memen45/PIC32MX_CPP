@@ -348,7 +348,7 @@ ISR(RTCC, 1){
     Irq ir; Cp0 cp;
     static bool b;
     if(b = !b){ //toggle and check
-        ir.on(Irq::CORE_TIMER, false); //core timer irq disable
+        ir.on(ir.CORE_TIMER, false); //core timer irq disable
         led2.off();
     } else {
         cp.compare_reload(true); //true = clear flag, core timer irq on
