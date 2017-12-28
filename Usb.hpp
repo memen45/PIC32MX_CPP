@@ -427,10 +427,8 @@ void USB_ISR(){
     flags.all &= u.irqs();          //mask off irq's not enabled
     eflags.all &= u.eirqs();        //mask off error irq's not enabled
 
-    //I'm not sure this is necessary, but we are using .endpt to index
-    //into an array of endpoint classes, so if the host gives us
-    //something for an endpoint beyond our array, we won't be
-    //attempting to call it
+    //shouldn't happen, but check anyway to make sure its inside
+    //our ep array
     if(stat.endpt > my_last_endp) return;
 
     //usb states-
@@ -465,6 +463,7 @@ void USB_ISR(){
         last_state = u.ATTACHED;
         return true;
     };
+
 
     switch(u.state){
         case u.ATTACHED:                    //only reset irq is active
