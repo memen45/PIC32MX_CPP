@@ -427,32 +427,23 @@ void USB_ISR(){
     flags.all &= u.irqs();          //mask off irq's not enabled
     eflags.all &= u.eirqs();        //mask off error irq's not enabled
 
-    //shouldn't happen, but check anyway to make sure its inside
+    //shouldn't happen, but check anyway to make sure we stay inside
     //our ep array
     if(stat.endpt > my_last_endp) return;
 
-    //usb states-
-    //DETACHED -we never see here, just means usb peripheral off
-    //ATTACHED, POWERED, DEFAULT, ADDRESS, CONFIGURED, SUSPENDED
-
     //nested function, check if need to suspend (idle detected >3ms)
+    //if go SUSPENDED, all flags will be cleared and only a resume
+    //or reset will get us going again (we were idle for a while so
+    //nothing going on, so safe to clear all flags)
     auto is_idle = [ & ](){
         if (flags.idle == 0) return false;
         last_state = u.state;               //save state for resume
         u.state = u.SUSPENDED;              //now in SUSPENDED state
-        u.irq(u.RESUME, true);              //enable resume irq
+        u.flags_clr(u.ALLFLAGS);            //clear flags
+        u.eflags_clr(u.ALLEFLAGS);          //clear flags
         u.irqs(u.RESUME|u.RESET);           //only resume or reset resumes
         //do suspend- whatever is needed
         return true;
-    };
-
-    //nested function, set to 'normal' interrupts
-    //clear all flags first
-    auto normal_irqs = [ & ](){
-        u.flags_clr(u.ALLFLAGS);            //clear all flags before enabling
-        u.eflags_clr(u.ALLEFLAGS);          //more irq's
-        u.irqs(u.STALL|u.IDLE|u.TOKEN|u.SOF|u.ERROR|u.RESET);
-        u.eirqs(u.BSTUFF|u.BTMOUT|u.DATSIZ|u.CRC16|u.CRC5|u.PID);
     };
 
     //nested function, check if reset flag, if so start over by calling
@@ -464,7 +455,19 @@ void USB_ISR(){
         return true;
     };
 
+    //nested function, set to 'normal' interrupts from idle+reset
+    //or resume+reset, or reset only
+    //clear all flags first
+    auto normal_irqs = [ & ](){
+        u.flags_clr(u.ALLFLAGS);            //clear flags
+        u.eflags_clr(u.ALLEFLAGS);          //clear flags
+        u.irqs(u.STALL|u.IDLE|u.TOKEN|u.SOF|u.ERROR|u.RESET);
+        u.eirqs(u.BSTUFF|u.BTMOUT|u.DATSIZ|u.CRC16|u.CRC5|u.PID);
+    };
 
+    //usb states-
+    //DETACHED -we never see here, just means usb peripheral off
+    //ATTACHED, POWERED, DEFAULT, ADDRESS, CONFIGURED, SUSPENDED
     switch(u.state){
         case u.ATTACHED:                    //only reset irq is active
             if(vbus_pin.isoff()) return;    //no vbus, we should not be here
@@ -475,7 +478,7 @@ void USB_ISR(){
         case u.POWERED:                     //reset and idle irq's active
             if(is_idle()) return;           //if idle, switch state and return
             if(flags.reset == 0) return;    //need reset to go to DEFAULT state
-            normal_irqs();                  //reset, so enable normal irq's
+            normal_irqs();                  //was reset, so enable normal irq's
             u.state = u.DEFAULT;            //and go to DEFAULT state
             return;
 
