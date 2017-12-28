@@ -338,87 +338,6 @@ struct UsbHandlers {
 // UsbHandlers static functions, vars
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-
-/*..............................................................................
-    USB ISR
-    declared in user data at top of this file
-..............................................................................*/
-void USB_ISR(){
-    Usb u; Irq ir;
-    static Usb::state_t last_state; //keep track of usb state for resumes
-    Usb::flags_t flags;
-    Usb::eflags_t eflags;
-    Usb::stat_t stat;
-
-    flags.all = u.flags();          //get all usb specific irq flags
-    eflags.all = u.eflags();        //get all usb specific irq error flags
-    stat.all = u.stat();            //get stat reg BEFORE flags cleared
-
-    u.flags_clr(flags.all);         //clear only what we got (1=clear)
-    u.eflags_clr(eflags.all);       //clear only what we got (1=clear)
-    ir.flag_clr(ir.USB);            //clear usb irq flag
-
-
-    //ATTACHED->POWERED if vbus_pin high
-    if(u.state == u.ATTACHED){
-        if(vbus_pin.ison()) u.state = u.POWERED;
-        else return; //no power (not sure how we would get here)
-    }
-
-    //must be >= POWERED
-
-    //if SUSPENDED, check for resume or reset
-    if(u.state == u.SUSPENDED){
-        if(flags.resume){               //resume
-            u.state = last_state;       //back to previous state
-            u.irq(u.RESUME, false);     //disable resume irq
-            u.irq(u.IDLE, true);        //enable idle (?)
-        } else if(! flags.reset){       //if not reset,
-            return;                     //still suspended
-        }
-        //reset or resume, continue below
-    }
-
-    //check if need to suspend (idle detected >3ms)
-    if (flags.idle){
-        last_state = u.state; //save
-        u.state = u.SUSPENDED;
-        u.irq(u.RESUME, true); //enable resume irq
-        u.irq(u.IDLE, false); //disable idle (?)
-        //do suspend- whatever is needed
-        return;
-    }
-
-    //check reset
-    //POWERED->DEFAULT, or >=DEFAULT->ATTACHED
-    if(flags.reset){ //handle reset condition
-        if(u.state == u.POWERED) u.state = u.DEFAULT;
-        else {
-            UsbHandlers::attach(); //from >=DEFAULT, so attach
-            return;
-        }
-    }
-
-    //in state DEFAULT, ADDRESS, or CONFIGURED
-    //(ADDRESS, CONFIGURED set in non-isr code)
-
-    if(flags.error){ //handle errors
-    }
-
-    if(flags.stall){ //handle stall
-    }
-
-    if(flags.sof){ //handle SOF
-    }
-
-    if(flags.token){
-        //call only if an endpoint range we are using
-        if(stat.endpt <= my_last_endp){
-            ep[stat.endpt].token((uint8_t)stat.bdidx);
-        }
-    }
-}
-
 /*..............................................................................
     detach
         power down usb module, usb irq's off
@@ -431,6 +350,7 @@ void UsbHandlers::detach(void){
     u.power(u.USBPWR, false);   //usb module off
 
     u.state = u.DETACHED;
+
     //wait 100ms+ before attach again (if we are cause of reset/detach and
     //was previously in >= DEFAULT state)
     //if was a usb reset that caused the attach function to run (and this)
@@ -456,9 +376,12 @@ void UsbHandlers::attach(void){
     ep[0].on(true);                 //and enable endpoint 0
 
     //enable irqs
-    u.irqs(u.STALL|u.IDLE|u.TOKEN|u.SOF|u.ERROR|u.RESET);
-    u.eirqs(u.BSTUFF|u.BTMOUT|u.DATSIZ|u.CRC16|u.CRC5|u.PID);
+    u.irqs(u.RESET); // only looking for reset first
+    //u.irqs(u.STALL|u.IDLE|u.TOKEN|u.SOF|u.ERROR|u.RESET);
+    //u.eirqs(u.BSTUFF|u.BTMOUT|u.DATSIZ|u.CRC16|u.CRC5|u.PID);
     ir.init(ir.USB, usb_irq_pri, usb_irq_subpri, true);
+
+    u.state = u.ATTACHED;
 
     u.control(u.USBEN, true);       //enable usb
 
@@ -475,6 +398,105 @@ void UsbHandlers::attach(void){
     attach();               //init all things
  }
 
+
+
+
+
+
+ /*..............................................................................
+    USB ISR
+    declared in user data at top of this file
+..............................................................................*/
+void USB_ISR(){
+    Usb u; Irq ir;
+    static Usb::state_t last_state; //keep track of usb state for resumes
+
+    Usb::flags_t flags;
+    Usb::eflags_t eflags;
+    Usb::stat_t stat;
+
+    flags.all = u.flags();          //get all usb specific irq flags
+    eflags.all = u.eflags();        //get all usb specific irq error flags
+    stat.all = u.stat();            //get stat reg BEFORE flags cleared
+
+    u.flags_clr(flags.all);         //clear only what we got (1=clear)
+    u.eflags_clr(eflags.all);       //clear only what we got (1=clear)
+    ir.flag_clr(ir.USB);            //clear usb irq flag
+
+    flags.all &= u.irqs();          //mask off irq's not enabled
+    eflags.all &= u.eirqs();        //mask off error irq's not enabled
+
+    //usb states-
+    //DETACHED -we never see here, just means usb peripheral off
+    //ATTACHED, POWERED, DEFAULT, ADDRESS, CONFIGURED, SUSPENDED
+
+    //nested function, check if need to suspend (idle detected >3ms)
+    auto is_idle = [ & ](){
+        if (flags.idle == 0) return false;
+        last_state = u.state;               //save state for resume
+        u.state = u.SUSPENDED;              //now in SUSPENDED state
+        u.irq(u.RESUME, true);              //enable resume irq
+        u.irqs(u.RESUME|u.RESET);           //only resume or reset resumes
+        //do suspend- whatever is needed
+        return true;
+    };
+
+    auto normal_irqs = [ & ](){
+        u.flags_clr(u.ALLFLAGS);            //clear all flags before enabling
+        u.eflags_clr(u.ALLEFLAGS);          //more irq's
+        u.irqs(u.STALL|u.IDLE|u.TOKEN|u.SOF|u.ERROR|u.RESET);
+        u.eirqs(u.BSTUFF|u.BTMOUT|u.DATSIZ|u.CRC16|u.CRC5|u.PID);
+    };
+
+    auto is_reset = [ & ](){
+        if (flags.reset == 0) return false;
+        UsbHandlers::attach();
+        last_state = u.ATTACHED;
+        return true;
+    };
+
+    switch(u.state){
+        case u.ATTACHED:                    //only reset irq is active
+            if(vbus_pin.isoff()) return;    //no vbus, we should not be here
+            u.state = u.POWERED;            //vbus ok, now go to POWERED state
+            u.flags_clr(u.IDLE);            //clear idle flag before enabling
+            u.irqs(u.IDLE|u.RESET);         //now add idle irq
+            //fall through
+        case u.POWERED:                     //reset and idle irq's active
+            if(is_idle()) return;           //if idle, switch state and return
+            if(flags.reset == 0) return;    //need reset to go to DEFAULT
+            normal_irqs();
+            u.state = u.DEFAULT;
+            break;
+        case u.DEFAULT:                     //device adddress is 0
+        case u.ADDRESS:                     //other code sets this state
+        case u.CONFIGURED:                  //other code sets this state
+            if(is_idle()) return;           //if idle, switch state and return
+            break;
+        case u.SUSPENDED:                   //only resume and reset irq's active
+            if(is_reset()) return;          //if reset, back to attached and return
+            u.state = last_state;           //else resume, back to previous state
+            normal_irqs();                  //and normal irq's
+            break;
+    }
+
+    //now we can check flags
+    if(flags.error){
+    }
+
+    if(flags.stall){
+    }
+
+    if(flags.sof){
+    }
+
+    if(flags.token){
+        if(stat.endpt <= my_last_endp){     //only if endpoint in range
+            ep[stat.endpt].token((uint8_t)stat.bdidx); //call endpoint
+        }
+    }
+
+}
 
 
 
