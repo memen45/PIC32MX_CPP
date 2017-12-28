@@ -12,6 +12,7 @@
 
 
 
+
 ///////////////////////////////////////////////////////////////////////////////
 /////// user provided data ////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -326,14 +327,14 @@ UsbEndpt ep[my_last_endp+1] = {
 struct UsbHandlers {
 //______________________________________________________________________________
 //
-// UsbHandlers - handle usb interrupt, call handlers
+// UsbHandlers
 //______________________________________________________________________________
     static void     UsbISR              (void);
     static void     init                ();
-    //state handlers
     static void     detach              (void);
     static void     attach              (void);
 };
+
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 // UsbHandlers static functions, vars
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -361,7 +362,7 @@ void UsbHandlers::detach(void){
 /*..............................................................................
     attach
         called from init (which first calls detach)
-        called from isr (from >=DEFAULT back to ATTACHED)
+        called from isr (when >=DEFAULT and reset flag)
 ..............................................................................*/
 void UsbHandlers::attach(void){
     Usb u; UsbBuf ubuf; Irq ir;
@@ -408,7 +409,7 @@ void UsbHandlers::attach(void){
     declared in user data at top of this file
 ..............................................................................*/
 void USB_ISR(){
-    Usb u; Irq ir;
+    Usb u; Irq ir;                  // u. for Usb:: , ir. for Irq::
     static Usb::state_t last_state; //keep track of usb state for resumes
 
     Usb::flags_t flags;
@@ -426,6 +427,12 @@ void USB_ISR(){
     flags.all &= u.irqs();          //mask off irq's not enabled
     eflags.all &= u.eirqs();        //mask off error irq's not enabled
 
+    //I'm not sure this is necessary, but we are using .endpt to index
+    //into an array of endpoint classes, so if the host gives us
+    //something for an endpoint beyond our array, we won't be
+    //attempting to call it
+    if(stat.endpt > my_last_endp) return;
+
     //usb states-
     //DETACHED -we never see here, just means usb peripheral off
     //ATTACHED, POWERED, DEFAULT, ADDRESS, CONFIGURED, SUSPENDED
@@ -441,6 +448,8 @@ void USB_ISR(){
         return true;
     };
 
+    //nested function, set to 'normal' interrupts
+    //clear all flags first
     auto normal_irqs = [ & ](){
         u.flags_clr(u.ALLFLAGS);            //clear all flags before enabling
         u.eflags_clr(u.ALLEFLAGS);          //more irq's
@@ -448,6 +457,8 @@ void USB_ISR(){
         u.eirqs(u.BSTUFF|u.BTMOUT|u.DATSIZ|u.CRC16|u.CRC5|u.PID);
     };
 
+    //nested function, check if reset flag, if so start over by calling
+    //attach() (only called from >=DEFAULT state)
     auto is_reset = [ & ](){
         if (flags.reset == 0) return false;
         UsbHandlers::attach();
@@ -464,23 +475,27 @@ void USB_ISR(){
             //fall through
         case u.POWERED:                     //reset and idle irq's active
             if(is_idle()) return;           //if idle, switch state and return
-            if(flags.reset == 0) return;    //need reset to go to DEFAULT
-            normal_irqs();
-            u.state = u.DEFAULT;
-            break;
+            if(flags.reset == 0) return;    //need reset to go to DEFAULT state
+            normal_irqs();                  //reset, so enable normal irq's
+            u.state = u.DEFAULT;            //and go to DEFAULT state
+            return;
+
         case u.DEFAULT:                     //device adddress is 0
         case u.ADDRESS:                     //other code sets this state
         case u.CONFIGURED:                  //other code sets this state
             if(is_idle()) return;           //if idle, switch state and return
-            break;
-        case u.SUSPENDED:                   //only resume and reset irq's active
-            if(is_reset()) return;          //if reset, back to attached and return
-            u.state = last_state;           //else resume, back to previous state
+            break;                          //only these 3 states break
+                                            //into useful code below
+
+        case u.SUSPENDED:                   //only resume/reset irq's active
+            if(is_reset()) return;          //if reset, attach and return
+            u.state = last_state;           //else resume, to previous state
             normal_irqs();                  //and normal irq's
-            break;
+            return;
     }
 
-    //now we can check flags
+    //DEFAULT, ADDRESS, or CONFIGURED state
+    //now we can check flags and do important stuff
     if(flags.error){
     }
 
@@ -490,10 +505,9 @@ void USB_ISR(){
     if(flags.sof){
     }
 
+    //and here we go to work moving bytes
     if(flags.token){
-        if(stat.endpt <= my_last_endp){     //only if endpoint in range
-            ep[stat.endpt].token((uint8_t)stat.bdidx); //call endpoint
-        }
+        ep[stat.endpt].token((uint8_t)stat.bdidx); //call endpoint
     }
 
 }
