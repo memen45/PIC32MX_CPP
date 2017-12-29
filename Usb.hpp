@@ -33,7 +33,7 @@ static const uint8_t usb_irq_subpri = 0;    //usb interrupt sub-priority
 //also need to set to this priority using Irq::shadow_set()
 //(isr function is in UsbHandler section, although not in any class can be
 // anywhere)
-ISR(USB, 5, SRS); //declared only, defined later in this file
+ISR(USB, 6); //declared only, defined later in this file
 ///////////////////////////////////////////////////////////////////////////////
 /////// usb uses irq only, no polling /////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -435,7 +435,7 @@ void USB_ISR(){
     //if go SUSPENDED, all flags will be cleared and only a resume
     //or reset will get us going again (we were idle for a while so
     //nothing going on, so safe to clear all flags)
-    auto is_idle = [ & ](){
+    auto _is_idle = [ & ](){
         if (flags.idle == 0) return false;
         last_state = u.state;               //save state for resume
         u.state = u.SUSPENDED;              //now in SUSPENDED state
@@ -448,17 +448,17 @@ void USB_ISR(){
 
     //nested function, check if reset flag, if so start over by calling
     //attach() (only called from >=DEFAULT state)
-    auto is_reset = [ & ](){
+    auto _is_reset = [ & ](){
         if (flags.reset == 0) return false;
         UsbHandlers::attach();
         last_state = u.ATTACHED;
         return true;
     };
 
-    //nested function, set to 'normal' interrupts from idle+reset
-    //or resume+reset, or reset only
+    //nested function, set to 'default' usb interrupts from
+    //idle+reset or resume+reset, or reset only
     //clear all flags first
-    auto normal_irqs = [ & ](){
+    auto _default = [ & ](){
         u.flags_clr(u.ALLFLAGS);            //clear flags
         u.eflags_clr(u.ALLEFLAGS);          //clear flags
         u.irqs(u.STALL|u.IDLE|u.TOKEN|u.SOF|u.ERROR|u.RESET);
@@ -466,7 +466,7 @@ void USB_ISR(){
     };
 
     //usb states-
-    //DETACHED -we never see here, just means usb peripheral off
+    //DETACHED -we never see here, usb peripheral off
     //ATTACHED, POWERED, DEFAULT, ADDRESS, CONFIGURED, SUSPENDED
     switch(u.state){
         case u.ATTACHED:                    //only reset irq is active
@@ -476,23 +476,22 @@ void USB_ISR(){
             u.irqs(u.IDLE|u.RESET);         //now add idle irq
             //fall through
         case u.POWERED:                     //reset and idle irq's active
-            if(is_idle()) return;           //if idle, switch state and return
-            if(flags.reset == 0) return;    //need reset to go to DEFAULT state
-            normal_irqs();                  //was reset, so enable normal irq's
-            u.state = u.DEFAULT;            //and go to DEFAULT state
+            if(_is_idle()) return;          //if idle, switch state and return
+            if(flags.reset == 0) return;    //need to see reset before we
+            u.state = u.DEFAULT;            //go to DEFAULT state
+            _default();                     //was reset, so enable default irq's
             return;
 
         case u.DEFAULT:                     //device adddress is 0
         case u.ADDRESS:                     //other code sets this state
         case u.CONFIGURED:                  //other code sets this state
-            if(is_idle()) return;           //if idle, switch state and return
-            break;                          //only these 3 states break
-                                            //into useful code below
+            if(_is_idle()) return;          //if idle, switch state and return
+            break;                          //only these 3 states continue below
 
         case u.SUSPENDED:                   //only resume/reset irq's active
-            if(is_reset()) return;          //if reset, attach and return
+            if(_is_reset()) return;         //if reset, attach and return
             u.state = last_state;           //else resume, to previous state
-            normal_irqs();                  //and normal irq's
+            _default();                     //and back to default irq's
             return;
     }
 

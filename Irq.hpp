@@ -162,7 +162,14 @@ void Irq::shadow_set(uint8_t pri, bool tf){
 }
 
 
-
+//struct isr {
+//    [[gnu::vector(5), gnu::keep, gnu::interrupt(IPL0AUTO) ]] void (*fp)();
+//    uint8_t vn;
+//    isr(uint8_t n, void(*f)()) :
+//    vn(n),
+//    fp(f)
+//    {}
+//};
 
 //YUCK - DEFINES
 
@@ -269,13 +276,12 @@ void Irq::shadow_set(uint8_t pri, bool tf){
 //the real work done here
 #define _ISR(vn, nam, pri, typ, ...) \
     extern "C" {\
-        void __attribute__(( vector(vn), interrupt(IPL##pri##typ) ))\
-        nam##_ISR();\
+        void __attribute((vector(vn),interrupt(IPL##pri##typ))) nam##_ISR();\
     }\
     void nam##_ISR()
 
 //we use this one
-#define ISR(vn, pri, ...) _ISR(vn##_VN, vn, pri, ##__VA_ARGS__, SOFT)
+#define ISR(vn, pri, ...) _ISR(vn##_VN, vn, pri, ##__VA_ARGS__, AUTO)
 ////////////////////////////////////////////////////////////////////////////////
 // description of macros
 ////////////////////////////////////////////////////////////////////////////////
@@ -284,7 +290,7 @@ void Irq::shadow_set(uint8_t pri, bool tf){
 here is the 'manual' way to create an isr function (without macro help)
 
 extern "C" {
-void __attribute__((vector(0), interrupt(IPL7SOFT))) CoreTimerISR(){
+void __attribute((vector(0), interrupt(IPL7SOFT))) CoreTimerISR(){
     Cp0::compare_reload();
     led2.invert();
     Irq::flagclear(Irq::CORE_TIMER);
@@ -370,7 +376,7 @@ first-
 second-
  _ISR(vn,nam,pri,typ,...) \
     extern "C" {\
-        void __attribute__((vector(vn),interrupt(IPL##pri##typ))) nam##_ISR();\
+        void __attribute((vector(vn),interrupt(IPL##pri##typ))) nam##_ISR();\
     }\
     void nam##_ISR()
 

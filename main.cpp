@@ -83,7 +83,7 @@ Irq::irq_list_t irqlist[] = {               //list of irq's to init/enable
     { Irq::TIMER_1,     1,  0,  true },
     { Irq::TIMER_2,     1,  0,  true },
     { Irq::TIMER_3,     1,  0,  true },
-    { Irq::CORE_TIMER,  7,  0,  true },
+    { Irq::CORE_TIMER,  5,  0,  true },
     { Irq::RTCC,        1,  0,  true },
     { Irq::END }                            //need END or else bad happens
 };
@@ -323,8 +323,8 @@ int main(){
  if not specified, the type is SOFT (options AUTO, SRS, SOFT)
  see Irq.hpp (end of file) for ISR details
 =============================================================================*/
-ISR(CORE_TIMER, 7){
-    Irq ir; Cp0 cp; //not needed, but like to use .func instead of IrQ::func
+ISR(CORE_TIMER, 5){
+    Irq ir; Cp0 cp; //can use IrQ::func() also
     cp.compare_reload();
     led2.invert();
     ir.flag_clr(ir.CORE_TIMER);
