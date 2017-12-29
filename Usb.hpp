@@ -29,11 +29,7 @@ static Pins vbus_pin(Pins::B6);             //Vbus pin
 //---interrupt------------------------------------------------------------------
 static const uint8_t usb_irq_pri = 5;       //usb interrupt priority
 static const uint8_t usb_irq_subpri = 0;    //usb interrupt sub-priority
-//priority will need to be set in Irq::init(), and if using shadow register
-//also need to set to this priority using Irq::shadow_set()
-//(isr function is in UsbHandler section, although not in any class can be
-// anywhere)
-ISR(USB, 6); //declared only, defined later in this file
+ISR(USB); //declared only, defined later in this file
 ///////////////////////////////////////////////////////////////////////////////
 /////// usb uses irq only, no polling /////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

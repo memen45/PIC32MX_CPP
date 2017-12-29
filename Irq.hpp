@@ -162,22 +162,11 @@ void Irq::shadow_set(uint8_t pri, bool tf){
 }
 
 
-//struct isr {
-//    [[gnu::vector(5), gnu::keep, gnu::interrupt(IPL0AUTO) ]] void (*fp)();
-//    uint8_t vn;
-//    isr(uint8_t n, void(*f)()) :
-//    vn(n),
-//    fp(f)
-//    {}
-//};
 
 //YUCK - DEFINES
 
 ////////////////////////////////////////////////////////////////////////////////
-// ISR MACROS - the only (easy) way to 'automate' isr creation a little bit,
-//              is to use defines/macros, as the __attribute__ options need
-//              constants that cannot be computed except by simple substitution
-//              by the preprocessor
+// ISR DEFINES/MACROS
 ////////////////////////////////////////////////////////////////////////////////
 // these names for the isr are similar to IRQ_VN enum names, appending _VN
 // BUT, you need to use the IRQ_VN name in the ISR macro, which will be
@@ -265,141 +254,25 @@ void Irq::shadow_set(uint8_t pri, bool tf){
 ////////////////////////////////////////////////////////////////////////////////
 // Priority 0-7 (0=off, 7=highest)
 ////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-// Type SRS, SOFT, AUTO (just use soft instead)
-// just use these type names, no defines needed
-// SOFT is default if not specified (instead of AUTO)
-////////////////////////////////////////////////////////////////////////////////
+
 ////////////////////////////////////////////////////////////////////////////////
 // here are the macros (need to expand args, so ISR 'calls' _ISR)
 ////////////////////////////////////////////////////////////////////////////////
 //the real work done here
-#define _ISR(vn, nam, pri, typ, ...) \
-    extern "C" {\
-        void __attribute((vector(vn),interrupt(IPL##pri##typ))) nam##_ISR();\
-    }\
+#define _ISR(vn, nam) \
+    extern "C" { void __attribute((vector(vn),interrupt)) nam##_ISR(); }\
     void nam##_ISR()
 
 //we use this one
-#define ISR(vn, pri, ...) _ISR(vn##_VN, vn, pri, ##__VA_ARGS__, AUTO)
-////////////////////////////////////////////////////////////////////////////////
-// description of macros
-////////////////////////////////////////////////////////////////////////////////
-/*
+#define ISR(vn) _ISR(vn##_VN, vn)
 
-here is the 'manual' way to create an isr function (without macro help)
+/*  simple usage-
 
-extern "C" {
-void __attribute((vector(0), interrupt(IPL7SOFT))) CoreTimerISR(){
-    Cp0::compare_reload();
-    led2.invert();
-    Irq::flagclear(Irq::CORE_TIMER);
-}
-}
+    ISR(ADC){
+        //code goes here
+    }
 
- we first have to use 'extern "C" {}' to get the isr name into C namespace
- or else the linker cannot find it
-
- then the attributes to the function need to be defined-
- vector(0) will override the weak function __vector_dispatch_0, where a jump
- to our isr is placed instead of one to _DefaultInterrupt
- IPL7SOFT tells the compiler to create interrupt backup/restore registers code
- for the specified priority level and type
-
- NOTE- the priority level has to match the priority level previously set in
-       other code for the specified irq, in this case the priority level is 7
-       the SRS option can only be used if other code also sets this priority
-       level to use the shadow register set
-
-
- the 'manual' way is not too hard, but is a little cumbersome with the
- attributes- we have to lookup the vector number when we lookup the name which
- can lead to using incorrect vector number, so defines/macros are used to help
- where we only need to come up with correct name
-
-
- here is what the same irq above looks like with the ISR macro-
-
- ISR(CORE_TIMER, 7, SOFT){
-    Cp0::compare_reload();
-    led2.invert();
-    Irq::flagclear(Irq::CORE_TIMER);
- }
-
- or (using default of SOFT)
-
- ISR(CORE_TIMER, 7){
-    Cp0::compare_reload();
-    led2.invert();
-    Irq::flagclear(Irq::CORE_TIMER);
- }
-
-NOTE- the priority level has to match the priority level previously set in
-      other code for the specified irq, in this case the priority level is 7
-      the SRS option can only be used if other code also sets this priority
-      level to use the shadow register set
-
-
-the ISR names from Irq::IRQ_VN are used in the ISR macro (same as datasheet)
-with _VN appended to keep defines from possibly colliding with others- in
-the ISR macro, use the Irq::IRQ_VN name (which will not collide with same
-names in Irq::IRQ_VN, since the enums are inside a class and are specified
-by class when used)
-
-
-NOTE- ## is macro string concatenation (except before __VA_ARGS__, which
-      indicates we want the preceeding comma removed if empty)
-
-first-
-#define ISR(vn,pri,...) _ISR(vn##_VN,vn,pri,##__VA_ARGS__,SOFT)
-
- the ISR macro takes 3 arguments-
-    vn is vector name
-    pri is priority level 0-7
-    ... is empty, SOFT, SRS, or AUTO
-
-    something like  ISR(CORE_TIMER, 7, SOFT) or
-                    ISR(CORE_TIMER, 7, SRS) or
-                    ISR(CORE_TIMER, 7) default SOFT, as ... is empty
-
- the ISR then 'calls' _ISR with the arguments-
-    vn##_VN, which is- CORE_TIMER_VN
-    vn, which is CORE_TIMER
-    pri, which is PRI7
-    ..., which is SOFT  !UNLESS! specified
-    (becomes SRS, SOFT  or SOFT  or SOFT, SOFT  or AUTO, SOFT)
-    (the ##__VA_ARGS__ will be 'nothing' if no argument, which moves
-     the default argument into the 'first' position of the following
-     variadic... in _ISR)
-
-
-second-
- _ISR(vn,nam,pri,typ,...) \
-    extern "C" {\
-        void __attribute((vector(vn),interrupt(IPL##pri##typ))) nam##_ISR();\
-    }\
-    void nam##_ISR()
-
-
- the _ISR macro runs with 'expanded' values
-    CORE_TIMER_VN is now 0 (since we have a define with that name)
-    CORE_TIMER is unchanged (we will use for name)
-    7 is unchanged (priority)
-    the typ is either the specified value, or SOFT
-    (the ... is there to 'consume' the default argument if not used)
-
-    so we now have _ISR(0,CORE_TIMER,7,SOFT)
-
- we first declare our function in the C namespace with the attributes set-
- vector(0),interrupt(IPL7SOFT), and the function name is CORE_TIMER_ISR
- (function name is not really important, except when looking at disassembled
-  code we can see by the name what that function is for)
-
- now that the function is declared, we can get out of the "C" namespace and
- simply start the function definition with our declared name, we need to only
- add the opening brace, our code, and the closing brace
-
- simple.
-
-
+    Irq::init will set priority of isr
+    isr will check if srs shadow set in use
+    will also check ipl level needed
 */

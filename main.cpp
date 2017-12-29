@@ -323,28 +323,28 @@ int main(){
  if not specified, the type is SOFT (options AUTO, SRS, SOFT)
  see Irq.hpp (end of file) for ISR details
 =============================================================================*/
-ISR(CORE_TIMER, 5){
-    Irq ir; Cp0 cp; //can use IrQ::func() also
+ISR(CORE_TIMER){
+    Irq ir; Cp0 cp; //can use IrQ::func() syntax also
     cp.compare_reload();
     led2.invert();
     ir.flag_clr(ir.CORE_TIMER);
 }
-ISR(TIMER_1, 1){
+ISR(TIMER_1){
     Irq ir;
     led1.invert();
     ir.flag_clr(ir.TIMER_1);
 }
-ISR(TIMER_2, 1){
+ISR(TIMER_2){
     Irq ir;
     led1.invert();
     ir.flag_clr(ir.TIMER_2);
 }
-ISR(TIMER_3, 1){
+ISR(TIMER_3){
     Irq ir;
     led1.invert();
     ir.flag_clr(ir.TIMER_3);
 }
-ISR(RTCC, 1){
+ISR(RTCC){
     Irq ir; Cp0 cp;
     static bool b;
     if(b = !b){ //toggle and check
