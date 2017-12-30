@@ -163,6 +163,7 @@ void Irq::shadow_set(uint8_t pri, bool tf){
 
 
 
+
 //YUCK - DEFINES
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -258,10 +259,9 @@ void Irq::shadow_set(uint8_t pri, bool tf){
 ////////////////////////////////////////////////////////////////////////////////
 // here are the macros (need to expand args, so ISR 'calls' _ISR)
 ////////////////////////////////////////////////////////////////////////////////
-//the real work done here
 #define _ISR(vn, nam) \
-    extern "C" { void __attribute((vector(vn),interrupt)) nam##_ISR(); }\
-    void nam##_ISR()
+    extern "C" { void nam##_ISR(); }\
+    __attribute((vector(vn),interrupt)) void nam##_ISR()
 
 //we use this one
 #define ISR(vn) _ISR(vn##_VN, vn)

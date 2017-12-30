@@ -316,12 +316,8 @@ int main(){
 
 /*=============================================================================
  Interrupt code
- irq's need to be set in other code for the priority (Irq::init) -
-    priority has to match priority used in ISR definition
- if shadow register set used, Irq::shadow_set() has to be set to the same
-    priority level
- if not specified, the type is SOFT (options AUTO, SRS, SOFT)
- see Irq.hpp (end of file) for ISR details
+ irq's need to be set in other code for the priority (Irq::init) and shadow
+ set (Irq::shadow_set)
 =============================================================================*/
 ISR(CORE_TIMER){
     Irq ir; Cp0 cp; //can use IrQ::func() syntax also
