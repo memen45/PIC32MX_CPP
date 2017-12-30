@@ -171,3 +171,4 @@ void Irq::shadow_set(uint8_t pri, bool tf){
 #define _IRQVN(nam) Irq::nam
 #define _ISR(nam,vn) extern "C" { void nam##_ISR(); }\
     __attribute((vector((int)vn),interrupt)) void nam##_ISR()
+
