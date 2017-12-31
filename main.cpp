@@ -128,13 +128,13 @@ int main(){
 
     //__________________________________________________________________________
     //try adc - pot on curiosity board
-    Adc adc; Adc def; //<--notice can create multiple references (same thing)
-    Adc::mode_12bit(true); //<--or use directly (all the same)
-    def.trig_sel(adc.AUTO);                 //adc starts conversion
+    Adc adc;
+    adc.mode_12bit(true);                   //12bit mode
+    adc.trig_sel(adc.AUTO);                 //adc starts conversion
     adc.samp_time(31);                      //max sampling time- 31Tad
     adc.conv_time(adc.PBCLK12BIT);          //if no arg,default is 4 (for 24MHz)
     adc.ch_sel(adc.AN14);                   //pot- RC8/AN14 (default ANSEL/TRIS)
-    def.on(true);
+    adc.on(true);
     //to get adc (polling, non-blocking)
     //Adc::samp(true);    //start sample, auto conversion
     //if(Adc::done()){    //check if done
