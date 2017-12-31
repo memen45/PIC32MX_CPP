@@ -465,7 +465,7 @@ void USB_ISR(){
     //ATTACHED, POWERED, DEFAULT, ADDRESS, CONFIGURED, SUSPENDED
     switch(u.state){
         case u.ATTACHED:                    //only reset irq is active
-            if(vbus_pin.isoff()) return;    //no vbus, we should not be here
+            if(!vbus_pin.ison()) return;    //no vbus, we should not be here
             u.state = u.POWERED;            //vbus ok, now go to POWERED state
             u.flags_clr(u.IDLE);            //clear idle flag before enabling
             u.irqs(u.IDLE|u.RESET);         //now add idle irq

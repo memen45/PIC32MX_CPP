@@ -79,10 +79,8 @@ class Pins {
     void        low             () const;
     void        high            () const;
     void        invert          () const;
-    void        on              () const;
-    void        off             () const;
+    void        on              (bool) const;
     bool        ison            () const;
-    bool        isoff           () const;
     //pin modes
     void        lowison         (bool);
     void        digital_in      () const;
@@ -160,8 +158,9 @@ bool Pins::latval() const { return r.is_set(m_pt+LAT, m_pn); }
 void Pins::low() const { r.clr(m_pt+LAT, m_pn); }
 void Pins::high() const { r.set(m_pt+LAT, m_pn); }
 void Pins::invert() const { r.inv(m_pt+LAT, m_pn); }
-void Pins::on() const { m_lowison ? low() : high(); }
-void Pins::off() const { m_lowison ? high() : low(); }
+void Pins::on(bool tf) const {
+    r.set(m_pt+LAT, m_pn, tf^m_lowison);
+}
+//void Pins::off() const { m_lowison ? high() : low(); }
 bool Pins::ison() const { return m_lowison ? !pinval() : pinval(); }
-bool Pins::isoff() const { return !ison(); }
 void Pins::icn_flagclear() const { r.clr(m_pt+CNF, m_pn); }
