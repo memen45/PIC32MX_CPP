@@ -11,21 +11,40 @@ struct Reg {
 
     //public functions
     //set/clear a bit or bits to specified level (default=set=1)
+    //(CLR register offset is +1, SET register offset is +2)
+    //setb(address, bitmask)-> *(uint32_t*)address+CLR+1 = bitmask
+    //setb(address, bitmask, 1)-> *(uint32_t*)address+CLR+1 = bitmask
+    //setb(address, bitmask, 0)-> *(uint32_t*)address+CLR+0|1 = bitmask
     template <typename T> static void       setb    (T, uint32_t, bool = true);
-    //flip bit or bits
+
+    //flip bitmask bit(s) in register
+    //(INV register offset is +3)
+    //flipb(address, bitmask)
     template <typename T> static void       flipb   (T, uint32_t);
 
+    //test if any bitmask bit(s) in the register are set/clear
+    //anybit(address, bitmask)-> return *(uint32_t*)address & bitmask
+    //anybit(address, bitmask, 1)-> return *(uint32_t*)address & bitmask
+    //anybit(address, bitmask, 0)-> return !(*(uint32_t*)address & bitmask)
     template <typename T> static bool       anybit  (T, uint32_t, bool = true);
+
+    //test if all bitmask bit(s) in the register are set/clear
+    //allbits(address, bitmask)->
+    //  return (*(uint32_t*)address & bitmask) == bitmask
+    //allbits(address, bitmask)->
+    //  return (*(uint32_t*)address & bitmask) == bitmask
+    //allbits(address, bitmask)->
+    //  return (*(uint32_t*)address | ~bitmask) == ~bitmask
     template <typename T> static bool       allbits (T, uint32_t, bool);
 
-    //I don't know how to get different return types, so am
-    //just creating 3 different versions- use for val wanted- will
+    //I don't know how to specify different return types when calling,
+    //so am just creating 3 different versions- use for val wanted- will
     //also then use val* as T (can do byte read for 8bits, etc.)
     template <typename T> static uint32_t   val     (T);
     template <typename T> static uint16_t   val16   (T);
     template <typename T> static uint8_t    val8    (T);
 
-    //set make T a V*, so can use the byte or half-word address
+    //make T a V*, so can use the byte or half-word address
     //(V type determines access)
     template <typename T, typename V> static void val(T, V);
 
@@ -36,6 +55,7 @@ struct Reg {
 
     private:
 
+    //register word offset to atomic access registers
     enum { CLR = 1, SET, INV };
 
 };
@@ -80,8 +100,6 @@ template <typename T> uint8_t Reg::val8(T r){
 template <typename T, typename V> void Reg::val(T r, V v){
     *(reinterpret_cast <volatile V*>(r)) = v;
 }
-
-
 
 
 //physical to kseg0/1 addr, kseg to physical addr
