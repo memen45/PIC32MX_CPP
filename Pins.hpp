@@ -19,7 +19,7 @@ class Pins {
         D0,D1,D2,D3,D4
     };
     //pps_in peripheral names
-    enum PPSIN {
+    enum PPSIN : uint8_t {
         //byte offset from RPINR1
         INT4 = 0,                                   //R1
         ICM1 = 6, ICM2 = 7,                         //R2
@@ -153,14 +153,13 @@ constexpr Pins::Pins(RPN e, bool lowison)
       m_lowison(lowison)
 {}
 
-bool Pins::pinval() const { return r.is_set(m_pt+PORT_, m_pn); }
-bool Pins::latval() const { return r.is_set(m_pt+LAT, m_pn); }
-void Pins::low() const { r.clr(m_pt+LAT, m_pn); }
-void Pins::high() const { r.set(m_pt+LAT, m_pn); }
-void Pins::invert() const { r.inv(m_pt+LAT, m_pn); }
+bool Pins::pinval() const { return r.anybit(m_pt+PORT_, m_pn); }
+bool Pins::latval() const { return r.anybit(m_pt+LAT, m_pn); }
+void Pins::low() const { r.setb(m_pt+LAT, m_pn, 0); }
+void Pins::high() const { r.setb(m_pt+LAT, m_pn); }
+void Pins::invert() const { r.flipb(m_pt+LAT, m_pn); }
 void Pins::on(bool tf) const {
-    r.set(m_pt+LAT, m_pn, tf^m_lowison);
+    r.setb(m_pt+LAT, m_pn, tf^m_lowison);
 }
-//void Pins::off() const { m_lowison ? high() : low(); }
 bool Pins::ison() const { return m_lowison ? !pinval() : pinval(); }
-void Pins::icn_flagclear() const { r.clr(m_pt+CNF, m_pn); }
+void Pins::icn_flagclear() const { r.setb(m_pt+CNF, m_pn, 0); }

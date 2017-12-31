@@ -98,17 +98,21 @@ void Rtcc::alarm_repeat(uint8_t v){
 void Rtcc::on(bool tf){ conset(RTCCON1, ON, tf); }
 void Rtcc::out(bool tf){ conset(RTCCON1, PINON, tf); }
 void Rtcc::pin_src(OUTSEL v){ conclr(RTCCON1, CLRSEL); conclr(RTCCON1, v); }
-void Rtcc::clk_div(uint16_t v){ unlock(); r.val16(RTCCON2+2, v); lock(); }
+void Rtcc::clk_div(uint16_t v){
+    unlock();
+    r.val(RTCCON2+2, v);
+    lock();
+}
 void Rtcc::clk_frdiv(uint8_t v){
     conclr(RTCCON2, FRDIVCLR);
     conset(RTCCON2, (v&FRDIVCLR)<<FRDIVSHIFT);
 }
 void Rtcc::clk_pre(PRESCALE e){ conclr(RTCCON2, PRE256); conset(RTCCON2, e); }
 void Rtcc::clk_sel(CLKSEL e){ conclr(RTCCON2, FCY); conset(RTCCON2, e); }
-bool Rtcc::alarm_evt(){ return r.is_set(RTCSTAT, ALMSTAT); }
-bool Rtcc::time_busy(){ return r.is_set(RTCSTAT, SYSNCSTAT); }
-bool Rtcc::alarm_busy(){ return r.is_set(RTCSTAT, ALMSYNCSTAT);}
-bool Rtcc::half_sec(){ return r.is_set(RTCSTAT, HALFSTAT); }
+bool Rtcc::alarm_evt(){ return r.anybit(RTCSTAT, ALMSTAT); }
+bool Rtcc::time_busy(){ return r.anybit(RTCSTAT, SYSNCSTAT); }
+bool Rtcc::alarm_busy(){ return r.anybit(RTCSTAT, ALMSYNCSTAT);}
+bool Rtcc::half_sec(){ return r.anybit(RTCSTAT, HALFSTAT); }
 //raw time, date
 uint32_t Rtcc::time(){ return r.val(RTCTIME); }
 uint32_t Rtcc::date(){ return r.val(RTCDATE); }
@@ -121,13 +125,13 @@ void Rtcc::alarm_date(uint32_t v){ r.val(ALMTIME, v); }
 
 //RTCCON1 lock off by default, these functions will lock RTCCON1 when done
 //private functions
-void Rtcc::unlock(){ Syskey::unlock(); r.clr(RTCCON1, WRLOCK); }
-void Rtcc::lock(){ r.set(RTCCON1, WRLOCK); Syskey::lock(); }
+void Rtcc::unlock(){ Syskey::unlock(); r.setb(RTCCON1, WRLOCK, 0); }
+void Rtcc::lock(){ r.setb(RTCCON1, WRLOCK); Syskey::lock(); }
 void Rtcc::conset(uint32_t r, uint32_t v, bool tf){
-    unlock(); Reg::set(r, v, tf); lock();
+    unlock(); Reg::setb(r, v, tf); lock();
 }
-void Rtcc::conset(uint32_t r, uint32_t v){ unlock(); Reg::set(r, v); lock(); }
-void Rtcc::conclr(uint32_t r, uint32_t v){ unlock(); Reg::clr(r, v); lock(); }
+void Rtcc::conset(uint32_t r, uint32_t v){ unlock(); Reg::setb(r, v); lock(); }
+void Rtcc::conclr(uint32_t r, uint32_t v){ unlock(); Reg::setb(r, v, 0); lock(); }
 void Rtcc::conval(uint32_t r, uint32_t v){
     Rtcc::unlock(); Reg::val(r, v); Rtcc::lock();
 }

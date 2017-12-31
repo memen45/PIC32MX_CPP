@@ -30,13 +30,12 @@ struct Cvref {
  all functions inline
 =============================================================================*/
 
-void Cvref::on(bool tf){ r.set(DAC1CON, ON, tf);
-void Cvref::out(bool tf){ r.set(DAC1CON, DACOE, tf);
+void Cvref::on(bool tf){ r.setb(DAC1CON, ON, tf);
+void Cvref::out(bool tf){ r.setb(DAC1CON, DACOE, tf);
 void Cvref::refsel(REFSEL e){
     r.clr(DAC1CON, REFSELCLR);
-    r.set(DAC1CON, e & REFSELCLR);
+    r.setb(DAC1CON, e & REFSELCLR);
 }
-//dac level 0-31, using Reg::val16 to change value
-//(only DACDAT in upper 16bits, so can just write dat which
-//will also mask off invalid bits, if dat >31)
-void Cvref::dacdat(uint8_t n){ r.val16(DAC1CON+2, n); }
+//dac level 0-31
+//(only DACDAT in upper 16bits, so can just write dat) which
+void Cvref::dacdat(uint8_t n){ r.val(DAC1CON+2, n); }

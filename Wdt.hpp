@@ -34,6 +34,6 @@ struct Wdt {
 //16bit write to upper 16bits of WDTCON
 //add 2 bytes to base to get the correct address for the 16bit write
 //(using enum values for WDTCON, so is normal byte addition)
-void Wdt::reset(){ r.val16(WDTCON+2, CLRKEY); }
-void Wdt::on(bool tf){ r.set(WDTCON, ON, tf); }
-void Wdt::window_on(bool tf){ r.set(WDTCON, WINEN, tf); }
+void Wdt::reset(){ r.val<uint32_t,uint16_t>(WDTCON+2, CLRKEY); }
+void Wdt::on(bool tf){ r.setb(WDTCON, ON, tf); }
+void Wdt::window_on(bool tf){ r.setb(WDTCON, WINEN, tf); }

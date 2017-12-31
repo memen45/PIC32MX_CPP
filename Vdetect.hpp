@@ -39,10 +39,10 @@ struct Vdetect {
  all functions inline
 =============================================================================*/
 
-void Vdetect::on(bool tf){ r.set(HLVDCON, ON, tf); }
-void Vdetect::stop_idle(bool tf){ r.set(HLVDCON, SIDL, tf); }
-void Vdetect::trip_above(bool tf){ r.set(HLVDCON, VDIR, tf); }
-bool Vdetect::bgap_stable(){ return r.is_set(HLVDCON, BGVST); }
-bool Vdetect::iref_stable(){ return r.is_set(HLVDCON, IRVST); }
-bool Vdetect::tripped(){ return r.is_set(HLVDCON, HLEVT); }
-void Vdetect::limit(HLVDL e){ r.clr(HLVDCON, VEXT); r.set(HLVDCON, e); }
+void Vdetect::on(bool tf){ r.setb(HLVDCON, ON, tf); }
+void Vdetect::stop_idle(bool tf){ r.setb(HLVDCON, SIDL, tf); }
+void Vdetect::trip_above(bool tf){ r.setb(HLVDCON, VDIR, tf); }
+bool Vdetect::bgap_stable(){ return r.anybit(HLVDCON, BGVST); }
+bool Vdetect::iref_stable(){ return r.anybit(HLVDCON, IRVST); }
+bool Vdetect::tripped(){ return r.anybit(HLVDCON, HLEVT); }
+void Vdetect::limit(HLVDL e){ r.clr(HLVDCON, VEXT); r.setb(HLVDCON, e); }

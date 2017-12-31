@@ -160,7 +160,7 @@ void UsbEndptTRx::options(uint8_t v){
   host- either case is considered done here and return actual tx/rx count)
 ______________________________________________________________________________*/
 uint16_t UsbEndptTRx::check(){
-    bool eo = r.is_set8(U1STAT, PPBI);//get PPBI
+    bool eo = r.anybit(U1STAT, PPBI);//get PPBI
     bdt_t& bd = *m_bd[eo];          //references look nicer to user
     uint16_t c = bd.count;          //get actual count rx/tx
     m_trx_count += c;               //add to total
@@ -394,13 +394,13 @@ void UsbEndpt::reinit(){
     m_TX.reinit();
 }
 void UsbEndpt::epreg(U1EP e, bool tf){
-    r.set(m_ep_reg, e, tf);
+    r.setb(m_ep_reg, e, tf);
 }
 volatile bool UsbEndpt::epreg(U1EP e) const {
-    return r.is_set8(m_ep_reg, e);
+    return r.anybit(m_ep_reg, e);
 }
 void UsbEndpt::epreg(uint8_t v){
-    r.val8(m_ep_reg, v);
+    r.val(m_ep_reg, v);
 }
 void UsbEndpt::on(bool tf){
     if(tf) epreg(m_ep_trx|HSHAKE);

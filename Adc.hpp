@@ -34,7 +34,7 @@ struct Adc {
     //compare mode
     enum CM { LT = 0, GT = 1, INWIN = 2, OUTWIN = 3 };
     //channel select
-    enum CH0SA {
+    enum CH0SA : uint8_t {
         AN0 = 0, AN1, AN2, AN3, AN4, AN5, AN6, AN7, AN8, AN9, AN10, AN11,
         AN12,AN13, AN14, AN15, AN16, AN17, AN18, AN19,
         VDD = 27, VBG, AVSS, AVDD,
@@ -121,65 +121,65 @@ uint16_t Adc::bufn(uint8_t n){
     return r.val16(ADC1BUF0+(n*ADC1BUF_SPACING));
 }
 //ADC1CON1
-void Adc::on(bool tf){ r.set(ADC1CON1, ON, tf); }
-void Adc::stop_idle(bool tf){ r.set(ADC1CON1, SIDL, tf); }
-void Adc::format(FORM e){ r.clr(ADC1CON1, SFR32); r.set(ADC1CON1, e); }
-void Adc::trig_sel(SSRC e){ r.clr(ADC1CON1, CLC2); r.set(ADC1CON1, e); }
-void Adc::mode_12bit(bool tf){ r.set(ADC1CON1, MODE12, tf); }
-void Adc::samp_auto(bool tf){ r.set(ADC1CON1, ASAM, tf); }
-void Adc::samp(bool tf){ r.set(ADC1CON1, SAMP, tf); }
-bool Adc::samp(){ return r.is_set(ADC1CON1, SAMP); }
-bool Adc::done(){ return r.is_set(ADC1CON1, DONE); }
+void Adc::on(bool tf){ r.setb(ADC1CON1, ON, tf); }
+void Adc::stop_idle(bool tf){ r.setb(ADC1CON1, SIDL, tf); }
+void Adc::format(FORM e){ r.setb(ADC1CON1, SFR32, 0); r.setb(ADC1CON1, e); }
+void Adc::trig_sel(SSRC e){ r.setb(ADC1CON1, CLC2, 0); r.setb(ADC1CON1, e); }
+void Adc::mode_12bit(bool tf){ r.setb(ADC1CON1, MODE12, tf); }
+void Adc::samp_auto(bool tf){ r.setb(ADC1CON1, ASAM, tf); }
+void Adc::samp(bool tf){ r.setb(ADC1CON1, SAMP, tf); }
+bool Adc::samp(){ return r.anybit(ADC1CON1, SAMP); }
+bool Adc::done(){ return r.anybit(ADC1CON1, DONE); }
 //ADC1CON2
 void Adc::vref_cfg(VCFG e){
-    r.clr(ADC1CON2, VCFGCLR);
-    r.set(ADC1CON2, e);
+    r.setb(ADC1CON2, VCFGCLR, 0);
+    r.setb(ADC1CON2, e);
 }
-void Adc::offset_cal(bool tf){ r.set(ADC1CON2, OFFCAL, tf); }
-void Adc::buf_reg(bool tf){ r.set(ADC1CON2, BUFREGEN, tf); }
-void Adc::scan(bool tf){ r.set(ADC1CON2, CSCNA, tf); }
-bool Adc::buf2nd_busy(){ r.is_set(ADC1CON2, BUFS); }
+void Adc::offset_cal(bool tf){ r.setb(ADC1CON2, OFFCAL, tf); }
+void Adc::buf_reg(bool tf){ r.setb(ADC1CON2, BUFREGEN, tf); }
+void Adc::scan(bool tf){ r.setb(ADC1CON2, CSCNA, tf); }
+bool Adc::buf2nd_busy(){ r.anybit(ADC1CON2, BUFS); }
 void Adc::samp_nirq(uint8_t n){
     n -= 1; n &= 15; //n = 1-16
-    r.clr(ADC1CON2, SMPICLR);
-    r.set(ADC1CON2, n<<SMPISHIFT);
+    r.setb(ADC1CON2, SMPICLR, 0);
+    r.setb(ADC1CON2, n<<SMPISHIFT);
 }
-void Adc::buf_split(bool tf){ r.set(ADC1CON2, BUFM, tf); }
+void Adc::buf_split(bool tf){ r.setb(ADC1CON2, BUFM, tf); }
 //ADC1CON3
-void Adc::clk_src(CLK e){ r.set(ADC1CON3, ADRC, e); }
-void Adc::samp_extend(bool tf){ r.set(ADC1CON3, EXTSAM, tf); }
+void Adc::clk_src(CLK e){ r.setb(ADC1CON3, ADRC, e); }
+void Adc::samp_extend(bool tf){ r.setb(ADC1CON3, EXTSAM, tf); }
 void Adc::samp_time(uint8_t t){
     t &= 31; t = t == 0 ? 1 : t; //0 not allowed (1-31)
-    r.clr(ADC1CON3, SAMCCLR);
-    r.set(ADC1CON3, t<<SAMCSHIFT);
+    r.setb(ADC1CON3, SAMCCLR, 0);
+    r.setb(ADC1CON3, t<<SAMCSHIFT);
 }
 //default value is for 24MHz, 4 will meet 280ns Tad for any clock
-void Adc::conv_time(uint8_t t){ r.val8(ADC1CON3, t); }
+void Adc::conv_time(uint8_t t){ r.val(ADC1CON3, t); }
 //ADC1CON5
-void Adc::scan_auto(bool tf){ r.set(ADC1CON5, ASEN, tf); }
-void Adc::low_power(bool tf){ r.set(ADC1CON5, LPEN, tf); }
-void Adc::bandgap(bool tf){ r.set(ADC1CON5, BGREQ, tf); }
+void Adc::scan_auto(bool tf){ r.setb(ADC1CON5, ASEN, tf); }
+void Adc::low_power(bool tf){ r.setb(ADC1CON5, LPEN, tf); }
+void Adc::bandgap(bool tf){ r.setb(ADC1CON5, BGREQ, tf); }
 void Adc::scan_autoirq(ASINT e){
-    r.clr(ADC1CON5, DETCOMP);
-    r.set(ADC1CON5, e);
+    r.setb(ADC1CON5, DETCOMP, 0);
+    r.setb(ADC1CON5, e);
 }
-void Adc::write_mode(WM e){ r.clr(ADC1CON5, WMCLR); r.set(ADC1CON5, e); }
+void Adc::write_mode(WM e){ r.setb(ADC1CON5, WMCLR, 0); r.setb(ADC1CON5, e); }
 void Adc::compare_mode(CM e){
-    r.clr(ADC1CON5, OUTWIN);
-    r.set(ADC1CON5, e);
+    r.setb(ADC1CON5, OUTWIN, 0);
+    r.setb(ADC1CON5, e);
 }
 //ADC1CHS
-void Adc::ch_sel(CH0SA e){ r.val8(ADC1CHS, e);}
+void Adc::ch_sel(CH0SA e){ r.val(ADC1CHS, e);}
 //ADC1SS
-void Adc::ch_scan(CH0SA e, bool tf){ r.set(ADC1CSS, e, tf); }
+void Adc::ch_scan(CH0SA e, bool tf){ r.setb(ADC1CSS, e, tf); }
 void Adc::ch_scan(CH0SA* e){
     r.val(ADC1CSS, 0); //clr all
-    for(; *e != END; e++) r.set(ADC1CSS, 1<<*e); //set list
+    for(; *e != END; e++) r.setb(ADC1CSS, 1<<*e); //set list
 }
 void Adc::ch_scan(uint32_t v){ r.val(ADC1CSS, v); }
 //ADC1CHIT
 //non AN values will return 0 (like VDD)
-bool Adc::ch_hit(CH0SA e){ return r.is_set(ADC1CHIT, 1<<e); }
+bool Adc::ch_hit(CH0SA e){ return r.anybit(ADC1CHIT, 1<<e); }
 uint32_t Adc::ch_hit(){ return r.val(ADC1CHIT); }
 
 /*

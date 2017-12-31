@@ -83,16 +83,16 @@ Resets::CAUSE Resets::cause(){
 bool Resets::config_err(){ return boot_flags & (BCFGERR|BCFGFAIL|CMR); }
 //RSWRST
 //resets after read
-void Resets::swreset(){ sk.unlock(); r.set(RSWRST, SWRST); r.val(RSWRST); }
+void Resets::swreset(){ sk.unlock(); r.setb(RSWRST, SWRST); r.val(RSWRST); }
 //RNMICON
-bool Resets::nmi_wdt(){ return r.is_set(RNMICON, WDTR); }
-bool Resets::nmi_sw(){ return r.is_set(RNMICON, SWNMI); }
-bool Resets::nmi_gen(){ return r.is_set(RNMICON, GNMI); }
-bool Resets::nmi_clkf(){ return r.is_set(RNMICON, CF); }
-bool Resets::nmi_wdts(){ return r.is_set(RNMICON, WDTS); }
-void Resets::nmi_wdtcount(uint16_t v){ r.val16(RNMICON, v); }
-void Resets::nmi_wdtclr(){ r.clr(RNMICON, WDTR); }
+bool Resets::nmi_wdt(){ return r.anybit(RNMICON, WDTR); }
+bool Resets::nmi_sw(){ return r.anybit(RNMICON, SWNMI); }
+bool Resets::nmi_gen(){ return r.anybit(RNMICON, GNMI); }
+bool Resets::nmi_clkf(){ return r.anybit(RNMICON, CF); }
+bool Resets::nmi_wdts(){ return r.anybit(RNMICON, WDTS); }
+void Resets::nmi_wdtcount(uint16_t v){ r.val(RNMICON, v); }
+void Resets::nmi_wdtclr(){ r.setb(RNMICON, WDTR, 0); }
 //PWRCON
-void Resets::bor(bool tf){ sk.unlock(); r.set(PWRCON, SBOREN, tf); sk.lock(); }
-void Resets::reten(bool tf){ sk.unlock(); r.set(PWRCON,RETEN, tf); sk.lock(); }
-void Resets::vregs(bool tf){ sk.unlock(); r.set(PWRCON,VREGS, tf); sk.lock(); }
+void Resets::bor(bool tf){ sk.unlock(); r.setb(PWRCON, SBOREN, tf); sk.lock(); }
+void Resets::reten(bool tf){ sk.unlock(); r.setb(PWRCON,RETEN, tf); sk.lock(); }
+void Resets::vregs(bool tf){ sk.unlock(); r.setb(PWRCON,VREGS, tf); sk.lock(); }

@@ -107,14 +107,14 @@ void Irq::disable_all(){ __builtin_disable_interrupts(); }
 void Irq::enable_all(){ __builtin_enable_interrupts(); }
 bool Irq::all_ison(){ return (__builtin_mfc0(12,0) & 1); }
 void Irq::proxtimer(uint8_t pri){
-    r.clr(INTCON, TPCMASK<<TPCSHIFT);
-    r.set(INTCON, (pri&TPCMASK)<<TPCSHIFT);
+    r.setb(INTCON, TPCMASK<<TPCSHIFT, 0);
+    r.setb(INTCON, (pri&TPCMASK)<<TPCSHIFT);
 }
-void Irq::eint4_rising(bool tf){ r.set(INTCON, INT4EP, tf); }
-void Irq::eint3_rising(bool tf){ r.set(INTCON, INT3EP, tf); }
-void Irq::eint2_rising(bool tf){ r.set(INTCON, INT2EP, tf); }
-void Irq::eint1_rising(bool tf){ r.set(INTCON, INT1EP, tf); }
-void Irq::eint0_rising(bool tf){ r.set(INTCON, INT0EP, tf); }
+void Irq::eint4_rising(bool tf){ r.setb(INTCON, INT4EP, tf); }
+void Irq::eint3_rising(bool tf){ r.setb(INTCON, INT3EP, tf); }
+void Irq::eint2_rising(bool tf){ r.setb(INTCON, INT2EP, tf); }
+void Irq::eint1_rising(bool tf){ r.setb(INTCON, INT1EP, tf); }
+void Irq::eint0_rising(bool tf){ r.setb(INTCON, INT0EP, tf); }
 
 //note- the following offsets calculated in bytes as the register
 //numbers are enums (not uint32_t*)- so need to calculate bytes
@@ -125,13 +125,13 @@ void Irq::eint0_rising(bool tf){ r.set(INTCON, INT0EP, tf); }
 //bit offset = 1<<(40%32) = 1<<8
 //bit offset 8 in IFS1
 void Irq::flag_clr(IRQ_VN irqvn){
-    r.clr(IFS_BASE + ((irqvn/32)*16), 1<<(irqvn%32));
+    r.setb(IFS_BASE + ((irqvn/32)*16), 1<<(irqvn%32), 0);
 }
 bool Irq::flag(IRQ_VN irqvn){
-    return r.is_set(IFS_BASE + ((irqvn/32)*16), 1<<(irqvn%32));
+    return r.anybit(IFS_BASE + ((irqvn/32)*16), 1<<(irqvn%32));
 }
 void Irq::on(IRQ_VN irqvn, bool tf){
-    r.set(IEC_BASE + ((irqvn/32)*16), 1<<(irqvn%32), tf);
+    r.setb(IEC_BASE + ((irqvn/32)*16), 1<<(irqvn%32), tf);
 }
 //vector 17 example
 //priority_shift = 8*(17%4) =  8*1= 8
@@ -144,8 +144,8 @@ void Irq::on(IRQ_VN irqvn, bool tf){
 void Irq::init(IRQ_VN irqvn, uint8_t pri, uint8_t sub, bool en){
     uint32_t priority_shift = 8*(irqvn%4);
     pri &= 7; sub &= 3; pri <<= 2; pri |= sub;
-    r.clr(IPC_BASE + ((irqvn/4)*16), (31<<priority_shift));
-    r.set(IPC_BASE + ((irqvn/4)*16), (pri<<priority_shift));
+    r.setb(IPC_BASE + ((irqvn/4)*16), (31<<priority_shift), 0);
+    r.setb(IPC_BASE + ((irqvn/4)*16), (pri<<priority_shift));
     flag_clr(irqvn);
     on(irqvn, en);
 }
@@ -161,7 +161,7 @@ void Irq::init(irq_list_t* arr){
 //pri val of 0 will set/clr SS0- no harm as not using
 void Irq::shadow_set(uint8_t pri, bool tf){
     pri &= 7; pri <<= 2; //0*4=0 1*4=4, 7*4=28
-    r.set(PRISS, 1<<pri, tf);
+    r.setb(PRISS, 1<<pri, tf);
 }
 
 

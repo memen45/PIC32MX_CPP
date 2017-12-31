@@ -110,8 +110,8 @@ ______________________________________________________________________________*/
         uint8_t all;
     } eflags_t;
 
-    static volatile uint8_t flags       ();             //get all
-    static volatile bool    flag        (FLAGS);        //get one
+    static uint8_t          flags       ();             //get all
+    static bool             flag        (FLAGS);        //get one
     static void             flags_clr   (uint8_t);      //clear one or more
 
     static uint8_t          irqs        ();             //get all
@@ -119,8 +119,8 @@ ______________________________________________________________________________*/
     static void             irqs        (uint8_t);      //set value (all)
     static void             irq         (FLAGS, bool);  //irq on/off
 
-    static volatile uint8_t eflags      ();             //get all
-    static volatile bool    eflag       (EFLAGS);       //get one
+    static uint8_t          eflags      ();             //get all
+    static bool             eflag       (EFLAGS);       //get one
     static void             eflags_clr  (uint8_t);      //clear one or more
 
     static uint8_t          eirqs       ();             //get all
@@ -159,7 +159,7 @@ ______________________________________________________________________________*/
         uint8_t all;
     } stat_t;
 
-    static volatile uint8_t stat                ();
+    static uint8_t stat                ();
 
 
     /*..........................................................................
@@ -172,7 +172,7 @@ ______________________________________________________________________________*/
         USBEN = 1<<0, SOFEN = 1<<0
     };
 
-    static volatile bool    control             (CONTROL);
+    static bool             control             (CONTROL);
     static void             control             (CONTROL, bool);
     static void             control             (uint8_t);
 
@@ -235,6 +235,7 @@ ______________________________________________________________________________*/
 
     private:
 
+
     //registers - all registers use only first 8bits
     enum {
         U1PWRC = 0xBF808480,
@@ -260,43 +261,43 @@ ______________________________________________________________________________*/
 // Usb static functions, vars
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 Usb::state_t Usb::state = Usb::DETACHED;
-bool Usb::power(POWER e){ return Reg::is_set8(U1PWRC, e); }
-void Usb::power(POWER e, bool tf){ Reg::set(U1PWRC, e, tf); }
-volatile uint8_t Usb::flags(){ return Reg::val8(U1IR); }
-volatile uint8_t Usb::eflags(){ return Reg::val8(U1EIR); }
-volatile bool Usb::flag(FLAGS e){ return Reg::is_set8(U1IR, e); }
-volatile bool Usb::eflag(EFLAGS e){ return Reg::is_set8(U1EIR, e); }
-void Usb::flags_clr(uint8_t v){ Reg::val8(U1IR, v); }
-void Usb::eflags_clr(uint8_t v){ Reg::val8(U1EIR, v); }
-uint8_t Usb::irqs(){ return Reg::val8(U1IE); }
-uint8_t Usb::eirqs(){ return Reg::val8(U1EIE); }
-bool Usb::irq(FLAGS e){ return Reg::is_set8(U1IE, e); }
-bool Usb::eirq(EFLAGS e){ return Reg::is_set8(U1EIE, e); }
-void Usb::irqs(uint8_t v){ Reg::val8(U1IE, v); }
-void Usb::eirqs(uint8_t v){ Reg::val8(U1EIE, v); }
-void Usb::irq(FLAGS e, bool tf){ Reg::set(U1IE, e); }
-void Usb::eirq(EFLAGS e, bool tf){ Reg::set(U1EIE, e); }
-volatile uint8_t Usb::stat(){ return Reg::val8(U1STAT); }
-volatile bool Usb::control(CONTROL e){ return Reg::is_set8(U1CON, e); }
-void Usb::control(CONTROL e, bool tf){ Reg::set(U1CON, e, tf); }
-void Usb::control(uint8_t v){ Reg::val8(U1CON, v); }
-uint8_t Usb::dev_addr(){ return Reg::val8(U1ADDR) & 127; }
-void Usb::dev_addr(uint8_t v){ Reg::clr(U1ADDR, 0x7F); Reg::set(U1ADDR, v); }
-uint16_t Usb::frame(){ return (Reg::val8(U1FRMH)<<8) | Reg::val8(U1FRML); }
+bool Usb::power(POWER e){ return Reg::anybit(U1PWRC, e); }
+void Usb::power(POWER e, bool tf){ Reg::setb(U1PWRC, e, tf); }
+uint8_t Usb::flags(){ return Reg::val(U1IR); }
+uint8_t Usb::eflags(){ return Reg::val(U1EIR); }
+bool Usb::flag(FLAGS e){ return Reg::anybit(U1IR, e); }
+bool Usb::eflag(EFLAGS e){ return Reg::anybit(U1EIR, e); }
+void Usb::flags_clr(uint8_t v){ Reg::val(U1IR, v); }
+void Usb::eflags_clr(uint8_t v){ Reg::val(U1EIR, v); }
+uint8_t Usb::irqs(){ return Reg::val(U1IE); }
+uint8_t Usb::eirqs(){ return Reg::val(U1EIE); }
+bool Usb::irq(FLAGS e){ return Reg::anybit(U1IE, e); }
+bool Usb::eirq(EFLAGS e){ return Reg::anybit(U1EIE, e); }
+void Usb::irqs(uint8_t v){ Reg::val(U1IE, v); }
+void Usb::eirqs(uint8_t v){ Reg::val(U1EIE, v); }
+void Usb::irq(FLAGS e, bool tf){ Reg::setb(U1IE, e, tf); }
+void Usb::eirq(EFLAGS e, bool tf){ Reg::setb(U1EIE, e, tf); }
+uint8_t Usb::stat(){ return Reg::val(U1STAT); }
+bool Usb::control(CONTROL e){ return Reg::anybit(U1CON, e); }
+void Usb::control(CONTROL e, bool tf){ Reg::setb(U1CON, e, tf); }
+void Usb::control(uint8_t v){ Reg::val(U1CON, v); }
+uint8_t Usb::dev_addr(){ return Reg::val(U1ADDR) & 127; }
+void Usb::dev_addr(uint8_t v){ Reg::setb(U1ADDR, 0x7F, 0); Reg::setb(U1ADDR, v); }
+uint16_t Usb::frame(){ return (Reg::val(U1FRMH)<<8) | Reg::val(U1FRML); }
 void Usb::bdt_addr(uint32_t v){
     v = Reg::k2phys(v); //physical address
-    Reg::val8(U1BDTP1, v>>8); //512byte aligned (bit0 of this reg unused)
-    Reg::val8(U1BDTP2, v>>16);
-    Reg::val8(U1BDTP3, v>>24);
+    Reg::val(U1BDTP1, v>>8); //512byte aligned (bit0 of this reg unused)
+    Reg::val(U1BDTP2, v>>16);
+    Reg::val(U1BDTP3, v>>24);
 }
 uint32_t Usb::bdt_addr(){
     return  Reg::p2kseg0( (uint32_t)
-    Reg::val8(U1BDTP1)<<8 | Reg::val8(U1BDTP2)<<16 | Reg::val8(U1BDTP3)<<24
+    Reg::val(U1BDTP1)<<8 | Reg::val(U1BDTP2)<<16 | Reg::val(U1BDTP3)<<24
     ); //kseg0
 }
-void Usb::config(CONFIG e, bool tf){ Reg::set(U1CNFG1, e, tf); }
-bool Usb::config(CONFIG e){ return Reg::is_set8(U1CNFG1, e); }
-void Usb::config(uint8_t v){ Reg::val8(U1CNFG1, v); }
+void Usb::config(CONFIG e, bool tf){ Reg::setb(U1CNFG1, e, tf); }
+bool Usb::config(CONFIG e){ return Reg::anybit(U1CNFG1, e); }
+void Usb::config(uint8_t v){ Reg::val(U1CNFG1, v); }
 //______________________________________________________________________________
 
 

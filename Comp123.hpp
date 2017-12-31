@@ -60,15 +60,15 @@ struct Comp123  {
 constexpr Comp123::Comp123(CMX e)
     : m_pt((volatile uint32_t*)CM1CON+(e*CMXCON_SPACING)){}
 
-void Comp123::on(bool tf){ r.set(m_pt, ON, tf); }
-void Comp123::out(bool tf){ r.set(m_pt, COE, tf); }
-void Comp123::out_inv(bool tf){ r.set(m_pt, CPOL, tf); }
-bool Comp123::event_bit(){ return r.is_set(m_pt, CEVT); }
-bool Comp123::out_bit(){ return r.is_set(m_pt, COUT); }
-void Comp123::event_sel(EVPOL e){ r.clr(m_pt, ANY); r.set(m_pt, e); }
-void Comp123::cref_cxina(bool tf){ r.set(m_pt, CREF, !tf); }
-void Comp123::ch_sel(CCH e){ r.clr(m_pt, BGAP); r.set(m_pt, e); }
+void Comp123::on(bool tf){ r.setb(m_pt, ON, tf); }
+void Comp123::out(bool tf){ r.setb(m_pt, COE, tf); }
+void Comp123::out_inv(bool tf){ r.setb(m_pt, CPOL, tf); }
+bool Comp123::event_bit(){ return r.anybit(m_pt, CEVT); }
+bool Comp123::out_bit(){ return r.anybit(m_pt, COUT); }
+void Comp123::event_sel(EVPOL e){ r.setb(m_pt, ANY, 0); r.setb(m_pt, e); }
+void Comp123::cref_cxina(bool tf){ r.setb(m_pt, CREF, !tf); }
+void Comp123::ch_sel(CCH e){ r.setb(m_pt, BGAP, 0); r.setb(m_pt, e); }
 
 //common static functions
-void Comp123::stop_idle(bool tf){ r.set(CMSTAT, SIDL, tf); }
-void Comp123::cref_sel(CVREF e){ r.set(CMSTAT, CVREFSEL, e); }
+void Comp123::stop_idle(bool tf){ r.setb(CMSTAT, SIDL, tf); }
+void Comp123::cref_sel(CVREF e){ r.setb(CMSTAT, CVREFSEL, e); }

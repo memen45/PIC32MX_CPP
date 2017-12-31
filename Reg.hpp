@@ -2,6 +2,7 @@
 
 /*=============================================================================
  Register (SFR) writes/read
+ ksgex address <-> physical address
 =============================================================================*/
 
 #include <cstdint>
@@ -9,20 +10,24 @@
 struct Reg {
 
     //public functions
-    template <typename T> static void       set     (T, uint32_t);
-    template <typename T> static void       set     (T, uint32_t, bool);
-    template <typename T> static void       clr     (T, uint32_t);
-    template <typename T> static void       inv     (T, uint32_t);
-    template <typename T> static bool       is_set  (T, uint32_t);
-    template <typename T> static bool       is_clr  (T, uint32_t);
-    template <typename T> static bool       is_set8 (T, uint8_t);
-    template <typename T> static bool       is_clr8 (T, uint8_t);
+    //set/clear a bit or bits to specified level (default=set=1)
+    template <typename T> static void       setb    (T, uint32_t, bool = true);
+    //flip bit or bits
+    template <typename T> static void       flipb   (T, uint32_t);
+
+    template <typename T> static bool       anybit  (T, uint32_t, bool = true);
+    template <typename T> static bool       allbits (T, uint32_t, bool);
+
+    //I don't know how to get different return types, so am
+    //just creating 3 different versions- use for val wanted- will
+    //also then use val* as T (can do byte read for 8bits, etc.)
     template <typename T> static uint32_t   val     (T);
-    template <typename T> static void       val     (T, uint32_t);
-    template <typename T> static void       val16   (T, uint16_t);
     template <typename T> static uint16_t   val16   (T);
-    template <typename T> static void       val8    (T, uint8_t);
     template <typename T> static uint8_t    val8    (T);
+
+    //set make T a V*, so can use the byte or half-word address
+    //(V type determines access)
+    template <typename T, typename V> static void val(T, V);
 
     //physical to kseg0/1 addr, kseg to physical addr
     template <typename T> static uint32_t   p2kseg1 (T); //unused in PIC32MM
@@ -38,68 +43,44 @@ struct Reg {
 /*=============================================================================
  all functions inline
 =============================================================================*/
-//reg values cast to volatile uint32_t*,uint16_t* or uint8_t*
-//specified in function name- no number=32bit, val16=16bit, set8=8bit
-
-//templates not used in v values so specific functions can be used by name
-//instead of v type (prevent wrong type passed, then using wrong function)-
-//if I want v treated as an 8bit value, I can specify by function name
-//rather than having to typecast in call or specify template parameter
-
-//templates used so can use enum values (or uint32_t) as register argument
-//SET/CLR/INV offsets will be calculated in words (4 bytes)
-
-//32bit
-template <typename T> void Reg::set(T r, uint32_t v){
-    *(reinterpret_cast <volatile uint32_t*>(r)+SET) = v;
-}
-//same name as set, but 3 args, last is true/false = set/clr (clr+1=set)
-template <typename T> void Reg::set(T r, uint32_t v, bool sc){
+//set/clr v bit(s) in register r (sc = 0/clr,1/set, default=1)
+template <typename T> void Reg::setb(T r, uint32_t v, bool sc){
     *(reinterpret_cast <volatile uint32_t*>(r)+CLR+sc) = v;
 }
-template <typename T> void Reg::clr(T r, uint32_t v){
-    *(reinterpret_cast <volatile uint32_t*>(r)+CLR) = v;
-}
-template <typename T> void Reg::inv(T r, uint32_t v){
+//invert v bit(s) in register r
+template <typename T> void Reg::flipb(T r, uint32_t v){
     *(reinterpret_cast <volatile uint32_t*>(r)+INV) = v;
 }
-//is_set/is_clr can check multiple bits
-template <typename T> bool Reg::is_set(T r, uint32_t v){
+//check if any bit v (bitmask) in register r is set/clear (sc=1,0)
+template <typename T> bool Reg::anybit(T r, uint32_t v, bool sc){
+    if(sc) return (*(reinterpret_cast <volatile uint32_t*>(r)) & v);
+    else return !(*(reinterpret_cast <volatile uint32_t*>(r)) & v);
+}
+//check if all bitmask v is set/clr (sc=1,0) in register r
+template <typename T> bool Reg::allbits(T r, uint32_t v, bool sc){
+    if(sc){
     return (*(reinterpret_cast <volatile uint32_t*>(r)) & v) == v;
-}
-template <typename T> bool Reg::is_clr(T r, uint32_t v){
+    } else {
     return (*(reinterpret_cast <volatile uint32_t*>(r)) | ~v) == ~v;
+    }
 }
+//return uint32_t value of register r
 template <typename T> uint32_t Reg::val(T r){
     return *(reinterpret_cast <volatile uint32_t*>(r));
 }
-template <typename T> void Reg::val(T r, uint32_t v){
-    *(reinterpret_cast <volatile uint32_t*>(r)) = v;
-}
-
-
-//16bit
-template <typename T> void Reg::val16(T r, uint16_t v){
-    *(reinterpret_cast <volatile uint16_t*>(r)) = v;
-}
+//return uint16_t value of register r
 template <typename T> uint16_t Reg::val16(T r){
     return *(reinterpret_cast <volatile uint16_t*>(r));
 }
-
-
-//8bit
-template <typename T> bool Reg::is_set8(T r, uint8_t v){
-    return (*(reinterpret_cast <volatile uint8_t*>(r)) & v) == v;
-}
-template <typename T> bool Reg::is_clr8(T r, uint8_t v){
-    return ! (*(reinterpret_cast <volatile uint8_t*>(r)) | v) == v ;
-}
-template <typename T> void Reg::val8(T r, uint8_t v){
-    *(reinterpret_cast <volatile uint8_t*>(r)) = v;
-}
+//return uint16_t value of register r
 template <typename T> uint8_t Reg::val8(T r){
     return *(reinterpret_cast <volatile uint8_t*>(r));
 }
+//set uint32_t value to register r
+template <typename T, typename V> void Reg::val(T r, V v){
+    *(reinterpret_cast <volatile V*>(r)) = v;
+}
+
 
 
 

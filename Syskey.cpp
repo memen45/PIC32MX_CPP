@@ -8,7 +8,7 @@
 //with unlock_count-
 // code A- unlock (count=1); (irq in here) do something; lock(count=0,lock);
 // irq B- unlock(count=2); do something; lock(count=1,no lock);
-static uint8_t unlock_count;
+static volatile uint8_t unlock_count;
 
 //not sure if irq disable required, but probably is as this possibly
 //could be called in irq
@@ -25,8 +25,8 @@ void Syskey::lock(){
 void Syskey::unlock(){
     bool irqstate = ir.all_ison();                  //get STATUS.IE
     ir.disable_all();
-    bool dmasusp = r.is_set(DMACON, DMASUSP);       //get DMA suspend bit
-    r.set(DMACON, DMASUSP);                         //DMA suspend
+    bool dmasusp = r.anybit(DMACON, DMASUSP);       //get DMA suspend bit
+    r.setb(DMACON, DMASUSP);                        //DMA suspend
     //
     if(! unlock_count){                             //first time, unlock
         r.val(SYSKEY_ADDR, MAGIC1);
@@ -34,6 +34,6 @@ void Syskey::unlock(){
     }
     unlock_count++;                                 //inc unlock_count
     //
-    if(! dmasusp) r.clr(DMACON, DMASUSP);           //DMA resume
+    if(! dmasusp) r.setb(DMACON, DMASUSP, 0);       //DMA resume
     if(irqstate) ir.enable_all();                   //restore IE state
 }

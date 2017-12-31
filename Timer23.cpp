@@ -5,12 +5,12 @@
 =============================================================================*/
 
 void Timer23::timer(uint16_t n) const { r.val(m_pt + TMRX, n); }
-uint16_t Timer23::timer() const { return r.val(m_pt + TMRX); }
+uint16_t Timer23::timer() const { return r.val16(m_pt + TMRX); }
 void Timer23::pr(uint16_t n) const { r.val(m_pt + PRX, n); }
-uint16_t Timer23::pr() const { return r.val(m_pt + PRX); }
-void Timer23::on(bool tf) const { r.set(m_pt, ON, tf); }
-void Timer23::stop_idle(bool tf) const { r.set(m_pt, SIDL, tf); }
-void Timer23::tgate(bool tf) const { r.set(m_pt, TGATE, tf); }
-void Timer23::prescale(PRESCALE e) const { r.clr(m_pt, PS256); r.set(m_pt, e); }
-void Timer23::t32bit(bool tf) const { r.set(m_pt, T32, tf); }
-void Timer23::clk_src(CLK e) const { r.set(m_pt, TCS, e); }
+uint16_t Timer23::pr() const { return r.val16(m_pt + PRX); }
+void Timer23::on(bool tf) const { r.setb(m_pt, ON, tf); }
+void Timer23::stop_idle(bool tf) const { r.setb(m_pt, SIDL, tf); }
+void Timer23::tgate(bool tf) const { r.setb(m_pt, TGATE, tf); }
+void Timer23::prescale(PRESCALE e) const { r.setb(m_pt, PS256, 0); r.setb(m_pt, e); }
+void Timer23::t32bit(bool tf) const { r.setb(m_pt, T32, tf); }
+void Timer23::clk_src(CLK e) const { r.setb(m_pt, TCS, e); }
