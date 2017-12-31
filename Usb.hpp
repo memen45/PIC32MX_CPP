@@ -35,7 +35,6 @@ ISR(USB); //declared only, defined later in this file
 ///////////////////////////////////////////////////////////////////////////////
 
 
-
 //simple way to separate classes/structs for now
 //__inline include______________________________________________________________
 

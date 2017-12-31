@@ -63,6 +63,7 @@ struct Irq {
         bool en;        //enable
     } irq_list_t;
 
+
     //public functions
     static void     disable_all     ();
     static void     enable_all      ();
@@ -80,6 +81,7 @@ struct Irq {
     static void     init            (irq_list_t*);
     static void     shadow_set      (uint8_t, bool);
 
+
     private:
 
     static Reg r;
@@ -87,6 +89,7 @@ struct Irq {
     enum {
         INTCON = 0xBF80F000,
         PRISS = 0xBF80F010,
+        INTSTAT = 0xBF80F020,
         IFS_BASE = 0xBF80F040,
         IEC_BASE = 0xBF80F0C0,
         IPC_BASE = 0xBF80F140,
@@ -162,13 +165,9 @@ void Irq::shadow_set(uint8_t pri, bool tf){
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // ISR MACRO
 ////////////////////////////////////////////////////////////////////////////////
 //usage- ISR(ADC){ /* isr code here */ }
-#define ISR(nam) _ISR(nam,_IRQVN(nam))
-#define _IRQVN(nam) Irq::nam
-#define _ISR(nam,vn) extern "C" { void nam##_ISR(); }\
-    __attribute((vector((int)vn),interrupt)) void nam##_ISR()
-
+#define ISR(nam) extern "C" __attribute((vector((int)Irq::nam),interrupt))\
+    void nam##_ISR()

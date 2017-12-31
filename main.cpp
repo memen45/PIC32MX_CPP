@@ -316,8 +316,8 @@ int main(){
 
 /*=============================================================================
  Interrupt code
- irq's need to be set in other code for the priority (Irq::init) and shadow
- set (Irq::shadow_set)
+ irq's need to be init in other code for the priority (Irq::init)
+ and if using shadow set (Irq::shadow_set)
 =============================================================================*/
 ISR(CORE_TIMER){
     Irq ir; Cp0 cp; //can use IrQ::func() syntax also
@@ -325,6 +325,7 @@ ISR(CORE_TIMER){
     led2.invert();
     ir.flag_clr(ir.CORE_TIMER);
 }
+
 ISR(TIMER_1){
     Irq ir;
     led1.invert();
