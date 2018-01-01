@@ -8,7 +8,7 @@ general coding style in use, mostly-
         argument types listed without argument names
         void somefunc(uint8_t, bool)
 
-    functions argument names- not strictly used
+    functions argument names- unless something better wanted
         e = enum
         v = value
         n = count/size value
@@ -20,13 +20,14 @@ general coding style in use, mostly-
         void somefunc(uint32_t n){ }
         void somefunc(uint32_t addr, bool tf){ }
 
-    functions use opening brace on same line (mostly)
+    opening brace mostly on same line (constructors, maybe not)
         void somefunc(){
             //code here
         }
 
     if/while/loops can eliminate braces if only one statement follows
         for(auto i = 0; i < 4; i++) buf[i] = 0;
+
     if only one statement follows, but a new line is used, then use braces
         if(i == 123 && j == 456 && k == 789 && m == 222){
             somefunc(i, k);
