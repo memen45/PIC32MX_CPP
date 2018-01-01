@@ -26,6 +26,7 @@ struct Reg {
 
 
     //public functions
+
     //set/clear a bit or bits to specified level (default=set=1)
     //(CLR register offset is +1, SET register offset is +2)
     //setb(address, bitmask)-> *(uint32_t*)address+CLR+1 = bitmask
@@ -53,9 +54,12 @@ struct Reg {
     //  return (*(uint32_t*)address | ~bitmask) == ~bitmask
     template <typename T> static bool       allbits (T, uint32_t, bool);
 
+    //return val from register- val = 32bit, val16 = 16bit, val8 = 8bit
+    //tmp = val(address)-> return *(uint32_t*)address
+    //tmp = val16(address)-> return *(uint16_t*)address
+    //tmp = val8(address)-> return *(uint8_t*)address
     //I don't know how to specify different return types when calling,
-    //so am just creating 3 different versions- use for val wanted- will
-    //also then use val* as T (can do byte read for 8bits, etc.)
+    //so am just creating 3 different versions- use which is needed
     template <typename T> static uint32_t   val     (T);
     template <typename T> static uint16_t   val16   (T);
     template <typename T> static uint8_t    val8    (T);
