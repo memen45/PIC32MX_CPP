@@ -66,6 +66,7 @@ struct Reg {
 
     //make T a V*, so can use the byte or half-word address
     //(V type determines access)
+    //val(address, val)-> *(V*)address = (V)val
     template <typename T, typename V> static void val(T, V);
 
     //physical to kseg0/1 addr, kseg to physical addr
