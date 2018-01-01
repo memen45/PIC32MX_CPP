@@ -5,9 +5,25 @@
  ksgex address <-> physical address
 =============================================================================*/
 
+/*                                             |-kseg = 1, phys = 0
+SFR - kseg0 0x9F800000-0x9F80FFFF bit<31:29> 0b100<-kseg0 = 0
+      kseg1 0xBF800000-0xBF80FFFF bit<31:29> 0b101<-kseg1 = 1
+      phys  0x1F800000-0x1F80FFFF bit<31:29> 0b000
+      access sfr's via kseg1 addresses
+
+16K
+RAM - kseg0 0x80000000-0x80003FFF bit<31:29> 0b100<-kseg0 = 0
+      kseg1 0xA0000000-0xA0003FFF bit<31:29> 0b101<-kseg1 = 1
+      phys  0x00000000-0x00003FFF bit<31:29> 0b000
+      compiler uses kseg0 for ram (although pic32mm has no cache)
+*/
+
 #include <cstdint>
+//#include <assert.h>
+
 
 struct Reg {
+
 
     //public functions
     //set/clear a bit or bits to specified level (default=set=1)
