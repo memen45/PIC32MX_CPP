@@ -33,3 +33,5 @@ general coding style in use, mostly-
             somefunc(i, k);
         }
 
+    static class access is generally used the format-
+    Reg r; Syskey sk; Irq ir;

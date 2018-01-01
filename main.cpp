@@ -29,6 +29,7 @@
 #include "Adc.hpp"
 #include "Resets.hpp"
 #include "Usb.hpp"
+#include "Osc.hpp"
 
 
 /*=============================================================================
@@ -118,6 +119,7 @@ int main(){
     //for(;;rc0.invert(),rc2.invert(),tmr.wait_ms(5000) );
     // +3.29vdc , -3.29vdc
 
+    Osc osc;
 
     //__________________________________________________________________________
     Resets::CAUSE cause = Resets::cause();  //use cause result somewhere

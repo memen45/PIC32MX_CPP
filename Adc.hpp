@@ -168,7 +168,7 @@ bool Adc::buf2nd_busy(){
     r.anybit(ADC1CON2, BUFS);
 }
 void Adc::samp_nirq(uint8_t n){
-    n -= 1; n &= 15; //n = 1-16
+    n -= 1; n &= 15; //n = 1-16 ->0-15
     r.setbit(ADC1CON2, SMPICLR, 0);
     r.setbit(ADC1CON2, n<<SMPISHIFT);
 }
