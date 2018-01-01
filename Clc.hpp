@@ -85,23 +85,23 @@ void Clc::mode(MODE e){
     r.setbit(m_pt, LSR, 0);
     r.setbit(m_pt, e);
 }
-//input select, dsn = 1-4, val = 0-7 (invalid args masked to good vals)
-void Clc::in_sel(uint8_t dsn, uint8_t val){
-    dsn -= 1; dsn &= 3; dsn <<= 2; val &= 7;
-    r.setbit(m_pt+SEL_OFFSET, 7<<dsn, 0);
-    r.setbit(m_pt+SEL_OFFSET, val<<dsn);
+//input select, n = 1-4, v = 0-7 (invalid args masked to good vals)
+void Clc::in_sel(uint8_t n, uint8_t v){
+    n -= 1; n &= 3; n <<= 2; v &= 7;
+    r.setbit(m_pt+SEL_OFFSET, 7<<n, 0);
+    r.setbit(m_pt+SEL_OFFSET, v<<n);
 }
 //or all in in shot with precomputed value
-void Clc::in_sel(uint32_t val){
-    r.val(m_pt+SEL_OFFSET, val);
+void Clc::in_sel(uint32_t v){
+    r.val(m_pt+SEL_OFFSET, v);
 }
-//gate select, gate = 1-4 (invalid gate masked to good gate)
-void Clc::gate_sel(uint8_t gate, uint8_t val){
-    gate -= 1; gate &= 3; gate <<= 3;
-    r.setbit(m_pt+GLS_OFFSET, 15<<gate, 0);
-    r.setbit(m_pt+GLS_OFFSET, val<<gate);
+//gate select, n = 1-4 (invalid gate masked to good gate)
+void Clc::gate_sel(uint8_t n, uint8_t v){
+    n -= 1; n &= 3; n <<= 3;
+    r.setbit(m_pt+GLS_OFFSET, 15<<n, 0);
+    r.setbit(m_pt+GLS_OFFSET, v<<n);
 }
 //or all in in shot with precomputed value
-void Clc::gate_sel(uint32_t val){
-    r.val(m_pt+GLS_OFFSET, val);
+void Clc::gate_sel(uint32_t v){
+    r.val(m_pt+GLS_OFFSET, v);
 }

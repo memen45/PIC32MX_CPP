@@ -22,8 +22,8 @@ struct UsbBuf {
 //______________________________________________________________________________
 
     static void                 reinit();
-    static volatile uint8_t*    get();
-    static void                 release(volatile uint8_t*);
+    static uint8_t*             get();
+    static void                 release(uint8_t*);
     static uint8_t              buf_len();
 
     typedef struct {
@@ -34,7 +34,7 @@ struct UsbBuf {
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 // UsbBuf static functions, vars
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-static volatile UsbBuf::buf_t m_buffers[my_buffer_count] = {0};
+static UsbBuf::buf_t m_buffers[my_buffer_count] = {0};
 
 //clear buffers, clear inuse flag
 void UsbBuf::reinit(){
@@ -44,7 +44,7 @@ void UsbBuf::reinit(){
     }
 }
 //get an unused buffer (address), return 0 if none available (caller checks 0)
-volatile uint8_t* UsbBuf::get(){
+uint8_t* UsbBuf::get(){
     for(auto& i : m_buffers){
         if(i.inuse) continue;
         i.inuse = true;
@@ -53,7 +53,7 @@ volatile uint8_t* UsbBuf::get(){
     return 0;
 }
 //return a buffer for use
-void UsbBuf::release(volatile uint8_t* p){
+void UsbBuf::release(uint8_t* p){
     //in case was physical address from bdt
     //convert to kseg0
     p = (uint8_t*)Reg::p2kseg0(p);
@@ -68,3 +68,78 @@ uint8_t UsbBuf::buf_len() {
     return my_buffer_size;
 }
 //______________________________________________________________________________
+
+
+
+
+
+
+struct UsbBuf2 {
+
+    //callers use
+    typedef struct {
+        uint8_t buf_size; //will be set to size of this buffer, caller can use
+        int32_t status;   //caller can use
+        void* vp;         //caller can use (callback function pointer)
+        uint8_t buf[64];  //the buffer
+    } buffer64_t;
+
+    //callers use (used same as 64, but has 512byte buffer)
+    typedef struct {
+        uint16_t buf_size;
+        uint8_t status;
+        void* vp;
+        uint8_t buf[512];
+    } buffer512_t;
+
+    static buffer64_t*      get64   ();             //get 64bytes (*0 if fails)
+    static buffer512_t*     get512  ();             //get 512bytes (*0 if fails)
+    static void             release (void* bufp);   //release buffer
+    static void             reinit  ();             //clear status (all now free)
+
+    //internal storage/tracking
+    typedef struct {
+        uint32_t status; //bit n 0-15  if(1<<n) inuse, bit n 16-19 if(1<<n) inuse
+        buffer64_t buffer64[16];
+        buffer512_t buffer512[4];
+    } m_buffer_t;
+
+    static m_buffer_t m_buffers2;
+};
+
+//=============================================================================
+UsbBuf2::m_buffer_t m_buffers2 = {0};
+
+UsbBuf2::buffer64_t* get64(){
+    for(auto i = 0; i < 16; i++){
+        if(m_buffers2.status & (1<<i)) continue;
+        m_buffers2.status |= 1<<i; //inuse
+        m_buffers2.buffer64[i].buf_size = 64;
+        return &m_buffers2.buffer64[i];
+    }
+    return 0;
+}
+UsbBuf2::buffer512_t* get512(){
+    for(auto i = 16; i < 20; i++){
+        if(m_buffers2.status & (1<<i)) continue;
+        m_buffers2.status |= 1<<i; //inuse
+        i >>= 16;
+        m_buffers2.buffer512[i].buf_size = 512;
+        return &m_buffers2.buffer512[i];
+    }
+    return 0;
+}
+void UsbBuf2::release(void* bufp){
+    for(auto i = 0; i < 16; i++){
+        if(bufp = (void*)&m_buffers2.buffer64[i]) continue;
+        m_buffers2.status &= ~(1<<i); //not inuse
+        return;
+    }
+    for(auto i = 16; i < 20; i++){
+        if(bufp = (void*)&m_buffers2.buffer512[i>>16]) continue;
+        m_buffers2.status &= ~(1<<i); //not inuse
+    }
+}
+void UsbBuf2::reinit(){
+    m_buffers2.status = 0;
+}

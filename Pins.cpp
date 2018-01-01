@@ -1,10 +1,8 @@
 #include "Pins.hpp"
-#include "Syskey.hpp"
 
 /*=============================================================================
  Pins functions
 =============================================================================*/
-
 void Pins::lowison(bool tf){
     m_lowison = tf;
 }
@@ -62,18 +60,18 @@ bool Pins::icn_stat() const {
  Pins functions - static
 =============================================================================*/
 //unlock, write byte, lock
-void Pins::pps_do(uint32_t r, uint8_t v){
-    Syskey::unlock();
-    Reg::setbit(RPCON, IOLOCK, 0);
-    Reg::val(r, v);
-    Reg::setbit(RPCON, IOLOCK);
-    Syskey::lock();
+void Pins::pps_do(uint32_t addr, uint8_t v){
+    sk.unlock();
+    r.setbit(RPCON, IOLOCK, 0);
+    r.val(addr, v);
+    r.setbit(RPCON, IOLOCK);
+    sk.lock();
 }
 //pin -> pps peripheral in
 void Pins::pps_in(PPSIN e, RPN n){
     pps_do(RPINR1+((e/4)*16)+(e%4), n&31);
-    Reg::setbit(ANSELA + TRIS + ((n>>8)/16)*0x100, 1<<((n>>8)%16));  //tris=1
-    Reg::setbit(ANSELA + ((n>>8)/16)*0x100, 1<<((n>>8)%16), 0);      //ansel=0
+    r.setbit(ANSELA + TRIS + ((n>>8)/16)*0x100, 1<<((n>>8)%16));  //tris=1
+    r.setbit(ANSELA + ((n>>8)/16)*0x100, 1<<((n>>8)%16), 0);      //ansel=0
 }
 //pps peripheral out -> pin
 void Pins::pps_out(PPSOUT e, RPN n){

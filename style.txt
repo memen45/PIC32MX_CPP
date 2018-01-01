@@ -1,0 +1,34 @@
+
+general coding style in use, mostly-
+
+    function declarations-
+        will not list void in empty argument function
+        void somefunc();
+
+        argument types listed without argument names
+        void somefunc(uint8_t, bool)
+
+    functions argument names- not strictly used
+        e = enum
+        v = value
+        n = count/size value
+        addr = 32bit address value
+        tf = bool
+
+        void somefunc(MYENUM e, bool tf){ }
+        void somefunc(uint8_t v){ }
+        void somefunc(uint32_t n){ }
+        void somefunc(uint32_t addr, bool tf){ }
+
+    functions use opening brace on same line (mostly)
+        void somefunc(){
+            //code here
+        }
+
+    if/while/loops can eliminate braces if only one statement follows
+        for(auto i = 0; i < 4; i++) buf[i] = 0;
+    if only one statement follows, but a new line is used, then use braces
+        if(i == 123 && j == 456 && k == 789 && m == 222){
+            somefunc(i, k);
+        }
+

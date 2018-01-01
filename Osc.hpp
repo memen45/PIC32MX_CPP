@@ -1,22 +1,22 @@
 #pragma once
 
 /*=============================================================================
- Voltage Reference (CVref, DAC)
+ Oscillator
 =============================================================================*/
 
 #include <cstdint>
 #include "Reg.hpp"
 
-struct Cvref {
+struct Osc {
 
     //vref select
     enum REFSEL { NONE = 0, CVREF, AVDD };
 
     //public functions
-    static void    on      (bool);
-    static void    out     (bool);
-    static void    refsel  (REFSEL);
-    static void    dacdat  (uint8_t);
+    void    on      (bool);
+    void    out     (bool);
+    void    refsel  (REFSEL);
+    void    dacdat  (uint8_t);
 
     private:
 
@@ -29,19 +29,3 @@ struct Cvref {
 /*=============================================================================
  all functions inline
 =============================================================================*/
-
-void Cvref::on(bool tf){
-    r.setbit(DAC1CON, ON, tf);
-}
-void Cvref::out(bool tf){
-    r.setbit(DAC1CON, DACOE, tf);
-}
-void Cvref::refsel(REFSEL e){
-    r.clr(DAC1CON, REFSELCLR);
-    r.setbit(DAC1CON, e & REFSELCLR);
-}
-//dac level 0-31
-//(only DACDAT in upper 16bits, so can just write dat) which
-void Cvref::dacdat(uint8_t v){
-    r.val(DAC1CON+2, v);
-}

@@ -47,7 +47,7 @@ struct Adc {
 
     //public functions
     //ADC1BUFn
-    static uint16_t bufn            (uint8_t);
+    static uint16_t     bufn            (uint8_t);
     //ADC1CON1
     static void         on              (bool);
     static void         stop_idle       (bool);

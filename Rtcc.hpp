@@ -56,6 +56,7 @@ struct Rtcc {
     private:
 
     static Reg r;
+    static Syskey sk;
 
     //private functions
     static void         unlock          ();
@@ -165,20 +166,20 @@ void Rtcc::alarm_date(uint32_t v){
 //RTCCON1 lock off by default, these functions will lock RTCCON1 when done
 //private functions
 void Rtcc::unlock(){
-    Syskey::unlock();
+    sk.unlock();
     r.setbit(RTCCON1, WRLOCK, 0);
 }
 void Rtcc::lock(){
     r.setbit(RTCCON1, WRLOCK);
-    Syskey::lock();
+    sk.lock();
 }
-void Rtcc::conset(uint32_t r, uint32_t v, bool tf){
+void Rtcc::conset(uint32_t addr, uint32_t v, bool tf){
     unlock();
-    Reg::setbit(r, v, tf);
+    r.setbit(addr, v, tf);
     lock();
 }
-void Rtcc::conval(uint32_t r, uint32_t v){
-    Rtcc::unlock();
-    Reg::val(r, v);
-    Rtcc::lock();
+void Rtcc::conval(uint32_t addr, uint32_t v){
+    unlock();
+    r.val(addr, v);
+    lock();
 }

@@ -15,18 +15,18 @@ struct Timer1 {
     enum CLK { EXT_SOSC = 2, EXT_T1CK = 258, EXT_LPRC = 514, INT_PBCLK = 0 };
 
     //public functions
-    static void         timer           (uint16_t n);
+    static void         timer           (uint16_t);
     static uint16_t     timer           ();
-    static void         period          (uint16_t n);
+    static void         period          (uint16_t);
     static uint16_t     period          ();
-    static void         on              (bool tf);
-    static void         stop_idle       (bool tf);
-    static void         wr_async        (bool tf);
+    static void         on              (bool);
+    static void         stop_idle       (bool);
+    static void         wr_async        (bool);
     static bool         wr_busy         ();
     static void         clk_src         (CLK);
-    static void         tgate           (bool tf);
+    static void         tgate           (bool);
     static void         prescale        (PRESCALE);
-    static void         tsync           (bool tf);
+    static void         tsync           (bool);
 
     private:
 

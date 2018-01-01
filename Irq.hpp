@@ -112,9 +112,9 @@ void Irq::enable_all(){
 bool Irq::all_ison(){
     return (__builtin_mfc0(12,0) & 1);
 }
-void Irq::proxtimer(uint8_t pri){
+void Irq::proxtimer(uint8_t n){ //n = priority 0-7
     r.setbit(INTCON, TPCMASK<<TPCSHIFT, 0);
-    r.setbit(INTCON, (pri&TPCMASK)<<TPCSHIFT);
+    r.setbit(INTCON, (n&TPCMASK)<<TPCSHIFT);
 }
 void Irq::eint4_rising(bool tf){
     r.setbit(INTCON, INT4EP, tf);
@@ -140,14 +140,14 @@ void Irq::eint0_rising(bool tf){
 //reg = 0xBF80F040 + (40/32)*16 = 0xBF80F050 = IFS1
 //bit offset = 1<<(40%32) = 1<<8
 //bit offset 8 in IFS1
-void Irq::flag_clr(IRQ_VN irqvn){
-    r.setbit(IFS_BASE + ((irqvn/32)*16), 1<<(irqvn%32), 0);
+void Irq::flag_clr(IRQ_VN e){
+    r.setbit(IFS_BASE + ((e/32)*16), 1<<(e%32), 0);
 }
-bool Irq::flag(IRQ_VN irqvn){
-    return r.anybit(IFS_BASE + ((irqvn/32)*16), 1<<(irqvn%32));
+bool Irq::flag(IRQ_VN e){
+    return r.anybit(IFS_BASE + ((e/32)*16), 1<<(e%32));
 }
-void Irq::on(IRQ_VN irqvn, bool tf){
-    r.setbit(IEC_BASE + ((irqvn/32)*16), 1<<(irqvn%32), tf);
+void Irq::on(IRQ_VN e, bool tf){
+    r.setbit(IEC_BASE + ((e/32)*16), 1<<(e%32), tf);
 }
 //vector 17 example
 //priority_shift = 8*(17%4) =  8*1= 8
@@ -157,13 +157,13 @@ void Irq::on(IRQ_VN irqvn, bool tf){
 //init specific irq
 //pri is masked to 0-7, sub is masked to 0-3
 //pri of 0 disables irq
-void Irq::init(IRQ_VN irqvn, uint8_t pri, uint8_t sub, bool en){
-    uint32_t priority_shift = 8*(irqvn%4);
+void Irq::init(IRQ_VN e, uint8_t pri, uint8_t sub, bool tf){
+    uint32_t priority_shift = 8*(e%4);
     pri &= 7; sub &= 3; pri <<= 2; pri |= sub;
-    r.setbit(IPC_BASE + ((irqvn/4)*16), (31<<priority_shift), 0);
-    r.setbit(IPC_BASE + ((irqvn/4)*16), (pri<<priority_shift));
-    flag_clr(irqvn);
-    on(irqvn, en);
+    r.setbit(IPC_BASE + ((e/4)*16), (31<<priority_shift), 0);
+    r.setbit(IPC_BASE + ((e/4)*16), (pri<<priority_shift));
+    flag_clr(e);
+    on(e, tf);
 }
 //init list (array) of irq's
 void Irq::init(irq_list_t* arr){

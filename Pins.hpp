@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include "Reg.hpp"
+#include "Syskey.hpp"
 
 class Pins {
 
@@ -114,6 +115,7 @@ class Pins {
     private:
 
     static Reg r;
+    static Syskey sk;
 
     enum { //offsets from base address, in words
         TRIS = 16>>2, PORT_ = 32>>2, LAT = 48>>2, ODC = 64>>2,
@@ -142,18 +144,18 @@ class Pins {
 /*=============================================================================
  inline functions
 =============================================================================*/
-
+//constructors do nothing to pins
 // A0 format - Pins led1(A0); or Pins led2(B3, true);
-constexpr Pins::Pins(PORTPIN e, bool lowison)
+constexpr Pins::Pins(PORTPIN e, bool tf)
     : m_pt((volatile uint32_t*)ANSELA + (e/PINMAX)*ANSELX_SPACING),
       m_pn(1<<(e%PINMAX)),
-      m_lowison(lowison)
+      m_lowison(tf)
 {}
 // RA0/RP1 format - Pins led1(RA0); or Pins led2(RP1, true);
-constexpr Pins::Pins(RPN e, bool lowison)
+constexpr Pins::Pins(RPN e, bool tf)
     : m_pt((volatile uint32_t*)ANSELA + ((e>>RN_SHIFT)/PINMAX)*ANSELX_SPACING),
       m_pn(1<<((e>>RN_SHIFT)%PINMAX)),
-      m_lowison(lowison)
+      m_lowison(tf)
 {}
 
 bool Pins::pinval() const {

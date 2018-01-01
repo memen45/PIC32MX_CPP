@@ -53,10 +53,10 @@ void Cp0::compare_reload(bool tf){
         ir.on(ir.CORE_TIMER, true);
     }
 }
-void Cp0::compare_us(uint32_t us){
-    m_compare_count = sysfreq / 2 * us;
+void Cp0::compare_us(uint32_t v){
+    m_compare_count = sysfreq / 2 * v;
     compare_reload();
 }
-void Cp0::compare_ms(uint16_t ms){
-    compare_us(ms * 1000);
+void Cp0::compare_ms(uint16_t v){
+    compare_us(v * 1000);
 }

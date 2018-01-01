@@ -382,8 +382,8 @@ UsbEndpt::UsbEndpt(uint8_t n, TR tr, uint16_t max) :
 //UsbEndpt::UsbEndpt(uint8_t n, TR tr){}
 void UsbEndpt::deinit(){
     epreg(0);
-    UsbBuf::release(m_rxbuf[0]);
-    UsbBuf::release(m_rxbuf[1]);
+    UsbBuf::release((uint8_t*)m_rxbuf[0]);
+    UsbBuf::release((uint8_t*)m_rxbuf[1]);
     m_TX.stop();
     m_RX.stop();
 }
@@ -523,7 +523,7 @@ void UsbEndpt::setup_token(){
 void UsbEndpt::in_token(){
     if(m_setup_stage == STATUS){
         m_setup_stage = COMPLETE;
-        UsbBuf::release(m_tx_ptr);
+        UsbBuf::release((uint8_t*)m_tx_ptr);
         m_tx_ptr = 0;
     }
     if(m_setup_stage == IN){
@@ -542,7 +542,7 @@ void UsbEndpt::in_token(){
 void UsbEndpt::out_token(){
     if(m_setup_stage == STATUS){
         m_setup_stage = COMPLETE;
-        UsbBuf::release(m_tx_ptr);
+        UsbBuf::release((uint8_t*)m_tx_ptr);
         m_tx_ptr = 0;
         return;
     }
