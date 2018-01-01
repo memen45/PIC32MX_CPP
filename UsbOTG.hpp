@@ -87,27 +87,64 @@ class UsbOTG {
  all functions inline
 =============================================================================*/
 
-uint8_t Usb::flags(){ return (Usb::FLAGSOTG)Reg::val(U1OTGIR); } //get all
-bool Usb::flag(FLAGSOTG e){ return Reg::anybit(U1OTGIR, e); } //get one
-void Usb::flags_clear(){ Reg::val(U1OTGIR, 255); } //clear all
-void Usb::flags_clear(uint8_t v){ Reg::val(U1OTGIR, v); } //clear one or more
-void Usb::flag_clear(FLAGSOTG e){ Reg::val(U1OTGIR, e); } //clear one
+uint8_t Usb::flags(){
+    return (Usb::FLAGSOTG)Reg::val(U1OTGIR);
+} //get all
+bool Usb::flag(FLAGSOTG e){
+    return Reg::anybit(U1OTGIR, e);
+} //get one
+void Usb::flags_clear(){
+    Reg::val(U1OTGIR, 255);
+} //clear all
+void Usb::flags_clear(uint8_t v){
+    Reg::val(U1OTGIR, v);
+} //clear one or more
+void Usb::flag_clear(FLAGSOTG e){
+    Reg::val(U1OTGIR, e);
+} //clear one
 
-uint8_t Usb::irqs(){ return Reg::val(U1OTGIR); } //get all
-bool Usb::irq(FLAGSOTG e){ return Reg::anybit(U1OTGIR, e); } //get one
-void Usb::irqs_clear(){ Reg::val(U1OTGIR, 255); } //clear all
-void Usb::irqs_clear(uint8_t v){ Reg::val(U1OTGIR, v); } //clear one or more
-void Usb::irq_clear(FLAGSOTG e){ Reg::val(U1OTGIR, e); } //clear one
+uint8_t Usb::irqs(){
+    return Reg::val(U1OTGIR);
+} //get all
+bool Usb::irq(FLAGSOTG e){
+    return Reg::anybit(U1OTGIR, e);
+} //get one
+void Usb::irqs_clear(){
+    Reg::val(U1OTGIR, 255);
+} //clear all
+void Usb::irqs_clear(uint8_t v){
+    Reg::val(U1OTGIR, v);
+} //clear one or more
+void Usb::irq_clear(FLAGSOTG e){
+    Reg::val(U1OTGIR, e);
+} //clear one
 
-uint8_t Usb::stat(){ return Reg::val(U1OTGSTAT); } //get all
-bool Usb::stat(FLAGSOTG e){ return Reg::anybit(U1OTGSTAT, e); } //get one
+uint8_t Usb::stat(){
+    return Reg::val(U1OTGSTAT);
+} //get all
+bool Usb::stat(FLAGSOTG e){
+    return Reg::anybit(U1OTGSTAT, e);
+} //get one
 
-void Usb::otg(OTG e, bool tf){ Reg::set(U1OTGCON, e, tf); }
+void Usb::otg(OTG e, bool tf){
+    Reg::set(U1OTGCON, e, tf);
+}
 
-void Usb::low_speed(bool tf){ Reg::set(U1ADDR, LSEN, tf); }
+void Usb::low_speed(bool tf){
+    Reg::set(U1ADDR, LSEN, tf);
+}
 
-uint8_t Usb::tok_pid(){ return (Usb::TOKPID)(Reg::val(U1TOK)>>4); }
-uint8_t Usb::tok_ep(){ return Reg::val(U1TOK) & 15; }
-void Usb::tok_ep(uint8_t v){ Reg::clr(U1TOK, 15); Reg::set(U1TOK, v & 15); }
+uint8_t Usb::tok_pid(){
+    return (Usb::TOKPID)(Reg::val(U1TOK)>>4);
+}
+uint8_t Usb::tok_ep(){
+    return Reg::val(U1TOK) & 15;
+}
+void Usb::tok_ep(uint8_t v){
+    Reg::clr(U1TOK, 15);
+    Reg::set(U1TOK, v & 15);
+}
 
-void Usb::sof_cnt(SOFVALS e){ Reg::val(U1SOF, e); }
+void Usb::sof_cnt(SOFVALS e){
+    Reg::val(U1SOF, e);
+}

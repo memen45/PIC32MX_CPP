@@ -57,28 +57,51 @@ struct Clc {
 constexpr Clc::Clc(CLC e)
     : m_pt((volatile uint32_t*)CLC1CON+(e*CLCXCON_SPACING)){}
 
-void Clc::gate_inv(GXPOL e, bool tf){ r.setb(m_pt, e, tf); }
-void Clc::on(bool tf){ r.setb(m_pt, ON, tf); }
-void Clc::stop_idle(bool tf){ r.setb(m_pt, SIDL, tf); }
-void Clc::intp(bool tf){ r.setb(m_pt, INTP, tf); }
-void Clc::intn(bool tf){ r.setb(m_pt, INTN, tf); }
-void Clc::out(bool tf){ r.setb(m_pt, LCOE, tf); }
-bool Clc::out(){ return r.anybit(m_pt, LCOUT); }
-void Clc::out_inv(bool tf){ r.setb(m_pt, LCPOL, tf); }
-void Clc::mode(MODE e){ r.setb(m_pt, LSR, 0); r.setb(m_pt, e); }
+void Clc::gate_inv(GXPOL e, bool tf){
+    r.setbit(m_pt, e, tf);
+}
+void Clc::on(bool tf){
+    r.setbit(m_pt, ON, tf);
+}
+void Clc::stop_idle(bool tf){
+    r.setbit(m_pt, SIDL, tf);
+}
+void Clc::intp(bool tf){
+    r.setbit(m_pt, INTP, tf);
+}
+void Clc::intn(bool tf){
+    r.setbit(m_pt, INTN, tf);
+}
+void Clc::out(bool tf){
+    r.setbit(m_pt, LCOE, tf);
+}
+bool Clc::out(){
+    return r.anybit(m_pt, LCOUT);
+}
+void Clc::out_inv(bool tf){
+    r.setbit(m_pt, LCPOL, tf);
+}
+void Clc::mode(MODE e){
+    r.setbit(m_pt, LSR, 0);
+    r.setbit(m_pt, e);
+}
 //input select, dsn = 1-4, val = 0-7 (invalid args masked to good vals)
 void Clc::in_sel(uint8_t dsn, uint8_t val){
     dsn -= 1; dsn &= 3; dsn <<= 2; val &= 7;
-    r.setb(m_pt+SEL_OFFSET, 7<<dsn, 0);
-    r.setb(m_pt+SEL_OFFSET, val<<dsn);
+    r.setbit(m_pt+SEL_OFFSET, 7<<dsn, 0);
+    r.setbit(m_pt+SEL_OFFSET, val<<dsn);
 }
 //or all in in shot with precomputed value
-void Clc::in_sel(uint32_t val){ r.val(m_pt+SEL_OFFSET, val); }
+void Clc::in_sel(uint32_t val){
+    r.val(m_pt+SEL_OFFSET, val);
+}
 //gate select, gate = 1-4 (invalid gate masked to good gate)
 void Clc::gate_sel(uint8_t gate, uint8_t val){
     gate -= 1; gate &= 3; gate <<= 3;
-    r.setb(m_pt+GLS_OFFSET, 15<<gate, 0);
-    r.setb(m_pt+GLS_OFFSET, val<<gate);
+    r.setbit(m_pt+GLS_OFFSET, 15<<gate, 0);
+    r.setbit(m_pt+GLS_OFFSET, val<<gate);
 }
 //or all in in shot with precomputed value
-void Clc::gate_sel(uint32_t val){ r.val(m_pt+GLS_OFFSET, val); }
+void Clc::gate_sel(uint32_t val){
+    r.val(m_pt+GLS_OFFSET, val);
+}

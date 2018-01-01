@@ -44,15 +44,41 @@ struct Timer1 {
  all functions inline
 =============================================================================*/
 
-void Timer1::timer(uint16_t n){ r.val(TMR1, n); }
-uint16_t Timer1::timer(){ return r.val16(TMR1); }
-void Timer1::period(uint16_t n){ r.val(PR1, n); }
-uint16_t Timer1::period(){ return r.val16(PR1); }
-void Timer1::on(bool tf){ r.setb(T1CON, ON, tf); }
-void Timer1::stop_idle(bool tf){ r.setb(T1CON, SIDL, tf); }
-void Timer1::wr_async(bool tf){ r.setb(T1CON, TWDIS, !tf); }
-bool Timer1::wr_busy(){ return r.anybit(T1CON, TWIP); }
-void Timer1::clk_src(CLK e){ r.setb(T1CON, CLK_CLR, 0); r.setb(T1CON, e); }
-void Timer1::tgate(bool tf){ r.setb(T1CON, TGATE, tf); }
-void Timer1::prescale(PRESCALE e){ r.setb(T1CON, PS256, 0); r.setb(T1CON, e); }
-void Timer1::tsync(bool tf){ r.setb(T1CON, TSYNC, tf); }
+void Timer1::timer(uint16_t n){
+    r.val(TMR1, n);
+}
+uint16_t Timer1::timer(){
+    return r.val16(TMR1);
+}
+void Timer1::period(uint16_t n){
+    r.val(PR1, n);
+}
+uint16_t Timer1::period(){
+    return r.val16(PR1);
+}
+void Timer1::on(bool tf){
+    r.setbit(T1CON, ON, tf);
+}
+void Timer1::stop_idle(bool tf){
+    r.setbit(T1CON, SIDL, tf);
+}
+void Timer1::wr_async(bool tf){
+    r.setbit(T1CON, TWDIS, !tf);
+}
+bool Timer1::wr_busy(){
+    return r.anybit(T1CON, TWIP);
+}
+void Timer1::clk_src(CLK e){
+    r.setbit(T1CON, CLK_CLR, 0);
+    r.setbit(T1CON, e);
+}
+void Timer1::tgate(bool tf){
+    r.setbit(T1CON, TGATE, tf);
+}
+void Timer1::prescale(PRESCALE e){
+    r.setbit(T1CON, PS256, 0);
+    r.setbit(T1CON, e);
+}
+void Timer1::tsync(bool tf){
+    r.setbit(T1CON, TSYNC, tf);
+}

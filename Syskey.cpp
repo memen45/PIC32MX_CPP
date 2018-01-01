@@ -26,7 +26,7 @@ void Syskey::unlock(){
     bool irqstate = ir.all_ison();                  //get STATUS.IE
     ir.disable_all();
     bool dmasusp = r.anybit(DMACON, DMASUSP);       //get DMA suspend bit
-    r.setb(DMACON, DMASUSP);                        //DMA suspend
+    r.setbit(DMACON, DMASUSP);                        //DMA suspend
     //
     if(! unlock_count){                             //first time, unlock
         r.val(SYSKEY_ADDR, MAGIC1);
@@ -34,6 +34,6 @@ void Syskey::unlock(){
     }
     unlock_count++;                                 //inc unlock_count
     //
-    if(! dmasusp) r.setb(DMACON, DMASUSP, 0);       //DMA resume
+    if(! dmasusp) r.setbit(DMACON, DMASUSP, 0);       //DMA resume
     if(irqstate) ir.enable_all();                   //restore IE state
 }

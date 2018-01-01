@@ -394,7 +394,7 @@ void UsbEndpt::reinit(){
     m_TX.reinit();
 }
 void UsbEndpt::epreg(U1EP e, bool tf){
-    r.setb(m_ep_reg, e, tf);
+    r.setbit(m_ep_reg, e, tf);
 }
 volatile bool UsbEndpt::epreg(U1EP e) const {
     return r.anybit(m_ep_reg, e);

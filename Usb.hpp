@@ -261,29 +261,76 @@ ______________________________________________________________________________*/
 // Usb static functions, vars
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 Usb::state_t Usb::state = Usb::DETACHED;
-bool Usb::power(POWER e){ return Reg::anybit(U1PWRC, e); }
-void Usb::power(POWER e, bool tf){ Reg::setb(U1PWRC, e, tf); }
-uint8_t Usb::flags(){ return Reg::val(U1IR); }
-uint8_t Usb::eflags(){ return Reg::val(U1EIR); }
-bool Usb::flag(FLAGS e){ return Reg::anybit(U1IR, e); }
-bool Usb::eflag(EFLAGS e){ return Reg::anybit(U1EIR, e); }
-void Usb::flags_clr(uint8_t v){ Reg::val(U1IR, v); }
-void Usb::eflags_clr(uint8_t v){ Reg::val(U1EIR, v); }
-uint8_t Usb::irqs(){ return Reg::val(U1IE); }
-uint8_t Usb::eirqs(){ return Reg::val(U1EIE); }
-bool Usb::irq(FLAGS e){ return Reg::anybit(U1IE, e); }
-bool Usb::eirq(EFLAGS e){ return Reg::anybit(U1EIE, e); }
-void Usb::irqs(uint8_t v){ Reg::val(U1IE, v); }
-void Usb::eirqs(uint8_t v){ Reg::val(U1EIE, v); }
-void Usb::irq(FLAGS e, bool tf){ Reg::setb(U1IE, e, tf); }
-void Usb::eirq(EFLAGS e, bool tf){ Reg::setb(U1EIE, e, tf); }
-uint8_t Usb::stat(){ return Reg::val(U1STAT); }
-bool Usb::control(CONTROL e){ return Reg::anybit(U1CON, e); }
-void Usb::control(CONTROL e, bool tf){ Reg::setb(U1CON, e, tf); }
-void Usb::control(uint8_t v){ Reg::val(U1CON, v); }
-uint8_t Usb::dev_addr(){ return Reg::val(U1ADDR) & 127; }
-void Usb::dev_addr(uint8_t v){ Reg::setb(U1ADDR, 0x7F, 0); Reg::setb(U1ADDR, v); }
-uint16_t Usb::frame(){ return (Reg::val(U1FRMH)<<8) | Reg::val(U1FRML); }
+bool Usb::power(POWER e){
+    return Reg::anybit(U1PWRC, e);
+}
+void Usb::power(POWER e, bool tf){
+    Reg::setbit(U1PWRC, e, tf);
+}
+uint8_t Usb::flags(){
+    return Reg::val(U1IR);
+}
+uint8_t Usb::eflags(){
+    return Reg::val(U1EIR);
+}
+bool Usb::flag(FLAGS e){
+    return Reg::anybit(U1IR, e);
+}
+bool Usb::eflag(EFLAGS e){
+    return Reg::anybit(U1EIR, e);
+}
+void Usb::flags_clr(uint8_t v){
+    Reg::val(U1IR, v);
+}
+void Usb::eflags_clr(uint8_t v){
+    Reg::val(U1EIR, v);
+}
+uint8_t Usb::irqs(){
+    return Reg::val(U1IE);
+}
+uint8_t Usb::eirqs(){
+    return Reg::val(U1EIE);
+}
+bool Usb::irq(FLAGS e){
+    return Reg::anybit(U1IE, e);
+}
+bool Usb::eirq(EFLAGS e){
+    return Reg::anybit(U1EIE, e);
+}
+void Usb::irqs(uint8_t v){
+    Reg::val(U1IE, v);
+}
+void Usb::eirqs(uint8_t v){
+    Reg::val(U1EIE, v);
+}
+void Usb::irq(FLAGS e, bool tf){
+    Reg::setbit(U1IE, e, tf);
+}
+void Usb::eirq(EFLAGS e, bool tf){
+    Reg::setbit(U1EIE, e, tf);
+}
+uint8_t Usb::stat(){
+    return Reg::val(U1STAT);
+}
+bool Usb::control(CONTROL e){
+    return Reg::anybit(U1CON, e);
+}
+void Usb::control(CONTROL e, bool tf){
+    Reg::setbit(U1CON, e, tf);
+}
+void Usb::control(uint8_t v){
+    Reg::val(U1CON, v);
+}
+uint8_t Usb::dev_addr(){
+    return Reg::val(U1ADDR) & 127;
+}
+void Usb::dev_addr(uint8_t v){
+    Reg::setbit(U1ADDR, 0x7F, 0);
+    Reg::setbit(U1ADDR, v);
+}
+uint16_t Usb::frame(){
+    return (Reg::val(U1FRMH)<<8) | Reg::val(U1FRML);
+}
 void Usb::bdt_addr(uint32_t v){
     v = Reg::k2phys(v); //physical address
     Reg::val(U1BDTP1, v>>8); //512byte aligned (bit0 of this reg unused)
@@ -295,9 +342,15 @@ uint32_t Usb::bdt_addr(){
     Reg::val(U1BDTP1)<<8 | Reg::val(U1BDTP2)<<16 | Reg::val(U1BDTP3)<<24
     ); //kseg0
 }
-void Usb::config(CONFIG e, bool tf){ Reg::setb(U1CNFG1, e, tf); }
-bool Usb::config(CONFIG e){ return Reg::anybit(U1CNFG1, e); }
-void Usb::config(uint8_t v){ Reg::val(U1CNFG1, v); }
+void Usb::config(CONFIG e, bool tf){
+    Reg::setbit(U1CNFG1, e, tf);
+}
+bool Usb::config(CONFIG e){
+    return Reg::anybit(U1CNFG1, e);
+}
+void Usb::config(uint8_t v){
+    Reg::val(U1CNFG1, v);
+}
 //______________________________________________________________________________
 
 

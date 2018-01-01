@@ -64,5 +64,7 @@ void UsbBuf::release(volatile uint8_t* p){
     }
 }
 //size of buffer
-uint8_t UsbBuf::buf_len() { return my_buffer_size; }
+uint8_t UsbBuf::buf_len() {
+    return my_buffer_size;
+}
 //______________________________________________________________________________

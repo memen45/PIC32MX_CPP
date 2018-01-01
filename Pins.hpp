@@ -153,13 +153,27 @@ constexpr Pins::Pins(RPN e, bool lowison)
       m_lowison(lowison)
 {}
 
-bool Pins::pinval() const { return r.anybit(m_pt+PORT_, m_pn); }
-bool Pins::latval() const { return r.anybit(m_pt+LAT, m_pn); }
-void Pins::low() const { r.setb(m_pt+LAT, m_pn, 0); }
-void Pins::high() const { r.setb(m_pt+LAT, m_pn); }
-void Pins::invert() const { r.flipb(m_pt+LAT, m_pn); }
-void Pins::on(bool tf) const {
-    r.setb(m_pt+LAT, m_pn, tf^m_lowison);
+bool Pins::pinval() const {
+    return r.anybit(m_pt+PORT_, m_pn);
 }
-bool Pins::ison() const { return m_lowison ? !pinval() : pinval(); }
-void Pins::icn_flagclear() const { r.setb(m_pt+CNF, m_pn, 0); }
+bool Pins::latval() const {
+    return r.anybit(m_pt+LAT, m_pn);
+}
+void Pins::low() const {
+    r.setbit(m_pt+LAT, m_pn, 0);
+}
+void Pins::high() const {
+    r.setbit(m_pt+LAT, m_pn);
+}
+void Pins::invert() const {
+    r.flipbit(m_pt+LAT, m_pn);
+}
+void Pins::on(bool tf) const {
+    r.setbit(m_pt+LAT, m_pn, tf^m_lowison);
+}
+bool Pins::ison() const {
+    return m_lowison ? !pinval() : pinval();
+}
+void Pins::icn_flagclear() const {
+    r.setbit(m_pt+CNF, m_pn, 0);
+}

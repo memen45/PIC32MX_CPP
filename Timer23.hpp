@@ -55,4 +55,6 @@ class Timer23 {
  inline functions
 =============================================================================*/
 
-constexpr Timer23::Timer23(TMR23 e) : m_pt((volatile uint32_t*)e){}
+constexpr Timer23::Timer23(TMR23 e)
+    : m_pt((volatile uint32_t*)e)
+{}

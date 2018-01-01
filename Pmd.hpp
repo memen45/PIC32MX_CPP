@@ -49,27 +49,33 @@ struct Pmd {
  all functions inline
 =============================================================================*/
 
-void Pmd::unlock(){ sk.unlock(); r.setb(PMDCON, PMDLOCK, 0); }
-void Pmd::lock(){ r.setb(PMDCON, PMDLOCK); sk.lock(); }
+void Pmd::unlock(){
+    sk.unlock();
+    r.setbit(PMDCON, PMDLOCK, 0);
+}
+void Pmd::lock(){
+    r.setbit(PMDCON, PMDLOCK);
+    sk.lock();
+}
 void Pmd::off(PMD e){
     unlock();
-    r.setb(PMD1_ADDR + 16*(e/32), (1<<(e%32)));
+    r.setbit(PMD1_ADDR + 16*(e/32), (1<<(e%32)));
     lock();
 }
 void Pmd::on(PMD e){
     unlock();
-    r.setb(PMD1_ADDR + 16*(e/32), (1<<(e%32)), 0);
+    r.setbit(PMD1_ADDR + 16*(e/32), (1<<(e%32)), 0);
     lock();
 }
 //array of modules to disable/enable, END is end of array
 void Pmd::off(PMD* e){
     unlock();
-    for(; *e != END; e++) r.setb(PMD1_ADDR + 16*(*e/32), (1<<(*e%32)));
+    for(; *e != END; e++) r.setbit(PMD1_ADDR + 16*(*e/32), (1<<(*e%32)));
     lock();
 }
 void Pmd::on(PMD* e){
     unlock();
-    for(; *e != END; e++) r.setb(PMD1_ADDR + 16*(*e/32), (1<<(*e%32)), 0);
+    for(; *e != END; e++) r.setbit(PMD1_ADDR + 16*(*e/32), (1<<(*e%32)), 0);
     lock();
 }
 
