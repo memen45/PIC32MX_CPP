@@ -7,6 +7,24 @@
 
 #include <cstdint>
 
+/*
+
+     retval     name            args (bool- set=1, clear=0, default=set)
+  -----------------------------------------------------------------------------
+                setb    (address, bitmask, bool = 1)    -set/clr bit(s)
+                flipb   (address, bitmask)              -invert bit(s)
+                anybit  (address, bitmask, bool = 1)    -any bit(s) set/clr?
+                allbits (address, bitmask, bool = 1)    -all bit(s) set/clr?
+    value32     val     (address)                       -read 32bit value
+    value16     val16   (address)                       -read 16bit value
+    value8      val8    (address)                       -read 8bit value
+                val     (address, value8|16|32)         -set 8|16|32bit value
+    value32     p2kseg1 (address)                       -phys addr->kseg1
+    value32     p2kseg0 (address)                       -phys addr->kseg0
+    value32     k2phys  (address)                       -ksegx addr->phys
+
+*/
+
 
 /*                                             |-kseg = 1, phys = 0
 SFR - kseg0 0x9F800000-0x9F80FFFF bit<31:29> 0b100<-kseg0 = 0
