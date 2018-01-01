@@ -36,7 +36,7 @@ class Pins {
     };
     //pps_out peripheral names
     enum PPSOUT : uint8_t {
-        PPSOFF = 0,
+        PPSLAT = 0,
         C1OUT, C2OUT, C3OUT,
         U2TX, U2RTS, U3TX, U3RTS,
         SDO2, SCK2OUT, SS2OUT,
@@ -53,6 +53,10 @@ class Pins {
         // so we can use one enum to get both RPn and port/pin info
         // (can then also set tris, clear ansel, for pps_in, and also
         //  use RPn or RXn as init value for Pins() in addition to Xn)
+
+        //to disable PPSIN for peripheral create a RPNONE,
+        //so we can use pps_in() to turn off pps in
+        RPNONE = 0,
 
         //RPn 1-24
         RP1 = 1+(A0<<8), RP2 = 2+(A1<<8), RP3 = 3+(A2<<8), RP4 = 4+(A3<<8),
@@ -99,9 +103,8 @@ class Pins {
     bool        icn_stat        () const;
     void        icn_flagclear   () const;
     //pps
-    static void pps_off         (PPSIN);
-    static void pps_in          (PPSIN, RPN);
-    static void pps_off         (RPN);
+    // static void pps_off         (PPSIN);
+    static void pps_in          (PPSIN, RPN = RPNONE);
     static void pps_out         (PPSOUT, RPN);
 
     //constructors (bool-> lowison)

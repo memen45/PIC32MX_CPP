@@ -69,19 +69,11 @@ void Pins::pps_do(uint32_t r, uint8_t v){
     Reg::setbit(RPCON, IOLOCK);
     Syskey::lock();
 }
-//pps off for peripheral
-void Pins::pps_off(PPSIN e){
-    pps_in(e, (RPN)0);
-}
 //pin -> pps peripheral in
 void Pins::pps_in(PPSIN e, RPN n){
     pps_do(RPINR1+((e/4)*16)+(e%4), n&31);
     Reg::setbit(ANSELA + TRIS + ((n>>8)/16)*0x100, 1<<((n>>8)%16));  //tris=1
     Reg::setbit(ANSELA + ((n>>8)/16)*0x100, 1<<((n>>8)%16), 0);      //ansel=0
-}
-//pin output not using pps
-void Pins::pps_off(RPN n){
-    pps_out(PPSOFF, n);
 }
 //pps peripheral out -> pin
 void Pins::pps_out(PPSOUT e, RPN n){

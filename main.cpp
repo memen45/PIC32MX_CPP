@@ -31,9 +31,12 @@
 #include "Usb.hpp"
 
 
-
 /*=============================================================================
- LED's
+ LED's - all in array
+ Pin class does not init pin, so we can control exactly if/when we want to
+ set them up
+ array is created here so we can init them all at once in a loop, and access
+ them later by index
 =============================================================================*/
 Pins leds[] = {                 //group leds
     { Pins::D1 },               //RED
@@ -42,11 +45,11 @@ Pins leds[] = {                 //group leds
     { Pins::D3 },               //LED1 (invert in timer1/timer2/timer3 irq)
     { Pins::C13 }               //LED2 (cp0 irq blinks)
 };
-Pins& led1 = leds[3];           //reference to specific leds
+Pins& led1 = leds[3];           //references to specific leds as needed
 Pins& led2 = leds[4];
 
 /*=============================================================================
- Switches
+ Switches - all in array
 =============================================================================*/
 Pins sw[] = {                   //true=lowison
     { Pins::B9,  true },        //SW1 (rotate delays))
@@ -191,10 +194,11 @@ int main(){
     //__________________________________________________________________________
     //see if pps code works (does nothing)
     //(do before pins setup below, as out will clear tris)
-    Pins::pps_in(Pins::U2RX, Pins::RP1);
-    Pins::pps_off(Pins::U2RX);
-    Pins::pps_out(Pins::U2TX, Pins::RA0);
-    Pins::pps_off(Pins::RA0);
+    //use RAx or RPx for pins (has to be the 'R' versions)
+    Pins::pps_in(Pins::U2RX, Pins::RP1); //RP1(RA0) alsp set to input
+    Pins::pps_in(Pins::U2RX); //default is Pins::RPNONE (peripheral input off)
+    Pins::pps_out(Pins::U2TX, Pins::RA0); //TX2->RA0(RP1)
+    Pins::pps_out(Pins::PPSLAT, Pins::RA0); //RA0 now uses LATx
 
     //__________________________________________________________________________
     //init sw pins
