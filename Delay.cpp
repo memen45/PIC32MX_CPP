@@ -12,23 +12,25 @@ void DelayCP0::reset(){
     m_expired = false;
 }
 void DelayCP0::wait_us(uint32_t n){
-    wait(m_cpu_mhz * n);
+    wait(n);
 }
 void DelayCP0::wait_ms(uint32_t n){
     wait_us(1000 * n);
 }
 void DelayCP0::set_us(uint32_t n){
-    reset(m_cpu_mhz * n);
+    reset(n);
 }
 void DelayCP0::set_ms(uint32_t n){
     set_us(1000 * n);
 }
+
 //private
 void DelayCP0::reset(uint32_t n){
     reset();
-    m_countn = n>>1;
+    m_countn = osc.speed() / 2000000 * n;
 }
 void DelayCP0::wait(uint32_t n){
     reset(n);
     while(! expired());
 }
+

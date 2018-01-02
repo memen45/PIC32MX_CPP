@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include "Cp0.hpp"
+#include "Osc.hpp"
 
 class DelayCP0 {
 
@@ -20,11 +21,12 @@ class DelayCP0 {
     void    set_ms      (uint32_t);
 
     //constructor
-    constexpr DelayCP0(uint8_t = 24);
+    //constexpr DelayCP0(uint8_t = 24);
 
     private:
 
     static Cp0 cp0;
+    static Osc osc;
 
     //private functions
     void    reset       (uint32_t);
@@ -33,12 +35,13 @@ class DelayCP0 {
     //private vars
     uint32_t    m_start{0};
     uint32_t    m_countn{0};
-    uint8_t     m_cpu_mhz;
+    //uint8_t     m_cpu_mhz;
     bool        m_expired{true};
 };
 
 /*=============================================================================
  inline functions
 =============================================================================*/
-
-constexpr DelayCP0::DelayCP0(uint8_t cpu_mhz) : m_cpu_mhz(cpu_mhz){}
+//constexpr DelayCP0::DelayCP0(uint8_t cpu_mhz)
+//    : m_cpu_mhz(cpu_mhz)
+//{}

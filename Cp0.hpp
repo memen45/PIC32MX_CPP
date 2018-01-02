@@ -7,6 +7,7 @@
 #include <cstdint>
 #include "Irq.hpp"
 #include "Reg.hpp"
+#include "Osc.hpp"
 
 struct Cp0 {
 
@@ -22,6 +23,7 @@ struct Cp0 {
     private:
 
     static Irq ir;
+    static Osc osc;
 };
 
 /*=============================================================================
@@ -29,7 +31,6 @@ struct Cp0 {
 =============================================================================*/
 
 //vars
-static uint8_t sysfreq = 24; //used to calculate compare values
 static uint32_t m_compare_count; //save count for reloads
 
 uint32_t Cp0::count(){
@@ -54,7 +55,7 @@ void Cp0::compare_reload(bool tf){
     }
 }
 void Cp0::compare_us(uint32_t v){
-    m_compare_count = sysfreq / 2 * v;
+    m_compare_count = osc.speed() / 2000000 * v; //cpu speed from Osc::
     compare_reload();
 }
 void Cp0::compare_ms(uint16_t v){

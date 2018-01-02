@@ -120,6 +120,29 @@ int main(){
     // +3.29vdc , -3.29vdc
 
     Osc osc;
+    //testing osc- seems MUL12 adds another div2
+    //as anytime MUL12 is used the DIV value is
+    //doubled
+
+    //osc.pllset(osc.MUL2, osc.DIV1);  // 16mhz ok
+    //osc.pllset(osc.MUL3, osc.DIV1);  // 24mhz ok
+    //osc.pllset(osc.MUL12, osc.DIV4); // 24mhz - actual 12mhz
+    //osc.pllset(osc.MUL4, osc.DIV1);  // 32mhz ok :)
+    //osc.pllset(osc.MUL4, osc.DIV2);  // 16mhz ok
+    //osc.pllset(osc.MUL4, osc.DIV4);  // 8mhz ok
+    //osc.pllset(osc.MUL6, osc.DIV4);  // 12mhz ok
+    //osc.pllset(osc.MUL6, osc.DIV2);  // 24mhz ok
+    //osc.pllset(osc.MUL8, osc.DIV4);  // 16mhz ok
+    //osc.pllset(osc.MUL12, osc.DIV8); // 12mhz - actual 6mhz
+
+    //should be 48MHz :), is actually 24MHz (verfied via rtcc/cp0 count)
+    //(but my code calculates as 48MHz, so delay timers etc run
+    //at half speed)
+    osc.pllset(osc.MUL12, osc.DIV4);
+//    uint32_t tmp = osc.speed();
+//    DelayCP0 tmr;
+//    led1.digital_out();
+//    for(;;tmr.wait_ms(500)) led1.invert();
 
     //__________________________________________________________________________
     Resets::CAUSE cause = Resets::cause();  //use cause result somewhere
@@ -177,9 +200,9 @@ int main(){
 
     const uint32_t test_time = (2<<28 | 3<<24 | 4<<20 | 5<<16 | 0<<12 | 1<<8);
     rtcc.time(test_time);                   //23:45:01
-    if(rtcc.time() != test_time){           //did write work? (testing)
-        while(1);                           //lockup if read/write not working
-    }                                       //else syskey/wrlock working
+//    if(rtcc.time() != test_time){           //did write work? (testing)
+//        while(1);                           //lockup if read/write not working
+//    }                                       //else syskey/wrlock working
     rtcc.on(true);                          //turn on, alarm is 00:00:00
                                             //(alarm every 00 seconds match)
                                             //disable/enable core timer irq
@@ -229,7 +252,7 @@ int main(){
     timer3.on(true);                        //turn on timer3
 
     //__________________________________________________________________________
-    //cp0 compare timeout (default sysfreq 24MHz)
+    //cp0 compare timeout
     Cp0::compare_ms(200);
 
 
@@ -351,6 +374,15 @@ ISR(TIMER_3){
 ISR(RTCC){
     Irq ir; Cp0 cp;
     static bool b;
+
+static volatile uint32_t newtime,timedif;
+newtime = cp.count();
+timedif = (newtime - timedif) /30;
+timedif = newtime;
+
+
+
+
     if(b = !b){ //toggle and check
         ir.on(ir.CORE_TIMER, false); //core timer irq disable
         led2.on(false);
