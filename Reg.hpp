@@ -131,7 +131,7 @@ template <typename T> uint16_t Reg::val16(T r){
 template <typename T> uint8_t Reg::val8(T r){
     return *(reinterpret_cast <volatile uint8_t*>(r));
 }
-//set uint32_t value to register r
+//set uint32_t/uint16_t/uint8_t value to register r
 template <typename T, typename V> void Reg::val(T r, V v){
     *(reinterpret_cast <volatile V*>(r)) = v;
 }
