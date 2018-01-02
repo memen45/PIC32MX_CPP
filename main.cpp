@@ -124,6 +124,7 @@ int main(){
     //as anytime MUL12 is used the DIV value is
     //doubled
 
+    //tested combos- all verfiy ok except for MUL12 (PLLMULT 0x05)
     //osc.pllset(osc.MUL2, osc.DIV1);  // 16mhz ok
     //osc.pllset(osc.MUL3, osc.DIV1);  // 24mhz ok
     //osc.pllset(osc.MUL12, osc.DIV4); // 24mhz - actual 12mhz
@@ -138,7 +139,11 @@ int main(){
     //should be 48MHz :), is actually 24MHz (verfied via rtcc/cp0 count)
     //(but my code calculates as 48MHz, so delay timers etc run
     //at half speed)
-    osc.pllset(osc.MUL12, osc.DIV4);
+    //osc.pllset(osc.MUL12, osc.DIV4);
+
+    //same as default- ok
+    osc.pllset(osc.MUL3, osc.DIV1);
+
 //    uint32_t tmp = osc.speed();
 //    DelayCP0 tmr;
 //    led1.digital_out();
