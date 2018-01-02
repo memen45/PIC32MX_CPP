@@ -43,9 +43,7 @@ struct Osc {
         MUL2 = 0, MUL3, MUL4, MUL6, MUL8, MUL12, MUL24
     };
 
-    static void         plldiv      (DIVS);     //set pll divider
     static DIVS         plldiv      ();         //get pll divider
-    static void         pllmul      (PLLMUL);   //set pll multiplier
     static PLLMUL       pllmul      ();         //get pll multiplier
     static bool         pllfrc      ();         //true=pll src frc, false=posc
     static void         pllset      (PLLMUL, DIVS); //set pll mul/div
@@ -86,7 +84,7 @@ struct Osc {
                                                 //will run speed() )
 
     static const uint32_t m_default_speed = 24000000;
-    static const uint8_t m_mul_lookup[];
+//    static const uint8_t m_mul_lookup[];
 
     enum {
         OSCCON = 0xBF802680,
@@ -109,7 +107,7 @@ struct Osc {
  all functions inline
 =============================================================================*/
 uint32_t Osc::m_speed = 0;
-const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
+//const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 
 void Osc::frcdiv(DIVS e){
     sk.unlock();
@@ -150,16 +148,6 @@ void Osc::sosc(bool tf){
     r.setbit(OSCCON, SOSCEN, tf);
     sk.lock();
 }
-void Osc::plldiv(DIVS e){
-    sk.unlock();
-    r.val(SPLLCON+3, e);
-    sk.lock();
-}
-void Osc::pllmul(PLLMUL e){
-    sk.unlock();
-    r.val(SPLLCON+2, e);
-    sk.lock();
-}
 Osc::DIVS Osc::plldiv(){
     return (DIVS)r.val8(SPLLCON+3);
 }
@@ -174,9 +162,14 @@ void Osc::pllset(PLLMUL m, DIVS d){
     bool irstatus = ir.all_ison();
     ir.disable_all();
     sk.unlock();
-    plldiv(d);
-    pllmul(m);
+    //need to switch from SPLL to something else
+    //or 12x MUL will be half of expected
+    source(FRC);
+    r.val(SPLLCON+3, d);
+    r.val(SPLLCON+2, m);
     while(!ready(SPLLRDY));
+    //back to SPLL
+    source(SPLL);
     sk.lock();
     if(irstatus) ir.enable_all();
     m_speed = 0;
@@ -191,16 +184,17 @@ uint32_t Osc::speed(){
             m_speed = 31250;
             break;
         case SOSC:
-            m_speed = 32768;//assume
+            m_speed = 32768;//assumed
             break;
         case POSC:          //need something to compare to (lposc vs cp0count)
             break;          //return default for now
         case SPLL: {
             if(!pllfrc()) break;            //is posc
-            uint8_t m = (uint8_t)pllmul(); //2 3 4  6 8 12 24
-            m = m_mul_lookup[m];
+            uint8_t m = (uint8_t)pllmul();  //2 3 4 6 8 12 24
+            static const uint8_t tl[] = {2, 3, 4, 6, 8, 12, 24};
+            m = tl[m];
             uint8_t d = (uint8_t)plldiv();
-            if(d == 7) d = 8;             //adjust DIV256
+            if(d == 7) d = 8;               //adjust DIV256
             m_speed = (8000000*m)>>d;
             break;
         }

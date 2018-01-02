@@ -120,34 +120,7 @@ int main(){
     // +3.29vdc , -3.29vdc
 
     Osc osc;
-    //testing osc- seems MUL12 adds another div2
-    //as anytime MUL12 is used the DIV value is
-    //doubled
-
-    //tested combos- all verfiy ok except for MUL12 (PLLMULT 0x05)
-    //osc.pllset(osc.MUL2, osc.DIV1);  // 16mhz ok
-    //osc.pllset(osc.MUL3, osc.DIV1);  // 24mhz ok
-    //osc.pllset(osc.MUL12, osc.DIV4); // 24mhz - actual 12mhz
-    //osc.pllset(osc.MUL4, osc.DIV1);  // 32mhz ok :)
-    //osc.pllset(osc.MUL4, osc.DIV2);  // 16mhz ok
-    //osc.pllset(osc.MUL4, osc.DIV4);  // 8mhz ok
-    //osc.pllset(osc.MUL6, osc.DIV4);  // 12mhz ok
-    //osc.pllset(osc.MUL6, osc.DIV2);  // 24mhz ok
-    //osc.pllset(osc.MUL8, osc.DIV4);  // 16mhz ok
-    //osc.pllset(osc.MUL12, osc.DIV8); // 12mhz - actual 6mhz
-
-    //should be 48MHz :), is actually 24MHz (verfied via rtcc/cp0 count)
-    //(but my code calculates as 48MHz, so delay timers etc run
-    //at half speed)
-    //osc.pllset(osc.MUL12, osc.DIV4);
-
-    //same as default- ok
-    osc.pllset(osc.MUL3, osc.DIV1);
-
-//    uint32_t tmp = osc.speed();
-//    DelayCP0 tmr;
-//    led1.digital_out();
-//    for(;;tmr.wait_ms(500)) led1.invert();
+    osc.pllset(osc.MUL12, osc.DIV4);        // 24mhz - 96MHz for usb (/2)
 
     //__________________________________________________________________________
     Resets::CAUSE cause = Resets::cause();  //use cause result somewhere
@@ -379,15 +352,6 @@ ISR(TIMER_3){
 ISR(RTCC){
     Irq ir; Cp0 cp;
     static bool b;
-
-static volatile uint32_t newtime,timedif;
-newtime = cp.count();
-timedif = (newtime - timedif) /30;
-timedif = newtime;
-
-
-
-
     if(b = !b){ //toggle and check
         ir.on(ir.CORE_TIMER, false); //core timer irq disable
         led2.on(false);
