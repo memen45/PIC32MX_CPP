@@ -7,6 +7,7 @@
 
 #include <cstdint>
 
+
 /*
 
      retval     name            args (bool- set=1, clear=0, default=set)
@@ -35,9 +36,6 @@ SFR - kseg0 0x9F800000-0x9F80FFFF bit<31:29> 0b100<-kseg0 = 0
 
 
 struct Reg {
-
-
-    //public functions
 
     //set/clear a bit or bits to specified level (default=set=1)
     //(CLR register offset is +1, SET register offset is +2)

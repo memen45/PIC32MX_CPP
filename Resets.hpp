@@ -60,7 +60,7 @@ static uint32_t boot_flags;
 
 //RCON
 //save flags, clear flags, return reset cause
-Resets::CAUSE Resets::cause(){
+auto Resets::cause() -> CAUSE {
     //save flags only if not already saved
     //boot_flags var will be 0 on any reset as c runtime will clear
     //before this function can run

@@ -32,7 +32,7 @@ struct Osc {
     static DIVS         frcdiv      ();         //get
     static CNOSC        source      ();         //get current osc source
     static void         source      (CNOSC);    //start switch to nosc
-    static bool         locked      ();         //get clock locked status
+    static void         clklock     ();         //lock nosc/oswen until reset
     static void         sleep       (bool);     //sleep enable
     static bool         failed      ();         //clock failed?
     static void         sosc        (bool);     //sosc enable
@@ -68,6 +68,7 @@ struct Osc {
     //osctun
 
 
+    //misc
     static uint32_t     speed       ();         //get cpu speed (0=unknown)
 
 
@@ -84,12 +85,14 @@ struct Osc {
                                                 //will run speed() )
 
     static const uint32_t m_default_speed = 24000000;
-//    static const uint8_t m_mul_lookup[];
+
+    static bool         unlock_irq  ();         //unlock reg access, irq's off
+    static void         lock_irq    (bool);     //lock reg access, restore irq
+
 
     enum {
         OSCCON = 0xBF802680,
-            COSC_SHIFT = 4, //byte accessed via osccon+1
-            CLKLOCK = 1<<7, SLPEN = 1<<5, CF = 1<<3,
+            CLKLOCK = 1<<7, SLPEN = 1<<4, CF = 1<<3,
             SOSCEN = 1<<1, OSWEN = 1<<0,
         SPLLCON = 0xBF8026A0,
             PLLICLK = 1<<7,
@@ -107,33 +110,46 @@ struct Osc {
  all functions inline
 =============================================================================*/
 uint32_t Osc::m_speed = 0;
-//const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 
+//some functions need irq disabled, others can use
+//sk.unlock/lock directly
+
+//system unlock for register access, w/irq disable
+bool Osc::unlock_irq(){
+    bool irstat = ir.all_ison();
+    ir.disable_all();
+    sk.unlock();
+    return irstat;
+}
+//system lock enable, restore previous irq status
+void Osc::lock_irq(bool tf){
+    sk.lock();
+    if(tf) ir.enable_all();
+}
+
+//osccon
 void Osc::frcdiv(DIVS e){
     sk.unlock();
     r.val(OSCCON+3, e); //upper byte access (only FRCDIV in upper byte)
     sk.lock();
 }
-Osc::DIVS Osc::frcdiv(){
+auto Osc::frcdiv() -> DIVS {
     return (DIVS)r.val8(OSCCON+3);
 }
-Osc::CNOSC Osc::source(){
+auto Osc::source() -> CNOSC {
     return (CNOSC)(r.val8(OSCCON+1)>>4);
 }
 void Osc::source(CNOSC e){
-    bool irstatus = ir.all_ison();
-    ir.disable_all();
-    sk.unlock();
+    bool irstat  = unlock_irq();
     r.val(OSCCON+1, e); //can't over-write cosc, so write whole byte
     r.setbit(OSCCON, OSWEN);
     while(r.anybit(OSCCON, OSWEN));
-    sk.lock();
+    lock_irq(irstat);
     m_speed = 0; //make speed() actually check it again
     speed();
-    if(irstatus) ir.enable_all();
 }
-bool Osc::locked(){
-    return r.anybit(OSCCON, CLKLOCK);
+void Osc::clklock(){
+    r.setbit(OSCCON, CLKLOCK);
 }
 void Osc::sleep(bool tf){
     sk.unlock();
@@ -146,12 +162,14 @@ bool Osc::failed(){
 void Osc::sosc(bool tf){
     sk.unlock();
     r.setbit(OSCCON, SOSCEN, tf);
-    sk.lock();
+    sk.unlock();
 }
-Osc::DIVS Osc::plldiv(){
+
+//spllcon
+auto Osc::plldiv() -> DIVS {
     return (DIVS)r.val8(SPLLCON+3);
 }
-Osc::PLLMUL Osc::pllmul(){
+auto Osc::pllmul() -> PLLMUL {
     return (PLLMUL)r.val8(SPLLCON+2);
 }
 bool Osc::pllfrc(){
@@ -159,9 +177,7 @@ bool Osc::pllfrc(){
 }
 void Osc::pllset(PLLMUL m, DIVS d){
     if(source() != SPLL) return; //pll not in use
-    bool irstatus = ir.all_ison();
-    ir.disable_all();
-    sk.unlock();
+    bool irstat  = unlock_irq();
     //need to switch from SPLL to something else
     //or 12x MUL will be half of expected
     source(FRC);
@@ -170,12 +186,25 @@ void Osc::pllset(PLLMUL m, DIVS d){
     while(!ready(SPLLRDY));
     //back to SPLL
     source(SPLL);
-    sk.lock();
-    if(irstatus) ir.enable_all();
+    lock_irq(irstat);
     m_speed = 0;
     speed();
 }
 
+//refo1con
+
+
+//refo1trim
+
+
+//clkstat
+bool Osc::ready(CLKRDY e){
+    return r.anybit(CLKSTAT, e);
+}
+
+//osctun
+
+//misc
 uint32_t Osc::speed(){
     if(m_speed) return m_speed;     //already have it
     CNOSC s = source();
@@ -211,6 +240,3 @@ uint32_t Osc::speed(){
     return m_speed;
 }
 
-bool Osc::ready(CLKRDY e){
-    return r.anybit(CLKSTAT, e);
-}
