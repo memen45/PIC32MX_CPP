@@ -25,9 +25,9 @@
 
 struct Osc {
 
-    //public
-
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //osccon
+
     enum DIVS : uint8_t { //upper byte of osccon, spllcon
         DIV1, DIV2, DIV4, DIV8, DIV16, DIV32, DIV64, DIV256
     };
@@ -44,8 +44,9 @@ struct Osc {
     static bool         clkbad      ();         //clock failed?
     static void         sosc        (bool);     //sosc enable
 
-
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //spllcon
+
     enum PLLMUL : uint8_t {
         MUL2 = 0, MUL3, MUL4, MUL6, MUL8, MUL12, MUL24
     };
@@ -57,13 +58,27 @@ struct Osc {
     static void         pllset      (PLLMUL, DIVS, bool = true);
                                                 //set pll mul/div, true=frc
 
-
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //refo1con
 
+    enum ROSEL : uint8_t {
+        RSYSCLK = 0, RPOSC = 2, RFRC = 3, RLPRC = 4, RSOSC = 5, RPLLVCO = 7
+    };
 
+    static void         refo        (bool);     //true = on
+    static void         refo_idle   (bool);     //true = stop in idle mode
+    static void         refo_out    (bool);     //true = clk out to REFO1 pin
+    static void         refo_sleep  (bool);     //true = run in sleep
+    static void         refo_divsw  (bool);     //true = divider switch enable
+    static bool         refo_divsw  ();         //false = divider switch done
+    static bool         refo_active ();         //true = active
+
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //refo1trim
 
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //clkstat
 
     enum CLKRDY : uint8_t {
@@ -73,14 +88,17 @@ struct Osc {
 
     static bool         ready       (CLKRDY);   //clock ready?
 
-
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //osctun
 
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //misc
+
     static uint32_t     speed       ();         //get cpu speed
 
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     private:
 
     static Reg r;                               //for static class access
@@ -88,10 +106,6 @@ struct Osc {
     static Irq ir;
 
     static uint32_t m_speed;                    //store calculated cpu freq
-                                                //returned from speed() if
-                                                //not 0, if 0 then calculate
-                                                //again (any change in clock
-                                                //will run speed() )
 
     static const uint32_t m_default_speed = 24000000;
 
@@ -106,6 +120,8 @@ struct Osc {
         SPLLCON = 0xBF8026A0,
             PLLICLK = 1<<7,
         REFO1CON = 0xBF802720,
+            ON = 1<<15, SIDL = 1<<13, OE = 1<<12, RSLP = 1<<11,
+            DIVSWEN = 1<<9, ACTIVE = 1<<8,
         REFO1TRIM = 0xBF802730,
         CLKSTAT = 0xBF802770,
         OSCTUN = 0xBF802880
