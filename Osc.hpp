@@ -222,6 +222,7 @@ bool Osc::ready(CLKRDY e){
 //misc
 uint32_t Osc::speed(){
     if(m_speed) return m_speed;     //already have it
+    m_speed = m_default_speed;      //assume default if cannot get
     CNOSC s = clksrc();
     switch(s){
         case LPRC:
@@ -251,7 +252,6 @@ uint32_t Osc::speed(){
         default:
             break;
     }
-    if(!m_speed) m_speed = m_default_speed;
     return m_speed;
 }
 
