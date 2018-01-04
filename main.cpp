@@ -109,7 +109,6 @@ Pmd::PMD pmd_list[] = {                      //list of modules to disable
 =============================================================================*/
 int main(){
 
-
     //pic32mm curiosity board, Fluke 101 (not TrueRMS), test
     //    DelayCP0 tmr;
     //    Pins rc0(Pins::C0); Pins rc2(Pins::C2);
@@ -127,7 +126,6 @@ int main(){
 
     Osc osc;
     osc.pllset(osc.MUL12, osc.DIV4);        // 24mhz - 96MHz for usb (/2)
-
 
     //__________________________________________________________________________
     //usb- can't do much

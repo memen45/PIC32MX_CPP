@@ -78,7 +78,7 @@ struct Osc {
 
 
     //misc
-    static uint32_t     speed       ();         //get cpu speed (0=unknown)
+    static uint32_t     speed       ();         //get cpu speed
 
 
     private:
