@@ -190,19 +190,20 @@ bool Osc::pllfrc(){
 void Osc::pllfrc(bool tf){
     r.setbit(SPLLCON, PLLICLK, tf);
 }
-//assume SPLL wanted as clock source
+//assume SPLL wanted as clock source (why else set pll)
 //assume frcpll, unless bool=false then POSC is source
-void Osc::pllset(PLLMUL m, DIVS d, bool frcpll){
+void Osc::pllset(PLLMUL m, DIVS d, bool frc){
     bool irstat  = unlock_irq();
     //need to switch from SPLL to something else
-    //or 12x MUL will be half of expected
+    //or 12x MUL will effectively be 6x
     //switch to frc (hardware does nothing if already frc)
     clksrc(FRC);
     //set new pll vals
     r.val(SPLLCON+3, d);
     r.val(SPLLCON+2, m);
-    if(frcpll) pllfrc(true);
-    //back to SPLL
+    //pll select
+    if(frc) pllfrc(true);
+    //source to SPLL
     clksrc(SPLL);
     lock_irq(irstat);
     m_speed = 0;
