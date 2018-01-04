@@ -8,11 +8,8 @@
  called or when cpu source/speed is changed, if unable to calculate (if ext
  crystal) then the default frequency is returned
 
- config bits will need to enable clock source switching
-
- clock source switching needed, as cannot reliably switch pll mul/div with
- spll as clock source- changing pll mul/div without switching works until
- 12x is used, then will get 1/2 expected (or xMUL /DIV /2)
+ config bits will need to enable clock source switching if changing clock
+ sources OR changing PLL mul/div values
 
  after software reset AND spll is clock selected in config bits, will lock
  up when trying to switch to spll in the pllset() function, so just set
@@ -195,7 +192,6 @@ void Osc::pllfrc(bool tf){
 void Osc::pllset(PLLMUL m, DIVS d, bool frc){
     bool irstat  = unlock_irq();
     //need to switch from SPLL to something else
-    //or 12x MUL will effectively be 6x
     //switch to frc (hardware does nothing if already frc)
     clksrc(FRC);
     //set new pll vals
