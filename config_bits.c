@@ -28,8 +28,8 @@
 #pragma config FWDTEN = OFF             // Watchdog Timer Enable bit (WDT is disabled)
 
 // FOSCSEL
-//#pragma config FNOSC = FRCDIV           // Oscillator Selection bits (Fast RC oscillator (FRC) with divide-by-N)
-#pragma config FNOSC = PLL              // Oscillator Selection bits (Primary or FRC oscillator with PLL)
+#pragma config FNOSC = FRCDIV           // Oscillator Selection bits (Fast RC oscillator (FRC) with divide-by-N)
+//#pragma config FNOSC = PLL              // Oscillator Selection bits (Primary or FRC oscillator with PLL)
 #pragma config PLLSRC = FRC             // System PLL Input Clock Selection bit (FRC oscillator is selected as PLL reference input on device reset)
 #pragma config SOSCEN = ON              // Secondary Oscillator Enable bit (Secondary oscillator (SOSC) is enabled)
 #pragma config IESO = OFF               // Two Speed Startup Enable bit (Two speed startup is disabled)
