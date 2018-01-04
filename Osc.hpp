@@ -4,11 +4,21 @@
  Oscillator - set cpu clock source, speed
 
  any fucntion that depends on cpu frequency, can call speed() to get current
- cpu frequency in Hz, if not already calculated, it will be calculated when
+ cpu frequency in Hz, if not already calculated it will be calculated when
  called or when cpu source/speed is changed, if unable to calculate (if ext
- crystal at the moment) then the default frequency is returned
+ crystal) then the default frequency is returned
 
- config bits will need to enable clock source switching (if needed)
+ config bits will need to enable clock source switching
+
+ clock source switching needed, as cannot reliably switch pll mul/div with
+ spll as clock source- changing pll mul/div without switching works until
+ 12x is used, then will get 1/2 expected (or xMUL /DIV /2)
+
+ after software reset AND spll is clock selected in config bits, will lock
+ up when trying to switch to spll in the pllset() function, so just set
+ frc as clock source in config bits for now until I figure out what is
+ happening
+
 =============================================================================*/
 
 #include <cstdint>
@@ -30,11 +40,11 @@ struct Osc {
 
     static void         frcdiv      (DIVS);     //set
     static DIVS         frcdiv      ();         //get
-    static CNOSC        source      ();         //get current osc source
-    static void         source      (CNOSC);    //start switch to nosc
+    static CNOSC        clksrc      ();         //get current osc source
+    static void         clksrc      (CNOSC);    //start switch to nosc
     static void         clklock     ();         //lock nosc/oswen until reset
     static void         sleep       (bool);     //sleep enable
-    static bool         failed      ();         //clock failed?
+    static bool         clkbad      ();         //clock failed?
     static void         sosc        (bool);     //sosc enable
 
 
@@ -46,7 +56,9 @@ struct Osc {
     static DIVS         plldiv      ();         //get pll divider
     static PLLMUL       pllmul      ();         //get pll multiplier
     static bool         pllfrc      ();         //true=pll src frc, false=posc
-    static void         pllset      (PLLMUL, DIVS); //set pll mul/div
+    static void         pllfrc      (bool);     //true=pll src frc, false=posc
+    static void         pllset      (PLLMUL, DIVS, bool = true);
+                                                //set pll mul/div, true=frc
 
 
     //refo1con
@@ -136,12 +148,12 @@ void Osc::frcdiv(DIVS e){
 auto Osc::frcdiv() -> DIVS {
     return (DIVS)r.val8(OSCCON+3);
 }
-auto Osc::source() -> CNOSC {
+auto Osc::clksrc() -> CNOSC {
     return (CNOSC)(r.val8(OSCCON+1)>>4);
 }
-void Osc::source(CNOSC e){
-    bool irstat  = unlock_irq();
-    r.val(OSCCON+1, e); //can't over-write cosc, so write whole byte
+void Osc::clksrc(CNOSC e){
+    bool irstat = unlock_irq();
+    r.val(OSCCON+1, e); //cosc is r/o, so can just write whole byte
     r.setbit(OSCCON, OSWEN);
     while(r.anybit(OSCCON, OSWEN));
     lock_irq(irstat);
@@ -156,7 +168,7 @@ void Osc::sleep(bool tf){
     r.setbit(OSCCON, SLPEN, tf);
     sk.lock();
 }
-bool Osc::failed(){
+bool Osc::clkbad(){
     return r.anybit(OSCCON, CF);
 }
 void Osc::sosc(bool tf){
@@ -175,17 +187,23 @@ auto Osc::pllmul() -> PLLMUL {
 bool Osc::pllfrc(){
     return r.anybit(SPLLCON, PLLICLK);
 }
-void Osc::pllset(PLLMUL m, DIVS d){
-    if(source() != SPLL) return; //pll not in use
+void Osc::pllfrc(bool tf){
+    r.setbit(SPLLCON, PLLICLK, tf);
+}
+//assume SPLL wanted as clock source
+//assume frcpll, unless bool=false then POSC is source
+void Osc::pllset(PLLMUL m, DIVS d, bool frcpll){
     bool irstat  = unlock_irq();
     //need to switch from SPLL to something else
     //or 12x MUL will be half of expected
-    source(FRC);
+    //switch to frc (hardware does nothing if already frc)
+    clksrc(FRC);
+    //set new pll vals
     r.val(SPLLCON+3, d);
     r.val(SPLLCON+2, m);
-    while(!ready(SPLLRDY));
+    if(frcpll) pllfrc(true);
     //back to SPLL
-    source(SPLL);
+    clksrc(SPLL);
     lock_irq(irstat);
     m_speed = 0;
     speed();
@@ -207,7 +225,7 @@ bool Osc::ready(CLKRDY e){
 //misc
 uint32_t Osc::speed(){
     if(m_speed) return m_speed;     //already have it
-    CNOSC s = source();
+    CNOSC s = clksrc();
     switch(s){
         case LPRC:
             m_speed = 31250;

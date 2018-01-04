@@ -2,6 +2,7 @@
 
 #include "Syskey.hpp"
 #include "Reg.hpp"
+#include "Irq.hpp"
 
 /*=============================================================================
  Resets functions
@@ -86,9 +87,11 @@ bool Resets::config_err(){
 //RSWRST
 //resets after read
 void Resets::swreset(){
+    Irq::disable_all();
     sk.unlock();
     r.setbit(RSWRST, SWRST);
     r.val(RSWRST);
+    while(1);
 }
 //RNMICON
 bool Resets::nmi_wdt(){

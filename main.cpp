@@ -120,13 +120,14 @@ int main(){
     //for(;;rc0.invert(),rc2.invert(),tmr.wait_ms(5000) );
     // +3.29vdc , -3.29vdc
 
-    Osc osc;
-    osc.pllset(osc.MUL12, osc.DIV4);        // 24mhz - 96MHz for usb (/2)
-
-
     //__________________________________________________________________________
     Resets::CAUSE cause = Resets::cause();  //use cause result somewhere
                                             //(will be EXTR mostly with pkob)
+
+
+    Osc osc;
+    osc.pllset(osc.MUL12, osc.DIV4);        // 24mhz - 96MHz for usb (/2)
+
 
     //__________________________________________________________________________
     //usb- can't do much

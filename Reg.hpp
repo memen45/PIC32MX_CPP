@@ -39,9 +39,9 @@ struct Reg {
 
     //set/clear a bit or bits to specified level (default=set=1)
     //(CLR register offset is +1, SET register offset is +2)
-    //setb(address, bitmask)-> *(uint32_t*)address+CLR+1 = bitmask
-    //setb(address, bitmask, 1)-> *(uint32_t*)address+CLR+1 = bitmask
-    //setb(address, bitmask, 0)-> *(uint32_t*)address+CLR+0|1 = bitmask
+    //setb(address, bitmask)-> *(uint32_t*)address+SET = bitmask
+    //setb(address, bitmask, 1)-> *(uint32_t*)address+SET = bitmask
+    //setb(address, bitmask, 0)-> *(uint32_t*)address+CLR = bitmask
     template <typename T> static void       setbit  (T, uint32_t, bool = true);
 
     //flip bitmask bit(s) in register
@@ -58,11 +58,11 @@ struct Reg {
     //test if all bitmask bit(s) in the register are set/clear
     //allbits(address, bitmask)->
     //  return (*(uint32_t*)address & bitmask) == bitmask
-    //allbits(address, bitmask)->
+    //allbits(address, bitmask, 1)->
     //  return (*(uint32_t*)address & bitmask) == bitmask
-    //allbits(address, bitmask)->
+    //allbits(address, bitmask, 0)->
     //  return (*(uint32_t*)address | ~bitmask) == ~bitmask
-    template <typename T> static bool       allbit  (T, uint32_t, bool);
+    template <typename T> static bool       allbit  (T, uint32_t, bool = true);
 
     //return val from register- val = 32bit, val16 = 16bit, val8 = 8bit
     //tmp = val(address)-> return *(uint32_t*)address
@@ -70,6 +70,8 @@ struct Reg {
     //tmp = val8(address)-> return *(uint8_t*)address
     //I don't know how to specify different return types when calling,
     //so am just creating 3 different versions- use which is needed
+    //could do- val((uint8_t*)OSCCON) to deduce type from T, but may
+    //be easier to just specify by function name- val8(OSCCON)
     template <typename T> static uint32_t   val     (T);
     template <typename T> static uint16_t   val16   (T);
     template <typename T> static uint8_t    val8    (T);
@@ -97,9 +99,10 @@ struct Reg {
  all functions inline
 =============================================================================*/
 //set/clr v bit(s) in register r (sc = 0/clr,1/set, default=1)
-template <typename T> void Reg::setbit(T r, uint32_t v, bool sc){
-    *(reinterpret_cast <volatile uint32_t*>(r)+CLR+sc) = v;
-}
+ template <typename T> void Reg::setbit(T r, uint32_t v, bool sc){
+     if(sc) *(reinterpret_cast <volatile uint32_t*>(r)+SET) = v;
+     else *(reinterpret_cast <volatile uint32_t*>(r)+CLR) = v;
+ }
 //invert v bit(s) in register r
 template <typename T> void Reg::flipbit(T r, uint32_t v){
     *(reinterpret_cast <volatile uint32_t*>(r)+INV) = v;
@@ -111,11 +114,8 @@ template <typename T> bool Reg::anybit(T r, uint32_t v, bool sc){
 }
 //check if all bitmask v is set/clr (sc=1,0) in register r
 template <typename T> bool Reg::allbit(T r, uint32_t v, bool sc){
-    if(sc){
-    return (*(reinterpret_cast <volatile uint32_t*>(r)) & v) == v;
-    } else {
-    return (*(reinterpret_cast <volatile uint32_t*>(r)) | ~v) == ~v;
-    }
+    if(sc) return (*(reinterpret_cast <volatile uint32_t*>(r)) & v) == v;
+    else return (*(reinterpret_cast <volatile uint32_t*>(r)) | ~v) == ~v;
 }
 //return uint32_t value of register r
 template <typename T> uint32_t Reg::val(T r){
