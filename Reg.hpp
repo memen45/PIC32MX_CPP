@@ -100,8 +100,7 @@ struct Reg {
 =============================================================================*/
 //set/clr v bit(s) in register r (sc = 0/clr,1/set, default=1)
  template <typename T> void Reg::setbit(T r, uint32_t v, bool sc){
-     if(sc) *(reinterpret_cast <volatile uint32_t*>(r)+SET) = v;
-     else *(reinterpret_cast <volatile uint32_t*>(r)+CLR) = v;
+    *(reinterpret_cast <volatile uint32_t*>(r)+CLR+sc) = v;
  }
 //invert v bit(s) in register r
 template <typename T> void Reg::flipbit(T r, uint32_t v){
