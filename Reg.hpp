@@ -99,7 +99,7 @@ struct Reg {
  all functions inline
 =============================================================================*/
 //set/clr v bit(s) in register r (sc = 0/clr,1/set, default=1)
- template <typename T> void Reg::setbit(T r, uint32_t v, bool sc){
+template <typename T> void Reg::setbit(T r, uint32_t v, bool sc){
     *(reinterpret_cast <volatile uint32_t*>(r)+CLR+sc) = v;
  }
 //invert v bit(s) in register r

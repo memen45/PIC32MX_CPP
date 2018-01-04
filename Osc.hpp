@@ -198,7 +198,7 @@ void Osc::pllset(PLLMUL m, DIVS d, bool frc){
     r.val(SPLLCON+3, d);
     r.val(SPLLCON+2, m);
     //pll select
-    if(frc) pllfrc(true);
+    pllfrc(frc);
     //source to SPLL
     clksrc(SPLL);
     lock_irq(irstat);
