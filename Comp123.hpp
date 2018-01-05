@@ -9,6 +9,7 @@
 
 struct Comp123  {
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //instantiate Comp123 with comparator number
     enum CMX { C1 = 0, C2, C3 };
     //event polarity
@@ -19,7 +20,8 @@ struct Comp123  {
     enum CVREF { INT_BGAP = 0, EXT_CVREF };
 
 
-    //public functions
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     void            on              (bool);
     void            out             (bool);
     void            out_inv         (bool);
@@ -28,14 +30,15 @@ struct Comp123  {
     void            event_sel       (EVPOL);
     void            cref_cxina      (bool);
     void            ch_sel          (CCH);
+
     //common for all instances
+
     static void     stop_idle       (bool);
     static void     cref_sel        (CVREF);
 
-    //constructor
     constexpr Comp123(CMX);
 
-
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     private:
 
     static Reg r;

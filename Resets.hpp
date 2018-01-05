@@ -10,18 +10,23 @@
 
 struct Resets {
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //reset cause
     enum CAUSE : uint8_t {
         EXTR = 1<<7, SWR = 1<<6, //1<<5 none- reads 0
         WDTO = 1<<4, SLEEP = 1<<3, IDLE = 1<<2, BOR = 1<<1, POR = 1<<0
     };
 
-    //public functions
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //RCON
     static CAUSE    cause           ();
     static bool     config_err      ();
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //RSWRST
     static void     swreset         ();
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //RNMICON
     static bool     nmi_wdt         ();
     static bool     nmi_sw          ();
@@ -30,11 +35,14 @@ struct Resets {
     static bool     nmi_wdts        ();
     static void     nmi_wdtcount    (uint16_t);
     static void     nmi_wdtclr      ();
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //PWRCON
     static void     bor             (bool);
     static void     reten           (bool);
     static void     vregs           (bool);
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     private:
 
     static Reg r;

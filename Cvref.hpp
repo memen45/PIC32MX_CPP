@@ -9,15 +9,18 @@
 
 struct Cvref {
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //vref select
     enum REFSEL { NONE = 0, CVREF, AVDD };
 
-    //public functions
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     static void    on      (bool);
     static void    out     (bool);
     static void    refsel  (REFSEL);
     static void    dacdat  (uint8_t);
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     private:
 
     static Reg r;

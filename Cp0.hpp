@@ -11,7 +11,8 @@
 
 struct Cp0 {
 
-    //public functions
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     static uint32_t     count           ();
     static uint32_t     compare         ();
     static void         count           (uint32_t);
@@ -20,6 +21,7 @@ struct Cp0 {
     static void         compare_us      (uint32_t);
     static void         compare_ms      (uint16_t);
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     private:
 
     static Irq ir;

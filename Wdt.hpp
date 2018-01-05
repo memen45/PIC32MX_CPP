@@ -9,11 +9,12 @@
 
 struct Wdt {
 
-    //public functions
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     static void     reset       ();
     static void     on          (bool);
     static void     window_on   (bool);
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     private:
 
     static Reg r;

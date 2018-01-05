@@ -10,6 +10,7 @@
 
 struct Irq {
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //irq vector numbers
     enum IRQ_VN : uint8_t {
         CORE_TIMER = 0, CORE_SOFTWARE_0, CORE_SOFTWARE_1,
@@ -64,7 +65,8 @@ struct Irq {
     } irq_list_t;
 
 
-    //public functions
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     static void     disable_all     ();
     static void     enable_all      ();
     static bool     all_ison        ();
@@ -81,7 +83,7 @@ struct Irq {
     static void     init            (irq_list_t*);
     static void     shadow_set      (uint8_t, bool);
 
-
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     private:
 
     static Reg r;

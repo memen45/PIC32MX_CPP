@@ -5,12 +5,13 @@
 
 class Syskey {
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     public:
 
-    //public functions
     static void     lock    ();
     static void     unlock  ();
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     private:
 
     static Reg r;

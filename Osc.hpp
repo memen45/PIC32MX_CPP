@@ -13,8 +13,8 @@
 
  after software reset AND spll is clock selected in config bits, will lock
  up when trying to switch to spll in the pllset() function, so just set
- frc as clock source in config bits for now until I figure out what is
- happening
+ frc as clock source in config bits
+ #pragma config FNOSC = FRCDIV
 
 =============================================================================*/
 
@@ -32,7 +32,7 @@ struct Osc {
         DIV1, DIV2, DIV4, DIV8, DIV16, DIV32, DIV64, DIV256
     };
     enum CNOSC : uint8_t { //cosc/nosc in second byte of osccon
-         FRC = 0, SPLL, POSC, SOSC = 4, LPRC
+         FRCDIV = 0, SPLL, POSC, SOSC = 4, LPRC
     };
 
     static void         frcdiv      (DIVS);     //set
@@ -166,11 +166,11 @@ auto Osc::clksrc() -> CNOSC {
 }
 void Osc::clksrc(CNOSC e){
     bool irstat = unlock_irq();
-    r.val(OSCCON+1, e); //cosc is r/o, so can just write whole byte
+    r.val(OSCCON+1, e);
     r.setbit(OSCCON, OSWEN);
     while(r.anybit(OSCCON, OSWEN));
     lock_irq(irstat);
-    m_speed = 0; //make speed() actually check it again
+    m_speed = 0;
     speed();
 }
 void Osc::clklock(){
@@ -209,7 +209,7 @@ void Osc::pllset(PLLMUL m, DIVS d, bool frc){
     bool irstat  = unlock_irq();
     //need to switch from SPLL to something else
     //switch to frc (hardware does nothing if already frc)
-    clksrc(FRC);
+    clksrc(FRCDIV);
     //set new pll vals
     r.val(SPLLCON+3, d);
     r.val(SPLLCON+2, m);
@@ -259,7 +259,7 @@ uint32_t Osc::speed(){
             m_speed = (8000000*m)>>d;
             break;
         }
-        case FRC: {
+        case FRCDIV: {
             uint8_t n = (uint8_t)frcdiv();
             if(n == 7) n = 8;               //adjust DIV256
             m_speed = 8000000>>n;

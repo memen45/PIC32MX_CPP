@@ -37,6 +37,7 @@ SFR - kseg0 0x9F800000-0x9F80FFFF bit<31:29> 0b100<-kseg0 = 0
 
 struct Reg {
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //set/clear a bit or bits to specified level (default=set=1)
     //(CLR register offset is +1, SET register offset is +2)
     //setb(address, bitmask)-> *(uint32_t*)address+SET = bitmask
@@ -44,17 +45,20 @@ struct Reg {
     //setb(address, bitmask, 0)-> *(uint32_t*)address+CLR = bitmask
     template <typename T> static void       setbit  (T, uint32_t, bool = true);
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //flip bitmask bit(s) in register
     //(INV register offset is +3)
     //flipb(address, bitmask)
     template <typename T> static void       flipbit (T, uint32_t);
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //test if any bitmask bit(s) in the register are set/clear
     //anybit(address, bitmask)-> return *(uint32_t*)address & bitmask
     //anybit(address, bitmask, 1)-> return *(uint32_t*)address & bitmask
     //anybit(address, bitmask, 0)-> return !(*(uint32_t*)address & bitmask)
     template <typename T> static bool       anybit  (T, uint32_t, bool = true);
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //test if all bitmask bit(s) in the register are set/clear
     //allbits(address, bitmask)->
     //  return (*(uint32_t*)address & bitmask) == bitmask
@@ -64,6 +68,7 @@ struct Reg {
     //  return (*(uint32_t*)address | ~bitmask) == ~bitmask
     template <typename T> static bool       allbit  (T, uint32_t, bool = true);
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //return val from register- val = 32bit, val16 = 16bit, val8 = 8bit
     //tmp = val(address)-> return *(uint32_t*)address
     //tmp = val16(address)-> return *(uint16_t*)address
@@ -76,18 +81,20 @@ struct Reg {
     template <typename T> static uint16_t   val16   (T);
     template <typename T> static uint8_t    val8    (T);
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //make T a V*, so can use the byte or half-word address
     //(V type determines access)
     //val(address, val)-> *(V*)address = (V)val
     template <typename T, typename V> static void val(T, V);
 
 
-
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //physical to kseg0/1 addr, kseg to physical addr
     template <typename T> static uint32_t   p2kseg1 (T); //unused in PIC32MM
     template <typename T> static uint32_t   p2kseg0 (T);
     template <typename T> static uint32_t   k2phys  (T);
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     private:
 
     //register word offset to atomic access registers

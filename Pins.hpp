@@ -10,16 +10,23 @@
 
 class Pins {
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     public:
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //instantiate Pins with the following pin name
+    //(can also use enum RPN names also)
+
     enum PORTPIN : uint8_t {
         A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,
         B0,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11,B13= 29,B14,B15,
         C0,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,
         D0,D1,D2,D3,D4
     };
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //pps_in peripheral names
+
     enum PPSIN : uint8_t {
         //byte offset from RPINR1
         INT4 = 0,                                   //R1
@@ -35,7 +42,10 @@ class Pins {
         SDI2 = 36, SCK2IN = 37, SS2IN = 38,         //R11
         CLCINA = 42, CLCINB = 43                    //R12
     };
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //pps_out peripheral names
+
     enum PPSOUT : uint8_t {
         PPSLAT = 0,
         C1OUT, C2OUT, C3OUT,
@@ -44,8 +54,11 @@ class Pins {
         OCM4, OCM5, OCM6, OCM7, OCM8, OCM9,
         CLC1OUT, CLC2OUT, CLC3OUT, CLC4OUT,
     };
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //pps_in/pps_out pin names (either RPn or RXn)
     //(can also instantiate Pins with these names)
+
     enum RPN : uint16_t {
         // encode as- 0x000ppnnnn000rrrrr - | 000 PORT/PIN | 000 RPn |
         // pp = port A=0,B=1,C=2,D=3
@@ -77,8 +90,9 @@ class Pins {
         RC6 = RP23, RA9 = RP24
     };
 
-    //public functions
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //r/w pins
+
     bool        pinval          () const;
     bool        latval          () const;
     void        low             () const;
@@ -86,7 +100,10 @@ class Pins {
     void        invert          () const;
     void        on              (bool) const;
     bool        ison            () const;
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //pin modes
+
     void        lowison         (bool);
     void        digital_in      () const;
     void        analog_in       () const;
@@ -94,7 +111,10 @@ class Pins {
     void        odrain          (bool) const;
     void        pullup          (bool) const;
     void        pulldn          (bool) const;
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //icn
+
     void        icn             (bool) const;
     void        icn_rising      () const;
     void        icn_falling     () const;
@@ -103,15 +123,20 @@ class Pins {
     bool        icn_flag        () const;
     bool        icn_stat        () const;
     void        icn_flagclear   () const;
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //pps
-    // static void pps_off         (PPSIN);
+
     static void pps_in          (PPSIN, RPN = RPNONE);
     static void pps_out         (PPSOUT, RPN);
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //constructors (bool-> lowison)
+    
     constexpr   Pins            (PORTPIN, bool = false); //A0, B3, C9, etc.
     constexpr   Pins            (RPN, bool = false); //or RP8, RB2, etc.
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     private:
 
     static Reg r;
@@ -132,10 +157,8 @@ class Pins {
         RPN_MASK = 7, RN_SHIFT = 8, PINMAX = 16
     };
 
-    //private functions
     static void     pps_do      (uint32_t, uint8_t);
 
-    //private vars
     const uint16_t      m_pn;       //pin mask
     volatile uint32_t*  m_pt;       //base address
     bool                m_lowison;  //pin on val is low

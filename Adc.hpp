@@ -9,6 +9,7 @@
 
 struct Adc {
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //adc data format
     enum FORM {
         INT16 = 0<<8, SINT16 = 1<<8, FR16 = 2<<8, SFR16 = 3<<8,
@@ -45,10 +46,14 @@ struct Adc {
     //clock source
     enum CLK { PBCLK = 0, FRC = 1 };
 
-    //public functions
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //ADC1BUFn
+
     static uint16_t     bufn            (uint8_t);
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //ADC1CON1
+
     static void         on              (bool);
     static void         stop_idle       (bool);
     static void         format          (FORM);
@@ -58,7 +63,10 @@ struct Adc {
     static void         samp            (bool);
     static bool         samp            ();
     static bool         done            ();
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //ADC1CON2
+
     static void         vref_cfg        (VCFG);
     static void         offset_cal      (bool);
     static void         buf_reg         (bool);
@@ -66,28 +74,42 @@ struct Adc {
     static bool         buf2nd_busy     ();
     static void         samp_nirq       (uint8_t);
     static void         buf_split       (bool);
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //ADC1CON3
+
     static void         clk_src         (CLK);
     static void         samp_extend     (bool);
     static void         samp_time       (uint8_t);
     static void         conv_time       (uint8_t = 4);
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //ADC1CON5
+
     static void         scan_auto       (bool);
     static void         low_power       (bool);
     static void         bandgap         (bool);
     static void         scan_autoirq    (ASINT);
     static void         write_mode      (WM);
     static void         compare_mode    (CM);
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //ADC1CHS
+
     static void         ch_sel          (CH0SA);
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //ADC1SS
     static void         ch_scan         (CH0SA, bool);
     static void         ch_scan         (CH0SA*);
     static void         ch_scan         (uint32_t);
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //ADC1CHIT
     static bool         ch_hit          (CH0SA);
     static uint32_t     ch_hit          ();
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     private:
 
     static Reg r;

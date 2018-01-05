@@ -10,6 +10,7 @@
 
 struct Pmd {
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //bit shift amount into 7 registers (PMD1-PMD7, 224 possible values)
     enum PMD {
         ADC = 0, VREF = 12, HLVD = 20,                          //PMD1
@@ -26,18 +27,19 @@ struct Pmd {
         END = 255 //for end of array value if using array
     };
 
-    //public functions
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     static void     off     (PMD);
     static void     on      (PMD);
     static void     off     (PMD*);
     static void     on      (PMD*);
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     private:
 
     static Reg r;
     static Syskey sk;
 
-    //private functions
     static void     unlock  ();
     static void     lock    ();
 

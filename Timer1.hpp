@@ -9,12 +9,15 @@
 
 struct Timer1 {
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //clock prescale values
     enum PRESCALE { PS256 = 3<<4, PS64 = 2<<4, PS8 = 1<<4, PS1 = 0<<4 };
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //clock source
     enum CLK { EXT_SOSC = 2, EXT_T1CK = 258, EXT_LPRC = 514, INT_PBCLK = 0 };
 
-    //public functions
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     static void         timer           (uint16_t);
     static uint16_t     timer           ();
     static void         period          (uint16_t);
@@ -28,6 +31,7 @@ struct Timer1 {
     static void         prescale        (PRESCALE);
     static void         tsync           (bool);
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     private:
 
     static Reg r;

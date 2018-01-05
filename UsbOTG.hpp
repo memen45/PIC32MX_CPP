@@ -11,6 +11,7 @@ class UsbOTG {
 
     public:
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     enum FLAGSOTG : uint8_t {
         //U1OTGIR, U1OTGIE, U1OTGSTAT
         ID = 1<<7,
@@ -20,23 +21,26 @@ class UsbOTG {
         SESSION = 1<<3, BVBUS = 1<<2, AVBUS = 1<<0
     };
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     static uint8_t  flags               ();                 //get all
     static bool     flag                (FLAGSOTG);         //get one
     static void     flags_clear         ();                 //clear all
     static void     flags_clear         (uint8_t);          //clear one or more
     static void     flag_clear          (FLAGSOTG);         //clear one
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     static uint16_t irqs                ();                 //get all
     static bool     irq                 (FLAGSOTG);         //get one
     static void     irqs_clear          ();                 //clear all
     static void     irqs_clear          (uint8_t);          //clr one or more
     static void     irq_clear           (FLAGS);            //clr one
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     static uint8_t  stat                ();                 //get all
     static bool     stat                (FLAGSOTG);         //get one
 
 
-
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     enum OTG : uint8_t {
         //U1OTGCON
         DPUP = 1<<7, DMUP = 1<<6, DPDN = 1<<5, DMDN = 1<<4,
@@ -45,20 +49,20 @@ class UsbOTG {
 
     static void     otg                 (OTG, bool);
 
-
-        //U1ADDR
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+    //U1ADDR
     static void     low_speed           (bool);
 
-
-        //U1TOK
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+    //U1TOK
     enum TOKPID : uint8_t { SETUP = 13, IN = 9, OUT = 1 };
 
     static uint8_t  tok_pid             ();
     static uint8_t  tok_ep              ();
     static void     tok_ep              (uint8_t);
 
-
-        //U1SOF
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+    //U1SOF
     enum SOFVALS : uint8_t {
         SOF64 = 74, SOF32 = 42, SOF16 = 26, SOF8 = 18
     };
@@ -66,7 +70,7 @@ class UsbOTG {
     static void     sof_cnt             (SOFVALS);
 
 
-
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     private:
 
     //registers - all use only first 8bits

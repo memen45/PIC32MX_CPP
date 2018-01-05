@@ -13,22 +13,31 @@
 
 struct Rtcc {
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //alarm mask
     enum AMASK {
         YEAR = 9<<24, MONTH = 8<<24, WEEK = 7<<24, DAY = 6<<24, HOUR= 5<<24,
         MINUTE10 = 4<<24, MINUTE1 = 3<<24, SECOND10 = 2<<24,
         SECOND1 = 1<<24, HALFSEC = 0, AMASKCLR = 15<<24,
     };
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //rtcc pin output select
     enum OUTSEL { CLKSRC = 2<<4, CLKSEC = 1<<4, ALMEVT = 0<<4, CLRSEL = 7<<4 };
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //clock prescale
     enum PRESCALE { PRE256 = 3<<4, PRE64 = 2<<4, PRE16 = 1<<4, PRE1 = 0<<4 };
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //clock select
     enum CLKSEL { FCY = 3, PWRLPIN = 2, LPRC = 1, SOSC = 0 };
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //clock divide precomputed for 32khz (prescale default 1:1)
     enum { CLK_DIV_32KHZ = 0x3FFF };
 
-    //public functions
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     static void         alarm           (bool);
     static void         chime           (bool);
     static void         alarm_interval  (AMASK);
@@ -53,12 +62,12 @@ struct Rtcc {
     static void         alarm_time      (uint32_t);
     static void         alarm_date      (uint32_t);
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     private:
 
     static Reg r;
     static Syskey sk;
 
-    //private functions
     static void         unlock          ();
     static void         lock            ();
     static void         conset          (uint32_t, uint32_t, bool = 1);

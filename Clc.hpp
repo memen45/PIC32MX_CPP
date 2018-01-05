@@ -9,6 +9,7 @@
 
 struct Clc {
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //instantiate Clc with clc number
     enum CLC { CLC1 = 0, CLC2, CLC3, CLC4 };
     //logic function
@@ -16,7 +17,8 @@ struct Clc {
     //gate polarity
     enum GXPOL { G4 = 1<<19, G3 = 1<<18, G2 = 1<<17, G1 = 1<<16 };
 
-    //public functions
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     void    gate_inv    (GXPOL, bool);
     void    on          (bool);
     void    stop_idle   (bool);
@@ -31,9 +33,9 @@ struct Clc {
     void    gate_sel    (uint8_t, uint8_t);
     void    gate_sel    (uint32_t);
 
-    //constructor
     constexpr Clc(CLC);
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     private:
 
     static Reg r;
