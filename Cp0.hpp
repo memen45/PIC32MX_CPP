@@ -57,7 +57,7 @@ void Cp0::compare_reload(bool tf){
     }
 }
 void Cp0::compare_us(uint32_t v){
-    m_compare_count = osc.speed() / 2000000 * v; //cpu speed from Osc::
+    m_compare_count = osc.sysclk() / 2000000 * v; //cpu speed from Osc::
     compare_reload();
 }
 void Cp0::compare_ms(uint16_t v){

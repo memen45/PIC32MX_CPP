@@ -27,7 +27,7 @@ void DelayCP0::set_ms(uint32_t n){
 //private
 void DelayCP0::reset(uint32_t n){
     reset();
-    m_countn = osc.speed() / 2000000 * n;
+    m_countn = osc.sysclk() / 2000000 * n;
 }
 void DelayCP0::wait(uint32_t n){
     reset(n);

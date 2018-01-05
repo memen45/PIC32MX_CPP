@@ -97,9 +97,7 @@ bool Resets::config_err(){
 void Resets::swreset(){
     Irq::disable_all();
     sk.unlock();
-    r.setbit(RSWRST, SWRST);
-    r.val(RSWRST);
-    while(1);
+    for(;; r.setbit(RSWRST, SWRST), r.val(RSWRST));
 }
 //RNMICON
 bool Resets::nmi_wdt(){

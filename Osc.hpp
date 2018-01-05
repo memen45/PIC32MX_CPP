@@ -3,7 +3,7 @@
 /*=============================================================================
  Oscillator - set cpu clock source, speed
 
- any fucntion that depends on cpu frequency, can call speed() to get current
+ any fucntion that depends on cpu frequency, can call sysclk() to get current
  cpu frequency in Hz, if not already calculated it will be calculated when
  called or when cpu source/speed is changed, if unable to calculate (if ext
  crystal) then the default frequency is returned
@@ -99,7 +99,8 @@ struct Osc {
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //misc
 
-    static uint32_t     speed       ();         //get cpu speed
+    static uint32_t     sysclk       ();        //get cpu sysclk
+    static uint32_t     vcoclk       ();        //get pll vco clock
 
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -109,9 +110,11 @@ struct Osc {
     static Syskey sk;                           //I like better than ::
     static Irq ir;
 
-    static uint32_t m_speed;                    //store calculated cpu freq
+    static uint32_t m_sysclk;                    //store calculated cpu freq
 
-    static const uint32_t m_default_speed = 24000000;
+    static const uint32_t m_default_freq = 24000000;
+    static const uint32_t m_frcosc_freq = 8000000;
+    static const uint8_t m_mul_lookup[7];
 
     enum IDSTAT { IRQ = 1, DMA = 2 };           //irq,dma status
 
@@ -143,24 +146,26 @@ struct Osc {
 /*=============================================================================
  all functions inline
 =============================================================================*/
-uint32_t Osc::m_speed = 0;
+uint32_t Osc::m_sysclk = 0;
+const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 
 //some functions need irq disabled, others can use
 //sk.unlock/lock directly
 
 //system unlock for register access, w/irq,dma disable
 auto Osc::unlock_irq() -> IDSTAT {
-    IDSTAT idstat = (IDSTAT)(ir.all_ison() | r.anybit(DMACON, DMASUSP)<<1);
-    r.setbit(DMACON, DMASUSP);
+    uint8_t idstat = ir.all_ison();
     ir.disable_all();
+    idstat |= r.anybit(DMACON, DMASUSP)<<1;
+    r.setbit(DMACON, DMASUSP);
     sk.unlock();
-    return idstat;
+    return (IDSTAT)idstat;
 }
 //system lock enable, restore previous irq status
 void Osc::lock_irq(IDSTAT idstat){
     sk.lock();
-    if((uint8_t)idstat & 2) r.clrbit(DMACON, DMASUSP);
-    if((uint8_t)idstat & 1) ir.enable_all();
+    if((uint8_t)idstat & DMA) r.clrbit(DMACON, DMASUSP);
+    if((uint8_t)idstat & IRQ) ir.enable_all();
 }
 
 //osccon
@@ -181,8 +186,8 @@ void Osc::clksrc(CNOSC e){
     r.setbit(OSCCON, OSWEN);
     while(r.anybit(OSCCON, OSWEN));
     lock_irq(irstat);
-    m_speed = 0;
-    speed();
+    m_sysclk = 0;
+    sysclk();
 }
 void Osc::clklock(){
     r.setbit(OSCCON, CLKLOCK);
@@ -229,8 +234,8 @@ void Osc::pllset(PLLMUL m, DIVS d, bool frc){
     //source to SPLL
     clksrc(SPLL);
     lock_irq(irstat);
-    m_speed = 0;
-    speed();
+    m_sysclk = 0;
+    sysclk();
 }
 
 //refo1con
@@ -273,38 +278,45 @@ bool Osc::ready(CLKRDY e){
 //osctun
 
 //misc
-uint32_t Osc::speed(){
-    if(m_speed) return m_speed;     //already have it
-    m_speed = m_default_speed;      //assume default if cannot get
+uint32_t Osc::sysclk(){
+    if(m_sysclk) return m_sysclk;    //already have it
+    m_sysclk = m_default_freq;       //assume default if cannot get
     CNOSC s = clksrc();
     switch(s){
         case LPRC:
-            m_speed = 31250;
+            m_sysclk = 31250;
             break;
         case SOSC:
-            m_speed = 32768;//assumed
+            m_sysclk = 32768;//assumed
             break;
         case POSC:          //need something to compare to (lposc vs cp0count)
             break;          //return default for now
         case SPLL: {
             if(!pllfrc()) break;            //is posc
             uint8_t m = (uint8_t)pllmul();  //2 3 4 6 8 12 24
-            static const uint8_t tl[] = {2, 3, 4, 6, 8, 12, 24};
-            m = tl[m];
+            m = m_mul_lookup[m];
             uint8_t d = (uint8_t)plldiv();
             if(d == 7) d = 8;               //adjust DIV256
-            m_speed = (8000000*m)>>d;
+            m_sysclk = (m_frcosc_freq*m)>>d;
             break;
         }
         case FRCDIV: {
             uint8_t n = (uint8_t)frcdiv();
             if(n == 7) n = 8;               //adjust DIV256
-            m_speed = 8000000>>n;
+            m_sysclk = m_frcosc_freq>>n;
             break;
         }
         default:
             break;
     }
-    return m_speed;
+    return m_sysclk;
 }
 
+//input to refo if PLLVCO is source
+uint32_t Osc::vcoclk(){
+    //ext clock, don't know (yet)
+    if(pllfrc() == 0) return m_default_freq;
+    //is frc,  so is = mul x 8mhz
+    return m_mul_lookup[ pllmul() ] * m_frcosc_freq;
+
+}
