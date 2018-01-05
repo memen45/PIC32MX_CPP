@@ -314,9 +314,8 @@ uint32_t Osc::sysclk(){
 
 //input to refo if PLLVCO is source
 uint32_t Osc::vcoclk(){
-    //ext clock, don't know (yet)
-    if(pllfrc() == 0) return m_default_freq;
     //is frc,  so is = mul x 8mhz
-    return m_mul_lookup[ pllmul() ] * m_frcosc_freq;
-
+    if(pllfrc() == 0) return m_mul_lookup[ pllmul() ] * m_frcosc_freq;
+    //ext clock, don't know (yet)
+    return m_default_freq;
 }
