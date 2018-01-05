@@ -123,7 +123,6 @@ int main(){
     Resets::CAUSE cause = Resets::cause();  //use cause result somewhere
                                             //(will be EXTR mostly with pkob)
 
-
     Osc osc;
     osc.pllset(osc.MUL12, osc.DIV4);        // 24mhz - 96MHz for usb (/2)
 
@@ -215,10 +214,10 @@ int main(){
     //init leds
     for(auto& l : leds){
         l.digital_out();
-        l.on(true);                             //show each led working
+        l.on();                             //show each led working
         auto d = cause == Resets::EXTR ? 500 : 2000; //ext- 1/2sec, else 2sec
         sw_dly.wait_ms(d); //wait
-        l.on(false);                            //then off
+        l.off();                            //then off
     }
 
     //__________________________________________________________________________
@@ -254,7 +253,7 @@ int main(){
         if(rate < 100 || rate > 4000) rate -= n;
         Cp0::compare_ms(rate);              //no need to disable irq's
         Cp0::compare_reload(true);          //true = clear flag, cp0 irq on
-        led2.on(true);                      //as cp0 irq only reloads (reads)
+        led2.on();                          //as cp0 irq only reloads (reads)
         Irq::enable_all();
     };
 
@@ -355,7 +354,7 @@ ISR(RTCC){
     static bool b;
     if(b = !b){ //toggle and check
         ir.on(ir.CORE_TIMER, false); //core timer irq disable
-        led2.on(false);
+        led2.off();
     } else {
         cp.compare_reload(true); //true = clear flag, core timer irq on
     }

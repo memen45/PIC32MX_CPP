@@ -51,12 +51,14 @@ struct Osc {
         MUL2 = 0, MUL3, MUL4, MUL6, MUL8, MUL12, MUL24
     };
 
+    enum PLLSRC : bool { EXT, FRC };
+
     static DIVS         plldiv      ();         //get pll divider
     static PLLMUL       pllmul      ();         //get pll multiplier
-    static bool         pllfrc      ();         //true=pll src frc, false=posc
-    static void         pllfrc      (bool);     //true=pll src frc, false=posc
-    static void         pllset      (PLLMUL, DIVS, bool = true);
-                                                //set pll mul/div, true=frc
+    static PLLSRC       pllsrc      ();         //get pll src
+    static void         pllsrc      (PLLSRC);   //set pll src
+    static void         pllset      (PLLMUL, DIVS, PLLSRC = FRC);
+                                                //set pll mul/div, pll src
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //refo1con
@@ -213,24 +215,24 @@ auto Osc::plldiv() -> DIVS {
 auto Osc::pllmul() -> PLLMUL {
     return (PLLMUL)r.val8(SPLLCON+2);
 }
-bool Osc::pllfrc(){
-    return r.anybit(SPLLCON, PLLICLK);
+auto Osc::pllsrc() -> PLLSRC {
+    return (PLLSRC)r.anybit(SPLLCON, PLLICLK);
 }
-void Osc::pllfrc(bool tf){
-    r.setbit(SPLLCON, PLLICLK, tf);
+void Osc::pllsrc(PLLSRC e){
+    r.setbit(SPLLCON, PLLICLK, e);
 }
 //assume SPLL wanted as clock source (why else set pll)
 //assume frcpll, unless bool=false then POSC is pll source
-void Osc::pllset(PLLMUL m, DIVS d, bool frc){
+void Osc::pllset(PLLMUL m, DIVS d, PLLSRC frc){
     IDSTAT irstat  = unlock_irq();
     //need to switch from SPLL to something else
     //switch to frc (hardware does nothing if already frc)
     clksrc(FRCDIV);
+    //pll select
+    pllsrc(frc);
     //set new pll vals
     r.val(SPLLCON+3, d);
     r.val(SPLLCON+2, m);
-    //pll select
-    pllfrc(frc);
     //source to SPLL
     clksrc(SPLL);
     lock_irq(irstat);
@@ -292,7 +294,7 @@ uint32_t Osc::sysclk(){
         case POSC:          //need something to compare to (lposc vs cp0count)
             break;          //return default for now
         case SPLL: {
-            if(!pllfrc()) break;            //is posc
+            if(pllsrc() == EXT) break;      //is posc
             uint8_t m = (uint8_t)pllmul();  //2 3 4 6 8 12 24
             m = m_mul_lookup[m];
             uint8_t d = (uint8_t)plldiv();
@@ -315,7 +317,7 @@ uint32_t Osc::sysclk(){
 //input to refo if PLLVCO is source
 uint32_t Osc::vcoclk(){
     //is frc,  so is = mul x 8mhz
-    if(pllfrc() == 0) return m_mul_lookup[ pllmul() ] * m_frcosc_freq;
+    if(pllsrc() == FRC) return m_mul_lookup[ pllmul() ] * m_frcosc_freq;
     //ext clock, don't know (yet)
     return m_default_freq;
 }

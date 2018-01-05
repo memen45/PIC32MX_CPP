@@ -98,7 +98,8 @@ class Pins {
     void        low             () const;
     void        high            () const;
     void        invert          () const;
-    void        on              (bool) const;
+    void        on              () const;
+    void        off             () const;
     bool        ison            () const;
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -196,8 +197,11 @@ void Pins::high() const {
 void Pins::invert() const {
     r.flipbit(m_pt+LAT, m_pn);
 }
-void Pins::on(bool tf) const {
-    r.setbit(m_pt+LAT, m_pn, tf^m_lowison);
+void Pins::on() const {
+    r.setbit(m_pt+LAT, m_pn, !m_lowison);
+}
+void Pins::off() const {
+    r.setbit(m_pt+LAT, m_pn, m_lowison);
 }
 bool Pins::ison() const {
     return m_lowison ? !pinval() : pinval();
