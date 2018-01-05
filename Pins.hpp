@@ -132,9 +132,9 @@ class Pins {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //constructors (bool-> lowison)
-    
-    constexpr   Pins            (PORTPIN, bool = false); //A0, B3, C9, etc.
-    constexpr   Pins            (RPN, bool = false); //or RP8, RB2, etc.
+
+    constexpr   Pins            (PORTPIN, bool = false);    //A0, B3, C9, etc.
+    constexpr   Pins            (RPN, bool = false);        //or RP8, RB2, etc.
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     private:
@@ -188,7 +188,7 @@ bool Pins::latval() const {
     return r.anybit(m_pt+LAT, m_pn);
 }
 void Pins::low() const {
-    r.setbit(m_pt+LAT, m_pn, 0);
+    r.clrbit(m_pt+LAT, m_pn);
 }
 void Pins::high() const {
     r.setbit(m_pt+LAT, m_pn);
@@ -203,5 +203,5 @@ bool Pins::ison() const {
     return m_lowison ? !pinval() : pinval();
 }
 void Pins::icn_flagclear() const {
-    r.setbit(m_pt+CNF, m_pn, 0);
+    r.clrbit(m_pt+CNF, m_pn);
 }

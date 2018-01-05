@@ -79,13 +79,13 @@ bool Comp123::out_bit(){
     return r.anybit(m_pt, COUT);
 }
 void Comp123::event_sel(EVPOL e){
-    r.setbit(m_pt, ANY, 0); r.setbit(m_pt, e);
+    r.clrbit(m_pt, ANY); r.setbit(m_pt, e);
 }
 void Comp123::cref_cxina(bool tf){
     r.setbit(m_pt, CREF, !tf);
 }
 void Comp123::ch_sel(CCH e){
-    r.setbit(m_pt, BGAP, 0);
+    r.clrbit(m_pt, BGAP);
     r.setbit(m_pt, e);
 }
 

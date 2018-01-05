@@ -25,7 +25,7 @@ void Timer23::tgate(bool tf) const {
     r.setbit(m_pt, TGATE, tf);
 }
 void Timer23::prescale(PRESCALE e) const {
-    r.setbit(m_pt, PS256, 0);
+    r.clrbit(m_pt, PS256);
     r.setbit(m_pt, e);
 }
 void Timer23::t32bit(bool tf) const {

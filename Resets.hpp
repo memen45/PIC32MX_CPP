@@ -121,7 +121,7 @@ void Resets::nmi_wdtcount(uint16_t v){
     r.val(RNMICON, v);
 }
 void Resets::nmi_wdtclr(){
-    r.setbit(RNMICON, WDTR, 0);
+    r.clrbit(RNMICON, WDTR);
 }
 //PWRCON
 void Resets::bor(bool tf){

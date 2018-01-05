@@ -65,6 +65,7 @@ struct Osc {
         RSYSCLK = 0, RPOSC = 2, RFRC = 3, RLPRC = 4, RSOSC = 5, RPLLVCO = 7
     };
 
+    static void         refo_div    (uint16_t); //divisor value
     static void         refo        (bool);     //true = on
     static void         refo_idle   (bool);     //true = stop in idle mode
     static void         refo_out    (bool);     //true = clk out to REFO1 pin
@@ -72,10 +73,13 @@ struct Osc {
     static void         refo_divsw  (bool);     //true = divider switch enable
     static bool         refo_divsw  ();         //false = divider switch done
     static bool         refo_active ();         //true = active
+    static void         refo_src    (ROSEL);    //clk source select
 
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //refo1trim
+
+
 
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -109,8 +113,10 @@ struct Osc {
 
     static const uint32_t m_default_speed = 24000000;
 
-    static bool         unlock_irq  ();         //unlock reg access, irq's off
-    static void         lock_irq    (bool);     //lock reg access, restore irq
+    enum IDSTAT { IRQ = 1, DMA = 2 };           //irq,dma status
+
+    static IDSTAT       unlock_irq  ();         //unlock- irq's off, dma susp
+    static void         lock_irq    (IDSTAT);   //lock-, restore irq, dma
 
 
     enum {
@@ -124,7 +130,10 @@ struct Osc {
             DIVSWEN = 1<<9, ACTIVE = 1<<8,
         REFO1TRIM = 0xBF802730,
         CLKSTAT = 0xBF802770,
-        OSCTUN = 0xBF802880
+        OSCTUN = 0xBF802880,
+
+        DMACON = 0xBF808900, //need until dma class written
+            DMASUSP = 1<<12
     };
 
 
@@ -139,17 +148,19 @@ uint32_t Osc::m_speed = 0;
 //some functions need irq disabled, others can use
 //sk.unlock/lock directly
 
-//system unlock for register access, w/irq disable
-bool Osc::unlock_irq(){
-    bool irstat = ir.all_ison();
+//system unlock for register access, w/irq,dma disable
+auto Osc::unlock_irq() -> IDSTAT {
+    IDSTAT idstat = (IDSTAT)(ir.all_ison() | r.anybit(DMACON, DMASUSP)<<1);
+    r.setbit(DMACON, DMASUSP);
     ir.disable_all();
     sk.unlock();
-    return irstat;
+    return idstat;
 }
 //system lock enable, restore previous irq status
-void Osc::lock_irq(bool tf){
+void Osc::lock_irq(IDSTAT idstat){
     sk.lock();
-    if(tf) ir.enable_all();
+    if((uint8_t)idstat & 2) r.clrbit(DMACON, DMASUSP);
+    if((uint8_t)idstat & 1) ir.enable_all();
 }
 
 //osccon
@@ -165,7 +176,7 @@ auto Osc::clksrc() -> CNOSC {
     return (CNOSC)(r.val8(OSCCON+1)>>4);
 }
 void Osc::clksrc(CNOSC e){
-    bool irstat = unlock_irq();
+    IDSTAT irstat = unlock_irq();
     r.val(OSCCON+1, e);
     r.setbit(OSCCON, OSWEN);
     while(r.anybit(OSCCON, OSWEN));
@@ -204,9 +215,9 @@ void Osc::pllfrc(bool tf){
     r.setbit(SPLLCON, PLLICLK, tf);
 }
 //assume SPLL wanted as clock source (why else set pll)
-//assume frcpll, unless bool=false then POSC is source
+//assume frcpll, unless bool=false then POSC is pll source
 void Osc::pllset(PLLMUL m, DIVS d, bool frc){
-    bool irstat  = unlock_irq();
+    IDSTAT irstat  = unlock_irq();
     //need to switch from SPLL to something else
     //switch to frc (hardware does nothing if already frc)
     clksrc(FRCDIV);
@@ -223,6 +234,32 @@ void Osc::pllset(PLLMUL m, DIVS d, bool frc){
 }
 
 //refo1con
+//16bit->15bit- pass in 16bit value, /2
+void Osc::refo_div(uint16_t v){
+    r.val(REFO1CON, v>>1);
+}
+void Osc::refo(bool tf){
+    r.setbit(REFO1CON, ON);
+}
+void Osc::refo_idle(bool tf){
+    r.setbit(REFO1CON, SIDL);
+}
+void Osc::refo_out(bool tf){
+    r.setbit(REFO1CON, OE);
+}
+void Osc::refo_sleep(bool tf){
+    r.setbit(REFO1CON, RSLP);
+}
+void Osc::refo_divsw(bool tf){
+    r.setbit(REFO1CON, DIVSWEN);
+}
+bool Osc::refo_divsw(){
+    return r.anybit(REFO1CON, DIVSWEN);
+}
+bool Osc::refo_active(){
+    return r.anybit(REFO1CON, ACTIVE);
+}
+
 
 
 //refo1trim

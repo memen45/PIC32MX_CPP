@@ -176,7 +176,7 @@ void Rtcc::alarm_date(uint32_t v){
 //private functions
 void Rtcc::unlock(){
     sk.unlock();
-    r.setbit(RTCCON1, WRLOCK, 0);
+    r.clrbit(RTCCON1, WRLOCK);
 }
 void Rtcc::lock(){
     r.setbit(RTCCON1, WRLOCK);

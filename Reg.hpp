@@ -12,7 +12,8 @@
 
      retval     name            args (bool- set=1, clear=0, default=set)
   -----------------------------------------------------------------------------
-                setbit  (address, bitmask, bool = 1)    -set/clr bit(s)
+                setbit  (address, bitmask, bool = 1)    -set or clr bit(s)
+                clrbit  (address, bitmask)              -clr bit(s)
                 flipbit (address, bitmask)              -invert bit(s)
                 anybit  (address, bitmask, bool = 1)    -any bit(s) set/clr?
                 allbit  (address, bitmask, bool = 1)    -all bit(s) set/clr?
@@ -40,10 +41,13 @@ struct Reg {
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //set/clear a bit or bits to specified level (default=set=1)
     //(CLR register offset is +1, SET register offset is +2)
-    //setb(address, bitmask)-> *(uint32_t*)address+SET = bitmask
-    //setb(address, bitmask, 1)-> *(uint32_t*)address+SET = bitmask
-    //setb(address, bitmask, 0)-> *(uint32_t*)address+CLR = bitmask
+    //setbit(address, bitmask)-> *(uint32_t*)address+SET = bitmask
+    //setbit(address, bitmask, 1)-> *(uint32_t*)address+SET = bitmask
+    //setbit(address, bitmask, 0)-> *(uint32_t*)address+CLR = bitmask
+    //clrbit(address, bitmask)-> *(uint32_t*)address+CLR = bitmask
     template <typename T> static void       setbit  (T, uint32_t, bool = true);
+    template <typename T> static void       clrbit  (T, uint32_t);
+
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //flip bitmask bit(s) in register
@@ -109,6 +113,9 @@ struct Reg {
 template <typename T> void Reg::setbit(T r, uint32_t v, bool sc){
     *(reinterpret_cast <volatile uint32_t*>(r)+CLR+sc) = v;
  }
+template <typename T> void Reg::clrbit(T r, uint32_t v){
+    *(reinterpret_cast <volatile uint32_t*>(r)+CLR) = v;
+}
 //invert v bit(s) in register r
 template <typename T> void Reg::flipbit(T r, uint32_t v){
     *(reinterpret_cast <volatile uint32_t*>(r)+INV) = v;

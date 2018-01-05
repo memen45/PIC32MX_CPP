@@ -1,21 +1,16 @@
 #include "Syskey.hpp"
 
 //syskey lock/unlock
-//keep track of unlock count- do not lock until unlock_count is 0
-//so we don't get locks while unlock in use elsewhere
-// code A - unlock; (irq in here) do something; lock;
-// irq B - unlock; do something; lock; <- A is now locked out
-//with unlock_count-
-// code A- unlock (count=1); (irq in here) do something; lock(count=0,lock);
-// irq B- unlock(count=2); do something; lock(count=1,no lock);
+//keep track of unlock count-
+//inc unlock_count on lock(), dec unlock_count on unlock()
+//unlock done when unlock_count is 0
+//lock done when unlock_count is 0
 static volatile uint8_t unlock_count;
 
-//not sure if irq disable required, but probably is as this possibly
-//could be called in irq
 void Syskey::lock(){
     bool irqstate = Irq::all_ison();                //get STATUS.IE
     ir.disable_all();
-    //
+    //unlock_count only accessed with irq off
     if(unlock_count) unlock_count--;                //dec counter
     if(unlock_count == 0) r.val(SYSKEY_ADDR, 0);    //if 0, lock
     //
@@ -26,14 +21,14 @@ void Syskey::unlock(){
     bool irqstate = ir.all_ison();                  //get STATUS.IE
     ir.disable_all();
     bool dmasusp = r.anybit(DMACON, DMASUSP);       //get DMA suspend bit
-    r.setbit(DMACON, DMASUSP);                        //DMA suspend
+    r.setbit(DMACON, DMASUSP);                      //DMA suspend
     //
-    if(! unlock_count){                             //first time, unlock
+    if(unlock_count == 0){                          //first time, unlock
         r.val(SYSKEY_ADDR, MAGIC1);
         r.val(SYSKEY_ADDR, MAGIC2);
     }
     unlock_count++;                                 //inc unlock_count
     //
-    if(! dmasusp) r.setbit(DMACON, DMASUSP, 0);       //DMA resume
+    if(! dmasusp) r.clrbit(DMACON, DMASUSP);        //DMA resume
     if(irqstate) ir.enable_all();                   //restore IE state
 }

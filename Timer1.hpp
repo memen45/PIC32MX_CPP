@@ -73,14 +73,14 @@ bool Timer1::wr_busy(){
     return r.anybit(T1CON, TWIP);
 }
 void Timer1::clk_src(CLK e){
-    r.setbit(T1CON, CLK_CLR, 0);
+    r.clrbit(T1CON, CLK_CLR);
     r.setbit(T1CON, e);
 }
 void Timer1::tgate(bool tf){
     r.setbit(T1CON, TGATE, tf);
 }
 void Timer1::prescale(PRESCALE e){
-    r.setbit(T1CON, PS256, 0);
+    r.clrbit(T1CON, PS256);
     r.setbit(T1CON, e);
 }
 void Timer1::tsync(bool tf){

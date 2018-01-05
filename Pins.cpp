@@ -8,15 +8,15 @@ void Pins::lowison(bool tf){
 }
 void Pins::digital_in() const {
     r.setbit(m_pt+TRIS, m_pn);
-    r.setbit(m_pt, m_pn, 0);
+    r.clrbit(m_pt, m_pn);
 }
 void Pins::analog_in() const {
     r.setbit(m_pt+TRIS, m_pn);
     r.setbit(m_pt, m_pn);
 }
 void Pins::digital_out() const {
-    r.setbit(m_pt+TRIS, m_pn, 0);
-    r.setbit(m_pt, m_pn, 0);
+    r.clrbit(m_pt+TRIS, m_pn);
+    r.clrbit(m_pt, m_pn);
 }
 void Pins::odrain(bool tf) const {
     r.setbit(m_pt+ODC, m_pn, tf);
@@ -33,17 +33,17 @@ void Pins::icn(bool tf) const {
 void Pins::icn_rising() const {
     r.setbit(m_pt+CNCON, CNSTYLE);
     r.setbit(m_pt+CNEN0, m_pn);
-    r.setbit(m_pt+CNEN1, m_pn, 0);
+    r.clrbit(m_pt+CNEN1, m_pn);
 }
 void Pins::icn_risefall() const {
     r.setbit(m_pt+CNCON, CNSTYLE);
     r.setbit(m_pt+CNEN0, m_pn);
-    r.setbit(m_pt+CNEN1, m_pn, 0);
+    r.clrbit(m_pt+CNEN1, m_pn);
 }
 void Pins::icn_falling() const {
     r.setbit(m_pt+CNCON, CNSTYLE);
     r.setbit(m_pt+CNEN1, m_pn);
-    r.setbit(m_pt+CNEN0, m_pn, 0);
+    r.clrbit(m_pt+CNEN0, m_pn);
 }
 void Pins::icn_mismatch() const {
     r.setbit(m_pt+CNEN0, m_pn);
@@ -62,7 +62,7 @@ bool Pins::icn_stat() const {
 //unlock, write byte, lock
 void Pins::pps_do(uint32_t addr, uint8_t v){
     sk.unlock();
-    r.setbit(RPCON, IOLOCK, 0);
+    r.clrbit(RPCON, IOLOCK);
     r.val(addr, v);
     r.setbit(RPCON, IOLOCK);
     sk.lock();
@@ -71,7 +71,7 @@ void Pins::pps_do(uint32_t addr, uint8_t v){
 void Pins::pps_in(PPSIN e, RPN n){
     pps_do(RPINR1+((e/4)*16)+(e%4), n&31);
     r.setbit(ANSELA + TRIS + ((n>>8)/16)*0x100, 1<<((n>>8)%16));  //tris=1
-    r.setbit(ANSELA + ((n>>8)/16)*0x100, 1<<((n>>8)%16), 0);      //ansel=0
+    r.clrbit(ANSELA + ((n>>8)/16)*0x100, 1<<((n>>8)%16));      //ansel=0
 }
 //pps peripheral out -> pin
 void Pins::pps_out(PPSOUT e, RPN n){

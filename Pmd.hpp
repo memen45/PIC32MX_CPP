@@ -53,7 +53,7 @@ struct Pmd {
 
 void Pmd::unlock(){
     sk.unlock();
-    r.setbit(PMDCON, PMDLOCK, 0);
+    r.clrbit(PMDCON, PMDLOCK);
 }
 void Pmd::lock(){
     r.setbit(PMDCON, PMDLOCK);
@@ -66,7 +66,7 @@ void Pmd::off(PMD e){
 }
 void Pmd::on(PMD e){
     unlock();
-    r.setbit(PMD1_ADDR + 16*(e/32), (1<<(e%32)), 0);
+    r.clrbit(PMD1_ADDR + 16*(e/32), (1<<(e%32)));
     lock();
 }
 //array of modules to disable/enable, END is end of array
@@ -77,7 +77,7 @@ void Pmd::off(PMD* e){
 }
 void Pmd::on(PMD* e){
     unlock();
-    for(; *e != END; e++) r.setbit(PMD1_ADDR + 16*(*e/32), (1<<(*e%32)), 0);
+    for(; *e != END; e++) r.clrbit(PMD1_ADDR + 16*(*e/32), (1<<(*e%32)));
     lock();
 }
 

@@ -115,7 +115,7 @@ bool Irq::all_ison(){
     return (__builtin_mfc0(12,0) & 1);
 }
 void Irq::proxtimer(uint8_t n){ //n = priority 0-7
-    r.setbit(INTCON, TPCMASK<<TPCSHIFT, 0);
+    r.clrbit(INTCON, TPCMASK<<TPCSHIFT);
     r.setbit(INTCON, (n&TPCMASK)<<TPCSHIFT);
 }
 void Irq::eint4_rising(bool tf){
@@ -143,7 +143,7 @@ void Irq::eint0_rising(bool tf){
 //bit offset = 1<<(40%32) = 1<<8
 //bit offset 8 in IFS1
 void Irq::flag_clr(IRQ_VN e){
-    r.setbit(IFS_BASE + ((e/32)*16), 1<<(e%32), 0);
+    r.clrbit(IFS_BASE + ((e/32)*16), 1<<(e%32));
 }
 bool Irq::flag(IRQ_VN e){
     return r.anybit(IFS_BASE + ((e/32)*16), 1<<(e%32));
@@ -162,7 +162,7 @@ void Irq::on(IRQ_VN e, bool tf){
 void Irq::init(IRQ_VN e, uint8_t pri, uint8_t sub, bool tf){
     uint32_t priority_shift = 8*(e%4);
     pri &= 7; sub &= 3; pri <<= 2; pri |= sub;
-    r.setbit(IPC_BASE + ((e/4)*16), (31<<priority_shift), 0);
+    r.clrbit(IPC_BASE + ((e/4)*16), (31<<priority_shift));
     r.setbit(IPC_BASE + ((e/4)*16), (pri<<priority_shift));
     flag_clr(e);
     on(e, tf);

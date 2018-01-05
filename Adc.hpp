@@ -150,11 +150,11 @@ void Adc::stop_idle(bool tf){
     r.setbit(ADC1CON1, SIDL, tf);
 }
 void Adc::format(FORM e){
-    r.setbit(ADC1CON1, SFR32, 0);
+    r.clrbit(ADC1CON1, SFR32);
     r.setbit(ADC1CON1, e);
 }
 void Adc::trig_sel(SSRC e){
-    r.setbit(ADC1CON1, CLC2, 0);
+    r.clrbit(ADC1CON1, CLC2);
     r.setbit(ADC1CON1, e);
 }
 void Adc::mode_12bit(bool tf){
@@ -174,7 +174,7 @@ bool Adc::done(){
 }
 //ADC1CON2
 void Adc::vref_cfg(VCFG e){
-    r.setbit(ADC1CON2, VCFGCLR, 0);
+    r.clrbit(ADC1CON2, VCFGCLR);
     r.setbit(ADC1CON2, e);
 }
 void Adc::offset_cal(bool tf){
@@ -191,7 +191,7 @@ bool Adc::buf2nd_busy(){
 }
 void Adc::samp_nirq(uint8_t n){
     n -= 1; n &= 15; //n = 1-16 ->0-15
-    r.setbit(ADC1CON2, SMPICLR, 0);
+    r.clrbit(ADC1CON2, SMPICLR);
     r.setbit(ADC1CON2, n<<SMPISHIFT);
 }
 void Adc::buf_split(bool tf){
@@ -206,7 +206,7 @@ void Adc::samp_extend(bool tf){
 }
 void Adc::samp_time(uint8_t t){
     t &= 31; t = t == 0 ? 1 : t; //0 not allowed (1-31)
-    r.setbit(ADC1CON3, SAMCCLR, 0);
+    r.clrbit(ADC1CON3, SAMCCLR);
     r.setbit(ADC1CON3, t<<SAMCSHIFT);
 }
 //default value is for 24MHz, 4 will meet 280ns Tad for any clock
@@ -224,15 +224,15 @@ void Adc::bandgap(bool tf){
     r.setbit(ADC1CON5, BGREQ, tf);
 }
 void Adc::scan_autoirq(ASINT e){
-    r.setbit(ADC1CON5, DETCOMP, 0);
+    r.clrbit(ADC1CON5, DETCOMP);
     r.setbit(ADC1CON5, e);
 }
 void Adc::write_mode(WM e){
-    r.setbit(ADC1CON5, WMCLR, 0);
+    r.clrbit(ADC1CON5, WMCLR);
     r.setbit(ADC1CON5, e);
 }
 void Adc::compare_mode(CM e){
-    r.setbit(ADC1CON5, OUTWIN, 0);
+    r.clrbit(ADC1CON5, OUTWIN);
     r.setbit(ADC1CON5, e);
 }
 //ADC1CHS
