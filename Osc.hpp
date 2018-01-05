@@ -61,21 +61,25 @@ struct Osc {
                                                 //set pll mul/div, pll src
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-    //refo1con
+    //refo1con, refo1trim
 
     enum ROSEL : uint8_t {
         RSYSCLK = 0, RPOSC = 2, RFRC = 3, RLPRC = 4, RSOSC = 5, RPLLVCO = 7
     };
 
     static void         refo_div    (uint16_t); //divisor value
-    static void         refo        (bool);     //true = on
+    static void         refo_trim   (uint16_t); //trim value
+    static void         refo_on     ();         //refo on
+    static void         refo_on     (ROSEL);    //refo on, src sel
+    static void         refo_off    ();         //refo off
     static void         refo_idle   (bool);     //true = stop in idle mode
     static void         refo_out    (bool);     //true = clk out to REFO1 pin
     static void         refo_sleep  (bool);     //true = run in sleep
-    static void         refo_divsw  (bool);     //true = divider switch enable
-    static bool         refo_divsw  ();         //false = divider switch done
+    static void         refo_divsw  ();         //do divider switch
     static bool         refo_active ();         //true = active
     static void         refo_src    (ROSEL);    //clk source select
+    static uint32_t     refo_clk    ();         //get refo in clk freq
+    static void         refo_freq   (uint32_t); //set refo frequency
 
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -98,6 +102,8 @@ struct Osc {
     //osctun
 
 
+
+
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //misc
 
@@ -113,9 +119,11 @@ struct Osc {
     static Irq ir;
 
     static uint32_t m_sysclk;                    //store calculated cpu freq
+    static uint32_t m_refoclk;                   //store calculate refo in clk
 
     static const uint32_t m_default_freq = 24000000;
     static const uint32_t m_frcosc_freq = 8000000;
+    static const uint32_t m_extosc_freq = 12000000; //use until we can calculate
     static const uint8_t m_mul_lookup[7];
 
     enum IDSTAT { IRQ = 1, DMA = 2 };           //irq,dma status
@@ -149,6 +157,7 @@ struct Osc {
  all functions inline
 =============================================================================*/
 uint32_t Osc::m_sysclk = 0;
+uint32_t Osc::m_refoclk = 0;
 const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 
 //some functions need irq disabled, others can use
@@ -241,36 +250,74 @@ void Osc::pllset(PLLMUL m, DIVS d, PLLSRC frc){
 }
 
 //refo1con
-//16bit->15bit- pass in 16bit value, /2
 void Osc::refo_div(uint16_t v){
-    r.val(REFO1CON, v>>1);
+    r.val(REFO1CON, v);
 }
-void Osc::refo(bool tf){
+void Osc::refo_trim(uint16_t v){
+    r.val(REFO1TRIM+2, v<<7);
+}
+void Osc::refo_on(){
+    refo_clk(); //calculate if needed
     r.setbit(REFO1CON, ON);
+    while(refo_active() == 0);
+}
+void Osc::refo_on(ROSEL e){
+    refo_src(e);
+    refo_on();
+}
+void Osc::refo_off(){
+    r.clrbit(REFO1CON, ON);
+    while(refo_active());
 }
 void Osc::refo_idle(bool tf){
-    r.setbit(REFO1CON, SIDL);
+    r.setbit(REFO1CON, SIDL, tf);
 }
 void Osc::refo_out(bool tf){
-    r.setbit(REFO1CON, OE);
+    r.setbit(REFO1CON, OE, tf);
 }
 void Osc::refo_sleep(bool tf){
-    r.setbit(REFO1CON, RSLP);
+    r.setbit(REFO1CON, RSLP, tf);
 }
-void Osc::refo_divsw(bool tf){
+void Osc::refo_divsw(){
     r.setbit(REFO1CON, DIVSWEN);
-}
-bool Osc::refo_divsw(){
-    return r.anybit(REFO1CON, DIVSWEN);
+    while(r.anybit(REFO1CON, DIVSWEN));
 }
 bool Osc::refo_active(){
     return r.anybit(REFO1CON, ACTIVE);
 }
-
-
-
-//refo1trim
-
+//anytime source set, get new m_refoclk
+//force recalculate by setting m_refoclk to 0
+void Osc::refo_src(ROSEL e){
+    refo_off();
+    r.val(REFO1CON, e);
+    m_refoclk = 0;
+    refo_clk();
+}
+//called by refo_src(), refo_on(), refo_freq()
+uint32_t Osc::refo_clk(){
+    if(m_refoclk) return m_refoclk; //previously calculated
+    switch(r.val8(REFO1CON)){
+        case RSYSCLK:   m_refoclk = sysclk();       break;
+        case RPOSC:     m_refoclk = m_extosc_freq;  break;
+        case RFRC:      m_refoclk = m_frcosc_freq;  break;
+        case RLPRC:     m_refoclk = 32125;          break;
+        case RSOSC:     m_refoclk = 32768;          break;
+        case RPLLVCO:   m_refoclk = vcoclk();       break;
+        //should not get anything else, but if do, use sysclk
+        default:        m_refoclk = sysclk();       break;
+    }
+    return m_refoclk;
+}
+void Osc::refo_freq(uint32_t v){
+    uint32_t m, n;
+    refo_clk(); //if not calculated already
+    m = (m_refoclk << 8) / v;
+    n =  m >> 9;
+    m &= 0x1ff;
+    refo_div(n);
+    refo_trim(m);
+    refo_divsw();
+}
 
 //clkstat
 bool Osc::ready(CLKRDY e){
@@ -285,21 +332,16 @@ uint32_t Osc::sysclk(){
     m_sysclk = m_default_freq;       //assume default if cannot get
     CNOSC s = clksrc();
     switch(s){
-        case LPRC:
-            m_sysclk = 31250;
-            break;
-        case SOSC:
-            m_sysclk = 32768;//assumed
-            break;
-        case POSC:          //need something to compare to (lposc vs cp0count)
-            break;          //return default for now
+        case LPRC: m_sysclk = 31250; break;
+        case SOSC: m_sysclk = 32768; break;
+        case POSC: m_sysclk = m_extosc_freq; break;
         case SPLL: {
-            if(pllsrc() == EXT) break;      //is posc
+            uint32_t f = pllsrc() == FRC ? m_frcosc_freq : m_extosc_freq;
             uint8_t m = (uint8_t)pllmul();  //2 3 4 6 8 12 24
             m = m_mul_lookup[m];
             uint8_t d = (uint8_t)plldiv();
             if(d == 7) d = 8;               //adjust DIV256
-            m_sysclk = (m_frcosc_freq*m)>>d;
+            m_sysclk = (f*m)>>d;
             break;
         }
         case FRCDIV: {
@@ -316,8 +358,7 @@ uint32_t Osc::sysclk(){
 
 //input to refo if PLLVCO is source
 uint32_t Osc::vcoclk(){
-    //is frc,  so is = mul x 8mhz
-    if(pllsrc() == FRC) return m_mul_lookup[ pllmul() ] * m_frcosc_freq;
-    //ext clock, don't know (yet)
-    return m_default_freq;
+    uint32_t f = 0;
+    f = pllsrc() == FRC ? m_frcosc_freq : m_extosc_freq ;
+    return m_mul_lookup[ pllmul() ] * f;
 }
