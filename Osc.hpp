@@ -81,13 +81,6 @@ struct Osc {
     static uint32_t     refo_clk    ();         //get refo in clk freq
     static void         refo_freq   (uint32_t); //set refo frequency
 
-
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-    //refo1trim
-
-
-
-
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //clkstat
 
@@ -162,8 +155,6 @@ struct Osc {
         DMACON = 0xBF808900, //need until dma class written
             DMASUSP = 1<<12
     };
-
-
 
 };
 
@@ -269,7 +260,7 @@ void Osc::pllset(PLLMUL m, DIVS d, PLLSRC frc){
 }
 
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-//refo1con
+//refo1con, refo1trim
 
 void Osc::refo_div(uint16_t v){
     r.val(REFO1CON, v);
