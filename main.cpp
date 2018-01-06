@@ -30,7 +30,7 @@
 #include "Resets.hpp"
 #include "Usb.hpp"
 #include "Osc.hpp"
-
+#include "Spi123.hpp"
 
 /*=============================================================================
  LED's - all in array
@@ -132,6 +132,16 @@ int main(){
     //just run something usb to prevent compiler from optimizing away
     //usb code, so can see if have (bad) code (compile errors)
     UsbHandlers::init();
+
+
+    //__________________________________________________________________________
+    //SPI
+    Spi123 spi1(Spi123::SPI1);
+    Spi123 spi2(Spi123::SPI2);
+    Spi123 spi3(Spi123::SPI3);
+    spi1.on(false);
+    spi2.on(false);
+    spi3.on(false);
 
     //__________________________________________________________________________
     //try adc - pot on curiosity board

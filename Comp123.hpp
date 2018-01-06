@@ -52,7 +52,7 @@ struct Comp123  {
     };
 
     //private vars
-    volatile uint32_t * m_pt;
+    volatile uint32_t* m_cmxcon;
 };
 
 
@@ -61,32 +61,32 @@ struct Comp123  {
 =============================================================================*/
 
 constexpr Comp123::Comp123(CMX e)
-    : m_pt((volatile uint32_t*)CM1CON+(e*CMXCON_SPACING)){}
+    : m_cmxcon((volatile uint32_t*)CM1CON+(e*CMXCON_SPACING)){}
 
 void Comp123::on(bool tf){
-    r.setbit(m_pt, ON, tf);
+    r.setbit(m_cmxcon, ON, tf);
 }
 void Comp123::out(bool tf){
-    r.setbit(m_pt, COE, tf);
+    r.setbit(m_cmxcon, COE, tf);
 }
 void Comp123::out_inv(bool tf){
-    r.setbit(m_pt, CPOL, tf);
+    r.setbit(m_cmxcon, CPOL, tf);
 }
 bool Comp123::event_bit(){
-    return r.anybit(m_pt, CEVT);
+    return r.anybit(m_cmxcon, CEVT);
 }
 bool Comp123::out_bit(){
-    return r.anybit(m_pt, COUT);
+    return r.anybit(m_cmxcon, COUT);
 }
 void Comp123::event_sel(EVPOL e){
-    r.clrbit(m_pt, ANY); r.setbit(m_pt, e);
+    r.clrbit(m_cmxcon, ANY); r.setbit(m_cmxcon, e);
 }
 void Comp123::cref_cxina(bool tf){
-    r.setbit(m_pt, CREF, !tf);
+    r.setbit(m_cmxcon, CREF, !tf);
 }
 void Comp123::ch_sel(CCH e){
-    r.clrbit(m_pt, BGAP);
-    r.setbit(m_pt, e);
+    r.clrbit(m_cmxcon, BGAP);
+    r.setbit(m_cmxcon, e);
 }
 
 //common static functions

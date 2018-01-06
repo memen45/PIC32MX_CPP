@@ -80,6 +80,7 @@ struct Osc {
     static void         refo_src    (ROSEL);    //clk source select
     static uint32_t     refo_clk    ();         //get refo in clk freq
     static void         refo_freq   (uint32_t); //set refo frequency
+    static uint32_t     refo_freq   ();         //get refo frequency
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //clkstat
@@ -334,6 +335,9 @@ void Osc::refo_freq(uint32_t v){
     refo_trim(m);
     refo_divsw();
     m_refo_freq = v;
+}
+uint32_t Osc::refo_freq(){
+    return m_refo_freq ;
 }
 
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
