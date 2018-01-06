@@ -144,7 +144,11 @@ void Spi123::frame_count(FRMCNT e){
     r.setbit(m_spixcon, e<<FRMCNT_SHIFT);
 }
 void Spi123::clk_sel(bool tf){
+    bool ison = r.anybit(m_spixcon, ON);
+    on(false);
     r.setbit(m_spixcon, MCLKSEL, tf);
+    freq(); //recaluclate
+    on(ison);
 }
 bool Spi123::clk_sel(){
     return r.anybit(m_spixcon, MCLKSEL);
@@ -153,7 +157,10 @@ void Spi123::frame_edge(bool tf){
     r.setbit(m_spixcon, SPIFE, tf);
 }
 void Spi123::enhanced(bool tf){
+    bool ison = r.anybit(m_spixcon, ON);
+    on(false);
     r.setbit(m_spixcon, ENHBUF, tf);
+    on(ison);
 }
 void Spi123::on(bool tf){
     r.setbit(m_spixcon, ON, tf);
@@ -213,8 +220,9 @@ void Spi123::freq(uint32_t v){
     uint16_t brg = (2 * v / clk) - 1;
     brg &= 0x1ff;
     baud(brg);
-    freq();;
+    freq();
 }
+//called by clk_sel(), freq(uint32_t)
 uint32_t Spi123::freq(){
     uint32_t clk;
     if(clk_sel() == REFOCLK) clk = osc.refo_freq();
