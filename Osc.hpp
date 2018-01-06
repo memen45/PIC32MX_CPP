@@ -101,6 +101,17 @@ struct Osc {
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //osctun
 
+    enum TUNSRC : bool { TSOSC, TUSB };
+
+    static void         tun_auto    (bool);     //osc tune on
+    static void         tun_idle    (bool);     //stop in idle
+    static void         tun_src     (TUNSRC);   //src, 0=sosc 1=usb
+    static bool         tun_lock    ();         //lock status
+    static void         tun_lpol    (bool);     //irq polarity, 1=0 0=1
+    static bool         tun_rng     ();         //out of range status
+    static void         tun_rpol    (bool);     //range polarity, 1=0 0=1
+    static void         tun_val     (int8_t);   //tune value 6bits, -32 to 31
+    static int8_t       tun_val     ();         //get tune value
 
 
 
@@ -119,7 +130,8 @@ struct Osc {
     static Irq ir;
 
     static uint32_t m_sysclk;                    //store calculated cpu freq
-    static uint32_t m_refoclk;                   //store calculate refo in clk
+    static uint32_t m_refoclk;                   //store calculated refo in clk
+    static uint32_t m_refo_freq;                 //store current refo frequency
 
     static const uint32_t m_default_freq = 24000000;
     static const uint32_t m_frcosc_freq = 8000000;
@@ -144,7 +156,9 @@ struct Osc {
         REFO1TRIM = 0xBF802730,
         CLKSTAT = 0xBF802770,
         OSCTUN = 0xBF802880,
-
+            /* ON = 1<<15, SIDL = 1<<13, from refo1con*/
+            SRC = 1<<12, LOCK = 1<<11, POL = 1<<10,
+            ORNG = 1<<9, ORPOL = 1<<8,
         DMACON = 0xBF808900, //need until dma class written
             DMASUSP = 1<<12
     };
@@ -158,10 +172,11 @@ struct Osc {
 =============================================================================*/
 uint32_t Osc::m_sysclk = 0;
 uint32_t Osc::m_refoclk = 0;
+uint32_t Osc::m_refo_freq = 0;
 const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 
 //some functions need irq disabled, others can use
-//sk.unlock/lock directly
+//Syskey::unlock/lock directly
 
 //system unlock for register access, w/irq,dma disable
 auto Osc::unlock_irq() -> IDSTAT {
@@ -179,10 +194,12 @@ void Osc::lock_irq(IDSTAT idstat){
     if((uint8_t)idstat & IRQ) ir.enable_all();
 }
 
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //osccon
+
 void Osc::frcdiv(DIVS e){
     sk.unlock();
-    r.val(OSCCON+3, e); //upper byte access (only FRCDIV in upper byte)
+    r.val(OSCCON+3, e);
     sk.lock();
 }
 auto Osc::frcdiv() -> DIVS {
@@ -217,7 +234,9 @@ void Osc::sosc(bool tf){
     sk.unlock();
 }
 
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //spllcon
+
 auto Osc::plldiv() -> DIVS {
     return (DIVS)r.val8(SPLLCON+3);
 }
@@ -229,27 +248,29 @@ auto Osc::pllsrc() -> PLLSRC {
 }
 void Osc::pllsrc(PLLSRC e){
     r.setbit(SPLLCON, PLLICLK, e);
+    m_refoclk = 0;  //recalculate refo clock
+    refo_clk();     //as input now may be different
 }
-//assume SPLL wanted as clock source (why else set pll)
-//assume frcpll, unless bool=false then POSC is pll source
+//set SPLL as clock source with specified mul/div
+//PLLSRC default is FRC
 void Osc::pllset(PLLMUL m, DIVS d, PLLSRC frc){
     IDSTAT irstat  = unlock_irq();
     //need to switch from SPLL to something else
     //switch to frc (hardware does nothing if already frc)
     clksrc(FRCDIV);
-    //pll select
-    pllsrc(frc);
     //set new pll vals
     r.val(SPLLCON+3, d);
     r.val(SPLLCON+2, m);
+    //pll select
+    pllsrc(frc); //do after m, so refo_clk() sees new m value
     //source to SPLL
     clksrc(SPLL);
     lock_irq(irstat);
-    m_sysclk = 0;
-    sysclk();
 }
 
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //refo1con
+
 void Osc::refo_div(uint16_t v){
     r.val(REFO1CON, v);
 }
@@ -306,10 +327,14 @@ uint32_t Osc::refo_clk(){
         //should not get anything else, but if do, use sysclk
         default:        m_refoclk = sysclk();       break;
     }
+    //if previously set refo freq, do again with psooibly new src
+    if(m_refo_freq) refo_freq(m_refo_freq);
     return m_refoclk;
 }
+//also called when pll input or pll mul changed
 void Osc::refo_freq(uint32_t v){
     uint32_t m, n;
+    m_refo_freq = 0; //prevent call back to here from refo_clk()
     refo_clk(); //if not calculated already
     m = (m_refoclk << 8) / v;
     n =  m >> 9;
@@ -317,16 +342,67 @@ void Osc::refo_freq(uint32_t v){
     refo_div(n);
     refo_trim(m);
     refo_divsw();
+    m_refo_freq = v;
 }
 
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //clkstat
+
 bool Osc::ready(CLKRDY e){
     return r.anybit(CLKSTAT, e);
 }
 
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //osctun
 
+void Osc::tun_auto(bool tf){
+    sk.unlock();
+    r.setbit(OSCTUN, ON, tf);
+    sk.lock();
+}
+void Osc::tun_idle(bool tf){
+    sk.unlock();
+    r.setbit(OSCTUN, SIDL, tf);
+    sk.lock();
+}
+void Osc::tun_src(TUNSRC e){
+    sk.unlock();
+    r.setbit(OSCTUN, SRC, e);
+    sk.lock();
+}
+bool Osc::tun_lock(){
+    return r.anybit(OSCTUN, LOCK);
+}
+void Osc::tun_lpol(bool tf){
+    sk.unlock();
+    r.setbit(OSCTUN, POL, !tf);
+    sk.lock();
+}
+bool Osc::tun_rng(){
+    return r.anybit(OSCTUN, ORNG);
+}
+void Osc::tun_rpol(bool tf){
+    sk.unlock();
+    r.setbit(OSCTUN, ORPOL, !tf);
+    sk.lock();
+}
+void Osc::tun_val(int8_t v ){
+    //linit -32 to +31
+    if(v > 31) v = 31;
+    if(v < -32) v = -32;
+    sk.unlock();
+    r.val(OSCTUN, v);
+    sk.lock();
+}
+int8_t Osc::tun_val(){
+    int8_t v = r.val8(OSCTUN);
+    if(v > 31) v |= 0xc0; //is negative, sign extend to 8bits
+    return v;
+}
+
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //misc
+
 uint32_t Osc::sysclk(){
     if(m_sysclk) return m_sysclk;    //already have it
     m_sysclk = m_default_freq;       //assume default if cannot get
