@@ -192,7 +192,7 @@ auto Osc::unlock_irq() -> IDSTAT {
     sk.unlock();
     return (IDSTAT)idstat;
 }
-//system lock enable, restore previous irq status
+//system lock enable, restore previous irq and dma status
 void Osc::lock_irq(IDSTAT idstat){
     sk.lock();
     if((uint8_t)idstat & DMA) r.clrbit(DMACON, DMASUSP);
@@ -455,32 +455,34 @@ uint32_t Osc::vcoclk(){
 //get ext clock freq, using sosc if available, or lprc
 //and cp0 counter to calculate
 //OR if user defined m_extosc_freq, return that
+//irq's disabled if calculation needed (re-using unlock_irq)
+//will only run once- will assume an ext clock will not change
 uint32_t Osc::extclk(){
     if(m_extosc_freq) return m_extosc_freq;
     if(m_extclk) return m_extclk;
     Timer1 t1; Cp0 cp0;
+    IDSTAT irstat  = unlock_irq();
    //backup timer1 (we want it, but will give it back)
     uint16_t t1conbak = *(volatile uint16_t*)t1.T1CON;
+    *(volatile uint16_t*)t1.T1CON = 0; //stop
     uint16_t pr1bak = t1.period();
     uint32_t t1bak = t1.timer();
-   //clear all t1con
-    *(volatile uint16_t*)t1.T1CON = 0;
+    //reset
     t1.period(0xFFFF);
     t1.prescale(t1.PS1);
     t1.timer(0);
+    //if sosc enabled, assume it is there
     if(r.anybit(OSCCON, SOSCEN)) t1.clk_src(t1.EXT_SOSC);
     else t1.clk_src(t1.EXT_LPRC);
-   //start timer1
+   //start timer1, get cp0 count
     t1.on(true);
-   //get cp0 count
     uint32_t c = cp0.count();
-   //wait for  timer1 count == x
+   //wait for ~1/4sec, get cp0 total count
     while(t1.timer() < 8192);
-   //now get total count
     c = cp0.count() - c;
-   //cp0 runs at sysclk/2, timer1 ran for ~1/4sec (x8, <<3)
+   //cp0 runs at sysclk/2, so x2 x4 = x8 or <<3
     c <<= 3;
-   //resolution to 0.1Mhz
+   //resolution only to 0.1Mhz
     c /= 100000;
     c *= 100000;
     m_extclk = c;
@@ -489,6 +491,7 @@ uint32_t Osc::extclk(){
     t1.timer(t1bak);
     t1.period(pr1bak);
     *(volatile uint32_t*)t1.T1CON = t1conbak;
+    lock_irq(irstat);
     return m_extclk;
 }
 
