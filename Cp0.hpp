@@ -25,7 +25,7 @@ struct Cp0 {
 /*=============================================================================
  all functions inline
 =============================================================================*/
-#include "Osc.hpp" //put after class, to prevent circular include problem
+#include "Osc.hpp"
 
 //vars
 static uint32_t m_compare_count; //save count for reloads

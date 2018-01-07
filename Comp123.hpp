@@ -4,12 +4,13 @@
 #include "Reg.hpp"
 
 /*=============================================================================
- Compare1/2/3 functions
+ Compare 1/2/3 functions
 =============================================================================*/
 
 struct Comp123  {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     //instantiate Comp123 with comparator number
     enum CMX { C1 = 0, C2, C3 };
     //event polarity
@@ -19,8 +20,9 @@ struct Comp123  {
     //cref source
     enum CVREF { INT_BGAP = 0, EXT_CVREF };
 
-
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+    constexpr Comp123(CMX);
 
     void            on              (bool);
     void            out             (bool);
@@ -31,12 +33,11 @@ struct Comp123  {
     void            cref_cxina      (bool);
     void            ch_sel          (CCH);
 
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //common for all instances
 
     static void     stop_idle       (bool);
     static void     cref_sel        (CVREF);
-
-    constexpr Comp123(CMX);
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     private:
@@ -51,7 +52,6 @@ struct Comp123  {
         SIDL = 1<<13, CVREFSEL = 1<<8
     };
 
-    //private vars
     volatile uint32_t* m_cmxcon;
 };
 

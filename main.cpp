@@ -30,6 +30,7 @@
 #include "Resets.hpp"
 #include "Usb.hpp"
 #include "Osc.hpp"
+#include "Uart123.hpp"
 #include "Spi123.hpp"
 
 /*=============================================================================
@@ -122,11 +123,20 @@ int main(){
     //__________________________________________________________________________
     Resets::CAUSE cause = Resets::cause();  //use cause result somewhere
                                             //(will be EXTR mostly with pkob)
-
+    //__________________________________________________________________________
+    //set osc to 24MHz, use values to also get usb working
     Osc osc;
     osc.pll_set(osc.MUL12, osc.DIV4);       // 24mhz - 96MHz for usb (/2)
 
-    uint32_t t = osc.extclk();
+    uint32_t t = osc.extclk();              //check if reading sysclock works
+
+    //__________________________________________________________________________
+    Uart123 u1(Uart123::UART1);
+    
+
+
+    //__________________________________________________________________________
+
 
     //__________________________________________________________________________
     //usb- can't do much

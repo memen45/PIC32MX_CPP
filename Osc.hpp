@@ -28,7 +28,7 @@
 #include "Reg.hpp"
 #include "Syskey.hpp"
 #include "Irq.hpp"
-#include "Cp0.hpp"
+
 
 struct Osc {
 
@@ -124,6 +124,7 @@ struct Osc {
     static uint32_t     sysclk       ();        //get cpu sysclk
     static uint32_t     vcoclk       ();        //get pll vco clock
     static uint32_t     extclk       ();        //get ext clock
+    static uint32_t     frcclk       ();        //get frc clock
 
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -173,6 +174,7 @@ struct Osc {
  all functions inline
 =============================================================================*/
 #include "Timer1.hpp"
+#include "Cp0.hpp"
 
 uint32_t Osc::m_sysclk = 0;
 uint32_t Osc::m_refoclk = 0;
@@ -495,6 +497,9 @@ uint32_t Osc::extclk(){
     return m_extclk;
 }
 
+uint32_t Osc::frcclk(){
+    return m_frcosc_freq;
+}
 
 /*
 
