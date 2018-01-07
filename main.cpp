@@ -124,7 +124,9 @@ int main(){
                                             //(will be EXTR mostly with pkob)
 
     Osc osc;
-    osc.pllset(osc.MUL12, osc.DIV4);        // 24mhz - 96MHz for usb (/2)
+    osc.pll_set(osc.MUL12, osc.DIV4);       // 24mhz - 96MHz for usb (/2)
+
+    uint32_t t = osc.extclk();
 
     //__________________________________________________________________________
     //usb- can't do much

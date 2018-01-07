@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include "Reg.hpp"
+#include "Osc.hpp"
 
 struct Timer1 {
 
@@ -14,7 +15,7 @@ struct Timer1 {
     enum PRESCALE { PS256 = 3<<4, PS64 = 2<<4, PS8 = 1<<4, PS1 = 0<<4 };
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-    //clock source
+    //clock source - also sets TCS unless pbclk
     enum CLK { EXT_SOSC = 2, EXT_T1CK = 258, EXT_LPRC = 514, INT_PBCLK = 0 };
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -36,8 +37,14 @@ struct Timer1 {
 
     static Reg r;
 
+    public:
+
+    enum { T1CON = 0xBF808000 };
+
+    private:
+
     enum {
-        T1CON = 0xBF808000, TMR1 = 0xBF808010, PR1 = 0xBF808020,
+        TMR1 = 0xBF808010, PR1 = 0xBF808020,
         ON = 1<<15, SIDL = 1<<13, TWDIS = 1<<12, TWIP = 1<<11,
         TGATE = 1<<7, TSYNC = 1<<2, CLK_CLR = (3<<8)|(1<<1)
     };
@@ -47,7 +54,6 @@ struct Timer1 {
 /*=============================================================================
  all functions inline
 =============================================================================*/
-
 void Timer1::timer(uint16_t n){
     r.val(TMR1, n);
 }
@@ -73,6 +79,7 @@ bool Timer1::wr_busy(){
     return r.anybit(T1CON, TWIP);
 }
 void Timer1::clk_src(CLK e){
+    if(e == EXT_SOSC) Osc::sosc(true);
     r.clrbit(T1CON, CLK_CLR);
     r.setbit(T1CON, e);
 }

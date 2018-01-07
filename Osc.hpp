@@ -5,16 +5,22 @@
 
  any fucntion that depends on cpu frequency, can call sysclk() to get current
  cpu frequency in Hz, if not already calculated it will be calculated when
- called or when cpu source/speed is changed, if unable to calculate (if ext
- crystal) then the default frequency is returned
+ called or when cpu source/speed is changed, if external clock/crystal is
+ used then frequency is calculated using sosc or lprc UNLESS m_extosc_freq
+ is set in this file by user to anything other than 0
 
  config bits will need to enable clock source switching if changing clock
  sources OR changing PLL mul/div values
+ #pragma config FCKSM = CSECMD
 
- after software reset AND spll is clock selected in config bits, will lock
- up when trying to switch to spll in the pllset() function, so just set
- frc as clock source in config bits
+ just set frc as clock source in config bits to prevent pll problems after
+ a reset (where MUL is too high, and reset will seem to lock up chip)
  #pragma config FNOSC = FRCDIV
+
+ use Osc::sysclk() to retrieve sysclock
+
+ any peripheral using SOSC, will also use Osc::sosc(true) to make sure sosc
+ is turned on, but no check if SOSC is present
 
 =============================================================================*/
 
@@ -22,6 +28,7 @@
 #include "Reg.hpp"
 #include "Syskey.hpp"
 #include "Irq.hpp"
+#include "Cp0.hpp"
 
 struct Osc {
 
@@ -35,13 +42,13 @@ struct Osc {
          FRCDIV = 0, SPLL, POSC, SOSC = 4, LPRC
     };
 
-    static void         frcdiv      (DIVS);     //set
-    static DIVS         frcdiv      ();         //get
-    static CNOSC        clksrc      ();         //get current osc source
-    static void         clksrc      (CNOSC);    //start switch to nosc
-    static void         clklock     ();         //lock nosc/oswen until reset
+    static void         frc_div     (DIVS);     //set
+    static DIVS         frc_div     ();         //get
+    static CNOSC        clk_src     ();         //get current osc source
+    static void         clk_src     (CNOSC);    //start switch to nosc
+    static void         clk_lock    ();         //lock nosc/oswen until reset
     static void         sleep       (bool);     //sleep enable
-    static bool         clkbad      ();         //clock failed?
+    static bool         clk_bad     ();         //clock failed?
     static void         sosc        (bool);     //sosc enable
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -53,11 +60,13 @@ struct Osc {
 
     enum PLLSRC : bool { EXT, FRC };
 
-    static DIVS         plldiv      ();         //get pll divider
-    static PLLMUL       pllmul      ();         //get pll multiplier
-    static PLLSRC       pllsrc      ();         //get pll src
-    static void         pllsrc      (PLLSRC);   //set pll src
-    static void         pllset      (PLLMUL, DIVS, PLLSRC = FRC);
+    static DIVS         pll_div     ();         //get pll divider
+    static PLLMUL       pll_mul     ();         //get pll multiplier
+    static PLLSRC       pll_src     ();         //get pll src
+    private:
+    static void         pll_src     (PLLSRC);   //set pll src
+    public:
+    static void         pll_set     (PLLMUL, DIVS, PLLSRC = FRC);
                                                 //set pll mul/div, pll src
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -78,7 +87,7 @@ struct Osc {
     static void         refo_divsw  ();         //do divider switch
     static bool         refo_active ();         //true = active
     static void         refo_src    (ROSEL);    //clk source select
-    static uint32_t     refo_clk    ();         //get refo in clk freq
+    static uint32_t     refoclk     ();         //get refo in clk freq
     static void         refo_freq   (uint32_t); //set refo frequency
     static uint32_t     refo_freq   ();         //get refo frequency
 
@@ -114,6 +123,7 @@ struct Osc {
 
     static uint32_t     sysclk       ();        //get cpu sysclk
     static uint32_t     vcoclk       ();        //get pll vco clock
+    static uint32_t     extclk       ();        //get ext clock
 
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -125,11 +135,11 @@ struct Osc {
 
     static uint32_t m_sysclk;                    //store calculated cpu freq
     static uint32_t m_refoclk;                   //store calculated refo in clk
+    static uint32_t m_extclk;
     static uint32_t m_refo_freq;                 //store current refo frequency
 
-    static const uint32_t m_default_freq = 24000000;
     static const uint32_t m_frcosc_freq = 8000000;
-    static const uint32_t m_extosc_freq = 12000000; //use until we can calculate
+    static const uint32_t m_extosc_freq = 0;    //set if want exact ext freq
     static const uint8_t m_mul_lookup[7];
 
     enum IDSTAT { IRQ = 1, DMA = 2 };           //irq,dma status
@@ -162,8 +172,11 @@ struct Osc {
 /*=============================================================================
  all functions inline
 =============================================================================*/
+#include "Timer1.hpp"
+
 uint32_t Osc::m_sysclk = 0;
 uint32_t Osc::m_refoclk = 0;
+uint32_t Osc::m_extclk = 0;
 uint32_t Osc::m_refo_freq = 0;
 const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 
@@ -189,18 +202,18 @@ void Osc::lock_irq(IDSTAT idstat){
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //osccon
 
-void Osc::frcdiv(DIVS e){
+void Osc::frc_div(DIVS e){
     sk.unlock();
     r.val(OSCCON+3, e);
     sk.lock();
 }
-auto Osc::frcdiv() -> DIVS {
+auto Osc::frc_div() -> DIVS {
     return (DIVS)r.val8(OSCCON+3);
 }
-auto Osc::clksrc() -> CNOSC {
+auto Osc::clk_src() -> CNOSC {
     return (CNOSC)(r.val8(OSCCON+1)>>4);
 }
-void Osc::clksrc(CNOSC e){
+void Osc::clk_src(CNOSC e){
     IDSTAT irstat = unlock_irq();
     r.val(OSCCON+1, e);
     r.setbit(OSCCON, OSWEN);
@@ -209,7 +222,7 @@ void Osc::clksrc(CNOSC e){
     m_sysclk = 0;
     sysclk();
 }
-void Osc::clklock(){
+void Osc::clk_lock(){
     r.setbit(OSCCON, CLKLOCK);
 }
 void Osc::sleep(bool tf){
@@ -217,7 +230,7 @@ void Osc::sleep(bool tf){
     r.setbit(OSCCON, SLPEN, tf);
     sk.lock();
 }
-bool Osc::clkbad(){
+bool Osc::clk_bad(){
     return r.anybit(OSCCON, CF);
 }
 void Osc::sosc(bool tf){
@@ -229,34 +242,35 @@ void Osc::sosc(bool tf){
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //spllcon
 
-auto Osc::plldiv() -> DIVS {
+auto Osc::pll_div() -> DIVS {
     return (DIVS)r.val8(SPLLCON+3);
 }
-auto Osc::pllmul() -> PLLMUL {
+auto Osc::pll_mul() -> PLLMUL {
     return (PLLMUL)r.val8(SPLLCON+2);
 }
-auto Osc::pllsrc() -> PLLSRC {
+auto Osc::pll_src() -> PLLSRC {
     return (PLLSRC)r.anybit(SPLLCON, PLLICLK);
 }
-void Osc::pllsrc(PLLSRC e){
+//private
+void Osc::pll_src(PLLSRC e){
     r.setbit(SPLLCON, PLLICLK, e);
     m_refoclk = 0;  //recalculate refo clock
-    refo_clk();     //as input now may be different
+    refoclk();     //as input now may be different
 }
 //set SPLL as clock source with specified mul/div
 //PLLSRC default is FRC
-void Osc::pllset(PLLMUL m, DIVS d, PLLSRC frc){
+void Osc::pll_set(PLLMUL m, DIVS d, PLLSRC frc){
     IDSTAT irstat  = unlock_irq();
     //need to switch from SPLL to something else
     //switch to frc (hardware does nothing if already frc)
-    clksrc(FRCDIV);
+    clk_src(FRCDIV);
     //set new pll vals
     r.val(SPLLCON+3, d);
     r.val(SPLLCON+2, m);
     //pll select
-    pllsrc(frc); //do after m, so refo_clk() sees new m value
+    pll_src(frc); //do after m, so refoclk() sees new m value
     //source to SPLL
-    clksrc(SPLL);
+    clk_src(SPLL);
     lock_irq(irstat);
 }
 
@@ -270,7 +284,7 @@ void Osc::refo_trim(uint16_t v){
     r.val(REFO1TRIM+2, v<<7);
 }
 void Osc::refo_on(){
-    refo_clk(); //calculate if needed
+    refoclk(); //calculate if needed
     r.setbit(REFO1CON, ON);
     while(refo_active() == 0);
 }
@@ -301,33 +315,36 @@ bool Osc::refo_active(){
 //anytime source set, get new m_refoclk
 //force recalculate by setting m_refoclk to 0
 void Osc::refo_src(ROSEL e){
+    bool ison = r.anybit(REFO1CON, ON);
     refo_off();
+    if(e == RSOSC) sosc(true);
     r.val(REFO1CON, e);
+    if(ison) refo_on();
     m_refoclk = 0;
-    refo_clk();
+    refoclk();
 }
 //called by refo_src(), refo_on(), refo_freq()
-uint32_t Osc::refo_clk(){
+uint32_t Osc::refoclk(){
     if(m_refoclk) return m_refoclk; //previously calculated
     switch(r.val8(REFO1CON)){
         case RSYSCLK:   m_refoclk = sysclk();       break;
-        case RPOSC:     m_refoclk = m_extosc_freq;  break;
+        case RPOSC:     m_refoclk = extclk();       break;
         case RFRC:      m_refoclk = m_frcosc_freq;  break;
         case RLPRC:     m_refoclk = 32125;          break;
         case RSOSC:     m_refoclk = 32768;          break;
         case RPLLVCO:   m_refoclk = vcoclk();       break;
-        //should not get anything else, but if do, use sysclk
-        default:        m_refoclk = sysclk();       break;
+        //should not get anything else, could set clk src
+        //to frc/pll if think could ever get here
     }
-    //if previously set refo freq, do again with psooibly new src
+    //if previously set refo freq, do again with possibly new src
     if(m_refo_freq) refo_freq(m_refo_freq);
     return m_refoclk;
 }
 //also called when pll input or pll mul changed
 void Osc::refo_freq(uint32_t v){
     uint32_t m, n;
-    m_refo_freq = 0; //prevent call back to here from refo_clk()
-    refo_clk(); //if not calculated already
+    m_refo_freq = 0; //prevent call back to here from refoclk()
+    refoclk(); //if not calculated already
     m = (m_refoclk << 8) / v;
     n =  m >> 9;
     m &= 0x1ff;
@@ -337,7 +354,7 @@ void Osc::refo_freq(uint32_t v){
     m_refo_freq = v;
 }
 uint32_t Osc::refo_freq(){
-    return m_refo_freq ;
+    return m_refo_freq;
 }
 
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -361,6 +378,7 @@ void Osc::tun_idle(bool tf){
     sk.lock();
 }
 void Osc::tun_src(TUNSRC e){
+    if(e == TSOSC) sosc(true);
     sk.unlock();
     r.setbit(OSCTUN, SRC, e);
     sk.lock();
@@ -399,29 +417,29 @@ int8_t Osc::tun_val(){
 //misc
 
 uint32_t Osc::sysclk(){
-    if(m_sysclk) return m_sysclk;    //already have it
-    m_sysclk = m_default_freq;       //assume default if cannot get
-    CNOSC s = clksrc();
+    if(m_sysclk) return m_sysclk;           //already have it
+    CNOSC s = clk_src();
     switch(s){
-        case LPRC: m_sysclk = 31250; break;
+        case LPRC: m_sysclk = 32000; break; //+/-20% = 25600 - 38400
         case SOSC: m_sysclk = 32768; break;
-        case POSC: m_sysclk = m_extosc_freq; break;
+        case POSC: m_sysclk = extclk(); break;
         case SPLL: {
-            uint32_t f = pllsrc() == FRC ? m_frcosc_freq : m_extosc_freq;
-            uint8_t m = (uint8_t)pllmul();  //2 3 4 6 8 12 24
+            uint32_t f = pll_src() == FRC ? m_frcosc_freq : extclk();
+            uint8_t m = (uint8_t)pll_mul();  //2 3 4 6 8 12 24
             m = m_mul_lookup[m];
-            uint8_t d = (uint8_t)plldiv();
+            uint8_t d = (uint8_t)pll_div();
             if(d == 7) d = 8;               //adjust DIV256
             m_sysclk = (f*m)>>d;
             break;
         }
         case FRCDIV: {
-            uint8_t n = (uint8_t)frcdiv();
+            uint8_t n = (uint8_t)frc_div();
             if(n == 7) n = 8;               //adjust DIV256
             m_sysclk = m_frcosc_freq>>n;
             break;
         }
         default:
+            m_sysclk = m_frcosc_freq;      //should not be able to get here
             break;
     }
     return m_sysclk;
@@ -430,6 +448,80 @@ uint32_t Osc::sysclk(){
 //input to refo if PLLVCO is source
 uint32_t Osc::vcoclk(){
     uint32_t f = 0;
-    f = pllsrc() == FRC ? m_frcosc_freq : m_extosc_freq ;
-    return m_mul_lookup[ pllmul() ] * f;
+    f = pll_src() == FRC ? m_frcosc_freq : extclk() ;
+    return m_mul_lookup[ pll_mul() ] * f;
 }
+
+//get ext clock freq, using sosc if available, or lprc
+//and cp0 counter to calculate
+//OR if user defined m_extosc_freq, return that
+uint32_t Osc::extclk(){
+    if(m_extosc_freq) return m_extosc_freq;
+    if(m_extclk) return m_extclk;
+    Timer1 t1; Cp0 cp0;
+   //backup timer1 (we want it, but will give it back)
+    uint16_t t1conbak = *(volatile uint16_t*)t1.T1CON;
+    uint16_t pr1bak = t1.period();
+    uint32_t t1bak = t1.timer();
+   //clear all t1con
+    *(volatile uint16_t*)t1.T1CON = 0;
+    t1.period(0xFFFF);
+    t1.prescale(t1.PS1);
+    t1.timer(0);
+    if(r.anybit(OSCCON, SOSCEN)) t1.clk_src(t1.EXT_SOSC);
+    else t1.clk_src(t1.EXT_LPRC);
+   //start timer1
+    t1.on(true);
+   //get cp0 count
+    uint32_t c = cp0.count();
+   //wait for  timer1 count == x
+    while(t1.timer() < 8192);
+   //now get total count
+    c = cp0.count() - c;
+   //cp0 runs at sysclk/2, timer1 ran for ~1/4sec (x8, <<3)
+    c <<= 3;
+   //resolution to 0.1Mhz
+    c /= 100000;
+    c *= 100000;
+    m_extclk = c;
+   //restore timer1
+    t1.on(false);
+    t1.timer(t1bak);
+    t1.period(pr1bak);
+    *(volatile uint32_t*)t1.T1CON = t1conbak;
+    return m_extclk;
+}
+
+
+/*
+
+func        reg         calls                   recalculate
+-----------------------------------------------------------------------
+frc_div()   FRCDIVv     sysclk()                [m_sysclk]
+clk_src()   NOSC        sysclk()                [m_sysclk]
+pll_src()   PLLICLK     refo_clk()              [m_refoclk]
+pll_set()   PLLxxxx     pll_src(),clk_src()     [m_refoclk][m_sysclk]
+refo_src()  ROSEL       refo_clk()              [m_refoclk]
+
+
+
+refo_clk()  recalculates m_refoclk if set to 0
+              else returns m_refoclk
+            re-sets refo freq if m_refo_freq not 0
+            returns m_refoclk
+
+sysclk()    recalculates m_sysclk if set to 0
+                else returns m_sysclk
+            returns m_sysclk
+
+//used by anyone to get sysclock
+Osc::sysclk()
+//used by anyone to get refo frequency
+Osc::refo_freq()
+//only needed by Osc
+Osc::refoclk()
+Osc::extclk()
+Osc::vcoclk()
+
+
+*/

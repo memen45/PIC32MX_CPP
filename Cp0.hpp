@@ -7,7 +7,6 @@
 #include <cstdint>
 #include "Irq.hpp"
 #include "Reg.hpp"
-#include "Osc.hpp"
 
 struct Cp0 {
 
@@ -21,16 +20,12 @@ struct Cp0 {
     static void         compare_us      (uint32_t);
     static void         compare_ms      (uint16_t);
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-    private:
-
-    static Irq ir;
-    static Osc osc;
 };
 
 /*=============================================================================
  all functions inline
 =============================================================================*/
+#include "Osc.hpp" //put after class, to prevent circular include problem
 
 //vars
 static uint32_t m_compare_count; //save count for reloads
@@ -52,12 +47,12 @@ void Cp0::compare(uint32_t v){
 void Cp0::compare_reload(bool tf){
     compare(count() + m_compare_count);
     if(tf){
-        ir.flag_clr(ir.CORE_TIMER);
-        ir.on(ir.CORE_TIMER, true);
+        Irq::flag_clr(Irq::CORE_TIMER);
+        Irq::on(Irq::CORE_TIMER, true);
     }
 }
 void Cp0::compare_us(uint32_t v){
-    m_compare_count = osc.sysclk() / 2000000 * v; //cpu speed from Osc::
+    m_compare_count = Osc::sysclk() / 2000000 * v; //cpu speed from Osc::
     compare_reload();
 }
 void Cp0::compare_ms(uint16_t v){

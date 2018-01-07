@@ -10,6 +10,7 @@
 #include <cstdint>
 #include "Reg.hpp"
 #include "Syskey.hpp"
+#include "Osc.hpp"
 
 struct Rtcc {
 
@@ -131,6 +132,7 @@ void Rtcc::clk_pre(PRESCALE e){
     conset(RTCCON2, e);
 }
 void Rtcc::clk_sel(CLKSEL e){
+    if(e == SOSC) Osc::sosc(true);
     conset(RTCCON2, FCY, 0);
     conset(RTCCON2, e);
 }

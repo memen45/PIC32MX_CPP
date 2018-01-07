@@ -69,12 +69,28 @@ struct Spi123  {
     void            tx_irq          (TXIRQ);            //tx irq mode
     void            rx_irq          (RXIRQ);            //rx irq mode
 
-
-
-
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //spixstat
 
+    enum {
+        FRMERR = 1<<12, SPIBUSY = 1<<11, SPITUR = 1<<8, SRMT = 1<<7,
+        SPIROV = 1<<6, SPIRBE = 1<<5, SPITBE = 1<<3,
+        SPITBF = 1<<1, SPIRBF = 1<<0
+    };
+
+    uint8_t         stat_rxcount    ();                 //enhanced rx buf count
+    uint8_t         stat_txcount    ();                 //enhanced tx buf count
+    bool            stat_frame      ();                 //framing error
+    void            stat_frame      (bool);             //framing error clear
+    bool            stat_busy       ();                 //spi busy
+    bool            stat_txurun     ();                 //tx underrun error
+    bool            stat_sremty     ();                 //shift reg empty
+    bool            stat_oflow      ();                 //rx overflow
+    void            stat_oflow      (bool);             //rx overflow clear
+    bool            stat_rxemty     ();                 //rx empty
+    bool            stat_txemty     ();                 //tx empty
+    bool            stat_txfull     ();                 //tx full
+    bool            stat_rxfull     ();                 //rx full
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //spixbuf
@@ -88,6 +104,28 @@ struct Spi123  {
     void            baud            (uint16_t);         //set baud
     void            freq            (uint32_t);         //set frequency
     uint32_t        freq            ();                 //get frequency
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+    //spixcon2
+
+    enum {
+        SPISGNEXT = 1<<15, FRMERREN = 1<<12, SPIROVEN = 1<<11,
+        SPITUREN = 1<<10, IGNROV = 1<<9, IGNTUR = 1<<8,
+        AUDEN = 1<<7, AUDOMONO = 1<<3
+    };
+
+    enum AUDMOD : uint8_t { I2S = 0, LEFT, RIGHT, PCMDSP };
+
+    void            sign_ext        (bool);             //rx sign extend
+    void            irq_frmerr      (bool);             //frame error irq
+    void            irq_oflow       (bool);             //overflow error irq
+    void            irq_urun        (bool);             //underrun err irq
+    void            ign_oflow       (bool);             //ignore overflow
+    void            ign_urun        (bool);             //ignore underrun
+    void            audio           (bool);             //audio mode
+    void            mono            (bool);             //audio mono
+    void            audio_mode      (AUDMOD);           //audio mode
+
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     private:
@@ -105,7 +143,7 @@ struct Spi123  {
     volatile uint32_t& m_spixbrg;                   //use reference
     volatile uint32_t* m_spixcon2;
 
-    uint32_t m_spix_freq;
+    uint32_t m_spix_freq;                           //set to actual spi freq
 };
 
 
@@ -196,6 +234,45 @@ void Spi123::rx_irq(RXIRQ e){
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //spixstat
 
+uint8_t Spi123::stat_rxcount(){
+    return r.val8(m_spixstat+3);
+}
+uint8_t Spi123::stat_txcount(){
+    return r.val8(m_spixstat+2);
+}
+bool Spi123::stat_frame(){
+    return r.anybit(m_spixstat, FRMERR);
+}
+void Spi123::stat_frame(bool tf){ //always clr
+    r.clrbit(m_spixstat, FRMERR);
+}
+bool Spi123::stat_busy(){
+    return r.anybit(m_spixstat, SPIBUSY);
+}
+bool Spi123::stat_txurun(){
+    return r.anybit(m_spixstat, SPITUR);
+}
+bool Spi123::stat_sremty(){
+    return r.anybit(m_spixstat, SRMT);
+}
+bool Spi123::stat_oflow(){
+    return r.anybit(m_spixstat, SPIROV);
+}
+void Spi123::stat_oflow(bool){ //always clear
+    r.clrbit(m_spixstat, SPIROV);
+}
+bool Spi123::stat_rxemty(){
+    return r.anybit(m_spixstat, SPIRBE);
+}
+bool Spi123::stat_txemty(){
+    return r.anybit(m_spixstat, SPITBE);
+}
+bool Spi123::stat_txfull(){
+    return r.anybit(m_spixstat, SPITBF);
+}
+bool Spi123::stat_rxfull(){
+     return r.anybit(m_spixstat, SPIRBF);
+}
 
 
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -213,6 +290,7 @@ uint32_t Spi123::buf(){
 void Spi123::baud(uint16_t v){
     m_spixbrg = v; //m_spibrg&
 }
+//set frequency
 void Spi123::freq(uint32_t v){
     uint32_t clk;
     if(clk_sel() == REFOCLK) clk = osc.refo_freq();
@@ -222,6 +300,7 @@ void Spi123::freq(uint32_t v){
     baud(brg);
     freq();
 }
+//get actual frequency
 //called by clk_sel(), freq(uint32_t)
 uint32_t Spi123::freq(){
     uint32_t clk;
@@ -229,4 +308,47 @@ uint32_t Spi123::freq(){
     else clk = osc.sysclk();
     m_spix_freq = clk / (2 * m_spixbrg + 1); //m_spibrg&
     return m_spix_freq;
+}
+
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//spixcon2
+
+enum AUDMOD : uint8_t { I2S = 0, LEFT, RIGHT, PCMDSP };
+
+void Spi123::sign_ext(bool tf){
+    r.setbit(m_spixcon2, SPISGNEXT, tf);
+}
+void Spi123::irq_frmerr(bool tf){
+    r.setbit(m_spixcon2, FRMERREN, tf);
+}
+void Spi123::irq_oflow(bool tf){
+    r.setbit(m_spixcon2, SPIROVEN, tf);
+}
+void Spi123::irq_urun(bool tf){
+    r.setbit(m_spixcon2, SPITUREN, tf);
+}
+void Spi123::ign_oflow(bool tf){
+    r.setbit(m_spixcon2, IGNROV, tf);
+}
+void Spi123::ign_urun(bool tf){
+    r.setbit(m_spixcon2, IGNTUR, tf);
+}
+void Spi123::audio(bool tf){
+    bool ison = r.anybit(m_spixcon, ON);
+    on(false);
+    r.setbit(m_spixcon2, AUDEN, tf);
+    on(ison);
+}
+void Spi123::mono(bool tf){
+    bool ison = r.anybit(m_spixcon, ON);
+    on(false);
+    r.setbit(m_spixcon2, AUDOMONO, tf);
+    on(ison);
+}
+void Spi123::audio_mode(AUDMOD e){
+    bool ison = r.anybit(m_spixcon, ON);
+    on(false);
+    r.clrbit(m_spixcon2, PCMDSP);
+    r.setbit(m_spixcon2, e);
+    on(ison);
 }
