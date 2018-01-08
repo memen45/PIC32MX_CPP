@@ -48,9 +48,9 @@ struct Resets {
     static Reg r;
     static Syskey sk;
 
-    enum {
+    enum : uint32_t {
         RCON = 0xBF8026E0,
-            PORIO = 1<<31, PORCORE = 1<<30,
+            PORIO = 1u<<31, PORCORE = 1<<30,
             BCFGERR = 1<<27, BCFGFAIL = 1<<26, CMR = 1<<9,
         RSWRST = 0xBF8026F0,
             SWRST = 1,

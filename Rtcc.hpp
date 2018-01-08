@@ -74,7 +74,7 @@ struct Rtcc {
     static void         conset          (uint32_t, uint32_t, bool = 1);
     static void         conval          (uint32_t, uint32_t);
 
-    enum {
+    enum : uint32_t {
         RTCCON1 = 0xBF800000,
         RTCCON2 = 0xBF800010,
         RTCSTAT = 0xBF800030,
@@ -82,7 +82,7 @@ struct Rtcc {
         RTCDATE = 0xBF800050,
         ALMTIME = 0xBF800060,
         ALMDATE = 0xBF800070,
-        ALARMEN = 1<<31, CHIME = 1<<30, ALMRPTCLR = 7<<16,
+        ALARMEN = 1u<<31, CHIME = 1<<30, ALMRPTCLR = 7<<16,
         ON = 1<<15, WRLOCK = 1<<11, PINON = 1<<7,
         ALMSTAT = 1<<5, SYSNCSTAT = 1<<2,
         ALMSYNCSTAT = 1<<1, HALFSTAT = 1<<0,

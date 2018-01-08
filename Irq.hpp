@@ -143,13 +143,13 @@ void Irq::eint0_rising(bool tf){
 //bit offset = 1<<(40%32) = 1<<8
 //bit offset 8 in IFS1
 void Irq::flag_clr(IRQ_VN e){
-    r.clrbit(IFS_BASE + ((e/32)*16), 1<<(e%32));
+    r.clrbit(IFS_BASE + ((e/32)*16), 1u<<(e%32));
 }
 bool Irq::flag(IRQ_VN e){
-    return r.anybit(IFS_BASE + ((e/32)*16), 1<<(e%32));
+    return r.anybit(IFS_BASE + ((e/32)*16), 1u<<(e%32));
 }
 void Irq::on(IRQ_VN e, bool tf){
-    r.setbit(IEC_BASE + ((e/32)*16), 1<<(e%32), tf);
+    r.setbit(IEC_BASE + ((e/32)*16), 1u<<(e%32), tf);
 }
 //vector 17 example
 //priority_shift = 8*(17%4) =  8*1= 8

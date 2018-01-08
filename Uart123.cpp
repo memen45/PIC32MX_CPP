@@ -22,7 +22,7 @@ void Uart123::oflow_stop(bool tf){
     r.setbit(m_uartxmode, OVFDIS, !tf);
 }
 void Uart123::on(bool tf){
-    update_brg();
+    update_brg(); //in case not set
     r.setbit(m_uartxmode, ON, tf);
 }
 void Uart123::stop_idle(bool tf){
@@ -78,5 +78,5 @@ uint32_t Uart123::clk_freq(){
     CLKSEL e = (CLKSEL)((r.val(m_uartxmode)>>17) & CLKSEL_CLR);
     if(e == REFO1) return Osc::refo_freq();
     else if(e == FRC) return Osc::frcclk();
-    return Osc::sysclk();
+    return Osc::sysclk(); //pb/sys are the same
 }
