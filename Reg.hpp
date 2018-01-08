@@ -108,80 +108,80 @@ struct Reg {
 //setbit, specify 1/0
 template <typename T, typename V> void Reg::setbit(T r, V v, bool sc){
     using vtyp = typename getVsiz<V>::typ;
-    *(reinterpret_cast <volatile vtyp*>(r)+(Vsiz<sizeof(V)>::CLR<<sc)) = v;
+    *((volatile vtyp*)r+(Vsiz<sizeof(V)>::CLR<<sc)) = v;
 }
 
 //setbit
 template <typename T, typename V> void Reg::setbit(T r, V v){
     using vtyp = typename getVsiz<V>::typ;
-    *(reinterpret_cast <volatile vtyp*>(r)+Vsiz<sizeof(V)>::SET) = v;
+    *((volatile vtyp*)r+Vsiz<sizeof(V)>::SET) = v;
 }
 
 //clrbit
 template <typename T, typename V> void Reg::clrbit(T r, V v){
     using vtyp = typename getVsiz<V>::typ;
-    *(reinterpret_cast <volatile vtyp*>(r)+Vsiz<sizeof(V)>::CLR) = v;
+    *((volatile vtyp*)r+Vsiz<sizeof(V)>::CLR) = v;
 }
 
 //flipbit
 template <typename T, typename V> void Reg::flipbit(T r, V v){
     using vtyp = typename getVsiz<V>::typ;
-    *(reinterpret_cast <volatile vtyp*>(r)+Vsiz<sizeof(V)>::INV) = v;
+    *((volatile vtyp*)r+Vsiz<sizeof(V)>::INV) = v;
 }
 
 //anybit
 template <typename T, typename V> bool Reg::anybit(T r, V v){
     using vtyp = typename getVsiz<V>::typ;
-    return *(reinterpret_cast <volatile vtyp*>(r)) & v;
+    return *(volatile vtyp*)r & v;
 }
 
 //anybit0
 template <typename T, typename V> bool Reg::anybit0(T r, V v){
     using vtyp = typename getVsiz<V>::typ;
-    return (~*(reinterpret_cast <volatile vtyp*>(r))) & v;
+    return (~ *(volatile vtyp*)r) & v;
 }
 
 //allbit
 template <typename T, typename V> bool Reg::allbit(T r, V v){
     using vtyp = typename getVsiz<V>::typ;
-    return (*(reinterpret_cast <volatile vtyp*>(r)) & v) == v;
+    return *(volatile vtyp*)r & v == v;
 }
 
 //allbit0
 template <typename T, typename V> bool Reg::allbit0(T r, V v){
     using vtyp = typename getVsiz<V>::typ;
-    return (~*(reinterpret_cast <volatile vtyp*>(r)) & v) == v;
+    return (~ *(volatile vtyp*)r) & v == v;
 }
 
 
 //return uint32_t value of register r
 template <typename T> uint32_t Reg::val(T r){
-     return *(reinterpret_cast <volatile uint32_t*>(r));
+     return *(volatile uint32_t*)r;
  }
  //return uint16_t value of register r
  template <typename T> uint16_t Reg::val16(T r){
-     return *(reinterpret_cast <volatile uint16_t*>(r));
+     return *(volatile uint16_t*)r;
  }
  //return uint16_t value of register r
  template <typename T> uint8_t Reg::val8(T r){
-     return *(reinterpret_cast <volatile uint8_t*>(r));
+     return *(volatile uint8_t*)r;
  }
 
 
 //set uint32_t/uint16_t/uint8_t value to register r
 template <typename T, typename V> void Reg::val(T r, V v){
     using vtyp = typename getVsiz<V>::typ;
-    *(reinterpret_cast <volatile vtyp*>(r)) = v;
+    *(volatile vtyp*)r = v;
 }
 
 
 //physical to kseg0/1 addr, kseg to physical addr
 template <typename T> uint32_t Reg::p2kseg1(T r){
-    return (reinterpret_cast <uint32_t>(r)) | 0xA0000000; //A0=0b1010_0000
+    return (uint32_t)r | 0xA0000000; //A0=0b1010_0000
 }
 template <typename T> uint32_t Reg::p2kseg0(T r){
-    return (reinterpret_cast <uint32_t>(r) | 0x80000000); //80=0b1000_0000
+    return (uint32_t)r | 0x80000000; //80=0b1000_0000
 }
 template <typename T> uint32_t Reg::k2phys(T r){
-    return (reinterpret_cast <uint32_t>(r)) & 0x1FFFFFFF; //1F=0b0001_1111
+    return (uint32_t)r & 0x1FFFFFFF; //1F=0b0001_1111
 }
