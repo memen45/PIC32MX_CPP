@@ -32,7 +32,15 @@ SFR - kseg0 0x9F800000-0x9F80FFFF bit<31:29> 0b100<-kseg0 = 0
     uint32_t    p2kseg0 (address)                       -phys addr->kseg0
     uint32_t    k2phys  (address)                       -ksegx addr->phys
 
+
+
+    address arguments are mostly enums, but can also be uint32_t or pointer
+    type, and value arguments are also mostly enums, but can be 8/16/32bit
+    values also, the templates work to get the underlying size of the value,
+    then set the address argument to a volatile pointer of that type, allowing
+    byte/half-word/word access to a register-
 */
+
 
 
 //helper templates- get size in bytes of V type
