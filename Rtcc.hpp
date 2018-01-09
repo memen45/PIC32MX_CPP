@@ -16,29 +16,29 @@ struct Rtcc {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //alarm mask
-    enum AMASK {
-        YEAR = 9<<24, MONTH = 8<<24, WEEK = 7<<24, DAY = 6<<24, HOUR= 5<<24,
-        MINUTE10 = 4<<24, MINUTE1 = 3<<24, SECOND10 = 2<<24,
-        SECOND1 = 1<<24, HALFSEC = 0, AMASKCLR = 15<<24,
+    enum AMASK : uint8_t {
+        HALFSEC = 0, SECOND1, SECOND10, MINUTE1, MINUTE10, HOUR,
+        DAY, WEEK, MONTH, YEAR
     };
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //rtcc pin output select
-    enum OUTSEL { CLKSRC = 2<<4, CLKSEC = 1<<4, ALMEVT = 0<<4, CLRSEL = 7<<4 };
+    enum OUTSEL : uint8_t { ALMEVT, CLKSEC, CLKSRC };
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //clock prescale
-    enum PRESCALE { PRE256 = 3<<4, PRE64 = 2<<4, PRE16 = 1<<4, PRE1 = 0<<4 };
+    enum PS : uint8_t { PRE1 = 0, PRE16, PRE64, PRE256 };
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //clock select
-    enum CLKSEL { FCY = 3, PWRLPIN = 2, LPRC = 1, SOSC = 0 };
+    enum CLKSEL : uint8_t { SOSC = 0, LPRC, PWRLPIN, FCY };
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //clock divide precomputed for 32khz (prescale default 1:1)
-    enum { CLK_DIV_32KHZ = 0x3FFF };
+    enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     static void         alarm           (bool);
     static void         chime           (bool);
     static void         alarm_interval  (AMASK);
@@ -48,7 +48,7 @@ struct Rtcc {
     static void         pin_src         (OUTSEL);
     static void         clk_div         (uint16_t);
     static void         clk_frdiv       (uint8_t);
-    static void         clk_pre         (PRESCALE);
+    static void         clk_pre         (PS);
     static void         clk_sel         (CLKSEL);
     static bool         alarm_evt       ();
     static bool         time_busy       ();
@@ -76,17 +76,27 @@ struct Rtcc {
 
     enum : uint32_t {
         RTCCON1 = 0xBF800000,
+            ALARMEN = 1u<<31,
+            CHIME = 1<<30,
+            AMASK_SHIFT = 24, AMASK_CLR = 15,
+            ALMRPT_SHIFT = 16, ALMRPT_CLR = 255,
+            ON = 1<<15,
+            WRLOCK = 1<<11,
+            PINON = 1<<7,
+            OUTSEL_SHIFT = 4, OUTSEL_CLR = 7,
         RTCCON2 = 0xBF800010,
+            FRDIV_SHIFT = 11, FRDIV_CLR = 31,
+            PS_SHIFT = 4, PS_CLR = 3,
+            CLKSEL_SHIFT = 9, CLKSEL_CLR = 3,
         RTCSTAT = 0xBF800030,
+            ALMSTAT = 1<<5,
+            SYSNCSTAT = 1<<2,
+            ALMSYNCSTAT = 1<<1,
+            HALFSTAT = 1<<0,
         RTCTIME = 0xBF800040,
         RTCDATE = 0xBF800050,
         ALMTIME = 0xBF800060,
         ALMDATE = 0xBF800070,
-        ALARMEN = 1u<<31, CHIME = 1<<30, ALMRPTCLR = 7<<16,
-        ON = 1<<15, WRLOCK = 1<<11, PINON = 1<<7,
-        ALMSTAT = 1<<5, SYSNCSTAT = 1<<2,
-        ALMSYNCSTAT = 1<<1, HALFSTAT = 1<<0,
-        FRDIVSHIFT = 11, FRDIVCLR = 31<<FRDIVSHIFT
     };
 };
 
@@ -101,12 +111,12 @@ void Rtcc::chime(bool tf){
     conset(RTCCON1, CHIME, tf);
 }
 void Rtcc::alarm_interval(AMASK e){
-    conset(RTCCON1, AMASKCLR, 0);
-    conset(RTCCON1, e);
+    conset(RTCCON1, AMASK_CLR<<AMASK_SHIFT, 0);
+    conset(RTCCON1, e<<AMASK_SHIFT, 1);
 }
 void Rtcc::alarm_repeat(uint8_t v){
-    conset(RTCCON1, ALMRPTCLR, 0);
-    conset(RTCCON1, v);
+    conset(RTCCON1, ALMRPT_CLR<<ALMRPT_SHIFT, 0);
+    conset(RTCCON1, v<<ALMRPT_SHIFT, 1);
 }
 void Rtcc::on(bool tf){
     conset(RTCCON1, ON, tf);
@@ -115,8 +125,8 @@ void Rtcc::out(bool tf){
     conset(RTCCON1, PINON, tf);
 }
 void Rtcc::pin_src(OUTSEL v){
-    conset(RTCCON1, CLRSEL, 0);
-    conset(RTCCON1, v, 0);
+    conset(RTCCON1, OUTSEL_CLR<<OUTSEL_SHIFT, 0);
+    conset(RTCCON1, v<<OUTSEL_SHIFT, 1);
 }
 void Rtcc::clk_div(uint16_t v){
     unlock();
@@ -124,17 +134,17 @@ void Rtcc::clk_div(uint16_t v){
     lock();
 }
 void Rtcc::clk_frdiv(uint8_t v){
-    conset(RTCCON2, FRDIVCLR, 0);
-    conset(RTCCON2, (v&FRDIVCLR)<<FRDIVSHIFT);
+    conset(RTCCON2, FRDIV_CLR<<FRDIV_SHIFT, 0);
+    conset(RTCCON2, (v & FRDIV_CLR)<<FRDIV_SHIFT, 1);
 }
-void Rtcc::clk_pre(PRESCALE e){
-    conset(RTCCON2, PRE256, 0);
-    conset(RTCCON2, e);
+void Rtcc::clk_pre(PS e){
+    conset(RTCCON2, PS_CLR<<PS_SHIFT, 0);
+    conset(RTCCON2, e<<PS_SHIFT, 1);
 }
 void Rtcc::clk_sel(CLKSEL e){
     if(e == SOSC) Osc::sosc(true);
-    conset(RTCCON2, FCY, 0);
-    conset(RTCCON2, e);
+    conset(RTCCON2, CLKSEL_CLR<<CLKSEL_SHIFT, 0);
+    conset(RTCCON2, e<<CLKSEL_SHIFT, 1);
 }
 bool Rtcc::alarm_evt(){
     return r.anybit(RTCSTAT, ALMSTAT);

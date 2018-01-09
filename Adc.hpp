@@ -11,29 +11,30 @@ struct Adc {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //adc data format
-    enum FORM {
-        INT16 = 0<<8, SINT16 = 1<<8, FR16 = 2<<8, SFR16 = 3<<8,
-        INT32 = 4<<8, SINT32 = 5<<8, FR32 = 6<<8, SFR32 = 7<<8
+    enum FORM : uint8_t {
+        INT16 = 0, SINT16, FR16, SFR16, INT32, SINT32, FR32, SFR32
     };
+
     //trigger source select
-    enum SSRC {
-        SOFT = 0<<4, INT0 = 1<<4,
-        TMR3 = 2<<4, TMR1 = 5<<4, TMR1SLEP = 6<<4,
-        AUTO = 7<<4,
-        MCCP1 = 8<<4, MCCP2 = 9<<4, MCCP3 = 10<<4,
-        SCCP4 = 11<<4, SCCP5 = 12<<4, SCCP6 = 13<<4,
-        CLC1 = 14<<4, CLC2 = 15<<4
+    enum SSRC : uint8_t {
+        SOFT = 0, INT0, TMR3, TMR1 = 5, TMR1SLEP, AUTO, MCCP1, MCCP2, MCCP3,
+        SCCP4, SCCP5, SCCP6, CLC1, CLC2
     };
+
     //vref config
-    enum VCFG {
-        EXTP_EXTN = 3<<13, EXTP_VSS = 2<<13, VDD_EXTN = 1<<13, VDD_VSS = 0<<13
+    enum VCFG :uint8_t {
+        VDD_VSS = 0, VDD_EXTN, EXTP_VSS, EXTP_EXTN
     };
+
     //auto-scan interrupt mode
-    enum ASINT { NONE = 0<<8, DET = 1<<8, COMP = 2<<8, DETCOMP = 3<<8 };
+    enum ASINT : uint8_t { NONE = 0, DET, COMP, DETCOMP };
+
     //write mode
-    enum WM { LEGACY = 0<<2, CONVSAV = 1<<2, COMPONLY = 2<<2 };
+    enum WM : uint8_t { LEGACY = 0, CONVSAV, COMPONLY };
+
     //compare mode
-    enum CM { LT = 0, GT = 1, INWIN = 2, OUTWIN = 3 };
+    enum CM :uint8_t { LT = 0, GT, INWIN, OUTWIN };
+
     //channel select
     enum CH0SA : uint8_t {
         AN0 = 0, AN1, AN2, AN3, AN4, AN5, AN6, AN7, AN8, AN9, AN10, AN11,
@@ -41,10 +42,12 @@ struct Adc {
         VDD = 27, VBG, AVSS, AVDD,
         END = 255
     };
+
     //minimal conversion times for frc/pbclk(24MHz) for 10/12bits
     enum CONVTIME { FRC10BIT = 1, FRC12BIT, PBCLK10BIT, PBCLK12BIT };
+
     //clock source
-    enum CLK { PBCLK = 0, FRC = 1 };
+    enum CLK { PBCLK = 0, FRC };
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //ADC1BUFn
@@ -117,17 +120,35 @@ struct Adc {
     enum {
         ADC1BUF0 = 0xBF802100, ADC1BUF_SPACING = 0x10, ADC1BUF_LAST = 21,
         ADC1CON1 = 0xBF802260,
-            ON = 1<<15, SIDL = 1<<13,
-            MODE12 = 1<<3, ASAM = 1<<2, SAMP = 1<<1, DONE = 1<<0,
+            ON = 1<<15,
+            SIDL = 1<<13,
+            FORM_SHIFT = 8, FORM_CLR = 7,
+            SSRC_SHIFT = 4, SSRC_CLR = 15,
+            MODE12 = 1<<3,
+            ASAM = 1<<2,
+            SAMP = 1<<1,
+            DONE = 1<<0,
         ADC1CON2 = 0xBF802270,
-            OFFCAL = 1<<12, BUFREGEN = 1<<11, CSCNA = 1<<10, BUFS = 1<<7,
-            SMPISHIFT = 2, SMPICLR = 7<<2, BUFM = 1<<0, VCFGCLR = 7<<13,
+            VCFG_SHIFT = 13, VCFG_CLR = 7,
+            OFFCAL = 1<<12,
+            BUFREGEN = 1<<11,
+            CSCNA = 1<<10,
+            BUFS = 1<<7,
+            SMPI_SHIFT = 2, SMPI_CLR = 7,
+            BUFM = 1<<1,
         ADC1CON3 = 0xBF802280,
-            ADRC = 1<<15, EXTSAM = 1<<14, SAMCSHIFT = 8, SAMCCLR = 31<<8,
+            ADRC = 1<<15,
+            EXTSAM = 1<<14,
+            SAMC_SHIFT = 8, SAMC_CLR = 31,
         ADC1CHS = 0xBF802290,
         ADC1CSS = 0xBF8022A0,
         ADC1CON5 = 0xBF8022C0,
-            ASEN = 1<<15, LPEN = 1<<14, BGREQ = 1<<12, WMCLR = 3<<2,
+            ASEN = 1<<15,
+            LPEN = 1<<14,
+            BGREQ = 1<<12,
+            ASINT_SHIFT = 8, ASINT_CLR = 3,
+            WM_SHIFT = 2, WM_CLR = 3,
+            CM_SHIFT = 0, CM_CLR = 3,
         ADC1CHIT = 0xBF8022D0
     };
 };
@@ -150,12 +171,12 @@ void Adc::stop_idle(bool tf){
     r.setbit(ADC1CON1, SIDL, tf);
 }
 void Adc::format(FORM e){
-    r.clrbit(ADC1CON1, SFR32);
-    r.setbit(ADC1CON1, e);
+    r.clrbit(ADC1CON1, FORM_CLR<<FORM_SHIFT);
+    r.setbit(ADC1CON1, e<<FORM_SHIFT);
 }
 void Adc::trig_sel(SSRC e){
-    r.clrbit(ADC1CON1, CLC2);
-    r.setbit(ADC1CON1, e);
+    r.clrbit(ADC1CON1, SSRC_CLR<<SSRC_SHIFT);
+    r.setbit(ADC1CON1, e<<SSRC_SHIFT);
 }
 void Adc::mode_12bit(bool tf){
     r.setbit(ADC1CON1, MODE12, tf);
@@ -174,8 +195,8 @@ bool Adc::done(){
 }
 //ADC1CON2
 void Adc::vref_cfg(VCFG e){
-    r.clrbit(ADC1CON2, VCFGCLR);
-    r.setbit(ADC1CON2, e);
+    r.clrbit(ADC1CON2, VCFG_CLR<<VCFG_SHIFT);
+    r.setbit(ADC1CON2, e<<VCFG_SHIFT);
 }
 void Adc::offset_cal(bool tf){
     r.setbit(ADC1CON2, OFFCAL, tf);
@@ -191,8 +212,8 @@ bool Adc::buf2nd_busy(){
 }
 void Adc::samp_nirq(uint8_t n){
     n -= 1; n &= 15; //n = 1-16 ->0-15
-    r.clrbit(ADC1CON2, SMPICLR);
-    r.setbit(ADC1CON2, n<<SMPISHIFT);
+    r.clrbit(ADC1CON2, SMPI_CLR<<SMPI_SHIFT);
+    r.setbit(ADC1CON2, n<<SMPI_SHIFT);
 }
 void Adc::buf_split(bool tf){
     r.setbit(ADC1CON2, BUFM, tf);
@@ -206,8 +227,8 @@ void Adc::samp_extend(bool tf){
 }
 void Adc::samp_time(uint8_t t){
     t &= 31; t = t == 0 ? 1 : t; //0 not allowed (1-31)
-    r.clrbit(ADC1CON3, SAMCCLR);
-    r.setbit(ADC1CON3, t<<SAMCSHIFT);
+    r.clrbit(ADC1CON3, SAMC_CLR<<SAMC_SHIFT);
+    r.setbit(ADC1CON3, t<<SAMC_SHIFT);
 }
 //default value is for 24MHz, 4 will meet 280ns Tad for any clock
 void Adc::conv_time(uint8_t t){
@@ -224,16 +245,16 @@ void Adc::bandgap(bool tf){
     r.setbit(ADC1CON5, BGREQ, tf);
 }
 void Adc::scan_autoirq(ASINT e){
-    r.clrbit(ADC1CON5, DETCOMP);
-    r.setbit(ADC1CON5, e);
+    r.clrbit(ADC1CON5, ASINT_CLR<<ASINT_SHIFT);
+    r.setbit(ADC1CON5, e<<ASINT_SHIFT);
 }
 void Adc::write_mode(WM e){
-    r.clrbit(ADC1CON5, WMCLR);
-    r.setbit(ADC1CON5, e);
+    r.clrbit(ADC1CON5, WM_CLR<<WM_SHIFT);
+    r.setbit(ADC1CON5, e<<WM_SHIFT);
 }
 void Adc::compare_mode(CM e){
-    r.clrbit(ADC1CON5, OUTWIN);
-    r.setbit(ADC1CON5, e);
+    r.clrbit(ADC1CON5, CM_CLR<<CM_SHIFT);
+    r.setbit(ADC1CON5, e<<CM_SHIFT);
 }
 //ADC1CHS
 void Adc::ch_sel(CH0SA e){

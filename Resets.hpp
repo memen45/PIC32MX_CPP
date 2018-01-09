@@ -50,14 +50,23 @@ struct Resets {
 
     enum : uint32_t {
         RCON = 0xBF8026E0,
-            PORIO = 1u<<31, PORCORE = 1<<30,
-            BCFGERR = 1<<27, BCFGFAIL = 1<<26, CMR = 1<<9,
+            PORIO = 1u<<31,
+            PORCORE = 1<<30,
+            BCFGERR = 1<<27,
+            BCFGFAIL = 1<<26,
+            CMR = 1<<9,
         RSWRST = 0xBF8026F0,
             SWRST = 1,
         RNMICON = 0xBF802700,
-            WDTR = 1<<24, SWNMI = 1<<23, GNMI = 1<<19, CF = 1<<17, WDTS = 1<<16,
+            WDTR = 1<<24,
+            SWNMI = 1<<23,
+            GNMI = 1<<19,
+            CF = 1<<17,
+            WDTS = 1<<16,
         PWRCON = 0xBF802710,
-            SBOREN = 1<<2, RETEN = 1<<0, VREGS = 1<<0
+            SBOREN = 1<<2,
+            RETEN = 1<<0,
+            VREGS = 1<<0
     };
 };
 
@@ -97,7 +106,9 @@ bool Resets::config_err(){
 void Resets::swreset(){
     Irq::disable_all();
     sk.unlock();
-    for(;; r.setbit(RSWRST, SWRST), r.val(RSWRST));
+    r.setbit(RSWRST, SWRST);
+    r.val(RSWRST);
+    for(;;);
 }
 //RNMICON
 bool Resets::nmi_wdt(){
@@ -129,11 +140,11 @@ void Resets::bor(bool tf){
 }
 void Resets::reten(bool tf){
     sk.unlock();
-    r.setbit(PWRCON,RETEN, tf);
+    r.setbit(PWRCON, RETEN, tf);
     sk.lock();
 }
 void Resets::vregs(bool tf){
     sk.unlock();
-    r.setbit(PWRCON,VREGS, tf);
+    r.setbit(PWRCON, VREGS, tf);
     sk.lock();
 }

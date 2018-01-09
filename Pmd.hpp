@@ -43,7 +43,11 @@ struct Pmd {
     static void     unlock  ();
     static void     lock    ();
 
-    enum { PMDCON = 0xBF8035B0, PMD1_ADDR = 0xBF8035C0, PMDLOCK = 1<<11 };
+    enum {
+        PMDCON = 0xBF8035B0,
+            PMDLOCK = 1<<11,
+        PMD1 = 0xBF8035C0
+    };
 
 };
 
@@ -61,23 +65,23 @@ void Pmd::lock(){
 }
 void Pmd::off(PMD e){
     unlock();
-    r.setbit(PMD1_ADDR + 16*(e/32), (1<<(e%32)));
+    r.setbit(PMD1 + 16*(e/32), (1<<(e%32)));
     lock();
 }
 void Pmd::on(PMD e){
     unlock();
-    r.clrbit(PMD1_ADDR + 16*(e/32), (1<<(e%32)));
+    r.clrbit(PMD1 + 16*(e/32), (1<<(e%32)));
     lock();
 }
 //array of modules to disable/enable, END is end of array
 void Pmd::off(PMD* e){
     unlock();
-    for(; *e != END; e++) r.setbit(PMD1_ADDR + 16*(*e/32), (1<<(*e%32)));
+    for(; *e != END; e++) r.setbit(PMD1 + 16*(*e/32), (1<<(*e%32)));
     lock();
 }
 void Pmd::on(PMD* e){
     unlock();
-    for(; *e != END; e++) r.clrbit(PMD1_ADDR + 16*(*e/32), (1<<(*e%32)));
+    for(; *e != END; e++) r.clrbit(PMD1 + 16*(*e/32), (1<<(*e%32)));
     lock();
 }
 

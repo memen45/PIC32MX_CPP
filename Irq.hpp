@@ -11,6 +11,7 @@
 struct Irq {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     //irq vector numbers
     enum IRQ_VN : uint8_t {
         CORE_TIMER = 0, CORE_SOFTWARE_0, CORE_SOFTWARE_1,
@@ -90,14 +91,17 @@ struct Irq {
 
     enum {
         INTCON = 0xBF80F000,
+            TPC_SHIFT = 8, TPC_CLR = 7,
+            INT4EP = 1<<4,
+            INT3EP = 1<<3,
+            INT2EP = 1<<2,
+            INT1EP = 1<<1,
+            INT0EP = 1<<0,
         PRISS = 0xBF80F010,
         INTSTAT = 0xBF80F020,
         IFS_BASE = 0xBF80F040,
         IEC_BASE = 0xBF80F0C0,
-        IPC_BASE = 0xBF80F140,
-        INT0EP = 1<<0, INT1EP = 1<<1, INT2EP = 1<<2,
-        INT3EP = 1<<3, INT4EP = 1<<4,
-        TPCMASK = 7, TPCSHIFT = 8,
+        IPC_BASE = 0xBF80F140
     };
 };
 
@@ -115,8 +119,8 @@ bool Irq::all_ison(){
     return (__builtin_mfc0(12,0) & 1);
 }
 void Irq::proxtimer(uint8_t n){ //n = priority 0-7
-    r.clrbit(INTCON, TPCMASK<<TPCSHIFT);
-    r.setbit(INTCON, (n&TPCMASK)<<TPCSHIFT);
+    r.clrbit(INTCON, TPC_CLR<<TPC_SHIFT);
+    r.setbit(INTCON, (n & TPC_CLR)<<TPC_SHIFT);
 }
 void Irq::eint4_rising(bool tf){
     r.setbit(INTCON, INT4EP, tf);

@@ -12,11 +12,13 @@ struct Timer1 {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //clock prescale values
-    enum PRESCALE { PS256 = 3<<4, PS64 = 2<<4, PS8 = 1<<4, PS1 = 0<<4 };
+    enum TCKPS : uint8_t { PS1 = 0, PS8, PS64, PS256 };
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //clock source - also sets TCS unless pbclk
-    enum CLK { EXT_SOSC = 2, EXT_T1CK = 258, EXT_LPRC = 514, INT_PBCLK = 0 };
+    enum CLK : uint16_t {
+        SOSC = 0x0002, T1CK = 0x0102, LPRC = 0x0202, PBCLK = 0x0000
+    };
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     static void         timer           (uint16_t);
@@ -29,24 +31,31 @@ struct Timer1 {
     static bool         wr_busy         ();
     static void         clk_src         (CLK);
     static void         tgate           (bool);
-    static void         prescale        (PRESCALE);
+    static void         prescale        (TCKPS);
     static void         tsync           (bool);
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-    private:
 
-    static Reg r;
-
-    public:
-
+    //public so Osc:: can have it to backup when
+    //it calculates ext clock freq
     enum { T1CON = 0xBF808000 };
 
     private:
 
+    static Reg r;
+
     enum {
-        TMR1 = 0xBF808010, PR1 = 0xBF808020,
-        ON = 1<<15, SIDL = 1<<13, TWDIS = 1<<12, TWIP = 1<<11,
-        TGATE = 1<<7, TSYNC = 1<<2, CLK_CLR = (3<<8)|(1<<1)
+        //T1CON
+            ON = 1<<15,
+            SIDL = 1<<13,
+            TWDIS = 1<<12,
+            TWIP = 1<<11,
+            TGATE = 1<<7,
+            TCKPS_SHIFT = 4, TCKPS_CLR = 3,
+            TSYNC = 1<<2,
+            CLK_CLR = (3<<8)|(1<<1),
+        TMR1 = 0xBF808010,
+        PR1 = 0xBF808020
     };
 
 };
@@ -79,16 +88,16 @@ bool Timer1::wr_busy(){
     return r.anybit(T1CON, TWIP);
 }
 void Timer1::clk_src(CLK e){
-    if(e == EXT_SOSC) Osc::sosc(true);
+    if(e == SOSC) Osc::sosc(true);
     r.clrbit(T1CON, CLK_CLR);
     r.setbit(T1CON, e);
 }
 void Timer1::tgate(bool tf){
     r.setbit(T1CON, TGATE, tf);
 }
-void Timer1::prescale(PRESCALE e){
-    r.clrbit(T1CON, PS256);
-    r.setbit(T1CON, e);
+void Timer1::prescale(TCKPS e){
+    r.clrbit(T1CON, TCKPS_CLR<<TCKPS_SHIFT);
+    r.setbit(T1CON, e<<TCKPS_SHIFT);
 }
 void Timer1::tsync(bool tf){
     r.setbit(T1CON, TSYNC, tf);

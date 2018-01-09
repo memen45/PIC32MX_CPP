@@ -144,15 +144,18 @@ class Pins {
     static Syskey sk;
 
     enum { //offsets from base address, in words
-        TRIS = 16>>2, PORT_ = 32>>2, LAT = 48>>2, ODC = 64>>2,
-        CNPU = 80>>2, CNPD = 96>>2, CNCON = 112>>2, CNEN0 = 128>>2,
-        CNSTAT = 144>>2, CNEN1 = 160>>2, CNF = 176>>2
+        TRIS = 0x10>>2, PORT_ = 0x20>>2, LAT = 0x30>>2, ODC = 0x40>>2,
+        CNPU = 0x50>>2, CNPD = 0x60>>2, CNCON = 0x70>>2, CNEN0 = 0x80>>2,
+        CNSTAT = 0x90>>2, CNEN1 = 0xA0>>2, CNF = 0xB0>>2
     };
 
     enum {
         ANSELA = 0xBF802BB0, ANSELX_SPACING = 64, //spacing in words
-        ON = 1<<15, CNSTYLE = 1<<11,
-        RPCON = 0xBF802A00, IOLOCK = 1<<11,
+        //CNCONx
+            ON = 1<<15,
+            CNSTYLE = 1<<11,
+        RPCON = 0xBF802A00,
+            IOLOCK = 1<<11,
         RPINR1 = 0xBF802A10,
         RPOR0 = 0xBF802B10,
         RPN_MASK = 7, RN_SHIFT = 8, PINMAX = 16

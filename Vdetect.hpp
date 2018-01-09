@@ -32,9 +32,13 @@ struct Vdetect {
     static Reg r;
 
     enum {
-        HLVDCON = 0xBF802920, HLVDCONCLR = 0xBF802924, HLVDCONSET = 0xBF802928,
-        ON = 1<<15, SIDL = 1<<13, VDIR = 1<<11,
-        BGVST = 1<<10, IRVST = 1<<9, HLEVT = 1<<8
+        HLVDCON = 0xBF802920,
+            ON = 1<<15,
+            SIDL = 1<<13,
+            VDIR = 1<<11,
+            BGVST = 1<<10,
+            IRVST = 1<<9,
+            HLEVT = 1<<8
     };
 };
 
@@ -61,6 +65,6 @@ bool Vdetect::tripped(){
     return r.anybit(HLVDCON, HLEVT);
 }
 void Vdetect::limit(HLVDL e){
-    r.clr(HLVDCON, VEXT);
+    r.clrbit(HLVDCON, VEXT);
     r.setbit(HLVDCON, e);
 }

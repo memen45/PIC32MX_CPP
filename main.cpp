@@ -173,8 +173,8 @@ int main(){
 
     //__________________________________________________________________________
     //try some compare functions (does nothing)
-    Comp123 c1(Comp123::C1);
-    Comp123 c2(Comp123::C2);
+    Comp123 c1(Comp123::CMP1);
+    Comp123 c2(Comp123::CMP2);
     c1.on(false);
     c2.on(false);
     Comp123::stop_idle(true); //<--use Comp123:: for common function

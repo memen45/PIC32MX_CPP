@@ -73,7 +73,7 @@ struct Osc {
     //refo1con, refo1trim
 
     enum ROSEL : uint8_t {
-        RSYSCLK = 0, RPOSC = 2, RFRC = 3, RLPRC = 4, RSOSC = 5, RPLLVCO = 7
+        RSYSCLK = 0, RPOSC = 2, RFRC, RLPRC, RSOSC, RPLLVCO = 7
     };
 
     static void         refo_div    (uint16_t); //divisor value
@@ -151,19 +151,29 @@ struct Osc {
 
     enum {
         OSCCON = 0xBF802680,
-            CLKLOCK = 1<<7, SLPEN = 1<<4, CF = 1<<3,
-            SOSCEN = 1<<1, OSWEN = 1<<0,
+            CLKLOCK = 1<<7,
+            SLPEN = 1<<4,
+            CF = 1<<3,
+            SOSCEN = 1<<1,
+            OSWEN = 1<<0,
         SPLLCON = 0xBF8026A0,
             PLLICLK = 1<<7,
         REFO1CON = 0xBF802720,
-            ON = 1<<15, SIDL = 1<<13, OE = 1<<12, RSLP = 1<<11,
-            DIVSWEN = 1<<9, ACTIVE = 1<<8,
+            ON = 1<<15,
+            SIDL = 1<<13,
+            OE = 1<<12,
+            RSLP = 1<<11,
+            DIVSWEN = 1<<9,
+            ACTIVE = 1<<8,
         REFO1TRIM = 0xBF802730,
         CLKSTAT = 0xBF802770,
         OSCTUN = 0xBF802880,
             /* ON = 1<<15, SIDL = 1<<13, from refo1con*/
-            SRC = 1<<12, LOCK = 1<<11, POL = 1<<10,
-            ORNG = 1<<9, ORPOL = 1<<8,
+            SRC = 1<<12,
+            LOCK = 1<<11,
+            POL = 1<<10,
+            ORNG = 1<<9,
+            ORPOL = 1<<8,
         DMACON = 0xBF808900, //need until dma class written
             DMASUSP = 1<<12
     };
@@ -474,8 +484,8 @@ uint32_t Osc::extclk(){
     t1.prescale(t1.PS1);
     t1.timer(0);
     //if sosc enabled, assume it is there
-    if(r.anybit(OSCCON, SOSCEN)) t1.clk_src(t1.EXT_SOSC);
-    else t1.clk_src(t1.EXT_LPRC);
+    if(r.anybit(OSCCON, SOSCEN)) t1.clk_src(t1.SOSC);
+    else t1.clk_src(t1.LPRC);
    //start timer1, get cp0 count
     t1.on(true);
     uint32_t c = cp0.count();

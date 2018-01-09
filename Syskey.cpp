@@ -12,7 +12,7 @@ void Syskey::lock(){
     ir.disable_all();
     //unlock_count only accessed with irq off
     if(unlock_count) unlock_count--;                //dec counter
-    if(unlock_count == 0) r.val(SYSKEY_ADDR, 0);    //if 0, lock
+    if(unlock_count == 0) r.val(SYSKEY, 0);         //if 0, lock
     //
     if(irqstate) ir.enable_all();                   //restore IE state
 }
@@ -24,8 +24,8 @@ void Syskey::unlock(){
     r.setbit(DMACON, DMASUSP);                      //DMA suspend
     //
     if(unlock_count == 0){                          //first time, unlock
-        r.val(SYSKEY_ADDR, MAGIC1);
-        r.val(SYSKEY_ADDR, MAGIC2);
+        r.val(SYSKEY, MAGIC1);
+        r.val(SYSKEY, MAGIC2);
     }
     unlock_count++;                                 //inc unlock_count
     //

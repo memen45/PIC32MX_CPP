@@ -10,6 +10,7 @@
 struct Cvref {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     //vref select
     enum REFSEL { NONE = 0, CVREF, AVDD };
 
@@ -25,7 +26,12 @@ struct Cvref {
 
     static Reg r;
 
-    enum { DAC1CON = 0xBF802380, ON = 1<<15, DACOE = 1<<8, REFSELCLR = 3 };
+    enum {
+        DAC1CON = 0xBF802380,
+            ON = 1<<15,
+            DACOE = 1<<8,
+            REFSEL_SHIFT = 0, REFSEL_CLR = 3
+    };
 
 };
 
@@ -40,8 +46,8 @@ void Cvref::out(bool tf){
     r.setbit(DAC1CON, DACOE, tf);
 }
 void Cvref::refsel(REFSEL e){
-    r.clr(DAC1CON, REFSELCLR);
-    r.setbit(DAC1CON, e & REFSELCLR);
+    r.clrbit(DAC1CON, REFSEL_CLR<<REFSEL_SHIFT);
+    r.setbit(DAC1CON, e<<REFSEL_SHIFT);
 }
 //dac level 0-31
 //(only DACDAT in upper 16bits, so can just write dat) which

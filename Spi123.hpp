@@ -22,63 +22,44 @@ struct Spi123  {
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //spixcon
 
-    enum {
-        FRMEN = 1<<31,
-        FRMSYNC = 1<<30,        FSLAVE = 1,     FMASTER = 0,
-        FRMPOL = 1<<29,         POLH = 1,       POLL = 0,
-        MSSEN = 1<<28,
-        FRMSYPW = 1<<27,        PWCHAR = 1,     PWCLK = 0,
-        FRMCNT_SHIFT = 24, FRMCNT_CLR = 7,
-        MCLKSEL = 1<<23,        REFOCLK = 1,    PBCLK = 0,
-        SPIFE = 1<<17,          ATBCLK = 1,     B4BCLK = 0,
-        ENHBUF = 1<<16,
-        ON = 1<<15,
-        MODE_SHIFT = 10, MODE_CLR = 3,
-        SMP = 1<<9,             SMPEND = 1,     SMPMID = 0,
-        CKE = 1<<8,             CKETRAIL = 1,   CKELEAD = 0,
-        SSEN = 1<<7,
-        CKP = 1<<6,             CKPHL = 1,      CKPLH = 0,
-        MSTEN = 1<<5,
-        STXISEL_SHIFT = 2, STXISEL_CLR = 3,
-        SRXISEL_SHIFT = 0, SRXISEL_CLR = 3
-    };
-
-    enum FRMCNT { CNT1 = 0, CNT2, CNT4, CNT8, CNT16, CNT32 };
-    enum MODE {
+    enum FRMDIR : bool { MASTER = 0, SLAVE };
+    enum FRMHL : bool { LOW = 0, HIGH };
+    enum FRMPW : bool { CLKW = 0, CHARW };
+    enum FRMCNT : uint8_t { CNT1 = 0, CNT2, CNT4, CNT8, CNT16, CNT32 };
+    enum CLKSEL : bool { PBCLK = 0, REFO1 };
+    enum FRMEDGE : bool { B4BCLK = 0, ATBCLK };
+    enum PHASE: bool { SMPMID = 0,SMPEND };
+    enum CLKEDGE : bool { LEAD = 0, TRAIL };
+    enum CLKPOL : bool { CLKH = 0, CLKL };
+    enum MODE : uint8_t {
         MODE8 = 0, MODE16, MODE32,
-        MODE1616 = 0, MODE1632, MODE3232, MODE2432
+        AMODE1616 = 0, AMODE1632, AMODE3232, AMODE2432
     };
-    enum TXIRQ { TDONE = 0, TEMPTY, THALF, TNOTFULL };
-    enum RXIRQ { REMPTY = 0, RANY, RHALF, RFULL };
+    enum TXIRQ : uint8_t { TDONE = 0, TEMPTY, THALF, TNOTFULL };
+    enum RXIRQ : uint8_t { REMPTY = 0, RANY, RHALF, RFULL };
 
     void            frame           (bool);             //framed support
-    void            frame_dir       (bool);             //frame sync pulse dir
-    void            frame_pol       (bool);             //frame sync polarity
+    void            frame_dir       (FRMDIR);           //frame sync pulse dir
+    void            frame_pol       (FRMHL);            //frame sync polarity
     void            slave_sel       (bool);             //slave select enable
-    void            frame_pwidth    (bool);             //1=1char, 0=1clk
+    void            frame_pwidth    (FRMPW);            //1=1char, 0=1clk
     void            frame_count     (FRMCNT);           //frame sync counter
-    void            clk_sel         (bool);             //set clock source
-    bool            clk_sel         ();                 //get clock source
-    void            frame_edge      (bool);             //frame sunc edge sel
+    void            clk_sel         (CLKSEL);           //set clock source
+    CLKSEL          clk_sel         ();                 //get clock source
+    void            frame_edge      (FRMEDGE);          //frame sync edge sel
     void            enhanced        (bool);             //enhanced buffer mode
     void            on              (bool);             //spi on/off
     void            mode            (MODE);             //set spi mode
-    void            phase           (bool);             //sample phase bit
-    void            clk_edge        (bool);             //clk edge sel
+    void            phase           (PHASE);            //sample phase bit
+    void            clk_edge        (CLKEDGE);          //clk edge sel
     void            ss              (bool);             //slave select enable
-    void            clk_pol         (bool);             //clock polarity
+    void            clk_pol         (CLKPOL);           //clock polarity
     void            master          (bool);             //master mode
     void            tx_irq          (TXIRQ);            //tx irq mode
     void            rx_irq          (RXIRQ);            //rx irq mode
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //spixstat
-
-    enum {
-        FRMERR = 1<<12, SPIBUSY = 1<<11, SPITUR = 1<<8, SRMT = 1<<7,
-        SPIROV = 1<<6, SPIRBE = 1<<5, SPITBE = 1<<3,
-        SPITBF = 1<<1, SPIRBF = 1<<0
-    };
 
     uint8_t         stat_rxcount    ();                 //enhanced rx buf count
     uint8_t         stat_txcount    ();                 //enhanced tx buf count
@@ -110,12 +91,6 @@ struct Spi123  {
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //spixcon2
 
-    enum {
-        SPISGNEXT = 1<<15, FRMERREN = 1<<12, SPIROVEN = 1<<11,
-        SPITUREN = 1<<10, IGNROV = 1<<9, IGNTUR = 1<<8,
-        AUDEN = 1<<7, AUDOMONO = 1<<3
-    };
-
     enum AUDMOD : uint8_t { I2S = 0, LEFT, RIGHT, PCMDSP };
 
     void            sign_ext        (bool);             //rx sign extend
@@ -134,9 +109,47 @@ struct Spi123  {
 
     Reg r;
 
-    enum {
+    enum :uint32_t {
         SPI1CON = 0xBF808100, SPIX_SPACING = 0x40, //spacing in words
+            FRMEN = 1u<<31,
+            FRMSYNC = 1<<30,
+            FRMPOL = 1<<29,
+            MSSEN = 1<<28,
+            FRMSYPW = 1<<27,
+            FRMCNT_SHIFT = 24, FRMCNT_CLR = 7,
+            MCLKSEL = 1<<23,
+            SPIFE = 1<<17,
+            ENHBUF = 1<<16,
+            ON = 1<<15,
+            MODE_SHIFT = 10, MODE_CLR = 3,
+            SMP = 1<<9,
+            CKE = 1<<8,
+            SSEN = 1<<7,
+            CKP = 1<<6,
+            MSTEN = 1<<5,
+            STXISEL_SHIFT = 2, STXISEL_CLR = 3,
+            SRXISEL_SHIFT = 0, SRXISEL_CLR = 3,
+        //SPIxSTAT
+            FRMERR = 1<<12,
+            SPIBUSY = 1<<11,
+            SPITUR = 1<<8,
+            SRMT = 1<<7,
+            SPIROV = 1<<6,
+            SPIRBE = 1<<5,
+            SPITBE = 1<<3,
+            SPITBF = 1<<1,
+            SPIRBF = 1<<0,
+        //SPIxCON2
+            SPISGNEXT = 1<<15,
+            FRMERREN = 1<<12,
+            SPIROVEN = 1<<11,
+            SPITUREN = 1<<10,
+            IGNROV = 1<<9,
+            IGNTUR = 1<<8,
+            AUDEN = 1<<7,
+            AUDOMONO = 1<<3
     };
+
 
     volatile uint32_t* m_spixcon;
     volatile uint32_t* m_spixstat;
