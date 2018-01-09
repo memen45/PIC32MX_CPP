@@ -45,29 +45,29 @@ SFR - kseg0 0x9F800000-0x9F80FFFF bit<31:29> 0b100<-kseg0 = 0
 
 //helper templates- get size in bytes of V type
 //also provide atomic register offsets
-template<uint32_t> struct Vsiz {
-    using typ = void;
+template<int> struct Vsiz {
+    using type = void;
 };
 template <> struct Vsiz<1> {
-    using typ = uint8_t;
+    using type = uint8_t;
     static const uint8_t CLR = 4;
     static const uint8_t SET = 8;
     static const uint8_t INV = 12;
 };
 template <> struct Vsiz<2> {
-    using typ = uint16_t;
+    using type = uint16_t;
     static const uint8_t CLR = 2;
     static const uint8_t SET = 4;
     static const uint8_t INV = 6;
 };
 template <> struct Vsiz<4> {
-    using typ = uint32_t;
+    using type = uint32_t;
     static const uint8_t CLR = 1;
     static const uint8_t SET = 2;
     static const uint8_t INV = 3;
 };
 template<typename T> struct getVsiz {
-    using typ = typename Vsiz<sizeof(T)>::typ;
+    using type = typename Vsiz<sizeof(T)>::type;
 };
 
 
@@ -115,50 +115,50 @@ struct Reg {
 =============================================================================*/
 //setbit, specify 1/0
 template <typename T, typename V> void Reg::setbit(T r, V v, bool sc){
-    using vtyp = typename getVsiz<V>::typ;
-    *((volatile vtyp*)r+(Vsiz<sizeof(V)>::CLR<<sc)) = v;
+    using vtype = typename getVsiz<V>::type;
+    *((volatile vtype*)r+(Vsiz<sizeof(V)>::CLR<<sc)) = v;
 }
 
 //setbit
 template <typename T, typename V> void Reg::setbit(T r, V v){
-    using vtyp = typename getVsiz<V>::typ;
-    *((volatile vtyp*)r+Vsiz<sizeof(V)>::SET) = v;
+    using vtype = typename getVsiz<V>::type;
+    *((volatile vtype*)r+Vsiz<sizeof(V)>::SET) = v;
 }
 
 //clrbit
 template <typename T, typename V> void Reg::clrbit(T r, V v){
-    using vtyp = typename getVsiz<V>::typ;
-    *((volatile vtyp*)r+Vsiz<sizeof(V)>::CLR) = v;
+    using vtype = typename getVsiz<V>::type;
+    *((volatile vtype*)r+Vsiz<sizeof(V)>::CLR) = v;
 }
 
 //flipbit
 template <typename T, typename V> void Reg::flipbit(T r, V v){
-    using vtyp = typename getVsiz<V>::typ;
-    *((volatile vtyp*)r+Vsiz<sizeof(V)>::INV) = v;
+    using vtype = typename getVsiz<V>::type;
+    *((volatile vtype*)r+Vsiz<sizeof(V)>::INV) = v;
 }
 
 //anybit
 template <typename T, typename V> bool Reg::anybit(T r, V v){
-    using vtyp = typename getVsiz<V>::typ;
-    return *(volatile vtyp*)r & v;
+    using vtype = typename getVsiz<V>::type;
+    return *(volatile vtype*)r & v;
 }
 
 //anybit0
 template <typename T, typename V> bool Reg::anybit0(T r, V v){
-    using vtyp = typename getVsiz<V>::typ;
-    return (~ *(volatile vtyp*)r) & v;
+    using vtype = typename getVsiz<V>::type;
+    return (~ *(volatile vtype*)r) & v;
 }
 
 //allbit
 template <typename T, typename V> bool Reg::allbit(T r, V v){
-    using vtyp = typename getVsiz<V>::typ;
-    return *(volatile vtyp*)r & v == v;
+    using vtype = typename getVsiz<V>::type;
+    return *(volatile vtype*)r & v == v;
 }
 
 //allbit0
 template <typename T, typename V> bool Reg::allbit0(T r, V v){
-    using vtyp = typename getVsiz<V>::typ;
-    return (~ *(volatile vtyp*)r) & v == v;
+    using vtype = typename getVsiz<V>::type;
+    return (~ *(volatile vtype*)r) & v == v;
 }
 
 
@@ -178,8 +178,8 @@ template <typename T> uint32_t Reg::val(T r){
 
 //set uint32_t/uint16_t/uint8_t value to register r
 template <typename T, typename V> void Reg::val(T r, V v){
-    using vtyp = typename getVsiz<V>::typ;
-    *(volatile vtyp*)r = v;
+    using vtype = typename getVsiz<V>::type;
+    *(volatile vtype*)r = v;
 }
 
 

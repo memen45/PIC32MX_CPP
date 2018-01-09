@@ -13,29 +13,26 @@ class Timer23 {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //instantiate with timer number
-    enum TMR23 { T2 = 0xBF808040, T3 = 0xBF808080 };
+    enum TMR23 { TMR2 = 0, TMR3 };
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //prescale values
-    enum PRESCALE {
-        PS256 = 7<<4, PS64 = 6<<4, PS32 = 5<<4, PS16 = 4<<4,
-        PS8 = 3<<4, PS4 = 2<<4, PS2 = 1<<4, PS1 = 0<<4,
-    };
+    enum PRESCALE { PS1 = 0, PS2, PS4, PS8, PS16, PS32, PS64, PS256 };
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //clock sources
-    enum CLK { EXT_T2CK = 1<<1, INT_PBCLK = 0 };
+    enum CLK { PBCLK = 0, T2CK };
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-    void        timer       (uint16_t) const;
-    uint16_t    timer       () const;
-    void        pr          (uint16_t) const;
-    uint16_t    pr          () const;
+    void        count       (uint32_t) const;
+    uint32_t    count       () const;
+    void        period      (uint32_t) const;
+    uint32_t    period      () const;
     void        on          (bool) const;
     void        stop_idle   (bool) const;
-    void        tgate       (bool) const;
+    void        gate        (bool) const;
     void        prescale    (PRESCALE) const;
-    void        t32bit      (bool) const; //T2 only (harmless for T3)
+    void        mode32      (bool) const; //T2 only (harmless for T3)
     void        clk_src     (CLK) const;
 
     constexpr Timer23(TMR23);
@@ -46,18 +43,26 @@ class Timer23 {
     static Reg r;
 
     enum {
-        TMRX = 4, PRX = 8, //word offsets
-        ON = 1<<15, SIDL = 1<<13,
-        EXT_RES = 3<<8, EXT_LPRC = 2<<8, EXT_T1CK = 1<<8, EXT_SOSC = 0<<8,
-        TGATE = 1<<7, T32 = 1<<3, TCS = 1<<1
+        ON = 1<<15,
+        SIDL = 1<<13,
+        TGATE = 1<<7,
+        TCKPS_SHIFT = 4, TCKPS_CLR = 7,
+        T32 = 1<<3,
+        TCS = 1<<1
     };
 
-    volatile uint32_t* m_pt;
+    enum { T1CON = 0xBF808040, TMR23_SPACING = 0x10 }; //spacing in words
+
+    volatile uint32_t* m_txcon;
+    volatile uint32_t& m_tmrx;
+    volatile uint32_t& m_prx;
 };
 
 /*=============================================================================
  inline functions
 =============================================================================*/
 constexpr Timer23::Timer23(TMR23 e)
-    : m_pt((volatile uint32_t*)e)
+    : m_txcon( (volatile uint32_t*)T1CON+(e*TMR23_SPACING) ),
+      m_tmrx( *((volatile uint32_t*)T1CON+(e*TMR23_SPACING)+4) ),
+      m_prx( *((volatile uint32_t*)T1CON+(e*TMR23_SPACING)+8) )
 {}

@@ -104,11 +104,10 @@ struct UsbBuf2 {
         buffer512_t buffer512[4];
     } m_buffer_t;
 
-    static m_buffer_t m_buffers2;
 };
 
 //=============================================================================
-UsbBuf2::m_buffer_t m_buffers2 = {0};
+static UsbBuf2::m_buffer_t m_buffers2 = {0};
 
 UsbBuf2::buffer64_t* get64(){
     for(auto i = 0; i < 16; i++){
