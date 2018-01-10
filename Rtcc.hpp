@@ -35,6 +35,7 @@ struct Rtcc {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //clock divide precomputed for 32khz (prescale default 1:1)
+    //need 2Hz
     enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -49,7 +50,7 @@ struct Rtcc {
     static void         clk_div         (uint16_t);
     static void         clk_frdiv       (uint8_t);
     static void         clk_pre         (PS);
-    static void         clk_sel         (CLKSEL);
+    static void         clk_src         (CLKSEL);
     static bool         alarm_evt       ();
     static bool         time_busy       ();
     static bool         alarm_busy      ();
@@ -119,6 +120,12 @@ void Rtcc::alarm_repeat(uint8_t v){
     conset(RTCCON1, v<<ALMRPT_SHIFT, 1);
 }
 void Rtcc::on(bool tf){
+    if(r.val((uint16_t*)RTCCON2+2)){    //div not set, so
+        clk_div(CLK_DIV_32KHZ); //init ourselves
+        if(Osc::sosc()) clk_src(SOSC); //preferred
+        else clk_src(LPRC);
+        clk_pre(PRE1);
+    }
     conset(RTCCON1, ON, tf);
 }
 void Rtcc::out(bool tf){
@@ -141,7 +148,7 @@ void Rtcc::clk_pre(PS e){
     conset(RTCCON2, PS_CLR<<PS_SHIFT, 0);
     conset(RTCCON2, e<<PS_SHIFT, 1);
 }
-void Rtcc::clk_sel(CLKSEL e){
+void Rtcc::clk_src(CLKSEL e){
     if(e == SOSC) Osc::sosc(true);
     conset(RTCCON2, CLKSEL_CLR<<CLKSEL_SHIFT, 0);
     conset(RTCCON2, e<<CLKSEL_SHIFT, 1);

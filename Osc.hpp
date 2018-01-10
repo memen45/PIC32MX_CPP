@@ -50,6 +50,8 @@ struct Osc {
     static void         sleep       (bool);     //sleep enable
     static bool         clk_bad     ();         //clock failed?
     static void         sosc        (bool);     //sosc enable
+    static bool         sosc        ();         //sosc enabled?
+                                                //if enabled, assume its there
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //spllcon
@@ -248,7 +250,10 @@ bool Osc::clk_bad(){
 void Osc::sosc(bool tf){
     sk.unlock();
     r.setbit(OSCCON, SOSCEN, tf);
-    sk.unlock();
+    sk.lock();
+}
+bool Osc::sosc(){
+    r.anybit(OSCCON, SOSCEN);
 }
 
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -263,7 +268,7 @@ auto Osc::pll_mul() -> PLLMUL {
 auto Osc::pll_src() -> PLLSRC {
     return (PLLSRC)r.anybit(SPLLCON, PLLICLK);
 }
-//private
+//private, use pll_set to change src
 void Osc::pll_src(PLLSRC e){
     r.setbit(SPLLCON, PLLICLK, e);
     m_refoclk = 0;  //recalculate refo clock
@@ -484,7 +489,7 @@ uint32_t Osc::extclk(){
     t1.prescale(t1.PS1);
     t1.timer(0);
     //if sosc enabled, assume it is there
-    if(r.anybit(OSCCON, SOSCEN)) t1.clk_src(t1.SOSC);
+    if(sosc()) t1.clk_src(t1.SOSC);
     else t1.clk_src(t1.LPRC);
    //start timer1, get cp0 count
     t1.on(true);

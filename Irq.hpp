@@ -58,12 +58,12 @@ struct Irq {
     };
 
     //to create a list (array) of irq's to init/enable
-    typedef struct {
+    using irq_list_t = struct {
         IRQ_VN irqvn;   //vector number
         uint8_t p;      //priority
         uint8_t s;      //sub-priority
         bool en;        //enable
-    } irq_list_t;
+    };
 
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||

@@ -20,11 +20,6 @@ struct Comp123  {
     //channel select
     enum CCH { CXINB = 0, CXINC, CXIND, BGAP };
 
-    //cref source
-    enum CVREF { INT_BGAP = 0, EXT_CVREF };
-
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
     constexpr Comp123(CMX);
 
     void            on              (bool);
@@ -38,6 +33,9 @@ struct Comp123  {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //common for all instances
+
+    //cref source
+    enum CVREF { INT_BGAP = 0, EXT_CVREF };
 
     static void     stop_idle       (bool);
     static void     cref_sel        (CVREF);

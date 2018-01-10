@@ -127,12 +127,15 @@ int main(){
     //set osc to 24MHz, use values to also get usb working
     Osc osc;
     osc.pll_set(osc.MUL12, osc.DIV4);       // 24mhz - 96MHz for usb (/2)
+    osc.sosc(true);                         //enable sosc if not already
 
     uint32_t t = osc.extclk();              //check if reading sysclock works
 
     //__________________________________________________________________________
     Uart123 u1(Uart123::UART1);
     u1.on(false);
+    u1.rx_addr(55);
+    u1.rx_mask(255);
 
 
     //__________________________________________________________________________
@@ -191,22 +194,18 @@ int main(){
     //__________________________________________________________________________
     //test rtcc (somewhat)
     Rtcc rtcc;
-    rtcc.clk_sel(rtcc.SOSC);                //external sosc (curiosity board)
-                                            //(soscen automatically set by rtcc)
-    rtcc.clk_div(rtcc.CLK_DIV_32KHZ);       //already calculated div for lprc
     rtcc.alarm_interval(rtcc.MINUTE1);      //alarm every minute
     rtcc.chime(true);                       //repeating alarm
     rtcc.alarm(true);                       //turn on alarm
 
     const uint32_t test_time = (2<<28 | 3<<24 | 4<<20 | 5<<16 | 0<<12 | 1<<8);
     rtcc.time(test_time);                   //23:45:01
-//    if(rtcc.time() != test_time){           //did write work? (testing)
-//        while(1);                           //lockup if read/write not working
-//    }                                       //else syskey/wrlock working
     rtcc.on(true);                          //turn on, alarm is 00:00:00
                                             //(alarm every 00 seconds match)
                                             //disable/enable core timer irq
                                             //every minute in rtcc isr
+                                            //clk is lprc unless sosc is on,
+                                            //div set for lprc/sosc
 
     //__________________________________________________________________________
     //peripheral module disable

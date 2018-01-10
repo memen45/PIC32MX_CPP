@@ -50,7 +50,6 @@ void Cvref::refsel(REFSEL e){
     r.setbit(DAC1CON, e<<REFSEL_SHIFT);
 }
 //dac level 0-31
-//(only DACDAT in upper 16bits, so can just write dat) which
 void Cvref::dacdat(uint8_t v){
     r.val(DAC1CON+2, v);
 }
