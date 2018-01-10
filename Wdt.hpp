@@ -36,7 +36,7 @@ struct Wdt {
 
 //16bit write to upper 16bits of WDTCON
 void Wdt::reset(){
-    r.val(WDTCON+2, (uint16_t)CLRKEY);
+    r.val16(WDTCON+2, CLRKEY);
 }
 void Wdt::on(bool tf){
     r.setbit(WDTCON, ON, tf);
