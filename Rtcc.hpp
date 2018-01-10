@@ -120,11 +120,11 @@ void Rtcc::alarm_repeat(uint8_t v){
     conset(RTCCON1, v<<ALMRPT_SHIFT, 1);
 }
 void Rtcc::on(bool tf){
-    if(r.val((uint16_t*)RTCCON2+2)){    //div not set, so
-        clk_div(CLK_DIV_32KHZ); //init ourselves
-        if(Osc::sosc()) clk_src(SOSC); //preferred
-        else clk_src(LPRC);
-        clk_pre(PRE1);
+    if(tf && r.val((uint16_t*)RTCCON2+2)){  //div not set, so
+        clk_div(CLK_DIV_32KHZ);             //init ourselves
+        if(Osc::sosc()) clk_src(SOSC);      //use sosc if on
+        else clk_src(LPRC);                 //else use lprc
+        clk_pre(PRE1);                      //should be already
     }
     conset(RTCCON1, ON, tf);
 }

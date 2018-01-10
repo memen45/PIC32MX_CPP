@@ -129,9 +129,10 @@ int main(){
     osc.pll_set(osc.MUL12, osc.DIV4);       // 24mhz - 96MHz for usb (/2)
     osc.sosc(true);                         //enable sosc if not already
 
-    uint32_t t = osc.extclk();              //check if reading sysclock works
+    uint32_t t = osc.extclk();              //calculate sysclock (testing)
 
     //__________________________________________________________________________
+    //uart
     Uart123 u1(Uart123::UART1);
     u1.on(false);
     u1.rx_addr(55);

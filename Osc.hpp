@@ -19,8 +19,14 @@
 
  use Osc::sysclk() to retrieve sysclock
 
- any peripheral using SOSC, will also use Osc::sosc(true) to make sure sosc
- is turned on, but no check if SOSC is present
+ any peripheral specifying SOSC as clock source, will also use
+ Osc::sosc(true) to make sure sosc is turned on, but no check if SOSC is
+ present (assume if specified, caller must know its available), if peripheral
+ like rtcc needs a clock but is not specified, then peripheral will call
+ sosc() to check if its on already, if on assume its available
+
+ if using sosc, just call Osc::sosc(true) early in code (may already be fused
+ on), so any peripheral needing it can use it
 
 =============================================================================*/
 
