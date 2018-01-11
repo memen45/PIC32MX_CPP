@@ -29,8 +29,6 @@ SFR - kseg0 0x9F800000-0x9F80FFFF bit<31:29> 0b100<-kseg0 = 0
     value16     val16   (address)                       -read 16bit value
     value8      val8    (address)                       -read 8bit value
                 val     (address, value8|16|32)         -set 8|16|32bit value
-                val16   (address, value16)              -set 16bit value
-                val8    (address, value8)               -set 8bit value
     uint32_t    p2kseg1 (address)                       -phys addr->kseg1
     uint32_t    p2kseg0 (address)                       -phys addr->kseg0
     uint32_t    k2phys  (address)                       -ksegx addr->phys
