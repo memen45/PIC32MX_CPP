@@ -518,6 +518,8 @@ void USB_ISR(){
     //DETACHED -we never see here, usb peripheral off
     //ATTACHED, POWERED, DEFAULT, ADDRESS, CONFIGURED, SUSPENDED
     switch(u.state){
+        case u.DETACHED:
+            return;
         case u.ATTACHED:                    //only reset irq is active
             if(!vbus_pin.ison()) return;    //no vbus, we should not be here
             u.state = u.POWERED;            //vbus ok, now go to POWERED state

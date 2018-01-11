@@ -157,8 +157,8 @@ class Pins {
 
     static void     pps_do      (uint32_t, uint8_t);
 
-    const uint16_t      m_pn;       //pin mask
     volatile uint32_t*  m_pt;       //base address
+    const uint16_t      m_pn;       //pin mask
     bool                m_lowison;  //pin on val is low
 
 };

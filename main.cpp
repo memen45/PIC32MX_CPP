@@ -129,7 +129,7 @@ int main(){
     osc.pll_set(osc.MUL12, osc.DIV4);       // 24mhz - 96MHz for usb (/2)
     osc.sosc(true);                         //enable sosc if not already
 
-    uint32_t t = osc.extclk();              //calculate sysclock (testing)
+    //uint32_t t = osc.extclk();              //calculate sysclock (testing)
 
     //__________________________________________________________________________
     //uart
@@ -374,7 +374,8 @@ ISR(TIMER_3){
 ISR(RTCC){
     Irq ir; Cp0 cp;
     static bool b;
-    if(b = !b){ //toggle and check
+    b ^= 1;
+    if(b){
         ir.on(ir.CORE_TIMER, false); //core timer irq disable
         led2.off();
     } else {

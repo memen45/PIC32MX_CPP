@@ -130,12 +130,12 @@ UsbBuf2::buffer512_t* get512(){
 }
 void UsbBuf2::release(void* bufp){
     for(auto i = 0; i < 16; i++){
-        if(bufp = (void*)&m_buffers2.buffer64[i]) continue;
+        if(bufp == (void*)&m_buffers2.buffer64[i]) continue;
         m_buffers2.status &= ~(1<<i); //not inuse
         return;
     }
     for(auto i = 16; i < 20; i++){
-        if(bufp = (void*)&m_buffers2.buffer512[i>>16]) continue;
+        if(bufp == (void*)&m_buffers2.buffer512[i>>16]) continue;
         m_buffers2.status &= ~(1<<i); //not inuse
     }
 }

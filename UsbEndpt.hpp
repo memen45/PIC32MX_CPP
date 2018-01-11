@@ -338,16 +338,16 @@ ______________________________________________________________________________*/
     enum { DATA0 = 0, DATA1 = 1<<6 /*DATA01 in CTRLOUT*/};
 
     static bdt_t        m_bdt[(my_last_endp+1)*4] __attribute__((aligned(512)));
+
     uint8_t             m_ep_n;         //0-15
     TR                  m_ep_trx;       //TX|RX|TRX (aligned for U1EPn <<2)
-    volatile uint8_t*   m_ep_reg;       //U1EPn sfr register
-    volatile uint8_t*   m_rxbuf[2];     //pointers to rx-even/odd buffers
-    uint16_t            m_buf_len;      //fixed length from UsbBuf (64)
-
-
     bdt_t*              m_bd[4];        //rx/tx buffer descriptor even/odd
+    volatile uint8_t*   m_ep_reg;       //U1EPn sfr register
+    uint16_t            m_buf_len;      //fixed length from UsbBuf (64)
     UsbCh9::SetupPkt_t  m_setup_pkt;    //copy of setup data packet (8bytes)
     SETUPXFER           m_setup_stage;  //setup transaction stages
+    volatile uint8_t*   m_rxbuf[2];     //pointers to rx-even/odd buffers
+
 
     volatile uint8_t*   m_tx_ptr;       //pointer to tx data
 
@@ -422,7 +422,7 @@ void UsbEndpt::token(uint8_t idx){
     //check if we even have an endpoint in use
     //if this is an unused endpoint below a higher used endpoint
     //turn off (should already be off, and shouldn't be here)
-    if(m_ep_trx = NONE){
+    if(m_ep_trx == NONE){
         on(false);
         return;
     }
@@ -457,8 +457,8 @@ void UsbEndpt::token(uint8_t idx){
 void UsbEndpt::setup_token(){
 
     bool dir = m_setup_pkt.dir;
-    uint8_t typ = m_setup_pkt.type;
-    uint8_t recip = m_setup_pkt.recip;
+    //uint8_t typ = m_setup_pkt.type;
+    //uint8_t recip = m_setup_pkt.recip;
 
     m_tx_ptr = UsbBuf::get();
     if(!m_tx_ptr){} //do something if can't get buffer- stall?
