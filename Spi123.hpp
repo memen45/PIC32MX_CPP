@@ -105,6 +105,7 @@ struct Spi123  {
 
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     private:
 
     Reg r;
@@ -150,7 +151,6 @@ struct Spi123  {
             AUDOMONO = 1<<3
     };
 
-
     volatile uint32_t* m_spixcon;
     volatile uint32_t* m_spixstat;
     volatile uint32_t& m_spixbuf;                   //use reference
@@ -158,6 +158,7 @@ struct Spi123  {
     volatile uint32_t* m_spixcon2;
 
     uint32_t m_spix_freq;                           //set to actual spi freq
+
 };
 
 

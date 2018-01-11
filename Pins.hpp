@@ -11,12 +11,11 @@
 class Pins {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     public:
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //instantiate Pins with the following pin name
     //(can also use enum RPN names also)
-
     enum PORTPIN : uint8_t {
         A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,
         B0,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11,B13= 29,B14,B15,
@@ -24,9 +23,7 @@ class Pins {
         D0,D1,D2,D3,D4
     };
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //pps_in peripheral names
-
     enum PPSIN : uint8_t {
         //byte offset from RPINR1
         INT4 = 0,                                   //R1
@@ -43,9 +40,7 @@ class Pins {
         CLCINA = 42, CLCINB = 43                    //R12
     };
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //pps_out peripheral names
-
     enum PPSOUT : uint8_t {
         PPSLAT = 0,
         C1OUT, C2OUT, C3OUT,
@@ -55,10 +50,8 @@ class Pins {
         CLC1OUT, CLC2OUT, CLC3OUT, CLC4OUT,
     };
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //pps_in/pps_out pin names (either RPn or RXn)
     //(can also instantiate Pins with these names)
-
     enum RPN : uint16_t {
         // encode as- 0x000ppnnnn000rrrrr - | 000 PORT/PIN | 000 RPn |
         // pp = port A=0,B=1,C=2,D=3
@@ -138,6 +131,7 @@ class Pins {
     constexpr   Pins            (RPN, bool = false);        //or RP8, RB2, etc.
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     private:
 
     static Reg r;
@@ -166,6 +160,7 @@ class Pins {
     const uint16_t      m_pn;       //pin mask
     volatile uint32_t*  m_pt;       //base address
     bool                m_lowison;  //pin on val is low
+
 };
 
 /*=============================================================================

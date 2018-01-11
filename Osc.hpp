@@ -103,8 +103,8 @@ struct Osc {
     //clkstat
 
     enum CLKRDY : uint8_t {
-        FRCRDY = 0, SPLLDIVRDY, POSCRDY,
-        SOSCRDY = 4, LPRCRDY, USBRDY, SPLLRDY
+        FRCRDY = 1<<0, SPLLDIVRDY = 1<<1, POSCRDY = 1<<2,
+        SOSCRDY = 1<<4, LPRCRDY = 1<<5, USBRDY = 1<<6, SPLLRDY = 1<<7
     };
 
     static bool         ready       (CLKRDY);   //clock ready?
@@ -124,8 +124,6 @@ struct Osc {
     static void         tun_val     (int8_t);   //tune value 6bits, -32 to 31
     static int8_t       tun_val     ();         //get tune value
 
-
-
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //misc
 
@@ -134,8 +132,8 @@ struct Osc {
     static uint32_t     extclk       ();        //get ext clock
     static uint32_t     frcclk       ();        //get frc clock
 
-
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     private:
 
     static Reg r;                               //for static class access
@@ -155,7 +153,6 @@ struct Osc {
 
     static IDSTAT       unlock_irq  ();         //unlock- irq's off, dma susp
     static void         lock_irq    (IDSTAT);   //lock-, restore irq, dma
-
 
     enum {
         OSCCON = 0xBF802680,
@@ -257,9 +254,10 @@ void Osc::sosc(bool tf){
     sk.unlock();
     r.setbit(OSCCON, SOSCEN, tf);
     sk.lock();
+    while(tf && !ready(SOSCRDY));
 }
 bool Osc::sosc(){
-    r.anybit(OSCCON, SOSCEN);
+    return r.anybit(OSCCON, SOSCEN);
 }
 
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||

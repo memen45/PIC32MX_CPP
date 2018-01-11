@@ -15,25 +15,22 @@
 struct Rtcc {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     //alarm mask
     enum AMASK : uint8_t {
         HALFSEC = 0, SECOND1, SECOND10, MINUTE1, MINUTE10, HOUR,
         DAY, WEEK, MONTH, YEAR
     };
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //rtcc pin output select
     enum OUTSEL : uint8_t { ALMEVT, CLKSEC, CLKSRC };
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //clock prescale
     enum PS : uint8_t { PRE1 = 0, PRE16, PRE64, PRE256 };
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //clock select
     enum CLKSEL : uint8_t { SOSC = 0, LPRC, PWRLPIN, FCY };
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //clock divide precomputed for 32khz (prescale default 1:1)
     //need 2Hz
     enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
@@ -65,6 +62,7 @@ struct Rtcc {
     static void         alarm_date      (uint32_t);
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     private:
 
     static Reg r;
@@ -99,6 +97,7 @@ struct Rtcc {
         ALMTIME = 0xBF800060,
         ALMDATE = 0xBF800070,
     };
+
 };
 
 /*=============================================================================

@@ -41,6 +41,7 @@ struct Comp123  {
     static void     cref_sel        (CVREF);
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     private:
 
     static Reg r;
@@ -60,6 +61,7 @@ struct Comp123  {
     };
 
     volatile uint32_t* m_cmxcon;
+
 };
 
 

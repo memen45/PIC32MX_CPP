@@ -10,6 +10,7 @@
 struct Adc {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     //adc data format
     enum FORM : uint8_t {
         INT16 = 0, SINT16, FR16, SFR16, INT32, SINT32, FR32, SFR32
@@ -103,16 +104,19 @@ struct Adc {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //ADC1SS
+
     static void         ch_scan         (CH0SA, bool);
     static void         ch_scan         (CH0SA*);
     static void         ch_scan         (uint32_t);
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //ADC1CHIT
+
     static bool         ch_hit          (CH0SA);
     static uint32_t     ch_hit          ();
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     private:
 
     static Reg r;
@@ -151,6 +155,7 @@ struct Adc {
             CM_SHIFT = 0, CM_CLR = 3,
         ADC1CHIT = 0xBF8022D0
     };
+
 };
 
 
@@ -163,6 +168,7 @@ uint16_t Adc::bufn(uint8_t n){
     if(n > ADC1BUF_LAST) n = ADC1BUF_LAST;
     return r.val16(ADC1BUF0+(n*ADC1BUF_SPACING));
 }
+
 //ADC1CON1
 void Adc::on(bool tf){
     r.setbit(ADC1CON1, ON, tf);
@@ -193,6 +199,7 @@ bool Adc::samp(){
 bool Adc::done(){
     return r.anybit(ADC1CON1, DONE);
 }
+
 //ADC1CON2
 void Adc::vref_cfg(VCFG e){
     r.clrbit(ADC1CON2, VCFG_CLR<<VCFG_SHIFT);
@@ -218,6 +225,7 @@ void Adc::samp_nirq(uint8_t n){
 void Adc::buf_split(bool tf){
     r.setbit(ADC1CON2, BUFM, tf);
 }
+
 //ADC1CON3
 void Adc::clk_src(CLK e){
     r.setbit(ADC1CON3, ADRC, e);
@@ -234,6 +242,7 @@ void Adc::samp_time(uint8_t t){
 void Adc::conv_time(uint8_t t){
     r.val(ADC1CON3, t);
 }
+
 //ADC1CON5
 void Adc::scan_auto(bool tf){
     r.setbit(ADC1CON5, ASEN, tf);
@@ -256,10 +265,12 @@ void Adc::compare_mode(CM e){
     r.clrbit(ADC1CON5, CM_CLR<<CM_SHIFT);
     r.setbit(ADC1CON5, e<<CM_SHIFT);
 }
+
 //ADC1CHS
 void Adc::ch_sel(CH0SA e){
     r.val(ADC1CHS, e);
 }
+
 //ADC1SS
 void Adc::ch_scan(CH0SA e, bool tf){
     r.setbit(ADC1CSS, e, tf);
@@ -271,6 +282,7 @@ void Adc::ch_scan(CH0SA* e){
 void Adc::ch_scan(uint32_t v){
     r.val(ADC1CSS, v);
 }
+
 //ADC1CHIT
 //non AN values will return 0 (like VDD)
 bool Adc::ch_hit(CH0SA e){

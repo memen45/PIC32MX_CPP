@@ -12,18 +12,20 @@ class Timer23 {
     public:
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     //instantiate with timer number
     enum TMR23 { TMR2 = 0, TMR3 };
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //prescale values
     enum PRESCALE { PS1 = 0, PS2, PS4, PS8, PS16, PS32, PS64, PS256 };
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //clock sources
     enum CLK { PBCLK = 0, T2CK };
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+    constexpr Timer23(TMR23);
+
     void        count       (uint32_t) const;
     uint32_t    count       () const;
     void        period      (uint32_t) const;
@@ -35,9 +37,8 @@ class Timer23 {
     void        mode32      (bool) const; //T2 only (harmless for T3)
     void        clk_src     (CLK) const;
 
-    constexpr Timer23(TMR23);
-
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     private:
 
     static Reg r;
@@ -56,6 +57,7 @@ class Timer23 {
     volatile uint32_t* m_txcon;
     volatile uint32_t& m_tmrx;
     volatile uint32_t& m_prx;
+
 };
 
 /*=============================================================================

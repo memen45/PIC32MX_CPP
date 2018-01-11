@@ -86,7 +86,6 @@ struct Uart123  {
     void            baud_set        ();                 //recalc, or default
     uint32_t        baud_clk        ();                 //get uart clock freq
 
-
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
     private:
@@ -137,6 +136,7 @@ struct Uart123  {
     uint32_t m_uartx_baud;                          //desired baud
 
     using vbyte_ptr = volatile uint8_t*;            //access stat bytes
+
 };
 
 #include "Osc.hpp"

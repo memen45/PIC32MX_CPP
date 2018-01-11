@@ -43,25 +43,17 @@ SFR - kseg0 0x9F800000-0x9F80FFFF bit<31:29> 0b100<-kseg0 = 0
     then set the address argument to a volatile pointer of that type, allowing
     byte/half-word/word access to a register-
 
-    val(address, value) -> *(V*) = v -> type deduced by type passed in
-    val16(address, value) -> *(uint16_t*) = v -> specify uint16_t
-    val8(address, value) -> *(uint8_t*) = v -> specify uint8_t
-    caller specifies 8/16 when may not know value type, or value type is not
-    the access type wanted (enum type may be 32bit, but enum value may be an 8
-    or 16bit value, so instead of typecast in the call using val, just use
-    val8/16 instead)
+    val(T r, V v) -> *(volatile V*)r = v -> type deduced by type passed in
 
     address- caller makes sure is 32bit number, also be aware of addition on
-    the address, if enum- additions are byte, if pointer- addition is word-
-    val(SOME_REG+3, 8) -> if SOME_REG is enum, and 8 is uint8_t, addition
-        will access last byte in reg
-    val(m_reg_base+3, 8) -> if m_reg_base is pointer, and 8 is uint8_t,
-        addition will now put pointer 12bytes higher- most likely not
-        wanted- will have to cast to uint8_t* before the addition-
-        val((uint8_t*)m_reg_base+3, 8) - will now access last byte in reg
-    summary- its mostly hands-off, until either an address addition is used
-        on a pointer, or a value type is unknown or needs to be cast to
-        another type (either by typecast, or using val8/16)
+    the address, if enum- additions are byte, if pointer- addition is word
+
+    value- type will determine address type of pointer, if value needs to be
+    something other than its type (size), it will need to be cast-
+    val(ENUM_REG+3, ENUM_VAL) - if ENUM_VAL is 32bit, need to cast to 8bit
+    in this case in order to access third byte of ENUM_REG
+    (unaligned access will cause exception :) )
+
 */
 
 
@@ -125,8 +117,6 @@ struct Reg {
 
     //val(address, val)-> *(V*)address = (V)val
     template <typename T, typename V> static void val(T r, V v);
-    template <typename T, typename V> static void val16(T r, V v);
-    template <typename T, typename V> static void val8(T r, V v);
 
     //physical to kseg0/1 addr, kseg to physical addr
     template <typename T> static uint32_t   p2kseg1 (T);
@@ -205,18 +195,6 @@ template <typename T> uint32_t Reg::val(T r){
 //(determined by size of V type)
 template <typename T, typename V> void Reg::val(T r, V v){
     using vtype = typename getVsiz<V>::type;
-    *(volatile vtype*)r = v;
-}
-
-//set uint16_t value to register r
-template <typename T, typename V> void Reg::val16(T r, V v){
-    using vtype = uint16_t;
-    *(volatile vtype*)r = v;
-}
-
-//set uint8_t value to register r
-template <typename T, typename V> void Reg::val8(T r, V v){
-    using vtype = uint8_t;
     *(volatile vtype*)r = v;
 }
 

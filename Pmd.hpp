@@ -11,6 +11,7 @@
 struct Pmd {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     //bit shift amount into 7 registers (PMD1-PMD7, 224 possible values)
     enum PMD {
         ADC = 0, VREF = 12, HLVD = 20,                          //PMD1
@@ -35,6 +36,7 @@ struct Pmd {
     static void     on      (PMD*);
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     private:
 
     static Reg r;

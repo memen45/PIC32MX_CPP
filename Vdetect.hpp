@@ -10,6 +10,7 @@
 struct Vdetect {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     //voltage level limits
     enum HLVDL {
         VEXT = 15, V200_222 = 14, V208_233 = 13, V215_244 = 12, V225_255 = 11,
@@ -18,6 +19,7 @@ struct Vdetect {
     };
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     static void     on              (bool);
     static void     stop_idle       (bool);
     static void     trip_above      (bool);
@@ -27,6 +29,7 @@ struct Vdetect {
     static void     limit           (HLVDL);
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     private:
 
     static Reg r;
@@ -40,6 +43,7 @@ struct Vdetect {
             IRVST = 1<<9,
             HLEVT = 1<<8
     };
+
 };
 
 /*=============================================================================

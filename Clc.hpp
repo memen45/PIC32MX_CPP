@@ -10,6 +10,7 @@
 struct Clc {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     //instantiate Clc with clc number
     enum CLC { CLC1 = 0, CLC2, CLC3, CLC4 };
 
@@ -38,6 +39,7 @@ struct Clc {
     void    gate_sel    (uint32_t);
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     private:
 
     static Reg r;
@@ -59,6 +61,7 @@ struct Clc {
     volatile uint32_t* m_clcx_con;
     volatile uint32_t* m_clcx_sel;
     volatile uint32_t* m_clcx_gls;
+
 };
 
 

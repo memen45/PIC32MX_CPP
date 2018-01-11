@@ -11,6 +11,7 @@
 class DelayCP0 {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     public:
 
     bool    expired     ();
@@ -21,6 +22,7 @@ class DelayCP0 {
     void    set_ms      (uint32_t);
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     private:
 
     static Cp0 cp0;
@@ -32,4 +34,5 @@ class DelayCP0 {
     uint32_t    m_start{0};
     uint32_t    m_countn{0};
     bool        m_expired{true};
+
 };

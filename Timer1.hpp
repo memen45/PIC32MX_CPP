@@ -11,16 +11,17 @@
 struct Timer1 {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     //clock prescale values
     enum TCKPS : uint8_t { PS1 = 0, PS8, PS64, PS256 };
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //clock source - also sets TCS unless pbclk
     enum CLK : uint16_t {
         SOSC = 0x0002, T1CK = 0x0102, LPRC = 0x0202, PBCLK = 0x0000
     };
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     static void         timer           (uint16_t);
     static uint16_t     timer           ();
     static void         period          (uint16_t);
@@ -63,6 +64,7 @@ struct Timer1 {
 /*=============================================================================
  all functions inline
 =============================================================================*/
+
 void Timer1::timer(uint16_t n){
     r.val(TMR1, n);
 }

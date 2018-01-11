@@ -10,11 +10,13 @@
 struct Wdt {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     static void     reset       ();
     static void     on          (bool);
     static void     window_on   (bool);
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
     private:
 
     static Reg r;
@@ -28,6 +30,7 @@ struct Wdt {
         //if need to read them, can make your own read function(s) here or use
         //uint32_t val = Reg::val(Wdt::WDTCON); -then decipher on your own
     };
+
 };
 
 /*=============================================================================
@@ -36,7 +39,7 @@ struct Wdt {
 
 //16bit write to upper 16bits of WDTCON
 void Wdt::reset(){
-    r.val16(WDTCON+2, CLRKEY);
+    r.val(WDTCON+2, (uint16_t)CLRKEY);
 }
 void Wdt::on(bool tf){
     r.setbit(WDTCON, ON, tf);
