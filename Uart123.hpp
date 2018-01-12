@@ -135,7 +135,7 @@ struct Uart123  {
 
     uint32_t m_uartx_baud;                          //desired baud
 
-    using vbyte_ptr = volatile uint8_t*;            //access stat bytes
+    using vbyte_ptr = volatile uint8_t*;            //access stat as bytes
 
 };
 
