@@ -30,6 +30,7 @@
 #include "Resets.hpp"
 #include "Usb.hpp"
 #include "Osc.hpp"
+#include "Dma.hpp"
 #include "Uart123.hpp"
 #include "Spi123.hpp"
 
@@ -140,7 +141,10 @@ int main(){
 
 
     //__________________________________________________________________________
-
+    //dma
+    Dma dma0(Dma::DMA0);
+    dma0.irq_abort(22);
+    dma0.irq_abort(Dma::IRQOFF);
 
     //__________________________________________________________________________
     //usb- can't do much

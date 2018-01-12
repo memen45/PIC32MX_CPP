@@ -2,6 +2,7 @@
 
 #include "Irq.hpp"
 #include "Reg.hpp"
+#include "Dma.hpp"
 
 class Syskey {
 
@@ -22,9 +23,7 @@ class Syskey {
     enum {
         SYSKEY = 0xBF803670,
             MAGIC1 = 0xAA996655,
-            MAGIC2 = 0x556699AA,
-        DMACON = 0xBF808900,
-            DMASUSP = 1<<12
+            MAGIC2 = 0x556699AA
     };
 
 };
