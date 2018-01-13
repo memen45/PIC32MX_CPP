@@ -24,15 +24,16 @@
 #include "Pmd.hpp"
 #include "Wdt.hpp"
 #include "Rtcc.hpp"
-#include "Comp123.hpp"
+#include "Comp.hpp"
 #include "Clc.hpp"
 #include "Adc.hpp"
 #include "Resets.hpp"
 #include "Usb.hpp"
 #include "Osc.hpp"
 #include "Dma.hpp"
-#include "Uart123.hpp"
-#include "Spi123.hpp"
+#include "Uart.hpp"
+#include "Spi.hpp"
+#include "I2c.hpp"
 
 /*=============================================================================
  LED's - all in array
@@ -134,16 +135,21 @@ int main(){
 
     //__________________________________________________________________________
     //uart
-    Uart123 u1(Uart123::UART1);
+    Uart u1(Uart::UART1);
     u1.on(false);
     u1.rx_addr(55);
     u1.rx_mask(255);
 
+    //__________________________________________________________________________
+    //i2c
+    I2c i2c1(I2c::I2C1);
+    i2c1.on(false);
+    i2c1.baud(I2c::KHZ400);
 
     //__________________________________________________________________________
     //dma
     Dma dma0(Dma::DMA0);
-    dma0.irq_abort(22);
+    dma0.irq_abort(Irq::CORE_TIMER);
     dma0.irq_abort(Dma::IRQOFF);
 
     //__________________________________________________________________________
@@ -156,9 +162,9 @@ int main(){
 
     //__________________________________________________________________________
     //SPI
-    Spi123 spi1(Spi123::SPI1);
-    Spi123 spi2(Spi123::SPI2);
-    Spi123 spi3(Spi123::SPI3);
+    Spi spi1(Spi::SPI1);
+    Spi spi2(Spi::SPI2);
+    Spi spi3(Spi::SPI3);
     spi1.on(false);
     spi2.on(false);
     spi3.on(false);
@@ -181,12 +187,12 @@ int main(){
 
     //__________________________________________________________________________
     //try some compare functions (does nothing)
-    Comp123 c1(Comp123::CMP1);
-    Comp123 c2(Comp123::CMP2);
+    Comp c1(Comp::CMP1);
+    Comp c2(Comp::CMP2);
     c1.on(false);
     c2.on(false);
-    Comp123::stop_idle(true); //<--use Comp123:: for common function
-    Comp123::cref_sel(Comp123::INT_BGAP);
+    Comp::stop_idle(true); //<--use Comp:: for common function
+    Comp::cref_sel(Comp::INT_BGAP);
 
     //__________________________________________________________________________
     //try clc (does nothing)

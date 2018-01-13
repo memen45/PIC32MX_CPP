@@ -8,7 +8,7 @@
  SPI 1/2/3 functions
 =============================================================================*/
 
-struct Spi123  {
+struct Spi  {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
@@ -17,7 +17,7 @@ struct Spi123  {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
-    constexpr Spi123(SPIX);
+    constexpr Spi(SPIX);
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //spixcon
@@ -165,7 +165,7 @@ struct Spi123  {
 /*=============================================================================
  inline functions
 =============================================================================*/
-constexpr Spi123::Spi123(SPIX e)
+constexpr Spi::Spi(SPIX e)
     : m_spixcon((volatile uint32_t*)SPI1CON+(e*SPIX_SPACING)),
       m_spixstat((volatile uint32_t*)SPI1CON+(e*SPIX_SPACING)+4),
       m_spixbuf(*((volatile uint32_t*)SPI1CON+(e*SPIX_SPACING)+8)),
@@ -177,9 +177,9 @@ constexpr Spi123::Spi123(SPIX e)
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //spixbuf
 
-void Spi123::buf(uint32_t v){
+void Spi::buf(uint32_t v){
     m_spixbuf = v; //m_spibuf&
 }
-uint32_t Spi123::buf(){
+uint32_t Spi::buf(){
     return m_spixbuf; //m_spibuf&
 }

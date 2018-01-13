@@ -7,11 +7,11 @@
  Compare 1/2/3 functions
 =============================================================================*/
 
-struct Comp123  {
+struct Comp {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
-    //instantiate Comp123 with comparator number
+    //instantiate Comp with comparator number
     enum CMX { CMP1 = 0, CMP2, CMP3 };
 
     //event polarity
@@ -20,7 +20,7 @@ struct Comp123  {
     //channel select
     enum CCH { CXINB = 0, CXINC, CXIND, BGAP };
 
-    constexpr Comp123(CMX);
+    constexpr Comp(CMX);
 
     void            on              (bool);
     void            out             (bool);
@@ -69,40 +69,40 @@ struct Comp123  {
  all functions inline
 =============================================================================*/
 
-constexpr Comp123::Comp123(CMX e)
+constexpr Comp::Comp(CMX e)
     : m_cmxcon((volatile uint32_t*)CM1CON+(e*CMXCON_SPACING)){}
 
-void Comp123::on(bool tf){
+void Comp::on(bool tf){
     r.setbit(m_cmxcon, ON, tf);
 }
-void Comp123::out(bool tf){
+void Comp::out(bool tf){
     r.setbit(m_cmxcon, COE, tf);
 }
-void Comp123::out_inv(bool tf){
+void Comp::out_inv(bool tf){
     r.setbit(m_cmxcon, CPOL, tf);
 }
-bool Comp123::evt_bit(){
+bool Comp::evt_bit(){
     return r.anybit(m_cmxcon, CEVT);
 }
-bool Comp123::out_bit(){
+bool Comp::out_bit(){
     return r.anybit(m_cmxcon, COUT);
 }
-void Comp123::evt_sel(EVPOL e){
+void Comp::evt_sel(EVPOL e){
     r.clrbit(m_cmxcon, EVPOL_CLR<<EVPOL_SHIFT);
     r.setbit(m_cmxcon, e<<EVPOL_SHIFT);
 }
-void Comp123::cref_cxina(bool tf){
+void Comp::cref_cxina(bool tf){
     r.setbit(m_cmxcon, CREF, !tf);
 }
-void Comp123::ch_sel(CCH e){
+void Comp::ch_sel(CCH e){
     r.clrbit(m_cmxcon, BGAP);
     r.setbit(m_cmxcon, e);
 }
 
 //common static functions
-void Comp123::stop_idle(bool tf){
+void Comp::stop_idle(bool tf){
     r.setbit(CMSTAT, SIDL, tf);
 }
-void Comp123::cref_sel(CVREF e){
+void Comp::cref_sel(CVREF e){
     r.setbit(CMSTAT, CVREFSEL, e);
 }

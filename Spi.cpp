@@ -1,77 +1,77 @@
-#include "Spi123.hpp"
+#include "Spi.hpp"
 
 /*=============================================================================
- Spi123 functions
+ Spi functions
 =============================================================================*/
 
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //spixcon
 
-void Spi123::frame(bool tf){
+void Spi::frame(bool tf){
     r.setbit(m_spixcon, FRMEN, tf);
 }
-void Spi123::frame_dir(FRMDIR e){
+void Spi::frame_dir(FRMDIR e){
     r.setbit(m_spixcon, FRMSYNC, e);
 }
-void Spi123::frame_pol(FRMHL e){
+void Spi::frame_pol(FRMHL e){
     r.setbit(m_spixcon, FRMPOL, e);
 }
-void Spi123::slave_sel(bool tf){
+void Spi::slave_sel(bool tf){
     r.setbit(m_spixcon, MSSEN, tf);
 }
-void Spi123::frame_pwidth(FRMPW e){
+void Spi::frame_pwidth(FRMPW e){
     r.setbit(m_spixcon, FRMSYPW, e);
 }
-void Spi123::frame_count(FRMCNT e){
+void Spi::frame_count(FRMCNT e){
     r.clrbit(m_spixcon, FRMCNT_CLR<<FRMCNT_SHIFT);
     r.setbit(m_spixcon, e<<FRMCNT_SHIFT);
 }
-void Spi123::clk_sel(CLKSEL e){
+void Spi::clk_sel(CLKSEL e){
     bool ison = r.anybit(m_spixcon, ON);
     on(false);
     r.setbit(m_spixcon, MCLKSEL, e);
     freq(); //recaluclate
     on(ison);
 }
-auto Spi123::clk_sel() -> CLKSEL {
+auto Spi::clk_sel() -> CLKSEL {
     return (CLKSEL)r.anybit(m_spixcon, MCLKSEL);
 }
-void Spi123::frame_edge(FRMEDGE e){
+void Spi::frame_edge(FRMEDGE e){
     r.setbit(m_spixcon, SPIFE, e);
 }
-void Spi123::enhanced(bool tf){
+void Spi::enhanced(bool tf){
     bool ison = r.anybit(m_spixcon, ON);
     on(false);
     r.setbit(m_spixcon, ENHBUF, tf);
     on(ison);
 }
-void Spi123::on(bool tf){
+void Spi::on(bool tf){
     r.setbit(m_spixcon, ON, tf);
 }
-void Spi123::mode(MODE e){
+void Spi::mode(MODE e){
     r.clrbit(m_spixcon, MODE_CLR<<MODE_SHIFT);
     r.setbit(m_spixcon, e<<MODE_SHIFT);
 }
-void Spi123::phase(PHASE e){
+void Spi::phase(PHASE e){
     r.setbit(m_spixcon, SMP, e);
 }
-void Spi123::clk_edge(CLKEDGE e){
+void Spi::clk_edge(CLKEDGE e){
     r.setbit(m_spixcon, CKE, e);
 }
-void Spi123::ss(bool tf){
+void Spi::ss(bool tf){
     r.setbit(m_spixcon, SSEN, tf);
 }
-void Spi123::clk_pol(CLKPOL e){
+void Spi::clk_pol(CLKPOL e){
     r.setbit(m_spixcon, CKP, e);
 }
-void Spi123::master(bool tf){
+void Spi::master(bool tf){
     r.setbit(m_spixcon, MSTEN, tf);
 }
-void Spi123::tx_irq(TXIRQ e){
+void Spi::tx_irq(TXIRQ e){
     r.clrbit(m_spixcon, STXISEL_CLR<<STXISEL_SHIFT);
     r.setbit(m_spixcon, e<<STXISEL_SHIFT);
 }
-void Spi123::rx_irq(RXIRQ e){
+void Spi::rx_irq(RXIRQ e){
     r.clrbit(m_spixcon, SRXISEL_CLR<<SRXISEL_SHIFT);
     r.setbit(m_spixcon, e<<SRXISEL_SHIFT);
 }
@@ -79,54 +79,54 @@ void Spi123::rx_irq(RXIRQ e){
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //spixstat
 
-uint8_t Spi123::stat_rxcount(){
+uint8_t Spi::stat_rxcount(){
     return r.val8(m_spixstat+3);
 }
-uint8_t Spi123::stat_txcount(){
+uint8_t Spi::stat_txcount(){
     return r.val8(m_spixstat+2);
 }
-bool Spi123::stat_frame(){
+bool Spi::stat_frame(){
     return r.anybit(m_spixstat, FRMERR);
 }
-void Spi123::stat_frame(bool tf){ //always clr
+void Spi::stat_frame(bool tf){ //always clr
     r.clrbit(m_spixstat, FRMERR);
 }
-bool Spi123::stat_busy(){
+bool Spi::stat_busy(){
     return r.anybit(m_spixstat, SPIBUSY);
 }
-bool Spi123::stat_txurun(){
+bool Spi::stat_txurun(){
     return r.anybit(m_spixstat, SPITUR);
 }
-bool Spi123::stat_sremty(){
+bool Spi::stat_sremty(){
     return r.anybit(m_spixstat, SRMT);
 }
-bool Spi123::stat_oflow(){
+bool Spi::stat_oflow(){
     return r.anybit(m_spixstat, SPIROV);
 }
-void Spi123::stat_oflow(bool){ //always clear
+void Spi::stat_oflow(bool){ //always clear
     r.clrbit(m_spixstat, SPIROV);
 }
-bool Spi123::stat_rxemty(){
+bool Spi::stat_rxemty(){
     return r.anybit(m_spixstat, SPIRBE);
 }
-bool Spi123::stat_txemty(){
+bool Spi::stat_txemty(){
     return r.anybit(m_spixstat, SPITBE);
 }
-bool Spi123::stat_txfull(){
+bool Spi::stat_txfull(){
     return r.anybit(m_spixstat, SPITBF);
 }
-bool Spi123::stat_rxfull(){
+bool Spi::stat_rxfull(){
      return r.anybit(m_spixstat, SPIRBF);
 }
 
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //spixbrg
 
-void Spi123::baud(uint16_t v){
+void Spi::baud(uint16_t v){
     m_spixbrg = v; //m_spibrg&
 }
 //set frequency
-void Spi123::freq(uint32_t v){
+void Spi::freq(uint32_t v){
     uint32_t clk;
     if(clk_sel() == REFO1) clk = Osc::refo_freq();
     else clk = Osc::sysclk();
@@ -137,7 +137,7 @@ void Spi123::freq(uint32_t v){
 }
 //get actual frequency
 //called by clk_sel(), freq(uint32_t)
-uint32_t Spi123::freq(){
+uint32_t Spi::freq(){
     uint32_t clk;
     if(clk_sel() == REFO1) clk = Osc::refo_freq();
     else clk = Osc::sysclk();
@@ -150,37 +150,37 @@ uint32_t Spi123::freq(){
 
 enum AUDMOD : uint8_t { I2S = 0, LEFT, RIGHT, PCMDSP };
 
-void Spi123::sign_ext(bool tf){
+void Spi::sign_ext(bool tf){
     r.setbit(m_spixcon2, SPISGNEXT, tf);
 }
-void Spi123::irq_frmerr(bool tf){
+void Spi::irq_frmerr(bool tf){
     r.setbit(m_spixcon2, FRMERREN, tf);
 }
-void Spi123::irq_oflow(bool tf){
+void Spi::irq_oflow(bool tf){
     r.setbit(m_spixcon2, SPIROVEN, tf);
 }
-void Spi123::irq_urun(bool tf){
+void Spi::irq_urun(bool tf){
     r.setbit(m_spixcon2, SPITUREN, tf);
 }
-void Spi123::ign_oflow(bool tf){
+void Spi::ign_oflow(bool tf){
     r.setbit(m_spixcon2, IGNROV, tf);
 }
-void Spi123::ign_urun(bool tf){
+void Spi::ign_urun(bool tf){
     r.setbit(m_spixcon2, IGNTUR, tf);
 }
-void Spi123::audio(bool tf){
+void Spi::audio(bool tf){
     bool ison = r.anybit(m_spixcon, ON);
     on(false);
     r.setbit(m_spixcon2, AUDEN, tf);
     on(ison);
 }
-void Spi123::mono(bool tf){
+void Spi::mono(bool tf){
     bool ison = r.anybit(m_spixcon, ON);
     on(false);
     r.setbit(m_spixcon2, AUDOMONO, tf);
     on(ison);
 }
-void Spi123::audio_mode(AUDMOD e){
+void Spi::audio_mode(AUDMOD e){
     bool ison = r.anybit(m_spixcon, ON);
     on(false);
     r.clrbit(m_spixcon2, PCMDSP);

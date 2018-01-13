@@ -11,7 +11,7 @@ struct Dma {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
-    //instantiate Comp123 with comparator number
+    //instantiate Dma with dma number
     enum DMAX { DMA0 = 0, DMA1, DMA2, DMA3 };
 
     constexpr Dma(DMAX);

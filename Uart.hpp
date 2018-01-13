@@ -8,16 +8,16 @@
  UART 1/2/3 functions
 =============================================================================*/
 
-struct Uart123  {
+struct Uart  {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
-    //instantiate Uart123 with uart number
+    //instantiate Uart with uart number
     enum UARTX { UART1 = 0, UART2, UART3 };
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
-    constexpr Uart123(UARTX);
+    constexpr Uart(UARTX);
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //uxmode
@@ -143,7 +143,7 @@ struct Uart123  {
 /*=============================================================================
  inline functions
 =============================================================================*/
-constexpr Uart123::Uart123(UARTX e)
+constexpr Uart::Uart(UARTX e)
     : m_uartx_mode((volatile uint32_t*)U1MODE+(e*UARTX_SPACING)),
       m_uartx_stat((volatile uint32_t*)U1MODE+(e*UARTX_SPACING)+4),
       m_uartx_tx(*((volatile uint32_t*)U1MODE+(e*UARTX_SPACING)+8)),
@@ -155,14 +155,14 @@ constexpr Uart123::Uart123(UARTX e)
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //uxtxreg
 
-void Uart123::tx(uint16_t v){
+void Uart::tx(uint16_t v){
     m_uartx_tx = v;
 }
 
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //uxrxreg
 
-uint16_t Uart123::rx(){
+uint16_t Uart::rx(){
     return m_uartx_rx;
 }
 
