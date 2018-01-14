@@ -107,7 +107,7 @@ struct Uart  {
             RXINV = 1<<4,
             BRGH = 1<<3,
             MODE_SHIFT = 0, MODE_CLR = 7,
-        //U1STA
+        UXSTA = 4, //offset from UXMODE in words
             MASK_SHIFT = 24, MASK_CLR = 255, //is byte3
             ADDR_SHIFT = 16, ADDR_CLR = 255, //is byte2
             UTXISEL_SHIFT = 14, UTXISEL_CLR = 3,
@@ -123,14 +123,15 @@ struct Uart  {
             PERR = 1<<3,
             FERR = 1<<2,
             OERR = 1<<1,
-            URXDA = 1<<0
+            URXDA = 1<<0,
+        UXTXREG = 8,
+        UXRXREG = 12,
+        UXBRG = 16
     };
 
     volatile uint32_t* m_uartx_mode;
-    volatile uint32_t* m_uartx_stat;
     volatile uint32_t& m_uartx_tx;                  //use reference
     volatile uint32_t& m_uartx_rx;                  //use reference
-    volatile uint32_t& m_uartx_brg;                 //use reference
 
     uint32_t m_uartx_baud;                          //desired baud
 
@@ -144,10 +145,8 @@ struct Uart  {
 =============================================================================*/
 constexpr Uart::Uart(UARTX e)
     : m_uartx_mode((volatile uint32_t*)U1MODE+(e*UARTX_SPACING)),
-      m_uartx_stat((volatile uint32_t*)U1MODE+(e*UARTX_SPACING)+4),
-      m_uartx_tx(*((volatile uint32_t*)U1MODE+(e*UARTX_SPACING)+8)),
-      m_uartx_rx(*((volatile uint32_t*)U1MODE+(e*UARTX_SPACING)+12)),
-      m_uartx_brg(*((volatile uint32_t*)U1MODE+(e*UARTX_SPACING)+16)),
+      m_uartx_tx(*((volatile uint32_t*)U1MODE+(e*UARTX_SPACING)+UXTXREG)),
+      m_uartx_rx(*((volatile uint32_t*)U1MODE+(e*UARTX_SPACING)+UXRXREG)),
       m_uartx_baud(0)
 {}
 

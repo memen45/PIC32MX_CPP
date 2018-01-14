@@ -60,7 +60,7 @@ struct Comp {
             CREF = 1<<4
     };
 
-    volatile uint32_t* m_cmxcon;
+    volatile uint32_t* m_cmpx_con;
 
 };
 
@@ -70,33 +70,33 @@ struct Comp {
 =============================================================================*/
 
 constexpr Comp::Comp(CMX e)
-    : m_cmxcon((volatile uint32_t*)CM1CON+(e*CMXCON_SPACING)){}
+    : m_cmpx_con((volatile uint32_t*)CM1CON+(e*CMXCON_SPACING)){}
 
 void Comp::on(bool tf){
-    r.setbit(m_cmxcon, ON, tf);
+    r.setbit(m_cmpx_con, ON, tf);
 }
 void Comp::out(bool tf){
-    r.setbit(m_cmxcon, COE, tf);
+    r.setbit(m_cmpx_con, COE, tf);
 }
 void Comp::out_inv(bool tf){
-    r.setbit(m_cmxcon, CPOL, tf);
+    r.setbit(m_cmpx_con, CPOL, tf);
 }
 bool Comp::evt_bit(){
-    return r.anybit(m_cmxcon, CEVT);
+    return r.anybit(m_cmpx_con, CEVT);
 }
 bool Comp::out_bit(){
-    return r.anybit(m_cmxcon, COUT);
+    return r.anybit(m_cmpx_con, COUT);
 }
 void Comp::evt_sel(EVPOL e){
-    r.clrbit(m_cmxcon, EVPOL_CLR<<EVPOL_SHIFT);
-    r.setbit(m_cmxcon, e<<EVPOL_SHIFT);
+    r.clrbit(m_cmpx_con, EVPOL_CLR<<EVPOL_SHIFT);
+    r.setbit(m_cmpx_con, e<<EVPOL_SHIFT);
 }
 void Comp::cref_cxina(bool tf){
-    r.setbit(m_cmxcon, CREF, !tf);
+    r.setbit(m_cmpx_con, CREF, !tf);
 }
 void Comp::ch_sel(CCH e){
-    r.clrbit(m_cmxcon, BGAP);
-    r.setbit(m_cmxcon, e);
+    r.clrbit(m_cmpx_con, BGAP);
+    r.setbit(m_cmpx_con, e);
 }
 
 //common static functions

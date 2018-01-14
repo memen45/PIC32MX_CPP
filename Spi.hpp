@@ -130,7 +130,7 @@ struct Spi  {
             MSTEN = 1<<5,
             STXISEL_SHIFT = 2, STXISEL_CLR = 3,
             SRXISEL_SHIFT = 0, SRXISEL_CLR = 3,
-        //SPIxSTAT
+        SPIXSTAT = 4, //offset from SPIXCON in words
             FRMERR = 1<<12,
             SPIBUSY = 1<<11,
             SPITUR = 1<<8,
@@ -140,7 +140,9 @@ struct Spi  {
             SPITBE = 1<<3,
             SPITBF = 1<<1,
             SPIRBF = 1<<0,
-        //SPIxCON2
+        SPIXBUF = 8, //offset from SPIXCON in words
+        SPIXBRG = 12, //offset from SPIXCON in words
+        SPIXCON2 = 16, //offset from SPIXCON in words
             SPISGNEXT = 1<<15,
             FRMERREN = 1<<12,
             SPIROVEN = 1<<11,
@@ -151,13 +153,12 @@ struct Spi  {
             AUDOMONO = 1<<3
     };
 
-    volatile uint32_t* m_spixcon;
-    volatile uint32_t* m_spixstat;
+    volatile uint32_t* m_spix_con;
     volatile uint32_t& m_spixbuf;                   //use reference
-    volatile uint32_t& m_spixbrg;                   //use reference
-    volatile uint32_t* m_spixcon2;
 
     uint32_t m_spix_freq;                           //set to actual spi freq
+
+    using vbyte_ptr = volatile uint8_t*;            //access stat as bytes
 
 };
 
@@ -166,11 +167,8 @@ struct Spi  {
  inline functions
 =============================================================================*/
 constexpr Spi::Spi(SPIX e)
-    : m_spixcon((volatile uint32_t*)SPI1CON+(e*SPIX_SPACING)),
-      m_spixstat((volatile uint32_t*)SPI1CON+(e*SPIX_SPACING)+4),
-      m_spixbuf(*((volatile uint32_t*)SPI1CON+(e*SPIX_SPACING)+8)),
-      m_spixbrg(*((volatile uint32_t*)SPI1CON+(e*SPIX_SPACING)+12)),
-      m_spixcon2((volatile uint32_t*)SPI1CON+(e*SPIX_SPACING)+16),
+    : m_spix_con((volatile uint32_t*)SPI1CON+(e*SPIX_SPACING)),
+      m_spixbuf(*((volatile uint32_t*)SPI1CON+(e*SPIX_SPACING)+SPIXBUF)),
       m_spix_freq(0)
 {}
 

@@ -59,55 +59,55 @@ void Uart::mode(MODESEL e){
 //uxsta
 
 void Uart::rx_mask(uint8_t v){
-    r.val((vbyte_ptr)m_uartx_stat+3, v);
+    r.val((vbyte_ptr)m_uartx_mode+(UXSTA*4)+3, v);
 }
 void Uart::rx_addr(uint8_t v){
-    r.val((vbyte_ptr)m_uartx_stat+2, v);
+    r.val((vbyte_ptr)m_uartx_mode+(UXSTA*4)+2, v);
 }
 void Uart::tx_irq(UTXISEL e){
-    r.clrbit(m_uartx_stat, UTXISEL_CLR<<UTXISEL_SHIFT);
-    r.setbit(m_uartx_stat, e<<UTXISEL_SHIFT);
+    r.clrbit(m_uartx_mode+UXSTA, UTXISEL_CLR<<UTXISEL_SHIFT);
+    r.setbit(m_uartx_mode+UXSTA, e<<UTXISEL_SHIFT);
 }
 void Uart::tx_pol(RXPOL e){
     bool b = r.anybit(m_uartx_mode, IREN) ? !e : e;
-    r.setbit(m_uartx_stat, UTXINV, b);
+    r.setbit(m_uartx_mode+UXSTA, UTXINV, b);
 }
 void Uart::rx_on(bool tf){
-    r.setbit(m_uartx_stat, URXEN, tf);
+    r.setbit(m_uartx_mode+UXSTA, URXEN, tf);
 }
 void Uart::tx_break(){
-    r.setbit(m_uartx_stat, UTXBRK);
+    r.setbit(m_uartx_mode+UXSTA, UTXBRK);
 }
 void Uart::tx_on(bool tf){
-    r.setbit(m_uartx_stat, UTXEN, tf);
+    r.setbit(m_uartx_mode+UXSTA, UTXEN, tf);
 }
 bool Uart::tx_full(){
-    return r.anybit(m_uartx_stat, UTXBF);
+    return r.anybit(m_uartx_mode+UXSTA, UTXBF);
 }
 bool Uart::tx_done(){
-    return r.anybit(m_uartx_stat, TRMT);
+    return r.anybit(m_uartx_mode+UXSTA, TRMT);
 }
 void Uart::rx_irq(URXISEL e){
-    r.clrbit(m_uartx_stat, URXISEL_CLR<<URXISEL_SHIFT);
-    r.setbit(m_uartx_stat, e<<URXISEL_SHIFT);
+    r.clrbit(m_uartx_mode+UXSTA, URXISEL_CLR<<URXISEL_SHIFT);
+    r.setbit(m_uartx_mode+UXSTA, e<<URXISEL_SHIFT);
 }
 void Uart::rx_addren(bool tf){
-    r.setbit(m_uartx_stat, ADDEN, tf);
+    r.setbit(m_uartx_mode+UXSTA, ADDEN, tf);
 }
 bool Uart::rx_busy(){
-    return !r.anybit(m_uartx_stat, RIDLE);
+    return !r.anybit(m_uartx_mode+UXSTA, RIDLE);
 }
 bool Uart::rx_perr(){
-    return r.anybit(m_uartx_stat, PERR);
+    return r.anybit(m_uartx_mode+UXSTA, PERR);
 }
 bool Uart::rx_ferr(){
-    return r.anybit(m_uartx_stat, FERR);
+    return r.anybit(m_uartx_mode+UXSTA, FERR);
 }
 bool Uart::rx_oerr(){
-    return r.anybit(m_uartx_stat, OERR);
+    return r.anybit(m_uartx_mode+UXSTA, OERR);
 }
 bool Uart::rx_empty(){
-    return !r.anybit(m_uartx_stat, URXDA);
+    return !r.anybit(m_uartx_mode+UXSTA, URXDA);
 }
 
 
@@ -117,13 +117,13 @@ bool Uart::rx_empty(){
 void Uart::baud_set(uint32_t v){
     m_uartx_baud = v;
     uint8_t bdiv = r.anybit(m_uartx_mode, BRGH) ? 4 : 16;
-    m_uartx_brg = baud_clk() / v / bdiv - 1;
+    v = baud_clk() / v / bdiv - 1;
+    r.val(m_uartx_mode+UXBRG, v);
 }
 //called by clk_sel(), on(), brg_mode()
 void Uart::baud_set(){
     //if baud not set, set it to 115200
-    if(m_uartx_baud == 0) baud_set(115200);
-    else baud_set(m_uartx_baud);
+    baud_set(m_uartx_baud ? m_uartx_baud : 115200);
 }
 uint32_t Uart::baud_clk(){
     CLKSEL e = (CLKSEL)((r.val(m_uartx_mode)>>17) & CLKSEL_CLR);

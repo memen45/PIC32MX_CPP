@@ -207,10 +207,7 @@ struct Dma {
         DCHXDPTR = 32,
         DCHXCSIZ = 36,
         DCHXCPTR = 40,
-        DCHXDAT = 44,
-
-
-
+        DCHXDAT = 44
     };
 
     volatile uint32_t* m_dmax_con;
@@ -227,7 +224,6 @@ struct Dma {
 constexpr Dma::Dma(DMAX e)
     : m_dmax_con((volatile uint32_t*)DCH0CON+(e*DCH_SPACING))
 {}
-
 
 
 //common static functions
@@ -331,7 +327,7 @@ void Dma::irq_abort(uint8_t v){
     r.setbit(m_dmax_con+DCHXECON, AIRQEN, v != (uint8_t)IRQOFF);
 }
 void Dma::irq_start(uint8_t v){
-    r.val((uint8_t*)m_dmax_con+(DCHXECON*4)+1, v);
+    r.val((vbyte_ptr)m_dmax_con+(DCHXECON*4)+1, v);
     r.setbit(m_dmax_con+DCHXECON, SIRQEN, v != (uint8_t)IRQOFF);
 }
 void Dma::start(){
