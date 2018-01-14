@@ -12,7 +12,7 @@ struct Clc {
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
     //instantiate Clc with clc number
-    enum CLC { CLC1 = 0, CLC2, CLC3, CLC4 };
+    enum CLCX { CLC1 = 0, CLC2, CLC3, CLC4 };
 
     //logic function
     enum MODE : uint8_t { ANDOR = 0, ORXOR, AND, SR, DSR, DR, JKR, LSR };
@@ -22,7 +22,7 @@ struct Clc {
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
-    constexpr Clc(CLC);
+    constexpr Clc(CLCX);
 
     void    gate_inv    (GXPOL, bool);
     void    on          (bool);
@@ -67,7 +67,7 @@ struct Clc {
  all functions inline
 =============================================================================*/
 
-constexpr Clc::Clc(CLC e)
+constexpr Clc::Clc(CLCX e)
     : m_clcx_con((volatile uint32_t*)CLC1CON+(e*CLCXCON_SPACING))
 {}
 
