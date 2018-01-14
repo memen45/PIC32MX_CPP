@@ -25,7 +25,6 @@ struct Uart  {
     enum CLKSEL { PBCLK = 0, SYSCLK, FRC, REFO1 };
     enum RTSMODE { FLOW = 0, SIMPLEX };
     enum RXPOL { IDLEHIGH = 0, IDLELOW };
-    enum SPEED { NORMAL = 0, HIGH };
     enum MODESEL {
          MODE8N1 = 0, MODE8E1 = 2, MODE8O1 = 4, MODE9N1 = 6,
          MODE8N2 = 1, MODE8E2 = 3, MODE8O2 = 5, MODE9N2 = 7
@@ -43,7 +42,7 @@ struct Uart  {
     void            loopback        (bool);             //loopback on/off
     void            autobaud        (bool);             //autobaud on/off
     void            rx_pol          (RXPOL);            //rx polarity
-    void            speed           (SPEED);            //(hign)4x or 16x
+    void            hispeed         (bool);             //(hign)4x or 16x
     void            mode            (MODESEL);          //parity, data, stop
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||

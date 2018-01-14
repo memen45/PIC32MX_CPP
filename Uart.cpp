@@ -46,8 +46,8 @@ void Uart::autobaud(bool tf){
 void Uart::rx_pol(RXPOL e){
     r.setbit(m_uartx_mode, RXINV, e);
 }
-void Uart::speed(SPEED e){
-    r.setbit(m_uartx_mode, BRGH, e);
+void Uart::hispeed(bool tf){
+    r.setbit(m_uartx_mode, BRGH, tf);
     baud_set();
 }
 void Uart::mode(MODESEL e){
