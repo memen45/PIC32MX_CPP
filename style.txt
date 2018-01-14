@@ -20,6 +20,28 @@ general coding style in use, mostly-
         void somefunc(uint32_t n){ }
         void somefunc(uint32_t addr, bool tf){ }
 
+    function names-
+        lowercase, shorter is better
+        if two words, will most likely be sparated by underscore
+        if in same class, but is register specific, will sometimes
+          be split into two words
+
+        Osc::clk_src()
+        Osc::pll_set()
+        Osc::tun_auto()
+        I2c::stat_rxfull()
+        I2c:on()
+
+    class names-
+        capitalized, short is better
+
+        I2c
+        Uart
+        Wdt
+        Pins
+        Osc
+
+
     opening brace mostly on same line (constructors, maybe not)
         void somefunc(){
             //code here
@@ -35,3 +57,5 @@ general coding style in use, mostly-
 
     static class access is generally used the format-
     Reg r; Syskey sk; Irq ir;
+
+
