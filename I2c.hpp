@@ -49,8 +49,6 @@ struct I2c  {
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //I2CXSTAT
 
-    enum DATADDR : bool { ADDR = 0, DATA };
-
     bool            stat_ack        ();
     bool            stat_txbusy     ();
     bool            stat_acktime    ();
@@ -62,7 +60,7 @@ struct I2c  {
     void            stat_txcol_clr  ();
     bool            stat_rxoflow    ();
     void            stat_rxoflow_clr();
-    DATADDR         stat_dataddr    ();
+    bool            stat_isdata     ();
     bool            stat_stopbit    ();
     bool            stat_startbit   ();
     bool            stat_rw         ();
@@ -263,8 +261,8 @@ bool I2c::stat_rxoflow(){
 void I2c::stat_rxoflow_clr(){
     r.clrbit(m_i2cx_con+I2CXSTAT, I2COV);
 }
-auto I2c::stat_dataddr() -> DATADDR {
-    return (DATADDR)r.anybit(m_i2cx_con+I2CXSTAT, DA);
+bool I2c::stat_isdata(){
+    return r.anybit(m_i2cx_con+I2CXSTAT, DA);
 }
 bool I2c::stat_stopbit(){
     return r.anybit(m_i2cx_con+I2CXSTAT, P);
