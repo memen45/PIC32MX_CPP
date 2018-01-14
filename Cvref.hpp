@@ -14,12 +14,10 @@ struct Cvref {
     //vref select
     enum REFSEL { NONE = 0, CVREF, AVDD };
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
-    static void    on      (bool);
-    static void    out     (bool);
-    static void    refsel  (REFSEL);
-    static void    dacdat  (uint8_t);
+    static void     on              (bool);
+    static void     out             (bool);
+    static void     refsel          (REFSEL);
+    static void     dacdat          (uint8_t);
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 

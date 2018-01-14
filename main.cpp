@@ -130,7 +130,7 @@ int main(){
     Osc osc;
     osc.pll_set(osc.MUL12, osc.DIV4);       // 24mhz - 96MHz for usb (/2)
     osc.sosc(true);                         //enable sosc if not already
-    osc.tun_auto(true);
+    osc.tun_auto(true);                     //let sosc tune frc
 
     //uint32_t t = osc.extclk();              //calculate sysclock (testing)
 
