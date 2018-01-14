@@ -53,14 +53,12 @@ struct Clc {
             LCOE = 1<<7,
             LCOUT = 1<<6,
             LCPOL = 1<<5,
-        SEL_OFFSET = 4, //offsets in words
-        GLS_OFFSET = 8, //offsets in words
+        CLCXSEL = 4, //offsets in words
+        CLCXGLS = 8, //offsets in words
     };
 
     //private vars
     volatile uint32_t* m_clcx_con;
-    volatile uint32_t* m_clcx_sel;
-    volatile uint32_t* m_clcx_gls;
 
 };
 
@@ -70,9 +68,7 @@ struct Clc {
 =============================================================================*/
 
 constexpr Clc::Clc(CLC e)
-    : m_clcx_con((volatile uint32_t*)CLC1CON+(e*CLCXCON_SPACING)),
-      m_clcx_sel((volatile uint32_t*)CLC1CON+(e*CLCXCON_SPACING)+4),
-      m_clcx_gls((volatile uint32_t*)CLC1CON+(e*CLCXCON_SPACING)+8)
+    : m_clcx_con((volatile uint32_t*)CLC1CON+(e*CLCXCON_SPACING))
 {}
 
 void Clc::gate_inv(GXPOL e, bool tf){
@@ -106,20 +102,20 @@ void Clc::mode(MODE e){
 //input select, n = 1-4, v = 0-7 (invalid args masked to good vals)
 void Clc::in_sel(uint8_t n, uint8_t v){
     n -= 1; n &= 3; n <<= 2; v &= 7;
-    r.clrbit(m_clcx_sel, 7<<n);
-    r.setbit(m_clcx_sel, v<<n);
+    r.clrbit(m_clcx_con+CLCXSEL, 7<<n);
+    r.setbit(m_clcx_con+CLCXSEL, v<<n);
 }
 //or all in in shot with precomputed value
 void Clc::in_sel(uint32_t v){
-    r.val(m_clcx_sel, v);
+    r.val(m_clcx_con+CLCXSEL, v);
 }
 //gate select, n = 1-4 (invalid gate masked to good gate)
 void Clc::gate_sel(uint8_t n, uint8_t v){
     n -= 1; n &= 3; n <<= 3;
-    r.clrbit(m_clcx_gls, 15<<n);
-    r.setbit(m_clcx_gls, v<<n);
+    r.clrbit(m_clcx_con+CLCXGLS, 15<<n);
+    r.setbit(m_clcx_con+CLCXGLS, v<<n);
 }
 //or all in in shot with precomputed value
 void Clc::gate_sel(uint32_t v){
-    r.val(m_clcx_gls, v);
+    r.val(m_clcx_con+CLCXGLS, v);
 }
