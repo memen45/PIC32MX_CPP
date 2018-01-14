@@ -12,28 +12,35 @@
 
 
 
-
+///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 /////// user provided data ////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
 //---power/wakeup options-------------------------------------------------------
 static const bool my_self_powered = 1;      //self-powered=1, bus-powered=0
 static bool my_remote_wakeup = 1;           //remote wakeup enabled=1
+
 //---endpoints------------------------------------------------------------------
 static const uint8_t my_last_endp = 4;      //last endpoint number used
 static const uint8_t my_n_endp = 3;         //number of endpoints used
 static const uint8_t my_buffer_size = 64;   //size of buffers (all same)
 static const uint8_t my_buffer_count = 8;   //number of buffers in buffer pool
+
 //---vbus pin-------------------------------------------------------------------
 static Pins vbus_pin(Pins::B6);             //Vbus pin
+
 //---interrupt------------------------------------------------------------------
 static const uint8_t usb_irq_pri = 5;       //usb interrupt priority
 static const uint8_t usb_irq_subpri = 0;    //usb interrupt sub-priority
 ISR(USB); //declared only, defined later in this file
+
+///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 /////// usb uses irq only, no polling /////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-
+///////////////////////////////////////////////////////////////////////////////
 
 //simple way to separate classes/structs for now
 //__inline include______________________________________________________________

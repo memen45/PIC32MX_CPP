@@ -78,8 +78,8 @@ struct UsbBuf2 {
 
     //callers use
     typedef struct {
-        uint8_t buf_size; //will be set to size of this buffer, caller can use
-        int32_t status;   //caller can use
+        uint16_t buf_size;//will be set to size of this buffer, caller can use
+        uint32_t status;  //caller can use
         void* vp;         //caller can use (callback function pointer)
         uint8_t buf[64];  //the buffer
     } buffer64_t;
@@ -87,7 +87,7 @@ struct UsbBuf2 {
     //callers use (used same as 64, but has 512byte buffer)
     typedef struct {
         uint16_t buf_size;
-        uint8_t status;
+        uint32_t status;
         void* vp;
         uint8_t buf[512];
     } buffer512_t;
@@ -130,12 +130,12 @@ UsbBuf2::buffer512_t* get512(){
 }
 void UsbBuf2::release(void* bufp){
     for(auto i = 0; i < 16; i++){
-        if(bufp == (void*)&m_buffers2.buffer64[i]) continue;
+        if(bufp != (void*)&m_buffers2.buffer64[i]) continue;
         m_buffers2.status &= ~(1<<i); //not inuse
         return;
     }
     for(auto i = 16; i < 20; i++){
-        if(bufp == (void*)&m_buffers2.buffer512[i>>16]) continue;
+        if(bufp != (void*)&m_buffers2.buffer512[i>>16]) continue;
         m_buffers2.status &= ~(1<<i); //not inuse
     }
 }
