@@ -151,6 +151,7 @@ int main(){
     Dma dma0(Dma::DMA0);
     dma0.irq_abort(Irq::CORE_TIMER);
     dma0.irq_abort(Dma::IRQOFF);
+    dma0.ssize(0x3355);
 
     //__________________________________________________________________________
     //usb- can't do much

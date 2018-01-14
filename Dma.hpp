@@ -173,6 +173,7 @@ struct Dma {
             CHEDET = 1<<2,
             CHPRI_SHIFT = 0, CHPRI_CLR = 3,
         //register offsets from base in words
+        //(m_dmax_con is pointer, so addition will be in words)
         DCHXECON = 4,
             CHAIRQ_SHIFT = 16, CHAIRG_CLR = 255, //can use byte access
             CHSIRQ_SHIFT = 8, CHSIRQ_CLR = 255, //can use byte access
