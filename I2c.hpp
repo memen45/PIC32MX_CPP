@@ -82,11 +82,11 @@ struct I2c  {
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //I2CXBRG
 
-    enum I2CBAUD : uint32_t {
+    enum I2CSPEED : uint32_t {
         KHZ100 = 100000, KHZ400 = 400000, MHZ1 = 1000000
     };
 
-    void            baud            (I2CBAUD);
+    void            speed           (I2CSPEED);
     void            brg             (uint16_t);
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -150,7 +150,7 @@ struct I2c  {
     };
 
     volatile uint32_t* m_i2cx_con;
-    I2CBAUD m_baud;
+    I2CSPEED m_speed;
 
 };
 
@@ -160,7 +160,7 @@ struct I2c  {
 =============================================================================*/
 constexpr I2c::I2c(I2CX e)
     : m_i2cx_con((volatile uint32_t*)I2C1CON+(e*I2CX_SPACING)),
-      m_baud(KHZ100)
+      m_speed(KHZ100)
 {}
 
 
@@ -183,7 +183,7 @@ void I2c::irq_collision(bool tf){
 void I2c::on(bool tf){
     //always set brg in case clock changed
     //or baud not changed since init
-    baud(m_baud);
+    speed(m_speed);
     r.setbit(m_i2cx_con, ON, tf);
 }
 void I2c::stop_idle(bool tf){
@@ -293,12 +293,12 @@ void I2c::addr_mask(uint16_t v){
 }
 
 //I2CXBRG
-void I2c::baud(I2CBAUD e){
+void I2c::speed(I2CSPEED e){
     uint32_t sck = e * 2;
     uint32_t clk = Osc::sysclk()<<6;
     clk = clk/sck - clk/9615384; //1/9615384=104ns=Tpgd
     brg((clk>>6)-2);
-    m_baud = e;
+    m_speed = e;
 }
 void I2c::brg(uint16_t v){
     if(v < 2) v = 2; //0,1 not allowed
