@@ -182,7 +182,7 @@ void I2c::irq_collision(bool tf){
 }
 void I2c::on(bool tf){
     //always set brg in case clock changed
-    //or baud not changed since init
+    //or speed not changed since init
     speed(m_speed);
     r.setbit(m_i2cx_con, ON, tf);
 }
