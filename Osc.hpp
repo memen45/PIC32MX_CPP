@@ -520,6 +520,7 @@ uint32_t Osc::frcclk(){
     return m_frcosc_freq;
 }
 
+
 /*
 
 func        reg         calls                   recalculate
