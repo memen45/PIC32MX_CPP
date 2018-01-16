@@ -36,6 +36,7 @@
 #include "I2c.hpp"
 #include "Ccp.hpp"
 
+
 /*=============================================================================
  LED's - all in array
  Pin class does not init pin, so we can control exactly if/when we want to
@@ -144,6 +145,10 @@ int main(){
 
     //__________________________________________________________________________
     //ccp
+    Ccp ccp1(Ccp::CCP1);
+    ccp1.mode(ccp1.TIMER32);
+    ccp1.pr32(0xFFFFFFFF);
+    ccp1.on(true);
 
 
     //__________________________________________________________________________
