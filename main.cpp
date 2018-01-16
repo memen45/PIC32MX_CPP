@@ -147,7 +147,6 @@ int main(){
     //ccp
     Ccp ccp1(Ccp::CCP1);
     ccp1.mode(ccp1.TIMER32);
-    ccp1.pr32(0xFFFFFFFF);
     ccp1.on(true);
 
 
