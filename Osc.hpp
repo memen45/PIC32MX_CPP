@@ -34,6 +34,7 @@
 #include "Reg.hpp"
 #include "Syskey.hpp"
 #include "Irq.hpp"
+#include "Dma.hpp"
 
 
 struct Osc {
@@ -178,9 +179,7 @@ struct Osc {
             LOCK = 1<<11,
             POL = 1<<10,
             ORNG = 1<<9,
-            ORPOL = 1<<8,
-        DMACON = 0xBF808900, //need until dma class written
-            DMASUSP = 1<<12
+            ORPOL = 1<<8
     };
 
 };
@@ -204,15 +203,15 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 auto Osc::unlock_irq() -> IDSTAT {
     uint8_t idstat = ir.all_ison();
     ir.disable_all();
-    idstat |= r.anybit(DMACON, DMASUSP)<<1;
-    r.setbit(DMACON, DMASUSP);
+    idstat |= Dma::all_suspend()<<1;
+    Dma::all_suspend(true);
     sk.unlock();
     return (IDSTAT)idstat;
 }
 //system lock enable, restore previous irq and dma status
 void Osc::lock_irq(IDSTAT idstat){
     sk.lock();
-    if((uint8_t)idstat & DMA) r.clrbit(DMACON, DMASUSP);
+    if(!(uint8_t)idstat & DMA) Dma::all_suspend(false);
     if((uint8_t)idstat & IRQ) ir.enable_all();
 }
 
