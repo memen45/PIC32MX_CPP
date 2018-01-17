@@ -234,3 +234,8 @@ uint16_t Ccp::buf16(){
 uint32_t Ccp::buf32(){
     return r.val(m_ccpx_con+CCPXBUF);
 }
+
+//misc
+uint8_t Ccp::ccp_num(){
+    return ((uint32_t)m_ccpx_con - CCP1CON1) / (CCPX_SPACING*4) + 1;
+}

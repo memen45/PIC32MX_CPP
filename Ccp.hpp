@@ -200,6 +200,11 @@ struct Ccp  {
     uint32_t        buf32           ();
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+    //misc
+
+    uint8_t         ccp_num         ();             //which ccp number am I
+
+    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
     private:
 
@@ -218,7 +223,7 @@ struct Ccp  {
             SIDL = 1<<13,
             CCPSLP = 1<<12,
             TMRSYNC = 1<<11,
-            CLKSEL_SHIFT = 1, CLKSEL_CLR = 7,
+            CLKSEL_SHIFT = 8, CLKSEL_CLR = 7,
             TMRPS_SHIFT = 6, TMRPS_CLR = 3,
             T32 = 1<<5, //combined into MODE
             CCSEL = 1<<4, //combined into MODE

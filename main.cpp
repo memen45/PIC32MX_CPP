@@ -145,10 +145,24 @@ int main(){
 
     //__________________________________________________________________________
     //ccp
-    Ccp ccp1(Ccp::CCP1);
-    ccp1.mode(ccp1.TIMER32);
-    ccp1.on(true);
+    //9 32bit timers running, doing nothing
+    Ccp ccps[] = {
+        Ccp::CCP1,
+        Ccp::CCP2,
+        Ccp::CCP3,
+        Ccp::CCP4,
+        Ccp::CCP5,
+        Ccp::CCP6,
+        Ccp::CCP7,
+        Ccp::CCP8,
+        Ccp::CCP9
+    };
 
+    for(auto i : ccps){
+        i.mode(i.TIMER32);
+        if(i.ccp_num() & 1) i.clk_src(i.SOSC); //odd use sosc
+        i.on(true);
+    }
 
     //__________________________________________________________________________
     //i2c
