@@ -358,7 +358,7 @@ int main(){
         for(auto i = 0; i < 3; i++){
             if(! dly[i].expired()) continue;
             leds[i].invert();
-            dly[i].reset();
+            dly[i].restart();
         }
         //check adc - swreset if < 10,
         //disable led1 if > 1/2Vref+(Vdd)
