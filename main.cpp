@@ -168,7 +168,16 @@ int main(){
     //__________________________________________________________________________
     //nvm
     Nvm nvm;
-    nvm.nop();
+    uint8_t onerow[Nvm::ROWSIZE];
+    for(uint16_t i = 0; i<Nvm::ROWSIZE; i++) onerow[i] = i;
+    nvm.page_erase(Nvm::MAXROW256*Nvm::PAGESIZE);
+    nvm.pgm_row((uint32_t*)onerow, Nvm::MAXROW256*Nvm::ROWSIZE);
+
+    uint32_t ip = (Nvm::MAXROW256*Nvm::ROWSIZE)|Nvm::BASEMEM;
+    for(uint16_t i = 0; i<Nvm::ROWSIZE; i++){
+        volatile uint8_t x = Reg::val8(ip++);
+        x = x;
+    }
 
     //__________________________________________________________________________
     //i2c
