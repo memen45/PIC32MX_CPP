@@ -1,4 +1,4 @@
-#include "Syskey.hpp"
+#include "Sys.hpp"
 
 //syskey lock/unlock
 //keep track of unlock count-
@@ -7,7 +7,7 @@
 //lock done when unlock_count is 0
 static volatile uint8_t unlock_count;
 
-void Syskey::lock(){
+void Sys::lock(){
     bool irqstate = Irq::all_ison();                //get STATUS.IE
     ir.disable_all();
     //unlock_count only accessed with irq off
@@ -17,7 +17,7 @@ void Syskey::lock(){
     if(irqstate) ir.enable_all();                   //restore IE state
 }
 
-void Syskey::unlock(){
+void Sys::unlock(){
     bool irqstate = ir.all_ison();                  //get STATUS.IE
     ir.disable_all();
     bool dmasusp = Dma::all_suspend();              //get DMA suspend status

@@ -61,11 +61,11 @@ bool Pins::icn_stat() const {
 =============================================================================*/
 //unlock, write byte, lock
 void Pins::pps_do(uint32_t addr, uint8_t v){
-    sk.unlock();
+    sys.unlock();
     r.clrbit(RPCON, IOLOCK);
     r.val(addr, v);
     r.setbit(RPCON, IOLOCK);
-    sk.lock();
+    sys.lock();
 }
 //pin -> pps peripheral in
 void Pins::pps_in(PPSIN e, RPN n){

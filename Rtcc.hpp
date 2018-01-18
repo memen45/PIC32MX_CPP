@@ -9,7 +9,7 @@
 
 #include <cstdint>
 #include "Reg.hpp"
-#include "Syskey.hpp"
+#include "Sys.hpp"
 #include "Osc.hpp"
 
 struct Rtcc {
@@ -66,7 +66,7 @@ struct Rtcc {
     private:
 
     static Reg r;
-    static Syskey sk;
+    static Sys sys;
 
     static void         unlock          ();
     static void         lock            ();
@@ -193,12 +193,12 @@ void Rtcc::alarm_date(uint32_t v){
 //RTCCON1 lock off by default, these functions will lock RTCCON1 when done
 //private functions
 void Rtcc::unlock(){
-    sk.unlock();
+    sys.unlock();
     r.clrbit(RTCCON1, WRLOCK);
 }
 void Rtcc::lock(){
     r.setbit(RTCCON1, WRLOCK);
-    sk.lock();
+    sys.lock();
 }
 void Rtcc::conset(uint32_t addr, uint32_t v, bool tf){
     unlock();

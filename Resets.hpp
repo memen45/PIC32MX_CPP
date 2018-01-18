@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Syskey.hpp"
+#include "Sys.hpp"
 #include "Reg.hpp"
 #include "Irq.hpp"
 
@@ -52,7 +52,7 @@ struct Resets {
     private:
 
     static Reg r;
-    static Syskey sk;
+    static Sys sys;
 
     enum : uint32_t {
         RCON = 0xBF8026E0,
@@ -112,7 +112,7 @@ bool Resets::config_err(){
 //resets after read
 void Resets::swreset(){
     Irq::disable_all();
-    sk.unlock();
+    sys.unlock();
     r.setbit(RSWRST, SWRST);
     r.val(RSWRST);
     for(;;);
@@ -141,17 +141,17 @@ void Resets::nmi_wdtclr(){
 }
 //PWRCON
 void Resets::bor(bool tf){
-    sk.unlock();
+    sys.unlock();
     r.setbit(PWRCON, SBOREN, tf);
-    sk.lock();
+    sys.lock();
 }
 void Resets::reten(bool tf){
-    sk.unlock();
+    sys.unlock();
     r.setbit(PWRCON, RETEN, tf);
-    sk.lock();
+    sys.lock();
 }
 void Resets::vregs(bool tf){
-    sk.unlock();
+    sys.unlock();
     r.setbit(PWRCON, VREGS, tf);
-    sk.lock();
+    sys.lock();
 }

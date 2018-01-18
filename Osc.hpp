@@ -32,7 +32,7 @@
 
 #include <cstdint>
 #include "Reg.hpp"
-#include "Syskey.hpp"
+#include "Sys.hpp"
 #include "Irq.hpp"
 #include "Dma.hpp"
 
@@ -138,7 +138,7 @@ struct Osc {
     private:
 
     static Reg r;                               //for static class access
-    static Syskey sk;                           //I like better than ::
+    static Sys sys;                             //alternate to  ::
     static Irq ir;
 
     static uint32_t m_sysclk;                    //store calculated cpu freq
@@ -197,7 +197,7 @@ uint32_t Osc::m_refo_freq = 0;
 const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 
 //some functions need irq disabled, others can use
-//Syskey::unlock/lock directly
+//Sys::unlock/lock directly
 
 //system unlock for register access, w/irq,dma disable
 auto Osc::unlock_irq() -> IDSTAT {
@@ -205,12 +205,12 @@ auto Osc::unlock_irq() -> IDSTAT {
     ir.disable_all();
     idstat |= Dma::all_suspend()<<1;
     Dma::all_suspend(true);
-    sk.unlock();
+    sys.unlock();
     return (IDSTAT)idstat;
 }
 //system lock enable, restore previous irq and dma status
 void Osc::lock_irq(IDSTAT idstat){
-    sk.lock();
+    sys.lock();
     if(!(uint8_t)idstat & DMA) Dma::all_suspend(false);
     if((uint8_t)idstat & IRQ) ir.enable_all();
 }
@@ -219,9 +219,9 @@ void Osc::lock_irq(IDSTAT idstat){
 //osccon
 
 void Osc::frc_div(DIVS e){
-    sk.unlock();
+    sys.unlock();
     r.val(OSCCON+3, e);
-    sk.lock();
+    sys.lock();
 }
 auto Osc::frc_div() -> DIVS {
     return (DIVS)r.val8(OSCCON+3);
@@ -242,17 +242,17 @@ void Osc::clk_lock(){
     r.setbit(OSCCON, CLKLOCK);
 }
 void Osc::sleep(bool tf){
-    sk.unlock();
+    sys.unlock();
     r.setbit(OSCCON, SLPEN, tf);
-    sk.lock();
+    sys.lock();
 }
 bool Osc::clk_bad(){
     return r.anybit(OSCCON, CF);
 }
 void Osc::sosc(bool tf){
-    sk.unlock();
+    sys.unlock();
     r.setbit(OSCCON, SOSCEN, tf);
-    sk.lock();
+    sys.lock();
     while(tf && !ready(SOSCRDY));
 }
 bool Osc::sosc(){
@@ -388,44 +388,44 @@ bool Osc::ready(CLKRDY e){
 //osctun
 
 void Osc::tun_auto(bool tf){
-    sk.unlock();
+    sys.unlock();
     r.setbit(OSCTUN, ON, tf);
-    sk.lock();
+    sys.lock();
 }
 void Osc::tun_idle(bool tf){
-    sk.unlock();
+    sys.unlock();
     r.setbit(OSCTUN, SIDL, tf);
-    sk.lock();
+    sys.lock();
 }
 void Osc::tun_src(TUNSRC e){
     if(e == TSOSC) sosc(true);
-    sk.unlock();
+    sys.unlock();
     r.setbit(OSCTUN, SRC, e);
-    sk.lock();
+    sys.lock();
 }
 bool Osc::tun_lock(){
     return r.anybit(OSCTUN, LOCK);
 }
 void Osc::tun_lpol(bool tf){
-    sk.unlock();
+    sys.unlock();
     r.setbit(OSCTUN, POL, !tf);
-    sk.lock();
+    sys.lock();
 }
 bool Osc::tun_rng(){
     return r.anybit(OSCTUN, ORNG);
 }
 void Osc::tun_rpol(bool tf){
-    sk.unlock();
+    sys.unlock();
     r.setbit(OSCTUN, ORPOL, !tf);
-    sk.lock();
+    sys.lock();
 }
 void Osc::tun_val(int8_t v ){
     //linit -32 to +31
     if(v > 31) v = 31;
     if(v < -32) v = -32;
-    sk.unlock();
+    sys.unlock();
     r.val(OSCTUN, v);
-    sk.lock();
+    sys.lock();
 }
 int8_t Osc::tun_val(){
     int8_t v = r.val8(OSCTUN);

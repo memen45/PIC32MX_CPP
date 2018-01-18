@@ -6,7 +6,7 @@
 
 #include <cstdint>
 #include "Reg.hpp"
-#include "Syskey.hpp"
+#include "Sys.hpp"
 
 class Pins {
 
@@ -135,7 +135,7 @@ class Pins {
     private:
 
     static Reg r;
-    static Syskey sk;
+    static Sys sys;
 
     enum { //offsets from base address, in words
         TRIS = 0x10>>2, PORT_ = 0x20>>2, LAT = 0x30>>2, ODC = 0x40>>2,

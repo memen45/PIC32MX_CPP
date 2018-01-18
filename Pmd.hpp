@@ -6,7 +6,7 @@
 
 #include <cstdint>
 #include "Reg.hpp"
-#include "Syskey.hpp"
+#include "Sys.hpp"
 
 struct Pmd {
 
@@ -40,7 +40,7 @@ struct Pmd {
     private:
 
     static Reg r;
-    static Syskey sk;
+    static Sys sys;
 
     static void     unlock  ();
     static void     lock    ();
@@ -58,12 +58,12 @@ struct Pmd {
 =============================================================================*/
 
 void Pmd::unlock(){
-    sk.unlock();
+    sys.unlock();
     r.clrbit(PMDCON, PMDLOCK);
 }
 void Pmd::lock(){
     r.setbit(PMDCON, PMDLOCK);
-    sk.lock();
+    sys.lock();
 }
 void Pmd::off(PMD e){
     unlock();
