@@ -1,8 +1,6 @@
 #pragma once
 
-/*=============================================================================
- Interrupt functions
-=============================================================================*/
+//Interrupt
 
 #include <cstdint>
 #include "Reg.hpp"
@@ -106,39 +104,64 @@ struct Irq {
 
 };
 
-/*=============================================================================
- all functions inline
-=============================================================================*/
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//  functions inline
 
-void Irq::disable_all(){
+//.............................................................................
+    void        Irq::disable_all        ()
+//.............................................................................
+{
     __builtin_disable_interrupts();
 }
-void Irq::enable_all(){
+//.............................................................................
+    void        Irq::enable_all         ()
+//.............................................................................
+{
     __builtin_enable_interrupts();
 }
-bool Irq::all_ison(){
+//.............................................................................
+    bool        Irq::all_ison           ()
+//.............................................................................
+{
     return (__builtin_mfc0(12,0) & 1);
 }
-void Irq::proxtimer(uint8_t n){ //n = priority 0-7
+//.............................................................................
+    void        Irq::proxtimer          (uint8_t n)
+//.............................................................................
+{ //n = priority 0-7
     r.clrbit(INTCON, TPC_CLR<<TPC_SHIFT);
     r.setbit(INTCON, (n & TPC_CLR)<<TPC_SHIFT);
 }
-void Irq::eint4_rising(bool tf){
+//.............................................................................
+    void        Irq::eint4_rising       (bool tf)
+//.............................................................................
+{
     r.setbit(INTCON, INT4EP, tf);
 }
-void Irq::eint3_rising(bool tf){
+//.............................................................................
+    void        Irq::eint3_rising       (bool tf)
+//.............................................................................
+{
     r.setbit(INTCON, INT3EP, tf);
 }
-void Irq::eint2_rising(bool tf){
+//.............................................................................
+    void        Irq::eint2_rising       (bool tf)
+//.............................................................................
+{
     r.setbit(INTCON, INT2EP, tf);
 }
-void Irq::eint1_rising(bool tf){
+//.............................................................................
+    void        Irq::eint1_rising       (bool tf)
+//.............................................................................
+{
     r.setbit(INTCON, INT1EP, tf);
 }
-void Irq::eint0_rising(bool tf){
+//.............................................................................
+    void        Irq::eint0_rising       (bool tf)
+//.............................................................................
+{
     r.setbit(INTCON, INT0EP, tf);
 }
-
 //note- the following offsets calculated in bytes as the register
 //numbers are enums (not uint32_t*)- so need to calculate bytes
 //the Reg::set/clr will reinterpret the enums to volatile uint32_t*
@@ -147,13 +170,22 @@ void Irq::eint0_rising(bool tf){
 //reg = 0xBF80F040 + (40/32)*16 = 0xBF80F050 = IFS1
 //bit offset = 1<<(40%32) = 1<<8
 //bit offset 8 in IFS1
-void Irq::flag_clr(IRQ_VN e){
+//.............................................................................
+    void        Irq::flag_clr           (IRQ_VN e)
+//.............................................................................
+{
     r.clrbit(IFS_BASE + ((e/32)*16), 1u<<(e%32));
 }
-bool Irq::flag(IRQ_VN e){
+//.............................................................................
+    bool        Irq::flag               (IRQ_VN e)
+//.............................................................................
+{
     return r.anybit(IFS_BASE + ((e/32)*16), 1u<<(e%32));
 }
-void Irq::on(IRQ_VN e, bool tf){
+//.............................................................................
+    void        Irq::on                 (IRQ_VN e, bool tf)
+//.............................................................................
+{
     r.setbit(IEC_BASE + ((e/32)*16), 1u<<(e%32), tf);
 }
 //vector 17 example
@@ -164,7 +196,10 @@ void Irq::on(IRQ_VN e, bool tf){
 //init specific irq
 //pri is masked to 0-7, sub is masked to 0-3
 //pri of 0 disables irq
-void Irq::init(IRQ_VN e, uint8_t pri, uint8_t sub, bool tf){
+//.............................................................................
+    void        Irq::init       (IRQ_VN e, uint8_t pri, uint8_t sub, bool tf)
+//.............................................................................
+{
     uint32_t priority_shift = 8*(e%4);
     pri &= 7; sub &= 3; pri <<= 2; pri |= sub;
     r.clrbit(IPC_BASE + ((e/4)*16), (31<<priority_shift));
@@ -173,7 +208,10 @@ void Irq::init(IRQ_VN e, uint8_t pri, uint8_t sub, bool tf){
     on(e, tf);
 }
 //init list (array) of irq's
-void Irq::init(irq_list_t* arr){
+//.............................................................................
+    void        Irq::init               (irq_list_t* arr)
+//.............................................................................
+{
     for(; arr->irqvn != END; arr++){
         init(arr->irqvn, arr->p, arr->s, arr->en);
     }
@@ -182,7 +220,10 @@ void Irq::init(irq_list_t* arr){
 //pri = 1-7, tf =0,1 (0=normal, 1=shadow)
 //pri is masked to 0-7
 //pri val of 0 will set/clr SS0- no harm as not using
-void Irq::shadow_set(uint8_t pri, bool tf){
+//.............................................................................
+    void        Irq::shadow_set         (uint8_t pri, bool tf)
+//.............................................................................
+{
     pri &= 7; pri <<= 2; //0*4=0 1*4=4, 7*4=28
     r.setbit(PRISS, 1<<pri, tf);
 }
@@ -190,7 +231,6 @@ void Irq::shadow_set(uint8_t pri, bool tf){
 
 ////////////////////////////////////////////////////////////////////////////////
 // ISR MACRO
-////////////////////////////////////////////////////////////////////////////////
-//usage- ISR(ADC){ /* isr code here */ }
+// usage- ISR(ADC){ /* isr code here */ }
 #define ISR(nam) extern "C" __attribute((vector((int)Irq::nam),interrupt))\
     void nam##_ISR()

@@ -1,8 +1,6 @@
 #pragma once
 
-/*=============================================================================
- Nvm functions
-=============================================================================*/
+//Nvm
 
 #include <cstdint>
 #include "Reg.hpp"
@@ -16,7 +14,6 @@
     return values
     0= no error, 1= low voltage error, 2= write error
 */
-
 
 struct Nvm {
 
@@ -44,8 +41,6 @@ struct Nvm {
     static uint8_t  page_erase      (uint32_t);
     static void     pgm_protect     (uint32_t, bool); //true=lock until reset
     static void     boot_protect    (BOOTP, bool); //true=lock until reset
-
-
 
     //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
@@ -97,10 +92,13 @@ struct Nvm {
 };
 
 
-/*=============================================================================
- all functions inline
-=============================================================================*/
-uint8_t Nvm::unlock(){
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//  functions inline
+
+//.............................................................................
+    uint8_t     Nvm::unlock         ()
+//.............................................................................
+{
     uint8_t idstat = ir.all_ison();
     ir.disable_all();
     idstat |= Dma::all_suspend()<<1;
@@ -109,64 +107,96 @@ uint8_t Nvm::unlock(){
     r.val(NVMKEY, MAGIC2);
     return idstat;
 }
-void Nvm::lock(uint8_t v){
+//.............................................................................
+    void        Nvm::lock           (uint8_t v)
+//.............................................................................
+{
     *(vword_ptr)NVMKEY = 0;
     if(v & 1) ir.enable_all();
     if(v & 2) return;
     Dma::all_suspend(false);
 }
-void Nvm::do_wr(){
+//.............................................................................
+    void        Nvm::do_wr          ()
+//.............................................................................
+{
     uint8_t stat = unlock();
     r.setbit(NVMCON, WR);
     lock(stat);
     while(r.anybit(NVMCON, WR));
 }
-void Nvm::do_op(uint8_t v){
+//.............................................................................
+    void        Nvm::do_op          (uint8_t v)
+//.............................................................................
+{
     r.clrbit(NVMCON, NVMOP_CLR|WREN);
     r.setbit(NVMCON, v|WREN);
     do_wr();
     r.clrbit(NVMCON, NVMOP_CLR|WREN);
 }
-void Nvm::address(uint32_t v){
+//.............................................................................
+    void        Nvm::address        (uint32_t v)
+//.............................................................................
+{
     //all addr to physical
     r.val(NVMADDR, r.k2phys(v));
 }
-uint8_t Nvm::pgm_dword(uint32_t* addr, uint32_t hw, uint32_t lw){
+//.............................................................................
+    uint8_t     Nvm::pgm_dword      (uint32_t* addr, uint32_t hw, uint32_t lw)
+//.............................................................................
+{
     address((uint32_t)addr);
     r.val(NVMDATA1, hw);
     r.val(NVMDATA0, lw);
     do_op(PGMDWORD);
     return error();
 }
-uint8_t Nvm::pgm_row(uint32_t* src, uint32_t dst){
+//.............................................................................
+    uint8_t     Nvm::pgm_row        (uint32_t* src, uint32_t dst)
+//.............................................................................
+{
     //flash (dst may be 0 based, OR kseg0 flash addr)
     address(dst|BASEMEM);
     r.val(NVMSRCADDR, r.k2phys(src)); //sram
     do_op(PGMROW);
     return error();
 }
-uint8_t Nvm::page_erase(uint32_t v){
+//.............................................................................
+    uint8_t     Nvm::page_erase     (uint32_t v)
+//.............................................................................
+{
     //flash (v may be 0 based, OR kseg0 flash addr)
     address(v|BASEMEM);
     do_op(ERASEPAGE);
     return error();
 }
-void Nvm::pgm_nop(){
+//.............................................................................
+    void        Nvm::pgm_nop        ()
+//.............................................................................
+{
     do_op(NOP);
 }
-uint8_t Nvm::error(){
+//.............................................................................
+    uint8_t     Nvm::error          ()
+//.............................................................................
+{
     uint8_t err = (r.val16(NVMCON)>>12) & 3;
     if(err) pgm_nop();
     return err;
 }
-
 //address | 0x1Dxxxxxx, true=lock until reset
-void Nvm::pgm_protect(uint32_t v, bool tf){
+//.............................................................................
+    void        Nvm::pgm_protect    (uint32_t v, bool tf)
+//.............................................................................
+{
     uint8_t stat = unlock();
     r.val(NVMPWP, (v & PWP_CLR) | !tf<<PWPULOCK_SHIFT);
     lock(stat);
 }
-void Nvm::boot_protect(BOOTP e, bool tf){
+//.............................................................................
+    void        Nvm::boot_protect   (BOOTP e, bool tf)
+//.............................................................................
+{
     uint8_t stat = unlock();
     r.val(NVMBWP, e | !tf<<BWPULOCK_SHIFT);
     lock(stat);

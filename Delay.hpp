@@ -1,8 +1,6 @@
 #pragma once
 
-/*=============================================================================
- Delay using Coprocessor0 Count
-=============================================================================*/
+//Delay using Coprocessor0 Count
 
 #include <cstdint>
 #include "Cp0.hpp"

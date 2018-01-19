@@ -1,10 +1,8 @@
 #pragma once
 
-/*=============================================================================
- Register (SFR) R/W
+//Register (SFR) R/W
+//kseg1/0 address <-> physical address
 
- kseg1/0 address <-> physical address
-=============================================================================*/
 
 #include <cstdint>
 
@@ -123,9 +121,9 @@ struct Reg {
 
 };
 
-/*=============================================================================
- all functions inline
-=============================================================================*/
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//  functions inline
+
 //setbit, specify 1/0
 template <typename T, typename V> void Reg::setbit(T r, V v, bool sc){
     using vtype = typename getVsiz<V>::type;
