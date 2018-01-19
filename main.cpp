@@ -328,7 +328,8 @@ int main(){
         rate += n;
         if(rate < 100 || rate > 4000) rate -= n;
         Cp0::compare_ms(rate);              //no need to disable irq's
-        Cp0::compare_reload(true);          //true = clear flag, cp0 irq on
+        Cp0::compare_reload();
+        Cp0::compare_irq(true);             //true = clear flag, cp0 irq on
         led2.on();                          //as cp0 irq only reloads (reads)
         Irq::enable_all();
     };
@@ -433,7 +434,8 @@ ISR(RTCC){
         ir.on(ir.CORE_TIMER, false); //core timer irq disable
         led2.off();
     } else {
-        cp.compare_reload(true); //true = clear flag, core timer irq on
+        cp.compare_reload();
+        cp.compare_irq(true);
     }
     ir.flag_clr(ir.RTCC);
 }
