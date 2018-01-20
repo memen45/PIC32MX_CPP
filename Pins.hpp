@@ -106,7 +106,7 @@ class Pins {
     void        icn_mismatch    () const;
     bool        icn_flag        () const;
     bool        icn_stat        () const;
-    void        icn_flagclear   () const;
+    void        icn_flagclr     () const;
 
     //pps
     static void pps_in          (PPSIN, RPN = RPNONE);
@@ -225,7 +225,7 @@ class Pins {
 }
 
 //=============================================================================
-    void        Pins::icn_flagclear () const
+    void        Pins::icn_flagclr () const
 //=============================================================================
 {
     r.clrbit(m_pt+CNF, m_pn);

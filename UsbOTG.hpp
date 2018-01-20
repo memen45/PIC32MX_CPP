@@ -20,15 +20,15 @@ class UsbOTG {
 
     static uint8_t  flags               ();                 //get all
     static bool     flag                (FLAGSOTG);         //get one
-    static void     flags_clear         ();                 //clear all
-    static void     flags_clear         (uint8_t);          //clear one or more
-    static void     flag_clear          (FLAGSOTG);         //clear one
+    static void     flags_clr           ();                 //clear all
+    static void     flags_clr           (uint8_t);          //clear one or more
+    static void     flag_clr            (FLAGSOTG);         //clear one
 
     static uint16_t irqs                ();                 //get all
     static bool     irq                 (FLAGSOTG);         //get one
-    static void     irqs_clear          ();                 //clear all
-    static void     irqs_clear          (uint8_t);          //clr one or more
-    static void     irq_clear           (FLAGS);            //clr one
+    static void     irqs_clr            ();                 //clear all
+    static void     irqs_clr            (uint8_t);          //clr one or more
+    static void     irq_clr             (FLAGS);            //clr one
 
     static uint8_t  stat                ();                 //get all
     static bool     stat                (FLAGSOTG);         //get one
@@ -88,21 +88,21 @@ bool Usb::flag(FLAGSOTG e)
 }
 
 //=============================================================================
-void Usb::flags_clear()
+void Usb::flags_clr()
 //=============================================================================
 {
     Reg::val(U1OTGIR, 255);
 }
 
 //=============================================================================
-void Usb::flags_clear(uint8_t v)
+void Usb::flags_clr(uint8_t v)
 //=============================================================================
 {
     Reg::val(U1OTGIR, v);
 }
 
 //=============================================================================
-void Usb::flag_clear(FLAGSOTG e)
+void Usb::flag_clr(FLAGSOTG e)
 //=============================================================================
 {
     Reg::val(U1OTGIR, e);
@@ -123,21 +123,21 @@ bool Usb::irq(FLAGSOTG e)
 }
 
 //=============================================================================
-void Usb::irqs_clear()
+void Usb::irqs_clr()
 //=============================================================================
 {
     Reg::val(U1OTGIR, 255);
 }
 
 //=============================================================================
-void Usb::irqs_clear(uint8_t v)
+void Usb::irqs_clr(uint8_t v)
 //=============================================================================
 {
     Reg::val(U1OTGIR, v);
 }
 
 //=============================================================================
-void Usb::irq_clear(FLAGSOTG e)
+void Usb::irq_clr(FLAGSOTG e)
 //=============================================================================
 {
     Reg::val(U1OTGIR, e);
