@@ -90,8 +90,6 @@ ______________________________________________________________________________*/
     void        stop        ();
     bool        stalled     ();
 
-
-
     private:
 
     enum { U1STAT = 0xBF808640, PPBI = 1<<2 };
@@ -118,12 +116,18 @@ ______________________________________________________________________________*/
  also need to know max packet size (constructor only)
  all vars reset, bd entries cleared
 ______________________________________________________________________________*/
+//=============================================================================
 UsbEndptTRx::UsbEndptTRx(bdt_t* b, uint16_t max)
+//=============================================================================
     : m_bd{b, b+1}, m_max_count(max)
 {
     reinit();
 }
-void UsbEndptTRx::reinit(){
+
+//=============================================================================
+void UsbEndptTRx::reinit()
+//=============================================================================
+{
     m_options = 0;
     m_bufptr = 0;
     m_bufn = 0;
@@ -140,7 +144,10 @@ void UsbEndptTRx::reinit(){
  (provide bits in correct bit position)
  BSTALL, UOWN unchanged
 ______________________________________________________________________________*/
-void UsbEndptTRx::options(uint8_t v){
+//=============================================================================
+void UsbEndptTRx::options(uint8_t v)
+//=============================================================================
+{
     m_options = (v & 0x78); //bits x6543xxx
 }
 
@@ -159,7 +166,10 @@ void UsbEndptTRx::options(uint8_t v){
   packet for some reason AND still remaining bytes to send, we shorted the
   host- either case is considered done here and return actual tx/rx count)
 ______________________________________________________________________________*/
-uint16_t UsbEndptTRx::check(){
+//=============================================================================
+uint16_t UsbEndptTRx::check()
+//=============================================================================
+{
     bool eo = r.anybit(U1STAT, PPBI);//get PPBI
     bdt_t& bd = *m_bd[eo];          //references look nicer to user
     uint16_t c = bd.count;          //get actual count rx/tx
@@ -185,7 +195,10 @@ uint16_t UsbEndptTRx::check(){
  (if RX/TX not used, m_max_count will be 0- return false always)
  if n > max packet size, also get second buffer ready now
 ______________________________________________________________________________*/
-bool UsbEndptTRx::start(uint8_t* buf, uint16_t n, bool d01, bool bstall){
+//=============================================================================
+bool UsbEndptTRx::start(uint8_t* buf, uint16_t n, bool d01, bool bstall)
+//=============================================================================
+{
     if(m_bufn || m_max_count == 0 || stalled()) return false;
     m_options &= ~(1<<6);
     m_options |= (d01<<6)|(bstall<<2);
@@ -210,7 +223,10 @@ bool UsbEndptTRx::start(uint8_t* buf, uint16_t n, bool d01, bool bstall){
  m_bufptr incremented by n, m_bufn count incremented, m_eveodd toggled,
  m_options bit6 (data01) toggled (all for for next time)
 ______________________________________________________________________________*/
-void UsbEndptTRx::setup(uint16_t n){
+//=============================================================================
+void UsbEndptTRx::setup(uint16_t n)
+//=============================================================================
+{
     bdt_t& bd = *m_bd[m_eveodd];        //get reference, so eveodd does not
                                         //have to compute on every one
     bd.addr = m_bufptr;                 //set address of buf
@@ -228,7 +244,10 @@ void UsbEndptTRx::setup(uint16_t n){
  take ownership of both buffers if not already owned
  (toggle m_eveodd if we caused a 1->0)
 ______________________________________________________________________________*/
-void UsbEndptTRx::stop(){
+//=============================================================================
+void UsbEndptTRx::stop()
+//=============================================================================
+{
     bdt_t& bde = *m_bd[0]; bdt_t& bdo = *m_bd[1];
     if(bde.uown){ m_eveodd ^= 1; bde.uown = 0; }
     if(bdo.uown){ m_eveodd ^= 1; bdo.uown = 0; }
@@ -239,7 +258,10 @@ void UsbEndptTRx::stop(){
  get stall status (stalled if either buffer stalled)
  if a setup packet received on this endpoint, bstall automatically cleared
 ______________________________________________________________________________*/
-bool UsbEndptTRx::stalled(){
+//=============================================================================
+bool UsbEndptTRx::stalled()
+//=============================================================================
+{
     bdt_t& bde = *m_bd[0]; bdt_t& bdo = *m_bd[1];
     return ((bde.uown && bde.bstall) || (bdo.uown && bdo.bstall));
 }
@@ -283,7 +305,7 @@ class UsbEndpt {
 
 
 ______________________________________________________________________________*/
-////////////////////////////////////////////////////////////////////////////////
+
     public:
 
     //capabilities (shifted into U1EPn bit positions)
@@ -308,7 +330,6 @@ ______________________________________________________________________________*/
 
     //public static function
     static uint32_t bdt_addr(); //to get bdt address (for Usb::bdt_addr() use)
-////////////////////////////////////////////////////////////////////////////////
 
     private:
 
@@ -355,17 +376,15 @@ ______________________________________________________________________________*/
     class UsbEndptTRx    m_TX;          //TX endpoint class
 };
 
-
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-//
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //static
 //UsbHandlers::attach will get bdt address, and set the address in the sfr reg
 bdt_t UsbEndpt::m_bdt[(my_last_endp+1)*4] = {0};
 uint32_t UsbEndpt::bdt_addr(){ return (uint32_t)m_bdt; }
 
 //public
+//=============================================================================
 UsbEndpt::UsbEndpt(uint8_t n, TR tr, uint16_t max) :
+//=============================================================================
     m_ep_n(n&15),
     m_ep_trx(tr),
     m_bd{&m_bdt[n*4],&m_bdt[n*4+1],&m_bdt[n*4+2],&m_bdt[n*4+3]},
@@ -379,34 +398,63 @@ UsbEndpt::UsbEndpt(uint8_t n, TR tr, uint16_t max) :
 {
     epreg(0);
 }
+
+
 //UsbEndpt::UsbEndpt(uint8_t n, TR tr){}
-void UsbEndpt::deinit(){
+//=============================================================================
+void UsbEndpt::deinit()
+//=============================================================================
+{
     epreg(0);
     UsbBuf::release((uint8_t*)m_rxbuf[0]);
     UsbBuf::release((uint8_t*)m_rxbuf[1]);
     m_TX.stop();
     m_RX.stop();
 }
-void UsbEndpt::reinit(){
+
+//=============================================================================
+void UsbEndpt::reinit()
+//=============================================================================
+{
     deinit();
     UsbEndpt(m_ep_n,m_ep_trx, m_buf_len);
     m_RX.reinit();
     m_TX.reinit();
 }
-void UsbEndpt::epreg(U1EP e, bool tf){
+
+//=============================================================================
+void UsbEndpt::epreg(U1EP e, bool tf)
+//=============================================================================
+{
     r.setbit(m_ep_reg, e, tf);
 }
-volatile bool UsbEndpt::epreg(U1EP e) const {
+
+//=============================================================================
+volatile bool UsbEndpt::epreg(U1EP e) const
+//=============================================================================
+{
     return r.anybit(m_ep_reg, e);
 }
-void UsbEndpt::epreg(uint8_t v){
+
+//=============================================================================
+void UsbEndpt::epreg(uint8_t v)
+//=============================================================================
+{
     r.val(m_ep_reg, v);
 }
-void UsbEndpt::on(bool tf){
+
+//=============================================================================
+void UsbEndpt::on(bool tf)
+//=============================================================================
+{
     if(tf) epreg(m_ep_trx|HSHAKE);
     else epreg(0);
 }
-void UsbEndpt::on(uint8_t v){
+
+//=============================================================================
+void UsbEndpt::on(uint8_t v)
+//=============================================================================
+{
     epreg(v);
 }
 
@@ -416,7 +464,10 @@ void UsbEndpt::on(uint8_t v){
     called from ISR with index into this endpoint of which caused the irq
     (0-3, rx-even,rx-odd,tx-even,tx-odd)
 ..............................................................................*/
-void UsbEndpt::token(uint8_t idx){
+//=============================================================================
+void UsbEndpt::token(uint8_t idx)
+//=============================================================================
+{
     Usb u; //just for style, using u. instead of Usb::
 
     //check if we even have an endpoint in use
@@ -454,7 +505,10 @@ void UsbEndpt::token(uint8_t idx){
         m_setup_pkt already contains the 8bytes
         any tx was cancelled
 ..............................................................................*/
-void UsbEndpt::setup_token(){
+//=============================================================================
+void UsbEndpt::setup_token()
+//=============================================================================
+{
 
     bool dir = m_setup_pkt.dir;
     //uint8_t typ = m_setup_pkt.type;
@@ -517,10 +571,11 @@ void UsbEndpt::setup_token(){
     //if IN data stage, tx is ready for IN
 
 }
-/*..............................................................................
 
-..............................................................................*/
-void UsbEndpt::in_token(){
+//=============================================================================
+void UsbEndpt::in_token()
+//=============================================================================
+{
     if(m_setup_stage == STATUS){
         m_setup_stage = COMPLETE;
         UsbBuf::release((uint8_t*)m_tx_ptr);
@@ -536,10 +591,11 @@ void UsbEndpt::in_token(){
     //}
 
 }
-/*..............................................................................
 
-..............................................................................*/
-void UsbEndpt::out_token(){
+//=============================================================================
+void UsbEndpt::out_token()
+//=============================================================================
+{
     if(m_setup_stage == STATUS){
         m_setup_stage = COMPLETE;
         UsbBuf::release((uint8_t*)m_tx_ptr);
@@ -556,11 +612,5 @@ void UsbEndpt::out_token(){
 
 
 }
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-//
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-/*..............................................................................
-
-..............................................................................*/

@@ -1,8 +1,6 @@
 #pragma once
 
-/*=============================================================================
- USB Chapter 9 stuff - imcomplete
-=============================================================================*/
+//USB Chapter 9 stuff - imcomplete
 
 #include <cstdint>
 
@@ -10,17 +8,11 @@ class UsbCh9 {
 
     public:
 
-    //============================================================
-    // Descriptors
-    //============================================================
-
     //bDescriptorType
     typedef enum {
         DEVICE = 1, CONFIG, STRING, IFACE,
         ENDP, QUAL, OTHER, IFACEPWR, OTG
     } bDescriptorType_t;
-
-
 
     //Device Descriptor
     typedef struct __attribute__ ((packed)) {
@@ -40,8 +32,6 @@ class UsbCh9 {
         uint8_t bNumConfigurations;
     } DeviceDescriptor_t;
 
-
-
     //Configuration Descriptor Structure
     typedef struct __attribute__ ((packed)) {
         uint8_t bLength;            // 9
@@ -58,8 +48,6 @@ class UsbCh9 {
         REQUIRED = 0x80, SELFPWR = 0xC0, REMWAKE = 0xA0
     } bmAttributesCONFIG_t;
 
-
-
     //Interface Descriptor
     typedef struct __attribute__ ((packed)){
         uint8_t bLength;            // 9
@@ -72,8 +60,6 @@ class UsbCh9 {
         uint8_t bInterfaceProtocol;
         uint8_t iInterface;
     } InterfaceDescriptor_t;
-
-
 
     //Endpoint Descriptor
     typedef struct __attribute__ ((packed)){
@@ -104,20 +90,11 @@ class UsbCh9 {
         FSBULKLG = 32, FSBULKMED = 16, FSBULKSM = 8
     } wMaxPacketSizeENDP_t;
 
-
-
     //String descriptor (header only)
     typedef struct __attribute__ ((packed)){
         uint8_t bLength;
         uint8_t bDescriptorType;    // 3 - STRING
     } StringDescriptor_t;
-
-
-
-
-    //============================================================
-    // Setup Packet
-    //============================================================
 
     //setup packet
     typedef union __attribute__ ((packed)){
@@ -137,7 +114,6 @@ class UsbCh9 {
             uint16_t wLength;
         };
     } SetupPkt_t;
-
 
     typedef enum { //uint16_t wRequest; (bRequest<<8|bmRequestType)
         DEV_GET_STATUS = 0x0080, DEV_CLEAR_FEATURE = 0x0100,

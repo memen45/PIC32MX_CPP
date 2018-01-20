@@ -8,18 +8,18 @@
 
 
 struct UsbBuf {
-//______________________________________________________________________________
-//
-// all usb buffers come from here
-// my_buffer_count * my_buffer_size byte buffers - all same length
-// caller requests buffer via -
-//   volatile uint8_t* mybuf = UsbBuf::get();
-//   if(!mybuf) no_free_buffers- try again
-// caller returns buffer when done
-//   UsbBuf::release(mybuf);
-// to reinit buffers (release all, and clear)-
-//   UsbBuf::reinit();
-//______________________________________________________________________________
+/*
+
+ all usb buffers come from here
+ my_buffer_count * my_buffer_size byte buffers - all same length
+ caller requests buffer via -
+   volatile uint8_t* mybuf = UsbBuf::get();
+   if(!mybuf) no_free_buffers- try again
+ caller returns buffer when done
+   UsbBuf::release(mybuf);
+ to reinit buffers (release all, and clear)-
+   UsbBuf::reinit();
+*/
 
     static void                 reinit();
     static uint8_t*             get();
@@ -31,20 +31,25 @@ struct UsbBuf {
         uint8_t buf[my_buffer_size];
     } buf_t;
 };
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-// UsbBuf static functions, vars
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 static UsbBuf::buf_t m_buffers[my_buffer_count] = {0};
 
 //clear buffers, clear inuse flag
-void UsbBuf::reinit(){
+//=============================================================================
+    void        UsbBuf::reinit          ()
+//=============================================================================
+{
     for(auto& i : m_buffers){
         i.inuse = false;
         for(auto& j : i.buf) j = 0;
     }
 }
+
 //get an unused buffer (address), return 0 if none available (caller checks 0)
-uint8_t* UsbBuf::get(){
+//=============================================================================
+    uint8_t*    UsbBuf::get             ()
+//=============================================================================
+{
     for(auto& i : m_buffers){
         if(i.inuse) continue;
         i.inuse = true;
@@ -52,8 +57,12 @@ uint8_t* UsbBuf::get(){
     }
     return 0;
 }
+
 //return a buffer for use
-void UsbBuf::release(uint8_t* p){
+//=============================================================================
+    void        UsbBuf::release         (uint8_t* p)
+//=============================================================================
+{
     //in case was physical address from bdt
     //convert to kseg0
     p = (uint8_t*)Reg::p2kseg0(p);
@@ -63,11 +72,15 @@ void UsbBuf::release(uint8_t* p){
         return;
     }
 }
+
 //size of buffer
-uint8_t UsbBuf::buf_len() {
+//=============================================================================
+    uint8_t     UsbBuf::buf_len         ()
+//=============================================================================
+{
     return my_buffer_size;
 }
-//______________________________________________________________________________
+
 
 
 
@@ -106,10 +119,12 @@ struct UsbBuf2 {
 
 };
 
-//=============================================================================
 static UsbBuf2::m_buffer_t m_buffers2 = {0};
 
-UsbBuf2::buffer64_t* get64(){
+//=============================================================================
+    auto        UsbBuf2::get64          () -> buffer64_t*
+//=============================================================================
+{
     for(auto i = 0; i < 16; i++){
         if(m_buffers2.status & (1<<i)) continue;
         m_buffers2.status |= 1<<i; //inuse
@@ -118,7 +133,11 @@ UsbBuf2::buffer64_t* get64(){
     }
     return 0;
 }
-UsbBuf2::buffer512_t* get512(){
+
+//=============================================================================
+    auto        UsbBuf2::get512         () -> buffer512_t*
+//=============================================================================
+{
     for(auto i = 16; i < 20; i++){
         if(m_buffers2.status & (1<<i)) continue;
         m_buffers2.status |= 1<<i; //inuse
@@ -128,7 +147,11 @@ UsbBuf2::buffer512_t* get512(){
     }
     return 0;
 }
-void UsbBuf2::release(void* bufp){
+
+//=============================================================================
+    void        UsbBuf2::release        (void* bufp)
+//=============================================================================
+{
     for(auto i = 0; i < 16; i++){
         if(bufp != (void*)&m_buffers2.buffer64[i]) continue;
         m_buffers2.status &= ~(1<<i); //not inuse
@@ -139,6 +162,10 @@ void UsbBuf2::release(void* bufp){
         m_buffers2.status &= ~(1<<i); //not inuse
     }
 }
-void UsbBuf2::reinit(){
+
+//=============================================================================
+    void        UsbBuf2::reinit         ()
+//=============================================================================
+{
     m_buffers2.status = 0;
 }
