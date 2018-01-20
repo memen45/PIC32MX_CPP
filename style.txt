@@ -8,17 +8,13 @@ general coding style in use, mostly-
         argument types listed without argument names
         void somefunc(uint8_t, bool)
 
-    functions argument names- unless something better wanted
+    common function argument names-
         e = enum
         v = value
-        n = count/size value
-        addr = 32bit address value
         tf = bool
 
         void somefunc(MYENUM e, bool tf){ }
         void somefunc(uint8_t v){ }
-        void somefunc(uint32_t n){ }
-        void somefunc(uint32_t addr, bool tf){ }
 
     function names-
         lowercase, shorter is better
@@ -42,8 +38,9 @@ general coding style in use, mostly-
         Osc
 
 
-    opening brace mostly on same line (constructors, maybe not)
-        void somefunc(){
+    function braces-
+        void somefunc()
+        {
             //code here
         }
 
