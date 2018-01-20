@@ -3,25 +3,16 @@
 #include <cstdint>
 #include "Reg.hpp"
 
-
-/*=============================================================================
- UART 1/2/3 functions
-=============================================================================*/
+//UART 1/2/3
 
 struct Uart  {
-
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
     //instantiate Uart with uart number
     enum UARTX { UART1 = 0, UART2, UART3 };
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
     constexpr Uart(UARTX);
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //uxmode
-
     enum CLKSEL { PBCLK = 0, SYSCLK, FRC, REFO1 };
     enum RTSMODE { FLOW = 0, SIMPLEX };
     enum RXPOL { IDLEHIGH = 0, IDLELOW };
@@ -45,9 +36,7 @@ struct Uart  {
     void            hispeed         (bool);             //(hign)4x or 16x
     void            mode            (MODESEL);          //parity, data, stop
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //uxsta
-
     enum UTXISEL : uint8_t { TFREE = 0, TDONE, TEMPTY };
     enum URXISEL : uint8_t { RANY = 0, RHALF, RMOST };
 
@@ -68,24 +57,16 @@ struct Uart  {
     bool            rx_oerr         ();                 //rx overrun err
     bool            rx_empty        ();                 //rx is empty
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //uxtxreg
-
     void            tx              (uint16_t);         //put in tx register
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //uxrxreg
-
     uint16_t        rx              ();                 //get from rx register
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //uxbrg
-
     void            baud_set        (uint32_t);         //set baud to value
     void            baud_set        ();                 //recalc, or default
     uint32_t        baud_clk        ();                 //get uart clock freq
-
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
     private:
 
@@ -141,28 +122,28 @@ struct Uart  {
 
 #include "Osc.hpp"
 
-//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-//  functions inline
-//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
-constexpr Uart::Uart(UARTX e)
+//=============================================================================
+    constexpr       Uart::Uart      (UARTX e)
+//=============================================================================
     : m_uartx_mode((volatile uint32_t*)U1MODE+(e*UARTX_SPACING)),
       m_uartx_tx(*((volatile uint32_t*)U1MODE+(e*UARTX_SPACING)+UXTXREG)),
       m_uartx_rx(*((volatile uint32_t*)U1MODE+(e*UARTX_SPACING)+UXRXREG)),
       m_uartx_baud(0)
 {}
 
-//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //uxtxreg
-
-void Uart::tx(uint16_t v){
+//=============================================================================
+    void            Uart::tx        (uint16_t v)
+//=============================================================================
+{
     m_uartx_tx = v;
 }
 
-//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //uxrxreg
-
-uint16_t Uart::rx(){
+//=============================================================================
+    uint16_t        Uart::rx        ()
+//=============================================================================
+{
     return m_uartx_rx;
 }
 

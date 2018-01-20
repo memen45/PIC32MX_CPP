@@ -7,7 +7,10 @@
 //lock done when unlock_count is 0
 static volatile uint8_t unlock_count;
 
-void Sys::lock(){
+//=============================================================================
+    void        Sys::lock           ()
+//=============================================================================
+{
     bool irqstate = Irq::all_ison();                //get STATUS.IE
     ir.disable_all();
     //unlock_count only accessed with irq off
@@ -17,7 +20,10 @@ void Sys::lock(){
     if(irqstate) ir.enable_all();                   //restore IE state
 }
 
-void Sys::unlock(){
+//=============================================================================
+    void        Sys::unlock         ()
+//=============================================================================
+{
     bool irqstate = ir.all_ison();                  //get STATUS.IE
     ir.disable_all();
     bool dmasusp = Dma::all_suspend();              //get DMA suspend status

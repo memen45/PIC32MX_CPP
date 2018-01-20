@@ -8,20 +8,14 @@
 
 struct Ccp  {
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
     //instantiate Ccp with ccp number
     enum CCPX {
         CCP1 = 0, CCP2, CCP3, CCP4, CCP5, CCP6, CCP7, CCP8, CCP9
     };
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
     constexpr Ccp(CCPX);
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //ccpxcon1
-
     enum OPOSTSRC : bool { TMRIRQ = 0, EVTTRG };
 
     enum SYNC : uint8_t {
@@ -87,9 +81,7 @@ struct Ccp  {
     void            tmr_prescale    (TMRPS);
     void            mode            (MODE);
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //ccpxcon2
-
     enum OUTPINS : uint8_t {
         OCF = 1<<5, OCE = 1<<4, OCD = 1<<3,
         OCC = 1<<2, OCB = 1<<1, OCA = 1<<0
@@ -123,9 +115,8 @@ struct Ccp  {
     void            gate_now        (bool);
     void            gate_autosrc    (GATEAUTOSRC);
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-    //ccpxcon3
 
+    //ccpxcon3
     enum OUTM : uint8_t {
         STEERABLE = 0, PUSHPULL, HALFBRIDGE, BRUSHREV = 4, BRUSHFWD, SCAN
     };
@@ -143,9 +134,7 @@ struct Ccp  {
     void            shutdown_bdf    (SHUTDOWN);
     void            dead_time       (uint8_t);
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //ccpxstat
-
     bool            pr16_busy       ();
     bool            tmr32_busy      ();
     bool            tmr16_busy      ();
@@ -161,9 +150,7 @@ struct Ccp  {
     bool            stat_oflow      ();
     bool            stat_bufany     ();
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //ccpxtmr
-
     void            tmr16           (uint16_t);
     void            tmr16h          (uint16_t);
     void            tmr32           (uint32_t);
@@ -171,9 +158,7 @@ struct Ccp  {
     uint16_t        tmr16h          ();
     uint32_t        tmr32           ();
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //ccpxpr
-
     void            pr16            (uint16_t);
     void            pr16h           (uint16_t);
     void            pr32            (uint32_t);
@@ -181,9 +166,7 @@ struct Ccp  {
     uint16_t        pr16h           ();
     uint32_t        pr32            ();
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //ccpxra, ccpxrb
-
     void            compa           (uint16_t);
     void            compb           (uint16_t);
     void            comp32          (uint32_t);
@@ -191,18 +174,12 @@ struct Ccp  {
     uint16_t        compb           ();
     uint32_t        comp32          ();
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //ccpxbuf
-
     uint16_t        buf16           ();
     uint32_t        buf32           ();
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //misc
-
     uint8_t         ccp_num         ();             //which ccp number am I
-
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
     private:
 
@@ -281,12 +258,9 @@ struct Ccp  {
 };
 
 
-//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-//functions inline
-
-//.............................................................................
+//=============================================================================
     constexpr       Ccp::Ccp        (CCPX e)
-//.............................................................................
+//=============================================================================
     : m_ccpx_con((vword_ptr)CCP1CON1+(e*CCPX_SPACING))
 {
 }

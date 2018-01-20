@@ -19,8 +19,6 @@
 
 class DelayCP0 {
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
     public:
 
     bool    expired     ();             //time expired?
@@ -31,8 +29,6 @@ class DelayCP0 {
     void    set_us      (uint32_t);     //set us wait time, no block (poll)
     void    set_ms      (uint32_t);     //set ms wait time, no block (poll)
     void    set_s       (uint16_t);     //set s wait time, no block (poll)
-
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
     private:
 

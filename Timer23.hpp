@@ -1,8 +1,6 @@
 #pragma once
 
-/*=============================================================================
- Timer2/Timer3 functions
-=============================================================================*/
+//Timer2/Timer3
 
 #include <cstdint>
 #include "Reg.hpp"
@@ -10,8 +8,6 @@
 class Timer23 {
 
     public:
-
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
     //instantiate with timer number
     enum TMR23 { TMR2 = 0, TMR3 };
@@ -21,8 +17,6 @@ class Timer23 {
 
     //clock sources
     enum CLK { PBCLK = 0, T2CK };
-
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
     constexpr Timer23(TMR23);
 
@@ -36,8 +30,6 @@ class Timer23 {
     void        prescale    (PRESCALE) const;
     void        mode32      (bool) const; //T2 only (harmless for T3)
     void        clk_src     (CLK) const;
-
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
     private:
 
@@ -60,12 +52,11 @@ class Timer23 {
 
 };
 
-//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-//  functions inline
-//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
-constexpr Timer23::Timer23(TMR23 e)
+//=============================================================================
+    constexpr       Timer23::Timer23        (TMR23 e)
+//=============================================================================
     : m_txcon( (volatile uint32_t*)T1CON+(e*TMR23_SPACING) ),
       m_tmrx( *((volatile uint32_t*)T1CON+(e*TMR23_SPACING)+4) ),
       m_prx( *((volatile uint32_t*)T1CON+(e*TMR23_SPACING)+8) )
-{}
+{
+}

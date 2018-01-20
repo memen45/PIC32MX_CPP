@@ -9,18 +9,12 @@
 
 struct Spi  {
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
     //instantiate Comp123 with comparator number
     enum SPIX { SPI1 = 0, SPI2, SPI3 };
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
     constexpr Spi(SPIX);
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //spixcon
-
     enum FRMDIR : bool { MASTER = 0, SLAVE };
     enum FRMHL : bool { LOW = 0, HIGH };
     enum FRMPW : bool { CLKW = 0, CHARW };
@@ -57,39 +51,31 @@ struct Spi  {
     void            tx_irq          (TXIRQ);            //tx irq mode
     void            rx_irq          (RXIRQ);            //rx irq mode
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //spixstat
-
     uint8_t         stat_rxcount    ();                 //enhanced rx buf count
     uint8_t         stat_txcount    ();                 //enhanced tx buf count
-    bool            stat_frame      ();                 //framing error
-    void            stat_frame      (bool);             //framing error clear
+    bool            stat_ferr       ();                 //framing error
+    void            stat_ferrclr    ();                 //framing error clear
     bool            stat_busy       ();                 //spi busy
     bool            stat_txurun     ();                 //tx underrun error
     bool            stat_sremty     ();                 //shift reg empty
-    bool            stat_oflow      ();                 //rx overflow
-    void            stat_oflow      (bool);             //rx overflow clear
+    bool            stat_oerr       ();                 //rx overflow
+    void            stat_oerrclr    ();                 //rx overflow clear
     bool            stat_rxemty     ();                 //rx empty
     bool            stat_txemty     ();                 //tx empty
     bool            stat_txfull     ();                 //tx full
     bool            stat_rxfull     ();                 //rx full
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //spixbuf
-
     void            buf             (uint32_t);         //set buf 8/16/32bit
     uint32_t        buf             ();                 //get buf 8/16/32bit
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //spixbrg
-
     void            baud            (uint16_t);         //set baud
     void            freq            (uint32_t);         //set frequency
     uint32_t        freq            ();                 //get frequency
 
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
     //spixcon2
-
     enum AUDMOD : uint8_t { I2S = 0, LEFT, RIGHT, PCMDSP };
 
     void            sign_ext        (bool);             //rx sign extend
@@ -101,9 +87,6 @@ struct Spi  {
     void            audio           (bool);             //audio mode
     void            mono            (bool);             //audio mono
     void            audio_mode      (AUDMOD);           //audio mode
-
-
-    //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
     private:
 
@@ -161,28 +144,26 @@ struct Spi  {
 
 };
 
-
-//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-//  functions inline
-
-//.............................................................................
+//=============================================================================
     constexpr       Spi::Spi        (SPIX e)
-//.............................................................................
+//=============================================================================
     : m_spix_con((volatile uint32_t*)SPI1CON+(e*SPIX_SPACING)),
       m_spixbuf(*((volatile uint32_t*)SPI1CON+(e*SPIX_SPACING)+SPIXBUF)),
       m_spix_freq(0)
 {
 }
+
 //spixbuf
-//.............................................................................
+//=============================================================================
     void            Spi::buf        (uint32_t v)
-//.............................................................................
+//=============================================================================
 {
     m_spixbuf = v; //m_spibuf&
 }
-//.............................................................................
+
+//=============================================================================
     uint32_t        Spi::buf        ()
-//.............................................................................
+//=============================================================================
 {
     return m_spixbuf; //m_spibuf&
 }
