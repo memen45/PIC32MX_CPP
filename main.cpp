@@ -47,14 +47,17 @@
  them later by index
 =============================================================================*/
 Pins leds[] = {                 //group leds
-    { Pins::D1 },               //RED
-    { Pins::C3 },               //GREEN
-    { Pins::C15 },              //BLUE
+    { Pins::D1 },               //RED   //OCM1B
+    { Pins::C3 },               //GREEN //OCM2B
+    { Pins::C15 },              //BLUE  //OCM3E
     { Pins::D3 },               //LED1 (invert in timer1/timer2/timer3 irq)
     { Pins::C13 }               //LED2 (cp0 irq blinks)
 };
 Pins& led1 = leds[3];           //references to specific leds as needed
 Pins& led2 = leds[4];
+//Pins& ledR = leds[0];
+//Pins& ledG = leds[1];
+//Pins& ledB = leds[2];
 
 /*=============================================================================
  Switches - all in array

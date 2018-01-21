@@ -95,6 +95,7 @@
 {
     r.clrbit(m_ccpx_con, CLKSEL_CLR<<CLKSEL_SHIFT);
     r.setbit(m_ccpx_con, e<<CLKSEL_SHIFT);
+    if(e == SOSC) Osc::sosc(true);
 }
 
 //=============================================================================

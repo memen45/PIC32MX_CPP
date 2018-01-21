@@ -2,7 +2,6 @@
 
 #include <cstdint>
 #include "Reg.hpp"
-#include "Osc.hpp"
 
 //MCCP 1-3, SCCP 4-9
 
@@ -257,6 +256,7 @@ struct Ccp  {
     vword_ptr m_ccpx_con;
 };
 
+#include "Osc.hpp"
 
 //=============================================================================
     constexpr       Ccp::Ccp        (CCPX e)
