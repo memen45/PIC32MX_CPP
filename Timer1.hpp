@@ -4,7 +4,6 @@
 
 #include <cstdint>
 #include "Reg.hpp"
-#include "Osc.hpp"
 
 struct Timer1 {
 
@@ -52,6 +51,8 @@ struct Timer1 {
     };
 
 };
+
+#include "Osc.hpp"
 
 //=============================================================================
     void        Timer1::timer           (uint16_t n)

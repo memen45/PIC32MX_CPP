@@ -38,6 +38,7 @@
 #include "Nvm.hpp"
 
 
+
 /*=============================================================================
  LED's - all in array
  Pin class does not init pin, so we can control exactly if/when we want to
@@ -327,11 +328,10 @@ int main(){
         static uint16_t rate = 200;
         rate += n;
         if(rate < 100 || rate > 4000) rate -= n;
-        Cp0::compare_ms(rate);              //no need to disable irq's
+        Cp0::compare_ms(rate);
         Cp0::compare_reload();
         Cp0::compare_irq(true);             //true = clear flag, cp0 irq on
-        led2.on();                          //as cp0 irq only reloads (reads)
-        Irq::enable_all();
+        led2.on();
     };
 
     //__________________________________________________________________________
