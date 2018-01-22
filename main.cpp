@@ -37,6 +37,11 @@
 #include "Ccp.hpp"
 #include "Nvm.hpp"
 
+
+//try extending Pins class for led
+//try protected on Pins, then provide needed
+//functions only in Led class to limit methods
+//available to Led class
 struct Led : protected Pins {
 
     Led(Pins::RPN, bool = false);
