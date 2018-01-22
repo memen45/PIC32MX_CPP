@@ -123,21 +123,26 @@
     sys.lock();
 }
 
-//pin -> pps peripheral in
+//pin -> pps peripheral in, or turn off
 //=============================================================================
-    void        Pins::pps_in            (PPSIN e, RPN n)
+    void        Pins::pps_in            (PPSIN e)
 //=============================================================================
 {
-    pps_do(RPINR1+((e/4)*16)+(e%4), n&31);
-    r.setbit(ANSELA + TRIS + ((n>>8)/16)*0x100, 1<<((n>>8)%16));  //tris=1
-    r.clrbit(ANSELA + ((n>>8)/16)*0x100, 1<<((n>>8)%16));      //ansel=0
+    if(m_rpn == 0) return;      //no pps for this pin
+    if(e != PPSINOFF) m_ppsin = (uint8_t)e; //save peripheral number
+    if(m_ppsin == PPSINOFF) return; //not set previously, nothing to do
+    //set peripheral m_ppsin register to 0 if off, or RPn number
+    pps_do(RPINR1+((m_ppsin/4)*16)+(m_ppsin%4), e == PPSINOFF ? 0 : m_rpn);
+    digital_in();
 }
 
 //pps peripheral out -> pin
 //=============================================================================
-    void        Pins::pps_out           (PPSOUT e, RPN n)
+    void        Pins::pps_out           (PPSOUT e)
 //=============================================================================
 {
-    pps_do(RPOR0+((((n&31)-1)/4)*16)+(((n&31)-1)%4), e);
+    if(m_rpn == 0) return; //no pps for this pin
+    uint8_t n = m_rpn-1; //1 based to 0 based to calc reg addresses
+    pps_do(RPOR0+((n/4)*16)+(n%4), e);
 }
 

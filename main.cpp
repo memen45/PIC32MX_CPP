@@ -37,27 +37,50 @@
 #include "Ccp.hpp"
 #include "Nvm.hpp"
 
+struct Led : protected Pins {
 
+    Led(Pins::RPN, bool = false);
+
+    void on();
+    void off();
+    void invert();
+    void digital_in();
+    void digital_out();
+
+    private:
+    uint32_t m_interval_us{0};
+
+};
+void Led::on(){ Pins::on(); }
+void Led::off(){ Pins::off(); }
+void Led::invert(){ Pins::invert(); }
+void Led::digital_in(){ Pins::digital_in(); }
+void Led::digital_out(){ Pins::digital_out(); }
+
+Led::Led(Pins::RPN pp, bool tf)
+:  Pins(pp, tf)
+{
+    Pins::digital_out();
+    Pins::off();
+}
+
+//try extending Pins class to Led
+Led led2(Pins::C13); //LED1 (invert in timer1/timer2/timer3 irq)
+Led led1(Pins::D3); //LED2 (cp0 irq blinks)
 
 /*=============================================================================
- LED's - all in array
- Pin class does not init pin, so we can control exactly if/when we want to
- set them up
- array is created here so we can init them all at once in a loop, and access
- them later by index
+ rgb LED's (array test)
 =============================================================================*/
 Pins leds[] = {                 //group leds
     { Pins::D1 },               //RED   //OCM1B
     { Pins::C3 },               //GREEN //OCM2B
     { Pins::C15 },              //BLUE  //OCM3E
-    { Pins::D3 },               //LED1 (invert in timer1/timer2/timer3 irq)
-    { Pins::C13 }               //LED2 (cp0 irq blinks)
+    //{ Pins::D3 },               //LED1 (invert in timer1/timer2/timer3 irq)
+    //{ Pins::C13 }               //LED2 (cp0 irq blinks)
 };
-Pins& led1 = leds[3];           //references to specific leds as needed
-Pins& led2 = leds[4];
-//Pins& ledR = leds[0];
-//Pins& ledG = leds[1];
-//Pins& ledB = leds[2];
+//Pins& led1 = leds[3];           //references to specific leds as needed
+//Pins& led2 = leds[4];
+
 
 /*=============================================================================
  Switches - all in array
@@ -77,9 +100,8 @@ Pins& sw3 = sw[2];
 DelayCP0 sw_dly;                //debounce
 DelayCP0 dly[3];                //CP0 led delays
 uint32_t t_ms[] = {             //led delay ms
-    200, 400, 600,
-    1000, 2000, 4000,
-    4000, 8000, 1600,
+    50, 60, 70,
+    300, 320, 340,
     0
 };
 
@@ -150,24 +172,23 @@ int main(){
 
     //__________________________________________________________________________
     //ccp
-    //9 32bit timers running, doing nothing
+    //mccp 1-3 pwm to rgb led's
     Ccp ccps[] = {
         Ccp::CCP1,
         Ccp::CCP2,
-        Ccp::CCP3,
-        Ccp::CCP4,
-        Ccp::CCP5,
-        Ccp::CCP6,
-        Ccp::CCP7,
-        Ccp::CCP8,
-        Ccp::CCP9
+        Ccp::CCP3
     };
-
-    for(auto i : ccps){
-        i.mode(i.TIMER32);
-        if(i.ccp_num() & 1) i.clk_src(i.SOSC); //odd use sosc
+    for(auto& i : ccps){
+        i.mode(i.DEPWM16);
+        i.compa(0);
+        i.out_pins(i.OCB);
         i.on(true);
     }
+    //R,G use OCxB, B uses OCxE
+    ccps[2].out_pins(ccps[2].OCE);
+    ccps[0].compb(0);
+    ccps[0].compb(0x2000);
+    ccps[0].compb(0x4000);
 
     //__________________________________________________________________________
     //nvm
@@ -278,10 +299,11 @@ int main(){
     //see if pps code works (does nothing)
     //(do before pins setup below, as out will clear tris)
     //use RAx or RPx for pins (has to be the 'R' versions)
-    Pins::pps_in(Pins::U2RX, Pins::RP1); //RP1(RA0) alsp set to input
-    Pins::pps_in(Pins::U2RX); //default is Pins::RPNONE (peripheral input off)
-    Pins::pps_out(Pins::U2TX, Pins::RA0); //TX2->RA0(RP1)
-    Pins::pps_out(Pins::PPSLAT, Pins::RA0); //RA0 now uses LATx
+    Pins u2rx(Pins::RP1);
+    u2rx.pps_in(u2rx.U2RX);
+    u2rx.pps_in(u2rx.PPSINOFF);
+
+
 
     //__________________________________________________________________________
     //init sw pins
@@ -359,9 +381,24 @@ int main(){
         Wdt::reset();                       //comment out to test wdt reset
 
         //check for delay timeouts, invert led, reset delay counter
+        static int updown[] = { 1, 1, 1 };
         for(auto i = 0; i < 3; i++){
             if(! dly[i].expired()) continue;
-            leds[i].invert();
+            //leds[i].invert();
+            uint16_t tmp = ccps[i].compb();
+            if(updown[i] == 1) tmp += 500;
+            else tmp -= 500;
+
+            if(tmp > 30000){
+                updown[i] = -1;
+                tmp = 30000;
+            }
+            if(tmp < 1000){
+                updown[i] = 1;
+                tmp = 1000;
+            }
+            ccps[i].compb(tmp);
+
             dly[i].restart();
         }
         //check adc - swreset if < 10,

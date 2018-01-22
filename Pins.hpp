@@ -10,15 +10,6 @@ class Pins {
 
     public:
 
-    //instantiate Pins with the following pin name
-    //(can also use enum RPN names also)
-    enum PORTPIN : uint8_t {
-        A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,
-        B0,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11,B13= 29,B14,B15,
-        C0,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,
-        D0,D1,D2,D3,D4
-    };
-
     //pps_in peripheral names
     enum PPSIN : uint8_t {
         //byte offset from RPINR1
@@ -33,7 +24,8 @@ class Pins {
         U2RX = 30, U2CTS = 31,                      //R9
         U3CTS = 35,                                 //R10
         SDI2 = 36, SCK2IN = 37, SS2IN = 38,         //R11
-        CLCINA = 42, CLCINB = 43                    //R12
+        CLCINA = 42, CLCINB = 43,                   //R12
+        PPSINOFF = 255
     };
 
     //pps_out peripheral names
@@ -46,32 +38,37 @@ class Pins {
         CLC1OUT, CLC2OUT, CLC3OUT, CLC4OUT,
     };
 
-    //pps_in/pps_out pin names (either RPn or RXn)
-    //(can also instantiate Pins with these names)
+    //normal pin names, RXn name, or RPn name
     enum RPN : uint16_t {
         // encode as- 0x000ppnnnn000rrrrr - | 000 PORT/PIN | 000 RPn |
         // pp = port A=0,B=1,C=2,D=3
         // nnnnn = pin = 0-15
         // rrrrr = RPn = 1-24
-        // so we can use one enum to get both RPn and port/pin info
-        // (can then also set tris, clear ansel, for pps_in, and also
-        //  use RPn or RXn as init value for Pins() in addition to Xn)
+        // so we can use one enum to get RPn and port/pin info
 
-        //to disable PPSIN for peripheral create a RPNONE,
-        //so we can use pps_in() to turn off pps in
-        RPNONE = 0,
+        //A0 - D4  (ppnnnn in 0x000ppnnnn000rrrrr)
+        A0 = 0<<8, A1 = 1<<8, A2 = 2<<8, A3 = 3<<8, A4 = 4<<8, A5 = 5<<8,
+        A6 = 6<<8, A7 = 7<<8, A8 = 8<<8, A9 = 9<<8, A10 = 10<<8, A11 = 11<<8,
+        A12 = 12<<8, A13 = 13<<8, A14 = 14<<8, A15 = 15<<8,
+        B0 = 16<<8, B1 = 17<<8, B2 = 18<<8, B3 = 19<<8, B4 =20<<8, B5 = 21<<8,
+        B6 = 22<<8, B7 = 23<<8, B8 = 24<<8, B9 = 25<<8, B10 = 26<<8,
+        B11 = 27<<8, /*no B12*/ B13 = 29<<8, B14 = 30<<8, B15 = 31<<8,
+        C0 = 32<<8, C1 = 33<<8, C2 = 34<<8, C3 = 35<<8, C4 = 36<<8, C5 = 37<<8,
+        C6 = 38<<8, C7 = 39<<8, C8 = 40<<8, C9 = 41<<8, C10 = 42<<8,
+        C11 = 43<<8, C12 = 44<<8, C13 = 45<<8, C14 = 46<<8, C15 = 47<<8,
+        D0 = 48<<8, D1 = 49<<8, D2 = 50<<8, D3 = 51<<8, D4 = 52<<8,
 
-        //RPn 1-24
-        RP1 = 1+(A0<<8), RP2 = 2+(A1<<8), RP3 = 3+(A2<<8), RP4 = 4+(A3<<8),
-        RP5 = 5+(A4<<8), RP6 = 6+(B0<<8), RP7 = 7+(B1<<8), RP8 = 8+(B2<<8),
-        RP9 = 9+(B3<<8), RP10 = 10+(B4<<8), RP11 = 11+(B5<<8),
-        RP12 = 12+(B7<<8), RP13 = 13+(B8<<8), RP14 = 14+(B9<<8),
-        RP15 = 15+(B13<<8), RP16 = 16+(B14<<8), RP17 = 17+(B15<<8),
-        RP18 = 18+(C8<<8), RP19 = 19+(C2<<8), RP20 = 20+(C7<<8),
-        RP21 = 21+(A7<<8), RP22 = 22+(A10<<8), RP23 = 23+(C6<<8),
-        RP24 = 24+(A9<<8),
+        //RPn 1-24 (rrrrr in 0x000ppnnnn000rrrrr)
+        RP1 = 1+A0, RP2 = 2+A1, RP3 = 3+A2, RP4 = 4+A3,
+        RP5 = 5+A4, RP6 = 6+B0, RP7 = 7+B1, RP8 = 8+B2,
+        RP9 = 9+B3, RP10 = 10+B4, RP11 = 11+B5,
+        RP12 = 12+B7, RP13 = 13+B8, RP14 = 14+B9,
+        RP15 = 15+B13, RP16 = 16+B14, RP17 = 17+B15,
+        RP18 = 18+C8, RP19 = 19+C2, RP20 = 20+C7,
+        RP21 = 21+A7, RP22 = 22+A10, RP23 = 23+C6,
+        RP24 = 24+A9,
 
-        //RXn to RPn
+        //RXn to RPn (rrrrr in 0x000ppnnnn000rrrrr)
         RA0 = RP1, RA1 = RP2, RA2 = RP3, RA3 = RP4, RA4 = RP5, RB0 = RP6,
         RB1 = RP7, RB2 = RP8, RB3 = RP9, RB4 = RP10, RB5 = RP11, RB7 = RP12,
         RB8 = RP13, RB9 = RP14, RB13 = RP15, RB14 = RP16, RB15 = RP17,
@@ -109,12 +106,11 @@ class Pins {
     void        icn_flagclr     () const;
 
     //pps
-    static void pps_in          (PPSIN, RPN = RPNONE);
-    static void pps_out         (PPSOUT, RPN);
+    void        pps_in          (PPSIN);
+    void        pps_out         (PPSOUT);
 
     //constructors (bool-> lowison)
-    constexpr   Pins            (PORTPIN, bool = false);    //A0, B3, C9, etc.
-    constexpr   Pins            (RPN, bool = false);        //or RP8, RB2, etc.
+    constexpr   Pins            (RPN, bool = false);    //A0, RP8, RB2, etc.
 
     private:
 
@@ -144,27 +140,21 @@ class Pins {
     volatile uint32_t*  m_pt;       //base address
     const uint16_t      m_pn;       //pin mask
     bool                m_lowison;  //pin on val is low
+    const uint8_t       m_rpn;      //RPn value
+    uint8_t             m_ppsin;    //store ppsin peripheral
 
 };
 
-//constructors do nothing to pins
-// A0 format - Pins led1(A0); or Pins led2(B3, true);
-//=============================================================================
-    constexpr   Pins::Pins          (PORTPIN e, bool tf)
-//=============================================================================
-    : m_pt((volatile uint32_t*)ANSELA + (e/PINMAX)*ANSELX_SPACING),
-      m_pn(1<<(e%PINMAX)),
-      m_lowison(tf)
-{
-}
 
-// RA0/RP1 format - Pins led1(RA0); or Pins led2(RP1, true);
+// A0/RA0/RP1 format - Pins led1(RA0); or Pins led2(RP1, true);
 //=============================================================================
     constexpr   Pins::Pins          (RPN e, bool tf)
 //=============================================================================
     : m_pt((volatile uint32_t*)ANSELA + ((e>>RN_SHIFT)/PINMAX)*ANSELX_SPACING),
       m_pn(1<<((e>>RN_SHIFT)%PINMAX)),
-      m_lowison(tf)
+      m_lowison(tf),
+      m_rpn((uint8_t)e & 31),
+      m_ppsin(PPSINOFF)
 {
 }
 
