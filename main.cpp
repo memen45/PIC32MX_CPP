@@ -38,41 +38,6 @@
 #include "Nvm.hpp"
 
 
-//try extending Pins class for led
-//try protected on Pins, then provide needed
-//functions only in Led class to limit methods
-//available to Led class
-struct Led : protected Pins {
-
-    Led(Pins::RPN, bool = false);
-
-    void on();
-    void off();
-    void invert();
-    void digital_in();
-    void digital_out();
-
-    private:
-    uint32_t m_interval_us{0};
-
-};
-void Led::on(){ Pins::on(); }
-void Led::off(){ Pins::off(); }
-void Led::invert(){ Pins::invert(); }
-void Led::digital_in(){ Pins::digital_in(); }
-void Led::digital_out(){ Pins::digital_out(); }
-
-Led::Led(Pins::RPN pp, bool tf)
-:  Pins(pp, tf)
-{
-    Pins::digital_out();
-    Pins::off();
-}
-
-//try extending Pins class to Led
-Led led2(Pins::C13); //LED1 (invert in timer1/timer2/timer3 irq)
-Led led1(Pins::D3); //LED2 (cp0 irq blinks)
-
 /*=============================================================================
  rgb LED's (array test)
 =============================================================================*/
@@ -80,11 +45,11 @@ Pins leds[] = {                 //group leds
     { Pins::D1 },               //RED   //OCM1B
     { Pins::C3 },               //GREEN //OCM2B
     { Pins::C15 },              //BLUE  //OCM3E
-    //{ Pins::D3 },               //LED1 (invert in timer1/timer2/timer3 irq)
-    //{ Pins::C13 }               //LED2 (cp0 irq blinks)
+    { Pins::D3 },               //LED1 (invert in timer1/timer2/timer3 irq)
+    { Pins::C13 }               //LED2 (cp0 irq blinks)
 };
-//Pins& led1 = leds[3];           //references to specific leds as needed
-//Pins& led2 = leds[4];
+Pins& led1 = leds[3];           //references to specific leds as needed
+Pins& led2 = leds[4];
 
 
 /*=============================================================================
