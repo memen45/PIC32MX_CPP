@@ -110,7 +110,7 @@ struct Uart  {
         UXBRG = 16
     };
 
-    volatile uint32_t* m_uartx_mode;
+    volatile uint32_t* m_uartx_base;
     volatile uint32_t& m_uartx_tx;                  //use reference
     volatile uint32_t& m_uartx_rx;                  //use reference
 
@@ -125,7 +125,7 @@ struct Uart  {
 //=============================================================================
     constexpr       Uart::Uart      (UARTX e)
 //=============================================================================
-    : m_uartx_mode((volatile uint32_t*)U1MODE+(e*UARTX_SPACING)),
+    : m_uartx_base((volatile uint32_t*)U1MODE+(e*UARTX_SPACING)),
       m_uartx_tx(*((volatile uint32_t*)U1MODE+(e*UARTX_SPACING)+UXTXREG)),
       m_uartx_rx(*((volatile uint32_t*)U1MODE+(e*UARTX_SPACING)+UXRXREG)),
       m_uartx_baud(0)
