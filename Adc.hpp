@@ -47,7 +47,7 @@ struct Adc {
     enum CLK { PBCLK = 0, FRC };
 
     //ADC1BUFn
-    static uint16_t     bufn            (uint8_t);
+    static uint16_t     read            (uint8_t);
 
     //ADC1CON1
     static void         on              (bool);
@@ -138,7 +138,7 @@ struct Adc {
 
 //ADC1BUFn
 //=============================================================================
-    uint16_t        Adc::bufn           (uint8_t n)
+    uint16_t        Adc::read           (uint8_t n)
 //=============================================================================
 {
     if(n > ADC1BUF_LAST) n = ADC1BUF_LAST;

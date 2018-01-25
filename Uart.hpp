@@ -58,10 +58,10 @@ struct Uart  {
     bool            rx_empty        ();                 //rx is empty
 
     //uxtxreg
-    void            tx              (uint16_t);         //put in tx register
+    void            write           (uint16_t);         //put in tx register
 
     //uxrxreg
-    uint16_t        rx              ();                 //get from rx register
+    uint16_t        read            ();                 //get from rx register
 
     //uxbrg
     void            baud_set        (uint32_t);         //set baud to value
@@ -133,7 +133,7 @@ struct Uart  {
 
 //uxtxreg
 //=============================================================================
-    void            Uart::tx        (uint16_t v)
+    void            Uart::write     (uint16_t v)
 //=============================================================================
 {
     m_uartx_tx = v;
@@ -141,7 +141,7 @@ struct Uart  {
 
 //uxrxreg
 //=============================================================================
-    uint16_t        Uart::rx        ()
+    uint16_t        Uart::read      ()
 //=============================================================================
 {
     return m_uartx_rx;

@@ -34,10 +34,10 @@ struct Nvm {
 
     enum BOOTP : uint16_t { PAGE0 = 1<<8, PAGE1 = 1<<9, PAGE2 = 1<<10 };
 
-    static uint8_t  pgm_dword       (uint32_t*, uint32_t, uint32_t);
-    static uint8_t  pgm_row         (uint32_t*, uint32_t); //src,dst
+    static uint8_t  write_dword     (uint32_t*, uint32_t, uint32_t);
+    static uint8_t  write_row       (uint32_t*, uint32_t); //src,dst
     static uint8_t  page_erase      (uint32_t);
-    static void     pgm_protect     (uint32_t, bool); //true=lock until reset
+    static void     write_protect   (uint32_t, bool); //true=lock until reset
     static void     boot_protect    (BOOTP, bool); //true=lock until reset
 
     private:
@@ -82,7 +82,7 @@ struct Nvm {
     static void     do_op       (uint8_t);
     static void     address     (uint32_t);
     static uint8_t  error       ();
-    static void     pgm_nop     ();
+    static void     write_nop   ();
 
     using vword_ptr = volatile uint32_t*;
 };
@@ -139,7 +139,7 @@ struct Nvm {
 }
 
 //=============================================================================
-    uint8_t     Nvm::pgm_dword      (uint32_t* addr, uint32_t hw, uint32_t lw)
+    uint8_t     Nvm::write_dword    (uint32_t* addr, uint32_t hw, uint32_t lw)
 //=============================================================================
 {
     address((uint32_t)addr);
@@ -150,7 +150,7 @@ struct Nvm {
 }
 
 //=============================================================================
-    uint8_t     Nvm::pgm_row        (uint32_t* src, uint32_t dst)
+    uint8_t     Nvm::write_row      (uint32_t* src, uint32_t dst)
 //=============================================================================
 {
     //flash (dst may be 0 based, OR kseg0 flash addr)
@@ -171,7 +171,7 @@ struct Nvm {
 }
 
 //=============================================================================
-    void        Nvm::pgm_nop        ()
+    void        Nvm::write_nop      ()
 //=============================================================================
 {
     do_op(NOP);
@@ -182,13 +182,13 @@ struct Nvm {
 //=============================================================================
 {
     uint8_t err = (r.val16(NVMCON)>>12) & 3;
-    if(err) pgm_nop();
+    if(err) write_nop();
     return err;
 }
 
 //address | 0x1Dxxxxxx, true=lock until reset
 //=============================================================================
-    void        Nvm::pgm_protect    (uint32_t v, bool tf)
+    void        Nvm::write_protect  (uint32_t v, bool tf)
 //=============================================================================
 {
     uint8_t stat = unlock();

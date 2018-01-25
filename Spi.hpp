@@ -67,8 +67,8 @@ struct Spi  {
     bool            stat_rxfull     ();                 //rx full
 
     //spixbuf
-    void            buf             (uint32_t);         //set buf 8/16/32bit
-    uint32_t        buf             ();                 //get buf 8/16/32bit
+    void            write           (uint32_t);         //set buf 8/16/32bit
+    uint32_t        read            ();                 //get buf 8/16/32bit
 
     //spixbrg
     void            baud            (uint16_t);         //set baud
@@ -155,14 +155,14 @@ struct Spi  {
 
 //spixbuf
 //=============================================================================
-    void            Spi::buf        (uint32_t v)
+    void            Spi::write      (uint32_t v)
 //=============================================================================
 {
     m_spixbuf = v; //m_spibuf&
 }
 
 //=============================================================================
-    uint32_t        Spi::buf        ()
+    uint32_t        Spi::read       ()
 //=============================================================================
 {
     return m_spixbuf; //m_spibuf&

@@ -166,7 +166,7 @@ int main(){
     uint8_t onerow[Nvm::ROWSIZE];
     for(uint16_t i = 0; i<Nvm::ROWSIZE; i++) onerow[i] = i;
     nvm.page_erase(Nvm::MAXROW256*Nvm::PAGESIZE);
-    nvm.pgm_row((uint32_t*)onerow, Nvm::MAXROW256*Nvm::ROWSIZE);
+    nvm.write_row((uint32_t*)onerow, Nvm::MAXROW256*Nvm::ROWSIZE);
 
     uint32_t ip = (Nvm::MAXROW256*Nvm::ROWSIZE)|Nvm::BASEMEM;
     for(uint16_t i = 0; i<Nvm::ROWSIZE; i++){
@@ -375,7 +375,7 @@ int main(){
         //disable led1 if > 1/2Vref+(Vdd)
         //(by setting led1 to digital in)
         if(Adc::done()){
-            auto r = Adc::bufn(0);
+            auto r = Adc::read(0);
             if(r < 10) Resets::swreset();
             if(r > (4096/2)) led1.digital_in();
             else led1.digital_out();
