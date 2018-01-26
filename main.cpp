@@ -50,7 +50,6 @@ int main()
 
     //use cp0 counter for delay (polling or blocking)
     Delay dly;
-    dly.set_ms(250);
 
     //c++ nested function
     //rotate through the 7 combos of 3 led's
@@ -67,12 +66,11 @@ int main()
     //loop, clear wdt (configs bits may be set to always on)
     //(start led1 in opposite state of led2)
     for(led1.invert(); ;Wdt::reset()){
-        if(dly.expired()){
-            led1.invert();
-            led2.invert();
-            rotate_rgb();
-            dly.restart();
-        }
+        dly.wait_ms(333);
+        led1.invert();
+        led2.invert();
+        rotate_rgb();
+        dly.restart();
     }
 
 
