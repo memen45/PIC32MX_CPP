@@ -17,7 +17,7 @@
     wait_ variants will block until count expired
 */
 
-class DelayCP0 {
+class Delay {
 
     public:
 

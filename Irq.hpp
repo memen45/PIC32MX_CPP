@@ -53,6 +53,8 @@ struct Irq {
         END = 255
     };
 
+    enum EINTXPOL : bool { FALLING = 0, RISING };
+
     //to create a list (array) of irq's to init/enable
     using irq_list_t = struct {
         IRQ_VN irqvn;   //vector number
@@ -65,11 +67,11 @@ struct Irq {
     static void     enable_all      ();
     static bool     all_ison        ();
     static void     proxtimer       (uint8_t);
-    static void     eint4_rising    (bool);
-    static void     eint3_rising    (bool);
-    static void     eint2_rising    (bool);
-    static void     eint1_rising    (bool);
-    static void     eint0_rising    (bool);
+    static void     eint4_pol       (EINTXPOL);
+    static void     eint3_pol       (EINTXPOL);
+    static void     eint2_pol       (EINTXPOL);
+    static void     eint1_pol       (EINTXPOL);
+    static void     eint0_pol       (EINTXPOL);
     static void     flag_clr        (IRQ_VN);
     static bool     flag            (IRQ_VN);
     static void     on              (IRQ_VN, bool);
@@ -128,38 +130,38 @@ struct Irq {
 }
 
 //=============================================================================
-    void        Irq::eint4_rising       (bool tf)
+    void        Irq::eint4_pol          (EINTXPOL e)
 //=============================================================================
 {
-    r.setbit(INTCON, INT4EP, tf);
+    r.setbit(INTCON, INT4EP, e);
 }
 
 //=============================================================================
-    void        Irq::eint3_rising       (bool tf)
+    void        Irq::eint3_pol          (EINTXPOL e)
 //=============================================================================
 {
-    r.setbit(INTCON, INT3EP, tf);
+    r.setbit(INTCON, INT3EP, e);
 }
 
 //=============================================================================
-    void        Irq::eint2_rising       (bool tf)
+    void        Irq::eint2_pol          (EINTXPOL e)
 //=============================================================================
 {
-    r.setbit(INTCON, INT2EP, tf);
+    r.setbit(INTCON, INT2EP, e);
 }
 
 //=============================================================================
-    void        Irq::eint1_rising       (bool tf)
+    void        Irq::eint1_pol          (EINTXPOL e)
 //=============================================================================
 {
-    r.setbit(INTCON, INT1EP, tf);
+    r.setbit(INTCON, INT1EP, e);
 }
 
 //=============================================================================
-    void        Irq::eint0_rising       (bool tf)
+    void        Irq::eint0_pol          (EINTXPOL e)
 //=============================================================================
 {
-    r.setbit(INTCON, INT0EP, tf);
+    r.setbit(INTCON, INT0EP, e);
 }
 
 //note- the following offsets calculated in bytes as the register
@@ -224,7 +226,7 @@ struct Irq {
 //priority shadow set, 0 or 1
 //pri = 1-7, tf =0,1 (0=normal, 1=shadow)
 //pri is masked to 0-7
-//pri val of 0 will set/clr SS0- no harm as not using
+//pri val of 0 will set/clr SS0- no harm as not using (single vector ss)
 //=============================================================================
     void        Irq::shadow_set         (uint8_t pri, bool tf)
 //=============================================================================

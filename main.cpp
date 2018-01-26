@@ -8,8 +8,83 @@
 
  =============================================================================*/
 
+//try different apps
+#define MAIN 1 //simple blink 2 leds, rgb led's
+//#define MAIN 2 //most peripherals touched
 
 
+//=============================================================================
+#if MAIN == 1
+
+#include <cstdint>
+#include "Pins.hpp"
+#include "Wdt.hpp"
+#include "Osc.hpp"
+#include "Delay.hpp"
+#include "Resets.hpp"
+
+//set led pins
+Pins led1(Pins::D3);
+Pins led2(Pins::C13);
+Pins ledR(Pins::D1);
+Pins ledG(Pins::C3);
+Pins ledB(Pins::C15);
+
+int main()
+{
+    //just get/store resets cause (not used here,though)
+    Resets::cause();
+
+    //set osc to 24MHz
+    Osc osc;
+    osc.pll_set(osc.MUL12, osc.DIV4);
+    osc.sosc(true);                         //enable sosc if not already
+    osc.tun_auto(true);                     //let sosc tune frc
+
+    //init pins
+    led1.digital_out();
+    led2.digital_out();
+    ledR.digital_out();
+    ledG.digital_out();
+    ledB.digital_out();
+
+    //use cp0 counter for delay (polling or blocking)
+    Delay dly;
+    dly.set_ms(250);
+
+    //c++ nested function
+    //rotate through the 7 combos of 3 led's
+    auto rotate_rgb = [](){
+        static uint8_t c = 1;
+        c++; if(c == 15) c = 1;
+        ledR.off(); ledG.off(); ledB.off();
+        if(c & 1) return;
+        if(c & 2) ledR.on();
+        if(c & 4) ledG.on();
+        if(c & 8) ledB.on();
+    };
+
+    //loop, clear wdt (configs bits may be set to always on)
+    //(start led1 in opposite state of led2)
+    for(led1.invert(); ;Wdt::reset()){
+        if(dly.expired()){
+            led1.invert();
+            led2.invert();
+            rotate_rgb();
+            dly.restart();
+        }
+    }
+
+
+
+}
+#endif
+//=============================================================================
+
+
+
+
+#if MAIN == 2
 /*=============================================================================
  Includes
 =============================================================================*/
@@ -67,8 +142,8 @@ Pins& sw3 = sw[2];
 /*=============================================================================
  Delays
 =============================================================================*/
-DelayCP0 sw_dly;                //debounce
-DelayCP0 dly[3];                //CP0 led delays
+Delay sw_dly;                   //debounce
+Delay dly[3];                   //CP0 led delays
 uint32_t t_ms[] = {             //led delay ms
     50, 60, 70,
     300, 320, 340,
@@ -112,7 +187,7 @@ Pmd::PMD pmd_list[] = {                      //list of modules to disable
 int main(){
 
     //pic32mm curiosity board, Fluke 101 (not TrueRMS), test
-    //    DelayCP0 tmr;
+    //    Delay tmr;
     //    Pins rc0(Pins::C0); Pins rc2(Pins::C2);
     //    rc0.digital_out(); rc2.digital_out();
     //    rc2.high(); rc0.low();
@@ -305,7 +380,6 @@ int main(){
     //cp0 compare timeout
     Cp0::compare_ms(200);
 
-
     //__________________________________________________________________________
     //nested function
     auto rotate_delays = [ & ](){           //init delays or rotate delays
@@ -344,13 +418,12 @@ int main(){
     Wdt::on(true);                          //try the watchdog
                                             //RWDTPS = PS8192, so 8ms timeout
 
-
     //<><><><><><><><><><><><><><><<><><><><><><><><><><><><><><><><><><><><><><
     //here we go
     for (;;){
         Wdt::reset();                       //comment out to test wdt reset
 
-        //check for delay timeouts, invert led, reset delay counter
+        //check for delay timeouts, change pwm on rgb, reset delay counter
         static int updown[] = { 1, 1, 1 };
         for(auto i = 0; i < 3; i++){
             if(! dly[i].expired()) continue;
@@ -449,3 +522,5 @@ ISR(RTCC){
     }
     ir.flag_clr(ir.RTCC);
 }
+//=============================================================================
+#endif
