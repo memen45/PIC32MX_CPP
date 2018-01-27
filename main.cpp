@@ -22,6 +22,7 @@
 #include "Osc.hpp"
 #include "Delay.hpp"
 #include "Resets.hpp"
+#include "Ccp.hpp"
 
 //set led pins
 Pins led1(Pins::D3);
@@ -29,6 +30,14 @@ Pins led2(Pins::C13);
 Pins ledR(Pins::D1);
 Pins ledG(Pins::C3);
 Pins ledB(Pins::C15);
+
+//pwm to rgb pins
+//mccp 1-3 pwm to rgb led's
+Ccp rgb[] = {
+    Ccp::CCP1,
+    Ccp::CCP2,
+    Ccp::CCP3
+};
 
 int main()
 {
@@ -44,33 +53,50 @@ int main()
     //init pins
     led1.digital_out();
     led2.digital_out();
-    ledR.digital_out();
-    ledG.digital_out();
-    ledB.digital_out();
+
+    //init pwm
+    for(auto& i : rgb){
+        i.mode(i.DEPWM16);
+        i.compa(0);
+        i.out_pins(i.OCB);
+        i.on(true);
+    }
+    //R,G use OCxB, B uses OCxE
+    rgb[2].out_pins(rgb[2].OCE);
+    rgb[0].compb(100);
+    rgb[1].compb(0x5555);
+    rgb[2].compb(0xAAAA);
 
     //use cp0 counter for delay (polling or blocking)
-    Delay dly;
+    Delay dly_led;
+    Delay dly_rgb;
+    dly_led.set_ms(333);
+    dly_rgb.set_ms(5);
 
     //c++ nested function
-    //rotate through the 7 combos of 3 led's
-    auto rotate_rgb = [](){
-        static uint8_t c = 1;
-        c++; if(c == 15) c = 1;
-        ledR.off(); ledG.off(); ledB.off();
-        if(c & 1) return;
-        if(c & 2) ledR.on();
-        if(c & 4) ledG.on();
-        if(c & 8) ledB.on();
+    auto do_rgb = [](){
+        static bool c[] = { 1, 1, 1 };
+        for(uint8_t i = 0; i < 3; i++){
+            uint16_t v = rgb[i].compb();
+            if(c[i]) v += 10 + i; else v -= 10 - i;
+            if(v < 50){ v = 50; c[i] = 1; }
+            if(v > 10000){ v = 10000; c[i] = 0; }
+            rgb[i].compb(v);
+        }
     };
 
     //loop, clear wdt (configs bits may be set to always on)
     //(start led1 in opposite state of led2)
     for(led1.invert(); ;Wdt::reset()){
-        dly.wait_ms(333);
-        led1.invert();
-        led2.invert();
-        rotate_rgb();
-        dly.restart();
+        if(dly_led.expired()){
+            led1.invert();
+            led2.invert();
+            dly_led.restart();
+        }
+        if(dly_rgb.expired()){
+            do_rgb();
+            dly_rgb.restart();
+        }
     }
 
 
