@@ -8,6 +8,11 @@
 
  =============================================================================*/
 
+#include <cstdint>
+
+
+
+
 //try different apps
 #define MAIN 1 //simple blink 2 leds, rgb led's
 //#define MAIN 2 //most peripherals touched
@@ -63,45 +68,51 @@ int main()
     }
     //R,G use OCxB, B uses OCxE
     rgb[2].out_pins(rgb[2].OCE);
+    //stagger pwm
     rgb[0].compb(100);
     rgb[1].compb(0x5555);
     rgb[2].compb(0xAAAA);
 
-    //use cp0 counter for delay (polling or blocking)
-    Delay dly_led;
-    Delay dly_rgb;
-    dly_led.set_ms(333);
-    dly_rgb.set_ms(5);
+    //delays, polling
+    Delay dly_led1, dly_led2, dly_rgb;
+    dly_led1.set_ms(333);
+    dly_led2.set_ms(333);
+    dly_rgb.set_ms(2);
 
-    //c++ nested function
-    auto do_rgb = [](){
+
+    auto rgb_do = [](){
         static bool c[] = { 1, 1, 1 };
         for(uint8_t i = 0; i < 3; i++){
             uint16_t v = rgb[i].compb();
-            if(c[i]) v += 10 + i; else v -= 10 - i;
+            if(c[i]) v += 20 + i*3; else v -= 15 - i*3;
             if(v < 50){ v = 50; c[i] = 1; }
-            if(v > 10000){ v = 10000; c[i] = 0; }
+            if(v > 30000){ v = 30000; c[i] = 0; }
             rgb[i].compb(v);
         }
     };
 
+
     //loop, clear wdt (configs bits may be set to always on)
     //(start led1 in opposite state of led2)
-    for(led1.invert(); ;Wdt::reset()){
-        if(dly_led.expired()){
+    led1.invert();
+    for(; ;Wdt::reset()){
+        if(dly_led1.expired()){
+            dly_led1.restart();
             led1.invert();
+        }
+        if(dly_led2.expired()){
+            dly_led2.restart();
             led2.invert();
-            dly_led.restart();
         }
         if(dly_rgb.expired()){
-            do_rgb();
             dly_rgb.restart();
+            rgb_do();
         }
     }
-
-
-
 }
+
+
+
 #endif
 //=============================================================================
 
