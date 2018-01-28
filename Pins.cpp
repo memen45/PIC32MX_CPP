@@ -129,7 +129,7 @@
 //=============================================================================
 {
     if(m_rpn == 0) return;      //no pps for this pin
-    if(e != PPSINOFF) m_ppsin = (uint8_t)e; //save peripheral number
+    if(e not_eq PPSINOFF) m_ppsin = (uint8_t)e; //save peripheral number
     if(m_ppsin == PPSINOFF) return; //not set previously, nothing to do
     //set peripheral m_ppsin register to 0 if off, or RPn number
     pps_do(RPINR1+((m_ppsin/4)*16)+(m_ppsin%4), e == PPSINOFF ? 0 : m_rpn);

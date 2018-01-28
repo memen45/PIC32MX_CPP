@@ -147,6 +147,7 @@ class Pins {
 
 
 // A0/RA0/RP1 format - Pins led1(RA0); or Pins led2(RP1, true);
+// tf = lowison tf=0 lowison=0 (high is on), tf=1 lowison=1 (low is on)
 //=============================================================================
     constexpr   Pins::Pins          (RPN e, bool tf)
 //=============================================================================
@@ -197,7 +198,7 @@ class Pins {
     void        Pins::on            () const
 //=============================================================================
 {
-    r.setbit(m_pt+LAT, m_pn, !m_lowison);
+    r.setbit(m_pt+LAT, m_pn, not m_lowison);
 }
 
 //=============================================================================
@@ -211,7 +212,7 @@ class Pins {
     bool        Pins::ison          () const
 //=============================================================================
 {
-    return m_lowison ? !pinval() : pinval();
+    return m_lowison ? not pinval() : pinval();
 }
 
 //=============================================================================

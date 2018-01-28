@@ -420,7 +420,7 @@ int main(){
     auto rotate_delays = [ & ](){           //init delays or rotate delays
         static uint8_t start = 0;
         for(auto& d : dly){
-            if(! t_ms[start]) start = 0;
+            if(not t_ms[start]) start = 0;
             d.set_ms(t_ms[start++]);
         }
     };
@@ -431,7 +431,7 @@ int main(){
     auto irq_blinkrate = [ & ](int16_t n){  //sw1/2 adjust cp0 irq rate +/-
         static uint16_t rate = 200;
         rate += n;
-        if(rate < 100 || rate > 4000) rate -= n;
+        if(rate < 100 or rate > 4000) rate -= n;
         Cp0::compare_ms(rate);
         Cp0::compare_reload();
         Cp0::compare_irq(true);             //true = clear flag, cp0 irq on
@@ -461,7 +461,7 @@ int main(){
         //check for delay timeouts, change pwm on rgb, reset delay counter
         static int updown[] = { 1, 1, 1 };
         for(auto i = 0; i < 3; i++){
-            if(! dly[i].expired()) continue;
+            if(not dly[i].expired()) continue;
             //leds[i].invert();
             uint16_t tmp = ccps[i].compb();
             if(updown[i] == 1) tmp += 500;
@@ -547,7 +547,7 @@ ISR(TIMER_3){
 ISR(RTCC){
     Irq ir; Cp0 cp;
     static bool b;
-    b ^= 1;
+    b xor_eq 1;
     if(b){
         ir.on(ir.CORE_TIMER, false); //core timer irq disable
         led2.off();

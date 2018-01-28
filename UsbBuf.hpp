@@ -14,7 +14,7 @@ struct UsbBuf {
  my_buffer_count * my_buffer_size byte buffers - all same length
  caller requests buffer via -
    volatile uint8_t* mybuf = UsbBuf::get();
-   if(!mybuf) no_free_buffers- try again
+   if(not mybuf) no_free_buffers- try again
  caller returns buffer when done
    UsbBuf::release(mybuf);
  to reinit buffers (release all, and clear)-
@@ -67,7 +67,7 @@ static UsbBuf::buf_t m_buffers[my_buffer_count] = {0};
     //convert to kseg0
     p = (uint8_t*)Reg::p2kseg0(p);
     for(auto& i : m_buffers){
-        if(p!=i.buf) continue;
+        if(p not_eq i.buf) continue;
         i.inuse = false;
         return;
     }
@@ -127,7 +127,7 @@ static UsbBuf2::m_buffer_t m_buffers2 = {0};
 {
     for(auto i = 0; i < 16; i++){
         if(m_buffers2.status & (1<<i)) continue;
-        m_buffers2.status |= 1<<i; //inuse
+        m_buffers2.status or_eq 1<<i; //inuse
         m_buffers2.buffer64[i].buf_size = 64;
         return &m_buffers2.buffer64[i];
     }
@@ -140,7 +140,7 @@ static UsbBuf2::m_buffer_t m_buffers2 = {0};
 {
     for(auto i = 16; i < 20; i++){
         if(m_buffers2.status & (1<<i)) continue;
-        m_buffers2.status |= 1<<i; //inuse
+        m_buffers2.status or_eq 1<<i; //inuse
         i >>= 16;
         m_buffers2.buffer512[i].buf_size = 512;
         return &m_buffers2.buffer512[i];
@@ -153,13 +153,13 @@ static UsbBuf2::m_buffer_t m_buffers2 = {0};
 //=============================================================================
 {
     for(auto i = 0; i < 16; i++){
-        if(bufp != (void*)&m_buffers2.buffer64[i]) continue;
-        m_buffers2.status &= ~(1<<i); //not inuse
+        if(bufp not_eq (void*)&m_buffers2.buffer64[i]) continue;
+        m_buffers2.status and_eq compl(1<<i); //not inuse
         return;
     }
     for(auto i = 16; i < 20; i++){
-        if(bufp != (void*)&m_buffers2.buffer512[i>>16]) continue;
-        m_buffers2.status &= ~(1<<i); //not inuse
+        if(bufp not_eq (void*)&m_buffers2.buffer512[i>>16]) continue;
+        m_buffers2.status and_eq compl(1<<i); //not inuse
     }
 }
 

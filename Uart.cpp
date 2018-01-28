@@ -7,7 +7,7 @@
     void        Uart::stop_sleep        (bool tf)
 //=============================================================================
 {
-    r.setbit(m_uartx_base, SLPEN, !tf);
+    r.setbit(m_uartx_base, SLPEN, not tf);
 }
 
 //=============================================================================
@@ -30,7 +30,7 @@
     void        Uart::oflow_stop        (bool tf)
 //=============================================================================
 {
-    r.setbit(m_uartx_base, OVFDIS, !tf);
+    r.setbit(m_uartx_base, OVFDIS, not tf);
 }
 
 //=============================================================================
@@ -133,7 +133,7 @@
     void        Uart::tx_pol            (RXPOL e)
 //=============================================================================
 {
-    bool b = r.anybit(m_uartx_base, IREN) ? !e : e;
+    bool b = r.anybit(m_uartx_base, IREN) ? not e : e;
     r.setbit(m_uartx_base+UXSTA, UTXINV, b);
 }
 
@@ -191,7 +191,7 @@
     bool        Uart::rx_busy           ()
 //=============================================================================
 {
-    return !r.anybit(m_uartx_base+UXSTA, RIDLE);
+    return not r.anybit(m_uartx_base+UXSTA, RIDLE);
 }
 
 //=============================================================================
@@ -219,7 +219,7 @@
     bool        Uart::rx_empty          ()
 //=============================================================================
 {
-    return !r.anybit(m_uartx_base+UXSTA, URXDA);
+    return not r.anybit(m_uartx_base+UXSTA, URXDA);
 }
 
 //uxbrg

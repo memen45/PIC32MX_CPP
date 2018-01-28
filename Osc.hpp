@@ -190,7 +190,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 {
     uint8_t idstat = ir.all_ison();
     ir.disable_all();
-    idstat |= Dma::all_suspend()<<1;
+    idstat or_eq Dma::all_suspend()<<1;
     Dma::all_suspend(true);
     sys.unlock();
     return (IDSTAT)idstat;
@@ -202,7 +202,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 //=============================================================================
 {
     sys.lock();
-    if(!(uint8_t)idstat & DMA) Dma::all_suspend(false);
+    if(not (uint8_t)idstat & DMA) Dma::all_suspend(false);
     if((uint8_t)idstat & IRQ) ir.enable_all();
 }
 
@@ -273,7 +273,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     sys.unlock();
     r.setbit(OSCCON, SOSCEN, tf);
     sys.lock();
-    while(tf && !ready(SOSCRDY));
+    while(tf and not ready(SOSCRDY));
 }
 
 //=============================================================================
@@ -457,7 +457,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     refoclk(); //if not calculated already
     m = (m_refoclk << 8) / v;
     n =  m >> 9;
-    m &= 0x1ff;
+    m and_eq 0x1ff;
     refo_div(n);
     refo_trim(m);
     refo_divsw();
@@ -520,7 +520,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 //=============================================================================
 {
     sys.unlock();
-    r.setbit(OSCTUN, POL, !tf);
+    r.setbit(OSCTUN, POL, not tf);
     sys.lock();
 }
 
@@ -536,7 +536,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 //=============================================================================
 {
     sys.unlock();
-    r.setbit(OSCTUN, ORPOL, !tf);
+    r.setbit(OSCTUN, ORPOL, not tf);
     sys.lock();
 }
 
@@ -557,7 +557,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 //=============================================================================
 {
     int8_t v = r.val8(OSCTUN);
-    if(v > 31) v |= 0xc0; //is negative, sign extend to 8bits
+    if(v > 31) v or_eq 0xc0; //is negative, sign extend to 8bits
     return v;
 }
 

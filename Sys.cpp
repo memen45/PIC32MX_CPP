@@ -35,6 +35,6 @@ static volatile uint8_t unlock_count;
     }
     unlock_count++;                                 //inc unlock_count
     //
-    if(! dmasusp) Dma::all_suspend(false);          //DMA resume
+    if(not dmasusp) Dma::all_suspend(false);        //DMA resume
     if(irqstate) ir.enable_all();                   //restore IE state
 }

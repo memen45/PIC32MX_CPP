@@ -45,7 +45,7 @@ struct Timer1 {
             TGATE = 1<<7,
             TCKPS_SHIFT = 4, TCKPS_CLR = 3,
             TSYNC = 1<<2,
-            CLK_CLR = (3<<8)|(1<<1),
+            CLK_CLR = (3<<8) | (1<<1),
         TMR1 = 0xBF808010,
         PR1 = 0xBF808020
     };
@@ -100,7 +100,7 @@ struct Timer1 {
     void        Timer1::wr_async        (bool tf)
 //=============================================================================
 {
-    r.setbit(T1CON, TWDIS, !tf);
+    r.setbit(T1CON, TWDIS, not tf);
 }
 
 //=============================================================================

@@ -130,7 +130,7 @@ struct Clc {
     void            Clc::in_sel         (uint8_t n, uint8_t v)
 //=============================================================================
 {
-    n -= 1; n &= 3; n <<= 2; v &= 7;
+    n -= 1; n and_eq 3; n <<= 2; v and_eq 7;
     r.clrbit(m_clcx_con+CLCXSEL, 7<<n);
     r.setbit(m_clcx_con+CLCXSEL, v<<n);
 }
@@ -148,7 +148,7 @@ struct Clc {
     void            Clc::gate_sel       (uint8_t n, uint8_t v)
 //=============================================================================
 {
-    n -= 1; n &= 3; n <<= 3;
+    n -= 1; n and_eq 3; n <<= 3;
     r.clrbit(m_clcx_con+CLCXGLS, 15<<n);
     r.setbit(m_clcx_con+CLCXGLS, v<<n);
 }

@@ -157,7 +157,7 @@ template <typename T, typename V> bool Reg::anybit(T r, V v){
 //anybit0
 template <typename T, typename V> bool Reg::anybit0(T r, V v){
     using vtype = typename getVsiz<V>::type;
-    return (~ *(volatile vtype*)r) & v;
+    return (compl *(volatile vtype*)r) & v;
 }
 
 //allbit
@@ -169,7 +169,7 @@ template <typename T, typename V> bool Reg::allbit(T r, V v){
 //allbit0
 template <typename T, typename V> bool Reg::allbit0(T r, V v){
     using vtype = typename getVsiz<V>::type;
-    return (~ *(volatile vtype*)r) & v == v;
+    return (compl *(volatile vtype*)r) & v == v;
 }
 
 

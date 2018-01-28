@@ -80,7 +80,7 @@
     r.setbit(m_txcon, T32, tf);
     //if turned on, bit will 'stick'
     //so must be T2, make sure T3 SIDL is off
-    if(tf && r.anybit(m_txcon, T32)){
+    if(tf and r.anybit(m_txcon, T32)){
        r.clrbit(m_txcon+TMR23_SPACING, SIDL);
     }
 }

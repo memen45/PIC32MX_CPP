@@ -333,7 +333,7 @@ uint32_t            Dma::crc_data       ()
 //=============================================================================
 {
     r.setbit(m_dmax_con, CHCHNS, e == TOLOWER);
-    r.setbit(m_dmax_con, CHCHN, e != CHAINOFF);
+    r.setbit(m_dmax_con, CHCHN, e not_eq CHAINOFF);
 }
 
 //=============================================================================
@@ -341,7 +341,7 @@ uint32_t            Dma::crc_data       ()
 //=============================================================================
 {
     r.setbit(m_dmax_con, CHEN, tf);
-    while(busy() != tf);
+    while(busy() not_eq tf);
 }
 
 //=============================================================================
@@ -379,7 +379,7 @@ uint32_t            Dma::crc_data       ()
 //=============================================================================
 {
     r.val((vbyte_ptr)m_dmax_con+(DCHXECON*4)+2, v);
-    r.setbit(m_dmax_con+DCHXECON, AIRQEN, v != (uint8_t)IRQOFF);
+    r.setbit(m_dmax_con+DCHXECON, AIRQEN, v not_eq (uint8_t)IRQOFF);
 }
 
 //=============================================================================
@@ -387,7 +387,7 @@ uint32_t            Dma::crc_data       ()
 //=============================================================================
 {
     r.val((vbyte_ptr)m_dmax_con+(DCHXECON*4)+1, v);
-    r.setbit(m_dmax_con+DCHXECON, SIRQEN, v != (uint8_t)IRQOFF);
+    r.setbit(m_dmax_con+DCHXECON, SIRQEN, v not_eq (uint8_t)IRQOFF);
 }
 
 //=============================================================================

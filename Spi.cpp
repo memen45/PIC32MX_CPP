@@ -256,7 +256,7 @@
     if(clk_sel() == REFO1) clk = Osc::refo_freq();
     else clk = Osc::sysclk();
     uint16_t brg = (2 * v / clk) - 1;
-    brg &= 0x1ff;
+    brg and_eq 0x1ff;
     baud(brg);
     freq();
 }

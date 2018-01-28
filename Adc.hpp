@@ -252,7 +252,7 @@ struct Adc {
     void            Adc::samp_nirq      (uint8_t n)
 //=============================================================================
 {
-    n -= 1; n &= 15; //n = 1-16 ->0-15
+    n -= 1; n and_eq 15; //n = 1-16 ->0-15
     r.clrbit(ADC1CON2, SMPI_CLR<<SMPI_SHIFT);
     r.setbit(ADC1CON2, n<<SMPI_SHIFT);
 }
@@ -283,7 +283,7 @@ struct Adc {
     void            Adc::samp_time      (uint8_t v)
 //=============================================================================
 {
-    v &= 31; v = v == 0 ? 1 : v; //0 not allowed (1-31)
+    v and_eq 31; v = v == 0 ? 1 : v; //0 not allowed (1-31)
     r.clrbit(ADC1CON3, SAMC_CLR<<SAMC_SHIFT);
     r.setbit(ADC1CON3, v<<SAMC_SHIFT);
 }
@@ -363,7 +363,7 @@ struct Adc {
 //=============================================================================
 {
     r.val(ADC1CSS, 0); //clr all
-    for(; *e != END; e++) r.setbit(ADC1CSS, 1<<*e); //set list
+    for(; *e not_eq END; e++) r.setbit(ADC1CSS, 1<<*e); //set list
 }
 
 //=============================================================================

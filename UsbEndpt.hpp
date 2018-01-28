@@ -176,9 +176,9 @@ uint16_t UsbEndptTRx::check()
     m_trx_count += c;               //add to total
     m_bufn--;                       //one less buffer in use
     //all done if >= requested or if c < max (short packet)
-    if(m_trx_count >= m_count || c < m_max_count){
+    if(m_trx_count >= m_count or c < m_max_count){
         m_bufn = 0;                 //should already be 0, but now we know
-        m_eveodd = eo ^ 1;          //next one to be used is not this one
+        m_eveodd = eo xor 1;        //next one to be used is not this one
         return m_trx_count;         //return actual count
     }
     //more, calculate remaining
@@ -199,9 +199,9 @@ ______________________________________________________________________________*/
 bool UsbEndptTRx::start(uint8_t* buf, uint16_t n, bool d01, bool bstall)
 //=============================================================================
 {
-    if(m_bufn || m_max_count == 0 || stalled()) return false;
-    m_options &= ~(1<<6);
-    m_options |= (d01<<6)|(bstall<<2);
+    if(m_bufn or m_max_count == 0 or stalled()) return false;
+    m_options and_eq compl(1<<6);
+    m_options or_eq (d01<<6)|(bstall<<2);
     m_bufptr = r.k2phys((uint32_t)buf);
     m_count = n;
     m_trx_count = 0;
@@ -212,8 +212,8 @@ bool UsbEndptTRx::start(uint8_t* buf, uint16_t n, bool d01, bool bstall)
         n2 = n > m_max_count ? m_max_count : n;
     }
     setup(n1);
-    if(n2 && bstall == 0) setup(n2);
-    m_options &= ~(1<<2); //clear bstall in m_options, only needed temporarily
+    if(n2 and bstall == 0) setup(n2);
+    m_options and_eq compl(1<<2); //clear bstall in m_options, temporarily
     return true;
 }
 
@@ -235,8 +235,8 @@ void UsbEndptTRx::setup(uint16_t n)
     bd.uown = 1;                        //give to usb hardware
     m_bufptr += n;                      //adjust for next time
     m_bufn++;                           //1 buffer now in use
-    m_eveodd ^= 1;                      //toggle even/odd
-    m_options ^= 1<<6;                  //toggle data01
+    m_eveodd xor_eq 1;                  //toggle even/odd
+    m_options xor_eq 1<<6;              //toggle data01
 }
 
 /*______________________________________________________________________________
@@ -249,8 +249,8 @@ void UsbEndptTRx::stop()
 //=============================================================================
 {
     bdt_t& bde = *m_bd[0]; bdt_t& bdo = *m_bd[1];
-    if(bde.uown){ m_eveodd ^= 1; bde.uown = 0; }
-    if(bdo.uown){ m_eveodd ^= 1; bdo.uown = 0; }
+    if(bde.uown){ m_eveodd xor_eq 1; bde.uown = 0; }
+    if(bdo.uown){ m_eveodd xor_eq 1; bdo.uown = 0; }
 }
 
 /*______________________________________________________________________________
@@ -263,7 +263,7 @@ bool UsbEndptTRx::stalled()
 //=============================================================================
 {
     bdt_t& bde = *m_bd[0]; bdt_t& bdo = *m_bd[1];
-    return ((bde.uown && bde.bstall) || (bdo.uown && bdo.bstall));
+    return ((bde.uown and bde.bstall) or (bdo.uown and bdo.bstall));
 }
 
 
@@ -315,7 +315,7 @@ ______________________________________________________________________________*/
     enum U1EP {
         //LS = 1<<7,            /*HOST mode and U1EP0 only*/
         //RETRYDIS = 1<<6,      /*HOST mode and U1EP0 only*/
-        CTRLDIS = 1<<4,         /*only when TXEN=1 && RXEN=1*/
+        CTRLDIS = 1<<4,         /*only when TXEN=1 and RXEN=1*/
         RXEN = 1<<3, TXEN = 1<<2, ESTALL = 1<<1, HSHAKE = 1<<0
     };
 
@@ -485,7 +485,7 @@ void UsbEndpt::token(uint8_t idx)
 
         case UsbCh9::SETUP:
             m_TX.stop();            //anything in tx, cancel
-            if(m_RX.check() != 8){} //something wrong, assume ok for now
+            if(m_RX.check() not_eq 8){} //something wrong, assume ok for now
             setup_token();          //process m_setup_pkt
             u.control(u.PKTDIS, false); //and continue control transfer
             break;
@@ -515,7 +515,7 @@ void UsbEndpt::setup_token()
     //uint8_t recip = m_setup_pkt.recip;
 
     m_tx_ptr = UsbBuf::get();
-    if(!m_tx_ptr){} //do something if can't get buffer- stall?
+    if(not m_tx_ptr){} //do something if can't get buffer- stall?
 
     //standard requests
     switch(m_setup_pkt.bRequest){
@@ -535,7 +535,7 @@ void UsbEndpt::setup_token()
             //m_setup_pkt.wLength should = 2
             //2bytes- byte0/bit0 = self-powered?, byte0/bit1=remote wakeup?
             m_tx_ptr[0] = my_self_powered<<0;
-            m_tx_ptr[0] |= my_remote_wakeup<<1;
+            m_tx_ptr[0] or_eq my_remote_wakeup<<1;
             m_tx_ptr[1] = 0;
             break;
         case UsbCh9::GET_DESCRIPTOR:

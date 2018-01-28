@@ -206,7 +206,7 @@ struct Irq {
 //=============================================================================
 {
     uint32_t priority_shift = 8*(e%4);
-    pri &= 7; sub &= 3; pri <<= 2; pri |= sub;
+    pri and_eq 7; sub and_eq 3; pri <<= 2; pri or_eq sub;
     r.clrbit(IPC_BASE + ((e/4)*16), (31<<priority_shift));
     r.setbit(IPC_BASE + ((e/4)*16), (pri<<priority_shift));
     flag_clr(e);
@@ -218,7 +218,7 @@ struct Irq {
     void        Irq::init               (irq_list_t* arr)
 //=============================================================================
 {
-    for(; arr->irqvn != END; arr++){
+    for(; arr->irqvn not_eq END; arr++){
         init(arr->irqvn, arr->p, arr->s, arr->en);
     }
 }
@@ -231,7 +231,7 @@ struct Irq {
     void        Irq::shadow_set         (uint8_t pri, bool tf)
 //=============================================================================
 {
-    pri &= 7; pri <<= 2; //0*4=0 1*4=4, 7*4=28
+    pri and_eq 7; pri <<= 2; //0*4=0 1*4=4, 7*4=28
     r.setbit(PRISS, 1<<pri, tf);
 }
 

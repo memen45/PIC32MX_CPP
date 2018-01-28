@@ -123,7 +123,7 @@ struct Rtcc {
     void        Rtcc::on                (bool tf)
 //=============================================================================
 {
-    if(tf && r.val16(RTCCON2+2)){           //div not set, so
+    if(tf and r.val16(RTCCON2+2)){           //div not set, so
         clk_div(CLK_DIV_32KHZ);             //init ourselves
         if(Osc::sosc()) clk_src(SOSC);      //use sosc if on
         else clk_src(LPRC);                 //else use lprc

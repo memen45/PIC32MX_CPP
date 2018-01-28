@@ -535,8 +535,8 @@ struct UsbHandlers {
     u.eflags_clr(eflags.all);       //clear only what we got (1=clear)
     ir.flag_clr(ir.USB);            //clear usb irq flag
 
-    flags.all &= u.irqs();          //mask off irq's not enabled
-    eflags.all &= u.eirqs();        //mask off error irq's not enabled
+    flags.all and_eq u.irqs();      //mask off irq's not enabled
+    eflags.all and_eq u.eirqs();    //mask off error irq's not enabled
 
     //shouldn't happen, but check anyway to make sure we stay inside
     //our ep array
@@ -583,7 +583,7 @@ struct UsbHandlers {
         case u.DETACHED:                    //can't get here- usb irq is off
             return;
         case u.ATTACHED:                    //only reset irq is active
-            if(!vbus_pin.ison()) return;    //no vbus, we should not be here
+            if(not vbus_pin.ison()) return; //no vbus, we should not be here
             u.state = u.POWERED;            //vbus ok, now go to POWERED state
             u.flags_clr(u.IDLE);            //clear idle flag before enabling
             u.irqs(u.IDLE|u.RESET);         //now add idle irq

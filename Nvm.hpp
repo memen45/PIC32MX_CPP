@@ -93,7 +93,7 @@ struct Nvm {
 {
     uint8_t idstat = ir.all_ison();
     ir.disable_all();
-    idstat |= Dma::all_suspend()<<1;
+    idstat or_eq Dma::all_suspend()<<1;
     Dma::all_suspend(true);
     r.val(NVMKEY, MAGIC1);
     r.val(NVMKEY, MAGIC2);
@@ -192,7 +192,7 @@ struct Nvm {
 //=============================================================================
 {
     uint8_t stat = unlock();
-    r.val(NVMPWP, (v & PWP_CLR) | !tf<<PWPULOCK_SHIFT);
+    r.val(NVMPWP, (v & PWP_CLR) | not tf<<PWPULOCK_SHIFT);
     lock(stat);
 }
 
@@ -201,6 +201,6 @@ struct Nvm {
 //=============================================================================
 {
     uint8_t stat = unlock();
-    r.val(NVMBWP, e | !tf<<BWPULOCK_SHIFT);
+    r.val(NVMBWP, e | not tf<<BWPULOCK_SHIFT);
     lock(stat);
 }
