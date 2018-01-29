@@ -109,8 +109,15 @@ class Pins {
     void        pps_in          (PPSIN);
     void        pps_out         (PPSOUT);
 
-    //constructors (bool-> lowison)
-    constexpr   Pins            (RPN, bool = false);    //A0, RP8, RB2, etc.
+    enum IOMODE : uint8_t {
+        AIN = 0,
+        DIN = 1, DINPU = 1<<2|DIN, DINPD = 1<<3|DIN,
+        DOUT = 2
+    };
+
+    //constructor
+    // bool-> lowison, IOMODE -> enum above
+                Pins            (RPN, bool = false, IOMODE = AIN);
 
     private:
 
@@ -148,8 +155,9 @@ class Pins {
 
 // A0/RA0/RP1 format - Pins led1(RA0); or Pins led2(RP1, true);
 // tf = lowison tf=0 lowison=0 (high is on), tf=1 lowison=1 (low is on)
+// m = AIN,DIN,DINPU,DINPD,DOUT (default is AIN)
 //=============================================================================
-    constexpr   Pins::Pins          (RPN e, bool tf)
+                    Pins::Pins          (RPN e, bool tf, IOMODE m)
 //=============================================================================
     : m_pt((volatile uint32_t*)ANSELA + ((e>>RN_SHIFT)/PINMAX)*ANSELX_SPACING),
       m_pn(1<<((e>>RN_SHIFT)%PINMAX)),
@@ -157,6 +165,11 @@ class Pins {
       m_rpn((uint8_t)e & 31),
       m_ppsin(PPSINOFF)
 {
+    if(m == AIN) analog_in();
+    else if(m & DIN) digital_in();
+    else digital_out();
+    pullup(m == DINPU);
+    pulldn(m == DINPD);
 }
 
 //=============================================================================

@@ -14,12 +14,12 @@
 
 
 //try different apps
-#define MAIN 1 //simple blink 2 leds, rgb led's
-//#define MAIN 2 //most peripherals touched
+#define MAIN1 //simple blink 2 leds, rgb led's
+//#define MAIN2 //most peripherals touched
 
 
 //=============================================================================
-#if MAIN == 1
+#ifdef MAIN1
 
 #include <cstdint>
 #include "Pins.hpp"
@@ -31,11 +31,12 @@
 
 
 //set led pins
-Pins led1(Pins::D3);
-Pins led2(Pins::C13);
-Pins ledR(Pins::D1);
-Pins ledG(Pins::C3);
-Pins ledB(Pins::C15);
+//pin number, low-is-on, mode
+Pins led1(Pins::D3, false, Pins::DOUT);
+Pins led2(Pins::C13, false, Pins::DOUT);
+Pins ledR(Pins::D1, false, Pins::DOUT);
+Pins ledG(Pins::C3, false, Pins::DOUT);
+Pins ledB(Pins::C15, false, Pins::DOUT);
 
 //pwm to rgb pins
 //mccp 1-3 pwm to rgb led's
@@ -52,40 +53,34 @@ int main()
 
     //set osc to 24MHz
     Osc osc;
-    osc.pll_set(osc.MUL12, osc.DIV4);
+    osc.pll_set(osc.MUL12, osc.DIV4);       //8*12/4 = 24MHz
     osc.sosc(true);                         //enable sosc if not already
     osc.tun_auto(true);                     //let sosc tune frc
 
-    //init pins
-    led1.digital_out();
-    led2.digital_out();
-
     //init pwm
-    for(auto& i : rgb){
-        i.mode(i.DEPWM16);
-        i.compa(0);
-        i.out_pins(i.OCB);
-        i.on(true);
-    }
+    uint16_t b = 0;
     //R,G use OCxB, B uses OCxE
-    rgb[2].out_pins(rgb[2].OCE);
-    //stagger pwm
-    rgb[0].compb(100);
-    rgb[1].compb(0x5555);
-    rgb[2].compb(0xAAAA);
+    for(auto i = 0; i < 3; i++){
+        rgb[i].mode(rgb[i].DEPWM16);
+        rgb[i].compa(0);
+        rgb[i].compb(b);
+        rgb[i].out_pins(i == 2 ? Ccp::OCE : Ccp::OCB);
+        rgb[i].on(true);
+        b += 0x5555; //stagger pwm
+    }
 
     //delays, polling
     Delay dly_led1, dly_led2, dly_rgb;
-    dly_led1.set_ms(333);
-    dly_led2.set_ms(333);
-    dly_rgb.set_ms(2);
+//    dly_led1.set_ms(333);
+//    dly_led2.set_ms(333);
+//    dly_rgb.set_ms(2);
 
 
     auto rgb_do = [](){
         static bool c[] = { 1, 1, 1 };
         for(uint8_t i = 0; i < 3; i++){
             uint16_t v = rgb[i].compb();
-            if(c[i]) v += 20 + i*3; else v -= 15 - i*3;
+            if(c[i]) v += 30 + i*8; else v -= 15 - i*4;
             if(v < 50){ v = 50; c[i] = 1; }
             if(v > 30000){ v = 30000; c[i] = 0; }
             rgb[i].compb(v);
@@ -95,20 +90,22 @@ int main()
 
     //loop, clear wdt (configs bits may be set to always on)
     //(start led1 in opposite state of led2)
-    led1.invert();
+    //led1.invert();
     for(; ;Wdt::reset()){
-        if(dly_led1.expired()){
-            dly_led1.restart();
-            led1.invert();
-        }
-        if(dly_led2.expired()){
-            dly_led2.restart();
-            led2.invert();
-        }
-        if(dly_rgb.expired()){
-            dly_rgb.restart();
-            rgb_do();
-        }
+        dly_rgb.wait_ms(2); //blocking delay
+        rgb_do();
+//        if(dly_led1.expired()){
+//            dly_led1.restart();
+//            led1.invert();
+//        }
+//        if(dly_led2.expired()){
+//            dly_led2.restart();
+//            led2.invert();
+//        }
+//        if(dly_rgb.expired()){
+//            dly_rgb.restart();
+//            rgb_do();
+//        }
     }
 }
 
@@ -120,7 +117,7 @@ int main()
 
 
 
-#if MAIN == 2
+#ifdef MAIN2
 /*=============================================================================
  Includes
 =============================================================================*/
@@ -153,11 +150,11 @@ int main()
  rgb LED's (array test)
 =============================================================================*/
 Pins leds[] = {                 //group leds
-    { Pins::D1 },               //RED   //OCM1B
-    { Pins::C3 },               //GREEN //OCM2B
-    { Pins::C15 },              //BLUE  //OCM3E
-    { Pins::D3 },               //LED1 (invert in timer1/timer2/timer3 irq)
-    { Pins::C13 }               //LED2 (cp0 irq blinks)
+    { Pins::D1, false, Pins::DOUT },    //RED   //OCM1B
+    { Pins::C3, false, Pins::DOUT },    //GREEN //OCM2B
+    { Pins::C15, false, Pins::DOUT },   //BLUE  //OCM3E
+    { Pins::D3, false, Pins::DOUT },    //LED1 (invert in timer1/timer2/timer3 irq)
+    { Pins::C13, false, Pins::DOUT }    //LED2 (cp0 irq blinks)
 };
 Pins& led1 = leds[3];           //references to specific leds as needed
 Pins& led2 = leds[4];
@@ -167,9 +164,9 @@ Pins& led2 = leds[4];
  Switches - all in array
 =============================================================================*/
 Pins sw[] = {                   //true=lowison
-    { Pins::B9,  true },        //SW1 (rotate delays))
-    { Pins::C10, true },        //SW2 cp0 irq blink rate++
-    { Pins::C4,  true }         //SW3 cp0 irq blink rate--
+    { Pins::B9,  true, Pins::DINPU }, //SW1 (rotate delays))
+    { Pins::C10, true, Pins::DINPU }, //SW2 cp0 irq blink rate++
+    { Pins::C4,  true, Pins::DINPU }  //SW3 cp0 irq blink rate--
 };
 Pins& sw1 = sw[0];              //sw1/2/3 references
 Pins& sw2 = sw[1];
@@ -233,7 +230,7 @@ int main(){
     // +3.29vdc , -3.29vdc
 
     //__________________________________________________________________________
-    Resets::CAUSE cause = Resets::cause();  //use cause result somewhere
+    Resets::cause();                        //save rest cause
                                             //(will be EXTR mostly with pkob)
     //__________________________________________________________________________
     //set osc to 24MHz, use values to also get usb working
@@ -384,24 +381,6 @@ int main(){
     u2rx.pps_in(u2rx.U2RX);
     u2rx.pps_in(u2rx.PPSINOFF);
 
-
-
-    //__________________________________________________________________________
-    //init sw pins
-    for(auto& s : sw){
-        s.digital_in();
-        s.pullup(true);
-    }
-
-    //__________________________________________________________________________
-    //init leds
-    for(auto& l : leds){
-        l.digital_out();
-        l.on();                             //show each led working
-        auto d = cause == Resets::EXTR ? 500 : 2000; //ext- 1/2sec, else 2sec
-        sw_dly.wait_ms(d); //wait
-        l.off();                            //then off
-    }
 
     //__________________________________________________________________________
     //init timers
