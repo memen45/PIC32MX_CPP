@@ -28,6 +28,7 @@
 #include "Delay.hpp"
 #include "Resets.hpp"
 #include "Ccp.hpp"
+#include "Adc.hpp"
 
 
 //set led pins
@@ -69,42 +70,57 @@ int main()
     }
 
     //delays, polling
-    Delay dly_led1, dly_led2, dly_rgb;
-//    dly_led1.set_ms(333);
-//    dly_led2.set_ms(333);
-//    dly_rgb.set_ms(2);
+    Delay dly_led, dly_rgb;
+    //init delay for led1/2 (changed by pot)
+    uint16_t dly_led_ms = 2048;
+    dly_led.set_ms(dly_led_ms);
+    dly_rgb.set_ms(2);
 
 
     auto rgb_do = [](){
         static bool c[] = { 1, 1, 1 };
+        static uint8_t t = 0;
         for(uint8_t i = 0; i < 3; i++){
             uint16_t v = rgb[i].compb();
-            if(c[i]) v += 30 + i*8; else v -= 15 - i*4;
-            if(v < 50){ v = 50; c[i] = 1; }
-            if(v > 30000){ v = 30000; c[i] = 0; }
+            t += rgb[i].tmr16(); t &= 0x3f;
+            if(c[i]) v += t; else v -= t;
+            if(v < 3000){ v = 3000; c[i] = 1; }
+            if(v > 50000){ v = 50000; c[i] = 0; }
             rgb[i].compb(v);
         }
     };
 
+    Adc adc;
+    adc.mode_12bit(true);                   //12bit mode
+    adc.trig_sel(adc.AUTO);                 //adc starts conversion
+    adc.samp_time(31);                      //max sampling time- 31Tad
+    adc.conv_time(adc.PBCLK12BIT);          //if no arg,default is 4 (for 24MHz)
+    adc.ch_sel(adc.AN14);                   //pot- RC8/AN14 (default ANSEL/TRIS)
+    adc.on(true);
+    Adc::samp(true);
+
+    auto check_adc = [&](){
+        if(Adc::done()){
+            auto r = Adc::read(0); //buf[0]
+            dly_led_ms = r > 100 ? r : 100;
+            Adc::samp(true); //start again
+        }
+    };
 
     //loop, clear wdt (configs bits may be set to always on)
     //(start led1 in opposite state of led2)
-    //led1.invert();
+    led1.invert();
     for(; ;Wdt::reset()){
-        dly_rgb.wait_ms(2); //blocking delay
-        rgb_do();
-//        if(dly_led1.expired()){
-//            dly_led1.restart();
-//            led1.invert();
-//        }
-//        if(dly_led2.expired()){
-//            dly_led2.restart();
-//            led2.invert();
-//        }
-//        if(dly_rgb.expired()){
-//            dly_rgb.restart();
-//            rgb_do();
-//        }
+        check_adc();
+        if(dly_led.expired()){
+            dly_led.set_ms(dly_led_ms); //set by check_adc
+            led1.invert();
+            led2.invert();
+        }
+        if(dly_rgb.expired()){
+            dly_rgb.restart();
+            rgb_do();
+        }
     }
 }
 
