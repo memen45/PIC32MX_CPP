@@ -109,15 +109,25 @@ class Pins {
     void        pps_in          (PPSIN);
     void        pps_out         (PPSOUT);
 
+    // bit  | 4  | 3  |  2   |  1   |  0  |
+    //      | PD | PU | ACTL | DOUT | DIN |
+    //-----------------------------------------
+    //AIN   |    |    |      |      |     | 0
+    //DIN   |    |    |      |      |  1  | 1
+    //DINPU |    |  1 |  1   |      |  1  | 13
+    //DINPD |  1 |    |      |      |  1  | 17
+    //DINL  |    |    |  1   |      |  1  | 5
+    //DOUT  |    |    |      |   1  |     | 2
+    //DOUTL |    |    |  1   |   1  |     | 6
     enum IOMODE : uint8_t {
         AIN = 0,
-        DIN = 1, DINPU = 1<<2|DIN, DINPD = 1<<3|DIN,
-        DOUT = 2
+        DIN = 1, DINPU = 1<<3|1<<2|DIN, DINPD = 1<<4|DIN, DINL = 1<<2|DIN,
+        DOUT = 2, DOUTL = 1<<2|DOUT
     };
 
     //constructor
     // bool-> lowison, IOMODE -> enum above
-                Pins            (RPN, bool = false, IOMODE = AIN);
+                Pins            (RPN, IOMODE = AIN);
 
     private:
 
@@ -154,14 +164,13 @@ class Pins {
 
 
 // A0/RA0/RP1 format - Pins led1(RA0); or Pins led2(RP1, true);
-// tf = lowison tf=0 lowison=0 (high is on), tf=1 lowison=1 (low is on)
-// m = AIN,DIN,DINPU,DINPD,DOUT (default is AIN)
+// m = AIN,DIN,DINPU,DINPD,DINL,DOUT,DOUTL (default is AIN)
 //=============================================================================
-                    Pins::Pins          (RPN e, bool tf, IOMODE m)
+                    Pins::Pins          (RPN e, IOMODE m)
 //=============================================================================
     : m_pt((volatile uint32_t*)ANSELA + ((e>>RN_SHIFT)/PINMAX)*ANSELX_SPACING),
       m_pn(1<<((e>>RN_SHIFT)%PINMAX)),
-      m_lowison(tf),
+      m_lowison(m & (1<<2)),
       m_rpn((uint8_t)e & 31),
       m_ppsin(PPSINOFF)
 {

@@ -31,12 +31,12 @@
 
 
 //set led pins
-//pin number, low-is-on, mode
-Pins led1(Pins::D3, false, Pins::DOUT);
-Pins led2(Pins::C13, false, Pins::DOUT);
-Pins ledR(Pins::D1, false, Pins::DOUT);
-Pins ledG(Pins::C3, false, Pins::DOUT);
-Pins ledB(Pins::C15, false, Pins::DOUT);
+//pin number, mode
+Pins led1(Pins::D3, Pins::DOUT);
+Pins led2(Pins::C13, Pins::DOUT);
+Pins ledR(Pins::D1, Pins::DOUT);
+Pins ledG(Pins::C3, Pins::DOUT);
+Pins ledB(Pins::C15, Pins::DOUT);
 
 //pwm to rgb pins
 //mccp 1-3 pwm to rgb led's
@@ -58,15 +58,14 @@ int main()
     osc.tun_auto(true);                     //let sosc tune frc
 
     //init pwm
-    uint16_t b = 0;
     //R,G use OCxB, B uses OCxE
-    for(auto i = 0; i < 3; i++){
+    //stagger compb init value
+    for(auto i = 0, b = 0; i < 3; i++, b += 0x5555){
         rgb[i].mode(rgb[i].DEPWM16);
         rgb[i].compa(0);
         rgb[i].compb(b);
         rgb[i].out_pins(i == 2 ? Ccp::OCE : Ccp::OCB);
         rgb[i].on(true);
-        b += 0x5555; //stagger pwm
     }
 
     //delays, polling
@@ -150,11 +149,11 @@ int main()
  rgb LED's (array test)
 =============================================================================*/
 Pins leds[] = {                 //group leds
-    { Pins::D1, false, Pins::DOUT },    //RED   //OCM1B
-    { Pins::C3, false, Pins::DOUT },    //GREEN //OCM2B
-    { Pins::C15, false, Pins::DOUT },   //BLUE  //OCM3E
-    { Pins::D3, false, Pins::DOUT },    //LED1 (invert in timer1/timer2/timer3 irq)
-    { Pins::C13, false, Pins::DOUT }    //LED2 (cp0 irq blinks)
+    { Pins::D1, Pins::DOUT },    //RED   //OCM1B
+    { Pins::C3, Pins::DOUT },    //GREEN //OCM2B
+    { Pins::C15, Pins::DOUT },   //BLUE  //OCM3E
+    { Pins::D3, Pins::DOUT },    //LED1 (invert in timer1/timer2/timer3 irq)
+    { Pins::C13, Pins::DOUT }    //LED2 (cp0 irq blinks)
 };
 Pins& led1 = leds[3];           //references to specific leds as needed
 Pins& led2 = leds[4];
@@ -164,9 +163,9 @@ Pins& led2 = leds[4];
  Switches - all in array
 =============================================================================*/
 Pins sw[] = {                   //true=lowison
-    { Pins::B9,  true, Pins::DINPU }, //SW1 (rotate delays))
-    { Pins::C10, true, Pins::DINPU }, //SW2 cp0 irq blink rate++
-    { Pins::C4,  true, Pins::DINPU }  //SW3 cp0 irq blink rate--
+    { Pins::B9,  Pins::DINPU }, //SW1 (rotate delays))
+    { Pins::C10, Pins::DINPU }, //SW2 cp0 irq blink rate++
+    { Pins::C4,  Pins::DINPU }  //SW3 cp0 irq blink rate--
 };
 Pins& sw1 = sw[0];              //sw1/2/3 references
 Pins& sw2 = sw[1];
