@@ -40,40 +40,40 @@ class Pins {
 
     //normal pin names, RXn name, or RPn name
     enum RPN : uint16_t {
-        // encode as- 0x000ppnnnn000rrrrr - | 000 PORT/PIN | 000 RPn |
+        // encode as- 0x000rrrrr00ppnnnn - | 000 RPn | 00 PORT/PIN |
         // pp = port A=0,B=1,C=2,D=3
         // nnnnn = pin = 0-15
         // rrrrr = RPn = 1-24
         // so we can use one enum to get RPn and port/pin info
 
-        //A0 - D4  (ppnnnn in 0x000ppnnnn000rrrrr)
-        A0 = 0<<8, A1 = 1<<8, A2 = 2<<8, A3 = 3<<8, A4 = 4<<8, A5 = 5<<8,
-        A6 = 6<<8, A7 = 7<<8, A8 = 8<<8, A9 = 9<<8, A10 = 10<<8, A11 = 11<<8,
-        A12 = 12<<8, A13 = 13<<8, A14 = 14<<8, A15 = 15<<8,
-        B0 = 16<<8, B1 = 17<<8, B2 = 18<<8, B3 = 19<<8, B4 =20<<8, B5 = 21<<8,
-        B6 = 22<<8, B7 = 23<<8, B8 = 24<<8, B9 = 25<<8, B10 = 26<<8,
-        B11 = 27<<8, /*no B12*/ B13 = 29<<8, B14 = 30<<8, B15 = 31<<8,
-        C0 = 32<<8, C1 = 33<<8, C2 = 34<<8, C3 = 35<<8, C4 = 36<<8, C5 = 37<<8,
-        C6 = 38<<8, C7 = 39<<8, C8 = 40<<8, C9 = 41<<8, C10 = 42<<8,
-        C11 = 43<<8, C12 = 44<<8, C13 = 45<<8, C14 = 46<<8, C15 = 47<<8,
-        D0 = 48<<8, D1 = 49<<8, D2 = 50<<8, D3 = 51<<8, D4 = 52<<8,
+        //A0 - D4  0x000rrrrr00ppnnnn
+        A0 = 0|1<<8, A1 = 1|2<<8, A2 = 2|3<<8, A3 = 3|4<<8,
+        A4 = 4|5<<8, A5 = 5, A6 = 6, A7 = 7|21<<8,
+        A8 = 8, A9 = 9|24<<8, A10 = 10|22<<8, A11 = 11,
+        A12 = 12, A13 = 13, A14 = 14, A15 = 15,
 
-        //RPn 1-24 (rrrrr in 0x000ppnnnn000rrrrr)
-        RP1 = 1+A0, RP2 = 2+A1, RP3 = 3+A2, RP4 = 4+A3,
-        RP5 = 5+A4, RP6 = 6+B0, RP7 = 7+B1, RP8 = 8+B2,
-        RP9 = 9+B3, RP10 = 10+B4, RP11 = 11+B5,
-        RP12 = 12+B7, RP13 = 13+B8, RP14 = 14+B9,
-        RP15 = 15+B13, RP16 = 16+B14, RP17 = 17+B15,
-        RP18 = 18+C8, RP19 = 19+C2, RP20 = 20+C7,
-        RP21 = 21+A7, RP22 = 22+A10, RP23 = 23+C6,
-        RP24 = 24+A9,
+        B0 = 16|6<<8, B1 = 17|7<<8, B2 = 18|8<<8, B3 = 19|9<<8,
+        B4 = 20|10<<8, B5 = 21|11<<8, B6 = 22, B7 = 23|12<<8,
+        B8 = 24|13<<8, B9 = 25|14<<8, B10 = 26, B11 = 27,
+        /*no B12*/ B13 = 29|15<<8, B14 = 30|16<<8, B15 = 31|17<<8,
 
-        //RXn to RPn (rrrrr in 0x000ppnnnn000rrrrr)
-        RA0 = RP1, RA1 = RP2, RA2 = RP3, RA3 = RP4, RA4 = RP5, RB0 = RP6,
-        RB1 = RP7, RB2 = RP8, RB3 = RP9, RB4 = RP10, RB5 = RP11, RB7 = RP12,
-        RB8 = RP13, RB9 = RP14, RB13 = RP15, RB14 = RP16, RB15 = RP17,
-        RC8 = RP18, RC2 = RP19, RC7 = RP20, RA7 = RP21, RA10 = RP22,
-        RC6 = RP23, RA9 = RP24
+        C0 = 32, C1 = 33, C2 = 34|19<<8, C3 = 35,
+        C4 = 36, C5 = 37, C6 = 38|23<<8, C7 = 39|20<<8,
+        C8 = 40|18<<8, C9 = 41, C10 = 42, C11 = 43,
+        C12 = 44, C13 = 45, C14 = 46, C15 = 47,
+
+        D0 = 48, D1 = 49, D2 = 50, D3 = 51,
+        D4 = 52,
+
+        //RPn 1-24
+        RP1 = A0, RP2 = A1, RP3 = A2, RP4 = A3,
+        RP5 = A4, RP6 = B0, RP7 = B1, RP8 = B2,
+        RP9 = B3, RP10 = B4, RP11 = B5,
+        RP12 = B7, RP13 = B8, RP14 = B9,
+        RP15 = B13, RP16 = B14, RP17 = B15,
+        RP18 = C8, RP19 = C2, RP20 = C7,
+        RP21 = A7, RP22 = A10, RP23 = C6,
+        RP24 = A9
     };
 
     //r/w pins
@@ -149,7 +149,9 @@ class Pins {
             IOLOCK = 1<<11,
         RPINR1 = 0xBF802A10,
         RPOR0 = 0xBF802B10,
-        RPN_MASK = 7, RN_SHIFT = 8, PINMAX = 16
+        //misc
+        PTMASK = 3, PTSHIFT = 4, PNMASK = 15,
+        ACTL = 1<<2 //IOMODE
     };
 
     static void     pps_do      (uint32_t, uint8_t);
@@ -160,22 +162,25 @@ class Pins {
     const uint8_t       m_rpn;      //RPn value
     uint8_t             m_ppsin;    //store ppsin peripheral
 
+    using vu32_ptr = volatile uint32_t*;
+
 };
 
 
-// A0/RA0/RP1 format - Pins led1(RA0); or Pins led2(RP1, true);
+// A0/RP1 format - Pins led1(A0); or Pins led2(RP1, true);
 // m = AIN,DIN,DINPU,DINPD,DINL,DOUT,DOUTL (default is AIN)
+// RPN encoded as 0x000rrrrr00ppnnnn (r=RPn, pp=PORT, nnnn=PIN)
 //=============================================================================
                     Pins::Pins          (RPN e, IOMODE m)
 //=============================================================================
-    : m_pt((volatile uint32_t*)ANSELA + ((e>>RN_SHIFT)/PINMAX)*ANSELX_SPACING),
-      m_pn(1<<((e>>RN_SHIFT)%PINMAX)),
-      m_lowison(m & (1<<2)),
-      m_rpn((uint8_t)e & 31),
+    : m_pt((vu32_ptr)ANSELA + ((e>>PTSHIFT) bitand PTMASK)*ANSELX_SPACING),
+      m_pn(1<<(e bitand PNMASK)),
+      m_lowison(m & ACTL),
+      m_rpn((uint8_t)(e>>8)),
       m_ppsin(PPSINOFF)
 {
     if(m == AIN) analog_in();
-    else if(m & DIN) digital_in();
+    else if(m bitand DIN) digital_in();
     else digital_out();
     pullup(m == DINPU);
     pulldn(m == DINPD);
