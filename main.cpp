@@ -119,7 +119,8 @@ uint8_t svg[][3] = {
         /*magenta*/ {255,0,255},
 ///*maroon*/ {128,0,0},
 ///*mediumaquamarine*/ {102,205,170},
-///*mediumblue*/ {0,0,205},
+        ///*mediumblue*/ {0,0,205},
+        /*mymediumblue*/ {0,0,255},
 ///*mediumorchid*/ {186,85,211},
 ///*mediumpurple*/ {147,112,219},
 ///*mediumseagreen*/ {60,179,113},
@@ -127,7 +128,7 @@ uint8_t svg[][3] = {
 ///*mediumspringgreen*/ {0,250,154},
 ///*mediumturquoise*/ {72,209,204},
         /*mediumvioletred*/ {199,21,133},
-        /*midnightblue*/ {25,25,112},
+///*midnightblue*/ {25,25,112},
 ///*mintcream*/ {245,255,250},
 ///*mistyrose*/ {255,228,225},
 ///*moccasin*/ {255,228,181},
@@ -228,7 +229,7 @@ int main()
     auto check_rgb = [&](){
         static uint8_t idx = 0;
         if(not ledR.expired()) return;
-        ledR.set_ms(20);
+        ledR.set_ms(10);
         if(idx >= sizeof(svg)/sizeof(svg[0])) idx = 0;
 
         bool color_done = true;
@@ -241,7 +242,7 @@ int main()
             rgb[i].compb(v);
         }
         if(not color_done) return;
-        ledR.set_ms(2000);
+        ledR.set_ms(5000);
         idx++;
     };
 
