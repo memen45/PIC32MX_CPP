@@ -42,9 +42,9 @@ uint8_t svg[][3] = {
 ///*blanchedalmond*/ {255,235,205},
 ///*blue*/ {0,0,255},
 ///*blueviolet*/ {138,43,226},
-        /*brown*/ {165,42,42},
+///*brown*/ {165,42,42},
 ///*burlywood*/ {222,184,135},
-        /*cadetblue*/ {95,158,160},
+///*cadetblue*/ {95,158,160},
 ///*chartreuse*/ {127,255,0},
 ///*chocolate*/ {210,105,30},
 ///*coral*/ {255,127,80},
@@ -60,7 +60,7 @@ uint8_t svg[][3] = {
 ///*darkgrey*/ {169,169,169},
 ///*darkkhaki*/ {189,183,107},
         /*darkmagenta*/ {139,0,139},
-        /*darkolivegreen*/ {85,107,47},
+///*darkolivegreen*/ {85,107,47},
 ///*darkorange*/ {255,140,0},
 ///*darkorchid*/ {153,50,204},
 ///*darkred*/ {139,0,0},
@@ -96,7 +96,7 @@ uint8_t svg[][3] = {
 ///*khaki*/ {240,230,140},
 ///*lavender*/ {230,230,250},
 ///*lavenderblush*/ {255,240,245},
-        /*lawngreen*/ {124,252,0},
+///*lawngreen*/ {124,252,0},
 ///*lemonchiffon*/ {255,250,205},
 ///*lightblue*/ {173,216,230},
 ///*lightcoral*/ {240,128,128},
@@ -119,7 +119,7 @@ uint8_t svg[][3] = {
         /*magenta*/ {255,0,255},
 ///*maroon*/ {128,0,0},
 ///*mediumaquamarine*/ {102,205,170},
-        /*mediumblue*/ {0,0,205},
+///*mediumblue*/ {0,0,205},
 ///*mediumorchid*/ {186,85,211},
 ///*mediumpurple*/ {147,112,219},
 ///*mediumseagreen*/ {60,179,113},
@@ -166,13 +166,13 @@ uint8_t svg[][3] = {
 ///*slategrey*/ {112,128,144},
 ///*snow*/ {255,250,250},
 ///*springgreen*/ {0,255,127},
-            /*steelblue*/ {70,130,180},
+///*steelblue*/ {70,130,180},
 ///*tan*/ {210,180,140},
 ///*teal*/ {0,128,128},
 ///*thistle*/ {216,191,216},
 ///*tomato*/ {255,99,71},
 ///*turquoise*/ {64,224,208},
-            /*violet*/ {238,130,238},
+///*violet*/ {238,130,238},
 ///*wheat*/ {245,222,179},
 ///*white*/ {255,255,255},
 ///*whitesmoke*/ {245,245,245},
@@ -184,8 +184,8 @@ uint8_t svg[][3] = {
 
 //set led pins
 //pin number, mode
-Pins led1(Pins::D3, Pins::DOUT);
-Pins led2(Pins::C13, Pins::DOUT);
+Pins led1(Pins::D3); //let check_led set io mode
+Pins led2(Pins::C13);
 Pins ledR(Pins::D1, Pins::DOUT);
 Pins ledG(Pins::C3, Pins::DOUT);
 Pins ledB(Pins::C15, Pins::DOUT);
@@ -209,32 +209,26 @@ int main()
     osc.sosc(true);                         //enable sosc if not already
     osc.tun_auto(true);                     //let sosc tune frc
 
-    //init pwm
+    //init pwm via loop
     //R,G use OCxB, B uses OCxE
     for(auto i = 0; i < 3; i++){
-        rgb[i].mode(rgb[i].DEPWM16);
+        rgb[i].mode(rgb[i].DEPWM16); //dual edge pwm 16bit
         rgb[i].compa(0);
-        rgb[i].compb(svg[0][i]<<8);
+        rgb[i].compb(0);
         rgb[i].out_pins(i == 2 ? Ccp::OCE : Ccp::OCB);
         rgb[i].on(true);
     }
 
-    //delays, polling
-    Delay dly_led, dly_rgb;
-    //init delay for led1/2 (changed by pot)
-    uint16_t dly_led_ms = 2048;
-    dly_led.set_ms(dly_led_ms);
-    dly_rgb.set_ms(20);
+    //delays, polling (Pins inherit Delay)
+    led1.set_ms(100);
+    ledR.set_ms(5);
+
 
     //cycle through svg colors
-    auto rgb_do = [](){
+    auto check_rgb = [&](){
         static uint8_t idx = 0;
-        static uint16_t hold_count = 0;
-
-        if(hold_count){
-            hold_count--;
-            return;
-        }
+        if(not ledR.expired()) return;
+        ledR.set_ms(20);
         if(idx >= sizeof(svg)/sizeof(svg[0])) idx = 0;
 
         bool color_done = true;
@@ -247,7 +241,7 @@ int main()
             rgb[i].compb(v);
         }
         if(not color_done) return;
-        hold_count = 50;
+        ledR.set_ms(2000);
         idx++;
     };
 
@@ -260,35 +254,36 @@ int main()
     adc.on(true);
     Adc::samp(true);
 
-    auto check_adc = [&](){
+    //alternate led/led2 at rate determined by pot via adc
+    //if very low value, turn off led's
+    auto check_led = [&](){
+        static uint16_t t = 100;
+        if(not led1.expired()) return;
         if(Adc::done()){
-            auto r = Adc::read(0); //buf[0]
-            if(r < 100){ //turn off led's by setting to input
-                led1.digital_in();
-                led2.digital_in();
-            } else {
-                dly_led_ms = r;
-                led1.digital_out();
-                led2.digital_out();
-            }
-            Adc::samp(true); //start again
+            t = Adc::read(0)>>2;
+            Adc::samp(true);
         }
+        if(t < 100){
+            t = 100;
+            led1.digital_in();
+            led2.digital_in();
+        }
+        else{
+            led1.digital_out();
+            led2.digital_out();
+        }
+        led1.set_ms(t);
+        led1.invert();
+        led2.invert();
     };
 
     //loop, clear wdt (configs bits may be set to always on)
     //(start led1 in opposite state of led2)
     led1.invert();
-    for(; ;Wdt::reset()){
-        check_adc();
-        if(dly_led.expired()){
-            dly_led.set_ms(dly_led_ms); //set by check_adc
-            led1.invert();
-            led2.invert();
-        }
-        if(dly_rgb.expired()){
-            dly_rgb.restart();
-            rgb_do();
-        }
+    for(;;){
+        Wdt::reset();
+        check_led();
+        check_rgb();
     }
 }
 

@@ -5,8 +5,10 @@
 #include <cstdint>
 #include "Reg.hpp"
 #include "Sys.hpp"
+#include "Delay.hpp"
 
-class Pins {
+
+class Pins : public Delay {
 
     public:
 
@@ -38,13 +40,12 @@ class Pins {
         CLC1OUT, CLC2OUT, CLC3OUT, CLC4OUT,
     };
 
-    //normal pin names, RXn name, or RPn name
+    //A0 type name, or RP0 type name (equivilent)
     enum RPN : uint16_t {
         // encode as- 0x000rrrrr00ppnnnn - | 000 RPn | 00 PORT/PIN |
         // pp = port A=0,B=1,C=2,D=3
         // nnnnn = pin = 0-15
         // rrrrr = RPn = 1-24
-        // so we can use one enum to get RPn and port/pin info
 
         //A0 - A-15  0x000rrrrr00ppnnnn
         A0 = 0|1<<8, A1 = 1|2<<8, A2 = 2|3<<8, A3 = 3|4<<8,
@@ -124,7 +125,6 @@ class Pins {
     };
 
     //constructor
-    // bool-> lowison, IOMODE -> enum above
                 Pins            (RPN, IOMODE = AIN);
 
     private:
@@ -165,9 +165,9 @@ class Pins {
 };
 
 
-// A0/RP1 format - Pins led1(A0); or Pins led2(RP1, true);
+// A0/RP1 format - Pins led1(A0); or Pins led2(RP1, DOUT);
 // m = AIN,DIN,DINPU,DINPD,DINL,DOUT,DOUTL (default is AIN)
-// RPN encoded as 0x000rrrrr00ppnnnn (r=RPn, pp=PORT, nnnn=PIN)
+// RPN enum encoded as 0x000rrrrr00ppnnnn (r=RPn, pp=PORT, nnnn=PIN)
 //=============================================================================
                     Pins::Pins          (RPN e, IOMODE m)
 //=============================================================================
