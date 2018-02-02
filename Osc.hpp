@@ -36,6 +36,8 @@
 #include "Sys.hpp"
 #include "Irq.hpp"
 #include "Dma.hpp"
+#include "Wdt.hpp"
+#include "Resets.hpp"
 
 
 struct Osc {
@@ -53,7 +55,9 @@ struct Osc {
     static CNOSC        clk_src     ();         //get current osc source
     static void         clk_src     (CNOSC);    //start switch to nosc
     static void         clk_lock    ();         //lock nosc/oswen until reset
-    static void         sleep       (bool);     //sleep enable
+    static void         sleep       ();         //sleep, wait
+    static void         sleep_reten ();         //retention sleep, wait
+    static void         idle        ();         //idle, wait
     static bool         clk_bad     ();         //clock failed?
     static void         sosc        (bool);     //sosc enable
     static bool         sosc        ();         //sosc enabled?
@@ -251,12 +255,36 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 }
 
 //=============================================================================
-    void            Osc::sleep          (bool tf)
+    void            Osc::sleep          ()
 //=============================================================================
 {
+    //sleep bit only enabled here, then disabled when wakes
     sys.unlock();
-    r.setbit(OSCCON, SLPEN, tf);
+    r.setbit(OSCCON, SLPEN);
     sys.lock();
+    Wdt::reset();
+    __asm__ __volatile__ ("wait");
+    sys.unlock();
+    r.clrbit(OSCCON, SLPEN);
+    sys.lock();
+}
+
+//=============================================================================
+    void            Osc::sleep_reten    ()
+//=============================================================================
+{
+    //reten bit only enabled here, then disabled when wakes
+    Resets::reten(true);
+    sleep();
+    Resets::reten(false);
+}
+
+//=============================================================================
+    void            Osc::idle           ()
+//=============================================================================
+{
+    Wdt::reset();
+    __asm__ __volatile__ ("wait");
 }
 
 //=============================================================================

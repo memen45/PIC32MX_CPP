@@ -32,7 +32,7 @@ struct Resets {
 
     //PWRCON
     static void     bor             (bool);
-    static void     reten           (bool);
+    static void     reten           (bool); //used by Osc for reten sleep mode
     static void     vregs           (bool);
 
     private:

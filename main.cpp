@@ -258,24 +258,20 @@ int main()
     //alternate led/led2 at rate determined by pot via adc
     //if very low value, turn off led's
     auto check_led = [&](){
-        static uint16_t t = 100;
         if(not led1.expired()) return;
-        if(Adc::done()){
-            t = Adc::read(0)>>2;
-            Adc::samp(true);
-        }
+        if(Adc::done()) Adc::samp(true);
+        uint16_t t = Adc::read(0)>>2;
         if(t < 100){
             t = 100;
             led1.digital_in();
             led2.digital_in();
-        }
-        else{
+        } else {
+            led1.invert();
+            led2.invert();
             led1.digital_out();
             led2.digital_out();
         }
         led1.set_ms(t);
-        led1.invert();
-        led2.invert();
     };
 
     //loop, clear wdt (configs bits may be set to always on)
