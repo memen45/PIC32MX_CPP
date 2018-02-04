@@ -30,6 +30,30 @@
 #include "Ccp.hpp"
 #include "Adc.hpp"
 
+//simple class for Vin pin, read adc voltage on pin
+//blocking
+//if pin has no ANn, will use AVss as adc channel (should return 0)
+struct Vin : public Pins {
+    Vin(Pins::RPN pp) : Pins(pp, Pins::AIN){};
+
+    uint16_t adcval(){
+        Adc adc;
+        adc.mode_12bit(true);           //12bit mode
+        adc.trig_sel(adc.AUTO);         //adc starts conversion
+        adc.samp_time(31);              //max sampling time- 31Tad
+        adc.conv_time(adc.PBCLK12BIT);  //if no arg,default is 4 (for 24MHz)
+        adc.ch_sel(an_num());           //ANn (AVss if no ANn for pin)
+        adc.on(true);
+        adc.samp(true);
+        while(not Adc::done());         //blocking
+        return Adc::read(0);            //buf[0]
+    }
+};
+
+Vin pot(Pins::AN14);
+
+
+
 //svg colors for rgb led
 uint8_t svg[][3] = {
 ///*aliceblue*/ {240,248,255},
@@ -246,21 +270,22 @@ int main()
         idx++;
     };
 
-    Adc adc;
-    adc.mode_12bit(true);                   //12bit mode
-    adc.trig_sel(adc.AUTO);                 //adc starts conversion
-    adc.samp_time(31);                      //max sampling time- 31Tad
-    adc.conv_time(adc.PBCLK12BIT);          //if no arg,default is 4 (for 24MHz)
-    adc.ch_sel(adc.AN14);                   //pot- RC8/AN14 (default ANSEL/TRIS)
-    adc.on(true);
-    Adc::samp(true);
+//    Adc adc;
+//    adc.mode_12bit(true);                   //12bit mode
+//    adc.trig_sel(adc.AUTO);                 //adc starts conversion
+//    adc.samp_time(31);                      //max sampling time- 31Tad
+//    adc.conv_time(adc.PBCLK12BIT);          //if no arg,default is 4 (for 24MHz)
+//    adc.ch_sel(adc.AN14);                   //pot- RC8/AN14 (default ANSEL/TRIS)
+//    adc.on(true);
+//    adc.samp(true);
 
     //alternate led/led2 at rate determined by pot via adc
     //if very low value, turn off led's
     auto check_led = [&](){
         if(not led1.expired()) return;
-        if(Adc::done()) Adc::samp(true);
-        uint16_t t = Adc::read(0)>>2;
+//        if(Adc::done()) Adc::samp(true);
+//        uint16_t t = Adc::read(0)>>2;
+        uint16_t t = pot.adcval()>>2;
         if(t < 100){
             t = 100;
             led1.digital_in();

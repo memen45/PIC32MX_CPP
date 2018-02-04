@@ -33,7 +33,7 @@ struct Uart  {
     void            loopback        (bool);             //loopback on/off
     void            autobaud        (bool);             //autobaud on/off
     void            rx_pol          (RXPOL);            //rx polarity
-    void            hispeed         (bool);             //(hign)4x or 16x
+    void            hispeed         (bool);             //(high)4x or 16x
     void            mode            (MODESEL);          //parity, data, stop
 
     //uxsta
