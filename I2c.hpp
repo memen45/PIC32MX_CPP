@@ -54,9 +54,9 @@ struct I2c  {
         TXFULL = 1<<0,
     };
     bool            stat            (STAT);
-    void            stat_buscol_clr ();
-    void            stat_txcol_clr  ();
-    void            stat_rxoflow_clr();
+    void            buscol_clr      ();
+    void            txcol_clr       ();
+    void            rxoflow_clr     ();
 
     //I2CXADDR
     void            addr            (uint16_t);
@@ -272,21 +272,21 @@ struct I2c  {
 }
 
 //=============================================================================
-    void        I2c::stat_buscol_clr    ()
+    void        I2c::buscol_clr         ()
 //=============================================================================
 {
     r.clrbit(m_i2cx_con+I2CXSTAT, BUSCOL);
 }
 
 //=============================================================================
-    void        I2c::stat_txcol_clr     ()
+    void        I2c::txcol_clr          ()
 //=============================================================================
 {
     r.clrbit(m_i2cx_con+I2CXSTAT, TXCOL);
 }
 
     //=============================================================================
-    void        I2c::stat_rxoflow_clr   ()
+    void        I2c::rxoflow_clr        ()
 //=============================================================================
 {
     r.clrbit(m_i2cx_con+I2CXSTAT, RXOFLOW);

@@ -58,7 +58,7 @@ const uint8_t svg[][3] = {
 ///*beige*/ {245,245,220},
 ///*bisque*/ {255,228,196},
 ///*blanchedalmond*/ {255,235,205},
-///*blue*/ {0,0,255},
+/*blue*/ {0,0,255},
 ///*blueviolet*/ {138,43,226},
 ///*brown*/ {165,42,42},
 ///*burlywood*/ {222,184,135},
@@ -74,10 +74,10 @@ const uint8_t svg[][3] = {
 ///*darkcyan*/ {0,139,139},
 ///*darkgoldenrod*/ {184,134,11},
 ///*darkgray*/ {169,169,169},
-        /*darkgreen*/ {0,100,0},
+/*darkgreen*/ {0,100,0},
 ///*darkgrey*/ {169,169,169},
 ///*darkkhaki*/ {189,183,107},
-        /*darkmagenta*/ {139,0,139},
+/*darkmagenta*/ {139,0,139},
 ///*darkolivegreen*/ {85,107,47},
 ///*darkorange*/ {255,140,0},
 ///*darkorchid*/ {153,50,204},
@@ -88,8 +88,8 @@ const uint8_t svg[][3] = {
 ///*darkslategray*/ {47,79,79},
 ///*darkslategrey*/ {47,79,79},
 ///*darkturquoise*/ {0,206,209},
-        /*darkviolet*/ {148,0,211},
-        /*deeppink*/ {255,20,147},
+/*darkviolet*/ {148,0,211},
+/*deeppink*/ {255,20,147},
 ///*deepskyblue*/ {0,191,255},
 ///*dimgray*/ {105,105,105},
 ///*dimgrey*/ {105,105,105},
@@ -107,9 +107,9 @@ const uint8_t svg[][3] = {
 ///*greenyellow*/ {173,255,47},
 ///*grey*/ {128,128,128},
 ///*honeydew*/ {240,255,240},
-///*hotpink*/ {255,105,180},
+/*hotpink*/ {255,105,180},
 ///*indianred*/ {205,92,92},
-        /*indigo*/ {75,0,130},
+/*indigo*/ {75,0,130},
 ///*ivory*/ {255,255,240},
 ///*khaki*/ {240,230,140},
 ///*lavender*/ {230,230,250},
@@ -131,21 +131,20 @@ const uint8_t svg[][3] = {
 ///*lightslategrey*/ {119,136,153},
 ///*lightsteelblue*/ {176,196,222},
 ///*lightyellow*/ {255,255,224},
-        /*lime*/ {0,255,0},
+/*lime*/ {0,255,0},
 ///*limegreen*/ {50,205,50},
 ///*linen*/ {250,240,230},
-        /*magenta*/ {255,0,255},
+/*magenta*/ {255,0,255},
 ///*maroon*/ {128,0,0},
 ///*mediumaquamarine*/ {102,205,170},
-        ///*mediumblue*/ {0,0,205},
-        /*mymediumblue*/ {0,0,255},
+///*mediumblue*/ {0,0,205},
 ///*mediumorchid*/ {186,85,211},
 ///*mediumpurple*/ {147,112,219},
 ///*mediumseagreen*/ {60,179,113},
 ///*mediumslateblue*/ {123,104,238},
 ///*mediumspringgreen*/ {0,250,154},
 ///*mediumturquoise*/ {72,209,204},
-        /*mediumvioletred*/ {199,21,133},
+/*mediumvioletred*/ {199,21,133},
 ///*midnightblue*/ {25,25,112},
 ///*mintcream*/ {245,255,250},
 ///*mistyrose*/ {255,228,225},
@@ -155,7 +154,7 @@ const uint8_t svg[][3] = {
 ///*oldlace*/ {253,245,230},
 ///*olive*/ {128,128,0},
 ///*olivedrab*/ {107,142,35},
-        /*orange*/ {255,165,0},
+/*orange*/ {255,165,0},
 ///*orangered*/ {255,69,0},
 ///*orchid*/ {218,112,214},
 ///*palegoldenrod*/ {238,232,170},
@@ -168,8 +167,8 @@ const uint8_t svg[][3] = {
 ///*pink*/ {255,192,203},
 ///*plum*/ {221,160,221},
 ///*powderblue*/ {176,224,230},
-        /*purple*/ {128,0,128},
-        /*red*/ {255,0,0},
+/*purple*/ {128,0,128},
+/*red*/ {255,0,0},
 ///*rosybrown*/ {188,143,143},
 ///*royalblue*/ {65,105,225},
 ///*saddlebrown*/ {139,69,19},
@@ -195,7 +194,7 @@ const uint8_t svg[][3] = {
 ///*wheat*/ {245,222,179},
 ///*white*/ {255,255,255},
 ///*whitesmoke*/ {245,245,245},
-        /*yellow*/ {255,255,0},
+/*yellow*/ {255,255,0},
 ///*yellowgreen*/ {154,205,50},
 //
 ///*black*/ {0,0,0} //end
@@ -238,11 +237,6 @@ int main()
         rgb[i].on(true);
     }
 
-    //delays, polling (Pins inherit Delay)
-    led1.set_ms(100);
-    ledR.set_ms(5);
-
-
     //cycle through svg colors
     auto check_rgb = [&](){
         static uint8_t idx = 0;
@@ -260,7 +254,7 @@ int main()
             rgb[i].compb(v);
         }
         if(not color_done) return;
-        ledR.set_ms(5000);
+        ledR.set_ms(3000);
         idx++;
     };
 
