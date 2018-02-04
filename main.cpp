@@ -33,7 +33,7 @@
 //simple class for Vin pin, read adc voltage on pin
 //blocking
 //if pin has no ANn, will use AVss as adc channel (should return 0)
-struct Vin : public Pins {
+struct Vin : private Pins {
     Vin(Pins::RPN pp) : Pins(pp, Pins::AIN){};
 
     uint16_t adcval(){
@@ -55,7 +55,7 @@ Vin pot(Pins::AN14);
 
 
 //svg colors for rgb led
-uint8_t svg[][3] = {
+const uint8_t svg[][3] = {
 ///*aliceblue*/ {240,248,255},
 ///*antiquewhite*/ {250,235,215},
 ///*aqua*/ {0,255,255},
