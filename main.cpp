@@ -8,11 +8,6 @@
 
  =============================================================================*/
 
-#include <cstdint>
-
-
-
-
 //try different apps
 #define MAIN1 //simple blink 2 leds, rgb led's
 //#define MAIN2 //most peripherals touched
@@ -51,7 +46,6 @@ struct Vin : private Pins {
 };
 
 Vin pot(Pins::AN14);
-
 
 
 //svg colors for rgb led
