@@ -110,6 +110,7 @@ class Pins : public Delay {
     //r/w pins
     bool        pinval          () const;
     bool        latval          () const;
+    void        latval          (bool) const;
     void        low             () const;
     void        high            () const;
     void        invert          () const;
@@ -231,6 +232,13 @@ class Pins : public Delay {
 //=============================================================================
 {
     return r.anybit(m_pt+LAT, m_pn);
+}
+
+//=============================================================================
+    void        Pins::latval        (bool tf) const
+//=============================================================================
+{
+    return r.setbit(m_pt+LAT, m_pn, tf);
 }
 
 //=============================================================================

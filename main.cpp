@@ -26,7 +26,7 @@
 #include "Adc.hpp"
 
 //simple class for Vin pin, read adc voltage on pin
-//blocking
+//adc read is blocking
 //if pin has no ANn, will use AVss as adc channel (should return 0)
 struct Vin : private Pins {
     Vin(Pins::RPN pp) : Pins(pp, Pins::AIN){};
@@ -44,12 +44,11 @@ struct Vin : private Pins {
         return Adc::read(0);            //buf[0]
     }
 };
-
 Vin pot(Pins::AN14);
 
 
 //svg colors for rgb led
-const uint8_t svg[][3] = {
+const uint8_t svg[][3]{
 ///*aliceblue*/ {240,248,255},
 ///*antiquewhite*/ {250,235,215},
 ///*aqua*/ {0,255,255},
@@ -200,20 +199,80 @@ const uint8_t svg[][3] = {
 ///*black*/ {0,0,0} //end
 };
 
-//set led pins
-//pin number, mode
-Pins led1(Pins::D3); //let check_led set io mode
-Pins led2(Pins::C13);
-Pins ledR(Pins::D1, Pins::DOUT);
-Pins ledG(Pins::C3, Pins::DOUT);
-Pins ledB(Pins::C15, Pins::DOUT);
+//rgb led's struct, use pwm for brightness
+//loop through svg colors by regularly calling update()
+struct Rgb {
 
-//pwm to rgb pins
-//mccp 1-3 pwm to rgb led's
-Ccp rgb[] = {
-    Ccp::CCP1,
-    Ccp::CCP2,
-    Ccp::CCP3
+    Rgb()
+    {
+        //init pwm via loop- R,G use OCxB, B uses OCxE
+        for(auto i = 0; i < 3; i++){
+            m_ccp[i].mode(m_ccp[i].DEPWM16); //dual edge pwm 16bit
+            m_ccp[i].compa(0);
+            m_ccp[i].compb(0);
+            m_ccp[i].out_pins(i == 2 ? Ccp::OCE : Ccp::OCB);
+            m_ccp[i].on(true);
+        }
+    }
+
+    //cycle through svg colors
+    void update()
+    {
+        if(not m_ledR.expired()) return;
+
+        uint16_t t = 3000;
+        for(uint8_t i = 0; i < 3; i++){
+            uint16_t v = m_ccp[i].compb();
+            uint16_t s = svg[m_idx][i]<<8;
+            if(v == s) continue;
+            t = 10;
+            if(v < s) v += 256; else v -= 256;
+            m_ccp[i].compb(v);
+        }
+        m_ledR.set_ms(t);
+        if(t == 10) return;
+        if(++m_idx >= sizeof(svg)/sizeof(svg[0])) m_idx = 0;
+    };
+
+    private:
+
+    uint8_t m_idx;
+    //pwm to rgb pins
+    //mccp 1-3 pwm to rgb led's
+    Ccp m_ccp[3]{ Ccp::CCP1, Ccp::CCP2, Ccp::CCP3 };
+
+    Pins m_ledR{Pins::D1, Pins::DOUT},
+         m_ledG{Pins::C3, Pins::DOUT},
+         m_ledB{Pins::C15, Pins::DOUT};
+};
+
+
+//alternate led/led2 at rate determined by pot via adc
+//if very low value, turn off led's
+struct Led12 {
+
+    void update()
+    {
+        if(not m_led1.expired()) return;
+        uint16_t t = pot.adcval()>>2;
+        if(t < 100){
+            t = 100;
+            m_led1.off();
+            m_led2.off();
+        } else {
+            m_led1_state = not m_led1_state;
+            m_led1.latval(m_led1_state);
+            m_led2.latval(not m_led1_state); //always opposite
+        }
+        m_led1.set_ms(t);
+    };
+
+    private:
+
+    Pins m_led1{Pins::D3, Pins::DOUT};
+    Pins m_led2{Pins::C13, Pins::DOUT};
+    bool m_led1_state{false};
+
 };
 
 int main()
@@ -227,73 +286,12 @@ int main()
     osc.sosc(true);                         //enable sosc if not already
     osc.tun_auto(true);                     //let sosc tune frc
 
-    //init pwm via loop
-    //R,G use OCxB, B uses OCxE
-    for(auto i = 0; i < 3; i++){
-        rgb[i].mode(rgb[i].DEPWM16); //dual edge pwm 16bit
-        rgb[i].compa(0);
-        rgb[i].compb(0);
-        rgb[i].out_pins(i == 2 ? Ccp::OCE : Ccp::OCB);
-        rgb[i].on(true);
-    }
-
-    //cycle through svg colors
-    auto check_rgb = [&](){
-        static uint8_t idx = 0;
-        if(not ledR.expired()) return;
-        ledR.set_ms(10);
-        if(idx >= sizeof(svg)/sizeof(svg[0])) idx = 0;
-
-        bool color_done = true;
-        for(uint8_t i = 0; i < 3; i++){
-            uint16_t v = rgb[i].compb();
-            uint16_t s = svg[idx][i]<<8;
-            if(v == s) continue;
-            color_done = false;
-            if(v < s) v += 256; else v -= 256;
-            rgb[i].compb(v);
-        }
-        if(not color_done) return;
-        ledR.set_ms(3000);
-        idx++;
-    };
-
-//    Adc adc;
-//    adc.mode_12bit(true);                   //12bit mode
-//    adc.trig_sel(adc.AUTO);                 //adc starts conversion
-//    adc.samp_time(31);                      //max sampling time- 31Tad
-//    adc.conv_time(adc.PBCLK12BIT);          //if no arg,default is 4 (for 24MHz)
-//    adc.ch_sel(adc.AN14);                   //pot- RC8/AN14 (default ANSEL/TRIS)
-//    adc.on(true);
-//    adc.samp(true);
-
-    //alternate led/led2 at rate determined by pot via adc
-    //if very low value, turn off led's
-    auto check_led = [&](){
-        if(not led1.expired()) return;
-//        if(Adc::done()) Adc::samp(true);
-//        uint16_t t = Adc::read(0)>>2;
-        uint16_t t = pot.adcval()>>2;
-        if(t < 100){
-            t = 100;
-            led1.digital_in();
-            led2.digital_in();
-        } else {
-            led1.invert();
-            led2.invert();
-            led1.digital_out();
-            led2.digital_out();
-        }
-        led1.set_ms(t);
-    };
-
-    //loop, clear wdt (configs bits may be set to always on)
-    //(start led1 in opposite state of led2)
-    led1.invert();
+    Rgb rgb;
+    Led12 led12;
     for(;;){
         Wdt::reset();
-        check_led();
-        check_rgb();
+        led12.update();
+        rgb.update();
     }
 }
 
