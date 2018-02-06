@@ -133,6 +133,7 @@ template <typename T, typename V> void Reg::setbit(T r, V v, bool sc){
 //setbit
 template <typename T, typename V> void Reg::setbit(T r, V v){
     using vtype = typename getVsiz<V>::type;
+    //((volatile vtype*)r)[Vsiz<sizeof(V)>::SET] = v;
     *((volatile vtype*)r+Vsiz<sizeof(V)>::SET) = v;
 }
 
