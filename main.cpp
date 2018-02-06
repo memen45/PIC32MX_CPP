@@ -203,8 +203,7 @@ const uint8_t svg[][3]{
 //loop through svg colors by regularly calling update()
 struct Rgb {
 
-    Rgb()
-    {
+    Rgb(){
         //init pwm via loop- R,G use OCxB, B uses OCxE
         for(auto i = 0; i < 3; i++){
             m_ccp[i].mode(m_ccp[i].DEPWM16); //dual edge pwm 16bit
@@ -216,26 +215,27 @@ struct Rgb {
     }
 
     //cycle through svg colors
-    void update()
-    {
+    void update(){
         if(not m_ledR.expired()) return;
 
-        uint16_t t = 3000;
+        uint16_t t = m_delay_long;
         for(uint8_t i = 0; i < 3; i++){
             uint16_t v = m_ccp[i].compb();
             uint16_t s = svg[m_idx][i]<<8;
             if(v == s) continue;
-            t = 10;
+            t = m_delay;
             if(v < s) v += 256; else v -= 256;
             m_ccp[i].compb(v);
         }
         m_ledR.set_ms(t);
-        if(t == 10) return;
+        if(t == m_delay) return;
         if(++m_idx >= sizeof(svg)/sizeof(svg[0])) m_idx = 0;
     };
 
     private:
 
+    static const uint16_t m_delay{5};
+    static const uint16_t m_delay_long{1000};
     uint8_t m_idx;
     //pwm to rgb pins
     //mccp 1-3 pwm to rgb led's
@@ -251,8 +251,7 @@ struct Rgb {
 //if very low value, turn off led's
 struct Led12 {
 
-    void update()
-    {
+    void update(){
         if(not m_led1.expired()) return;
         uint16_t t = pot.adcval()>>2;
         if(t < 100){
@@ -275,19 +274,25 @@ struct Led12 {
 
 };
 
+void Osc_init(){
+    Osc osc;
+    osc.pll_set(osc.MUL12, osc.DIV4);       //8*12/4 = 24MHz
+    osc.sosc(true);                         //enable sosc if not already
+    osc.tun_auto(true);                     //let sosc tune frc
+}
+
+
 int main()
 {
     //just get/store resets cause (not used here,though)
     Resets::cause();
 
     //set osc to 24MHz
-    Osc osc;
-    osc.pll_set(osc.MUL12, osc.DIV4);       //8*12/4 = 24MHz
-    osc.sosc(true);                         //enable sosc if not already
-    osc.tun_auto(true);                     //let sosc tune frc
+    Osc_init();
 
     Rgb rgb;
     Led12 led12;
+
     for(;;){
         Wdt::reset();
         led12.update();
