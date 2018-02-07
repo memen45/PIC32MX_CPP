@@ -148,16 +148,16 @@ class Pins : public Delay {
     //      | PD | PU | ACTL | DOUT | DIN |
     //-----------------------------------------
     //AIN   |    |    |      |      |     | 0
-    //DIN   |    |    |      |      |  1  | 1
-    //DINPU |    |  1 |  1   |      |  1  | 13
-    //DINPD |  1 |    |      |      |  1  | 17
-    //DINL  |    |    |  1   |      |  1  | 5
-    //DOUT  |    |    |      |   1  |     | 2
-    //DOUTL |    |    |  1   |   1  |     | 6
+    //IN    |    |    |      |      |  1  | 1
+    //INPU  |    |  1 |  1   |      |  1  | 13
+    //INPD  |  1 |    |      |      |  1  | 17
+    //INL   |    |    |  1   |      |  1  | 5
+    //OUT   |    |    |      |   1  |     | 2
+    //OUTL  |    |    |  1   |   1  |     | 6
     enum IOMODE : uint8_t {
         AIN = 0,
-        DIN = 1, DINPU = 1<<3|1<<2|DIN, DINPD = 1<<4|DIN, DINL = 1<<2|DIN,
-        DOUT = 2, DOUTL = 1<<2|DOUT
+        IN = 1, INPU = 1<<3|1<<2|IN, INPD = 1<<4|IN, INL = 1<<2|IN,
+        OUT = 2, OUTL = 1<<2|OUT
     };
     enum : uint8_t { ACTL = 1<<2  };
 
@@ -214,10 +214,10 @@ class Pins : public Delay {
       m_an((e>>ANSHIFT) & ANMASK)
 {
     if(m == AIN) analog_in();
-    else if(m bitand DIN) digital_in();
+    else if(m bitand IN) digital_in();
     else digital_out();
-    pullup(m == DINPU);
-    pulldn(m == DINPD);
+    pullup(m == INPU);
+    pulldn(m == INPD);
 }
 
 //=============================================================================

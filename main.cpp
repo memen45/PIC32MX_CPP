@@ -23,28 +23,7 @@
 #include "Delay.hpp"
 #include "Resets.hpp"
 #include "Ccp.hpp"
-#include "Adc.hpp"
-
-//simple class for Vin pin, read adc voltage on pin
-//adc read is blocking
-//if pin has no ANn, will use AVss as adc channel (should return 0)
-struct Vin : private Pins {
-    Vin(Pins::RPN pp) : Pins(pp, Pins::AIN){};
-
-    uint16_t adcval(){
-        Adc adc;
-        adc.mode_12bit(true);           //12bit mode
-        adc.trig_sel(adc.AUTO);         //adc starts conversion
-        adc.samp_time(31);              //max sampling time- 31Tad
-        adc.conv_time(adc.PBCLK12BIT);  //if no arg,default is 4 (for 24MHz)
-        adc.ch_sel(an_num());           //ANn (AVss if no ANn for pin)
-        adc.on(true);
-        adc.samp(true);
-        while(not Adc::done());         //blocking
-        return Adc::read(0);            //buf[0]
-    }
-};
-Vin pot(Pins::AN14);
+#include "Vin.hpp"
 
 
 //svg colors for rgb led
@@ -71,7 +50,7 @@ const uint8_t svg[][3]{
 ///*cyan*/ {0,255,255},
 ///*darkblue*/ {0,0,139},
 ///*darkcyan*/ {0,139,139},
-///*darkgoldenrod*/ {184,134,11},
+/*darkgoldenrod*/ {184,134,11},
 ///*darkgray*/ {169,169,169},
 /*darkgreen*/ {0,100,0},
 ///*darkgrey*/ {169,169,169},
@@ -138,7 +117,7 @@ const uint8_t svg[][3]{
 ///*mediumaquamarine*/ {102,205,170},
 ///*mediumblue*/ {0,0,205},
 ///*mediumorchid*/ {186,85,211},
-///*mediumpurple*/ {147,112,219},
+/*mediumpurple*/ {147,112,219},
 ///*mediumseagreen*/ {60,179,113},
 ///*mediumslateblue*/ {123,104,238},
 ///*mediumspringgreen*/ {0,250,154},
@@ -149,7 +128,7 @@ const uint8_t svg[][3]{
 ///*mistyrose*/ {255,228,225},
 ///*moccasin*/ {255,228,181},
 ///*navajowhite*/ {255,222,173},
-///*navy*/ {0,0,128},
+/*navy*/ {0,0,128},
 ///*oldlace*/ {253,245,230},
 ///*olive*/ {128,128,0},
 ///*olivedrab*/ {107,142,35},
@@ -164,7 +143,7 @@ const uint8_t svg[][3]{
 ///*peachpuff*/ {255,218,185},
 ///*peru*/ {205,133,63},
 ///*pink*/ {255,192,203},
-///*plum*/ {221,160,221},
+/*plum*/ {221,160,221},
 ///*powderblue*/ {176,224,230},
 /*purple*/ {128,0,128},
 /*red*/ {255,0,0},
@@ -187,7 +166,7 @@ const uint8_t svg[][3]{
 ///*tan*/ {210,180,140},
 ///*teal*/ {0,128,128},
 ///*thistle*/ {216,191,216},
-///*tomato*/ {255,99,71},
+/*tomato*/ {255,99,71},
 ///*turquoise*/ {64,224,208},
 ///*violet*/ {238,130,238},
 ///*wheat*/ {245,222,179},
@@ -234,17 +213,22 @@ struct Rgb {
 
     private:
 
-    static const uint16_t m_delay{5};
+    static const uint16_t m_delay{3};
     static const uint16_t m_delay_long{1000};
     uint8_t m_idx;
     //pwm to rgb pins
     //mccp 1-3 pwm to rgb led's
     Ccp m_ccp[3]{ Ccp::CCP1, Ccp::CCP2, Ccp::CCP3 };
 
-    Pins m_ledR{Pins::D1, Pins::DOUT},
-         m_ledG{Pins::C3, Pins::DOUT},
-         m_ledB{Pins::C15, Pins::DOUT};
+    Pins m_ledR{Pins::D1, Pins::OUT},
+         m_ledG{Pins::C3, Pins::OUT},
+         m_ledB{Pins::C15, Pins::OUT};
 };
+
+
+
+//check pot val via adc (0-4096 -> 0-256)
+Vin pot(Pins::AN14);
 
 
 //alternate led/led2 at rate determined by pot via adc
@@ -253,7 +237,7 @@ struct Led12 {
 
     void update(){
         if(not m_led1.expired()) return;
-        uint16_t t = pot.adcval()>>2;
+        uint8_t t = pot.adcval()>>2;
         if(t < 100){
             t = 100;
             m_led1.off();
@@ -268,8 +252,8 @@ struct Led12 {
 
     private:
 
-    Pins m_led1{Pins::D3, Pins::DOUT};
-    Pins m_led2{Pins::C13, Pins::DOUT};
+    Pins m_led1{Pins::D3, Pins::OUT};
+    Pins m_led2{Pins::C13, Pins::OUT};
     bool m_led1_state{false};
 
 };
