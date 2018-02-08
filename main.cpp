@@ -61,7 +61,7 @@ const uint8_t svg[][3]{
 ///*darkorchid*/ {153,50,204},
 /*darkred*/ {139,0,0},
 ///*darksalmon*/ {233,150,122},
-///*darkseagreen*/ {143,188,143},
+/*darkseagreen*/ {143,188,143},
 ///*darkslateblue*/ {72,61,139},
 ///*darkslategray*/ {47,79,79},
 ///*darkslategrey*/ {47,79,79},
