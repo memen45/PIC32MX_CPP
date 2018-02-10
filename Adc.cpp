@@ -1,280 +1,268 @@
-#include "Uart.hpp"
-#include "Osc.hpp"
+#include "Adc.hpp"
 
-//Uart
-
+//ADC1BUFn
 //=============================================================================
-                    Uart::Uart      (UARTX e)
-//=============================================================================
-    : m_uartx_base((vu32ptr)U1MODE + (e * UARTX_SPACING)),
-      m_uartx_tx(*((vu32ptr)U1MODE + (e * UARTX_SPACING) + UXTXREG)),
-      m_uartx_rx(*((vu32ptr)U1MODE + (e * UARTX_SPACING) + UXRXREG)),
-      m_uartx_baud(0)
-{}
-
-//uxtxreg
-//=============================================================================
-    void            Uart::write     (uint16_t v)
+    uint16_t        Adc::read           (uint8_t n)
 //=============================================================================
 {
-    m_uartx_tx = v;
-}
-
-//uxrxreg
-//=============================================================================
-    uint16_t        Uart::read      ()
-//=============================================================================
-{
-    return m_uartx_rx;
-}
-
-
-//uxmode
-//=============================================================================
-    void        Uart::stop_sleep        (bool tf)
-//=============================================================================
-{
-    r.setbit(m_uartx_base, SLPEN, not tf);
+    if(n > ADC1BUF_LAST) n = ADC1BUF_LAST;
+    return r.val16(ADC1BUF0 + (n * ADC1BUF_SPACING));
 }
 
 //=============================================================================
-    bool        Uart::active            ()
+    uint16_t        Adc::read           ()
 //=============================================================================
 {
-    return r.anybit(m_uartx_base, ACTIVE);
+    return r.val16(ADC1BUF0);
+}
+
+//ADC1CON1
+//=============================================================================
+    void            Adc::on             (bool tf)
+//=============================================================================
+{
+    r.setbit(ADC1CON1, ON, tf);
 }
 
 //=============================================================================
-    void        Uart::clk_sel           (CLKSEL e)
+    void            Adc::stop_idle      (bool tf)
 //=============================================================================
 {
-    r.clrbit(m_uartx_base, CLKSEL_CLR<<CLKSEL_SHIFT);
-    r.setbit(m_uartx_base, e<<CLKSEL_SHIFT);
-    baud_set();
+    r.setbit(ADC1CON1, SIDL, tf);
 }
 
 //=============================================================================
-    void        Uart::oflow_stop        (bool tf)
+    void            Adc::format         (FORM e)
 //=============================================================================
 {
-    r.setbit(m_uartx_base, OVFDIS, not tf);
+    r.clrbit(ADC1CON1, FORM_CLR<<FORM_SHIFT);
+    r.setbit(ADC1CON1, e<<FORM_SHIFT);
 }
 
 //=============================================================================
-    void        Uart::on                (bool tf)
+    void            Adc::trig_sel       (SSRC e)
 //=============================================================================
 {
-    baud_set(); //in case not set
-    r.setbit(m_uartx_base, ON, tf);
+    r.clrbit(ADC1CON1, SSRC_CLR<<SSRC_SHIFT);
+    r.setbit(ADC1CON1, e<<SSRC_SHIFT);
 }
 
 //=============================================================================
-    void        Uart::stop_idle         (bool tf)
+    void            Adc::mode_12bit     (bool tf)
 //=============================================================================
 {
-    r.setbit(m_uartx_base, SIDL, tf);
+    r.setbit(ADC1CON1, MODE12, tf);
 }
 
 //=============================================================================
-    void        Uart::irda              (bool tf)
+    void            Adc::samp_auto      (bool tf)
 //=============================================================================
 {
-    r.setbit(m_uartx_base, IREN, tf);
+    r.setbit(ADC1CON1, ASAM, tf);
 }
 
 //=============================================================================
-    void        Uart::rts_mode          (RTSMODE e)
+    void            Adc::samp           (bool tf)
 //=============================================================================
 {
-    r.setbit(m_uartx_base, RTSMD, e);
+    r.setbit(ADC1CON1, SAMP, tf);
 }
 
 //=============================================================================
-    void        Uart::wake              (bool tf)
+    bool            Adc::samp           ()
 //=============================================================================
 {
-    r.setbit(m_uartx_base, WAKE, tf);
+    return r.anybit(ADC1CON1, SAMP);
 }
 
 //=============================================================================
-    void        Uart::loopback          (bool tf)
+    bool            Adc::done           ()
 //=============================================================================
 {
-    r.setbit(m_uartx_base, LPBACK, tf);
+    return r.anybit(ADC1CON1, DONE);
+}
+
+//ADC1CON2
+//=============================================================================
+    void            Adc::vref_cfg       (VCFG e)
+//=============================================================================
+{
+    r.clrbit(ADC1CON2, VCFG_CLR<<VCFG_SHIFT);
+    r.setbit(ADC1CON2, e<<VCFG_SHIFT);
 }
 
 //=============================================================================
-    void        Uart::autobaud          (bool tf)
+    void            Adc::offset_cal     (bool tf)
 //=============================================================================
 {
-    r.setbit(m_uartx_base, ABAUD, tf);
+    r.setbit(ADC1CON2, OFFCAL, tf);
 }
 
 //=============================================================================
-    void        Uart::rx_pol            (RXPOL e)
+    void            Adc::buf_reg        (bool tf)
 //=============================================================================
 {
-    r.setbit(m_uartx_base, RXINV, e);
+    r.setbit(ADC1CON2, BUFREGEN, tf);
 }
 
 //=============================================================================
-    void        Uart::hispeed           (bool tf)
+    void            Adc::scan           (bool tf)
 //=============================================================================
 {
-    r.setbit(m_uartx_base, BRGH, tf);
-    baud_set();
+    r.setbit(ADC1CON2, CSCNA, tf);
 }
 
 //=============================================================================
-    void        Uart::mode              (MODESEL e)
+    bool            Adc::buf2nd_busy    ()
 //=============================================================================
 {
-    r.clrbit(m_uartx_base, MODE_CLR<<MODE_SHIFT);
-    r.setbit(m_uartx_base, e<<MODE_SHIFT);
+    return r.anybit(ADC1CON2, BUFS);
 }
 
 //=============================================================================
-//uxsta
-    void        Uart::rx_mask           (uint8_t v)
+    void            Adc::samp_nirq      (uint8_t n)
 //=============================================================================
 {
-    r.val((vu8ptr)m_uartx_base + (UXSTA * 4) + 3, v);
+    n -= 1; n and_eq 15; //n = 1-16 ->0-15
+    r.clrbit(ADC1CON2, SMPI_CLR<<SMPI_SHIFT);
+    r.setbit(ADC1CON2, n<<SMPI_SHIFT);
 }
 
 //=============================================================================
-    void        Uart::rx_addr           (uint8_t v)
+    void            Adc::buf_split      (bool tf)
 //=============================================================================
 {
-    r.val((vu8ptr)m_uartx_base + (UXSTA * 4) + 2, v);
+    r.setbit(ADC1CON2, BUFM, tf);
+}
+
+//ADC1CON3
+//=============================================================================
+    void            Adc::clk_src        (CLK e)
+//=============================================================================
+{
+    r.setbit(ADC1CON3, ADRC, e);
 }
 
 //=============================================================================
-    void        Uart::tx_irq            (UTXISEL e)
+    void            Adc::samp_extend    (bool tf)
 //=============================================================================
 {
-    r.clrbit(m_uartx_base + UXSTA, UTXISEL_CLR<<UTXISEL_SHIFT);
-    r.setbit(m_uartx_base + UXSTA, e<<UTXISEL_SHIFT);
+    r.setbit(ADC1CON3, EXTSAM, tf);
 }
 
 //=============================================================================
-    void        Uart::tx_pol            (RXPOL e)
+    void            Adc::samp_time      (uint8_t v)
 //=============================================================================
 {
-    bool b = r.anybit(m_uartx_base, IREN) ? not e : e;
-    r.setbit(m_uartx_base + UXSTA, UTXINV, b);
+    v and_eq 31; v = v == 0 ? 1 : v; //0 not allowed (1-31)
+    r.clrbit(ADC1CON3, SAMC_CLR<<SAMC_SHIFT);
+    r.setbit(ADC1CON3, v<<SAMC_SHIFT);
+}
+
+//default value is for 24MHz, 4 will meet 280ns Tad for any clock
+//=============================================================================
+    void            Adc::conv_time      (uint8_t v)
+//=============================================================================
+{
+    r.val(ADC1CON3, v);
+}
+
+//ADC1CON5
+//=============================================================================
+    void            Adc::scan_auto      (bool tf)
+//=============================================================================
+{
+    r.setbit(ADC1CON5, ASEN, tf);
 }
 
 //=============================================================================
-    void        Uart::rx_on             (bool tf)
+    void            Adc::low_power      (bool tf)
 //=============================================================================
 {
-    r.setbit(m_uartx_base + UXSTA, URXEN, tf);
+    r.setbit(ADC1CON5, LPEN, tf);
 }
 
 //=============================================================================
-    void        Uart::tx_break          ()
+    void            Adc::bandgap        (bool tf)
 //=============================================================================
 {
-    r.setbit(m_uartx_base + UXSTA, UTXBRK);
+    r.setbit(ADC1CON5, BGREQ, tf);
 }
 
 //=============================================================================
-    void        Uart::tx_on             (bool tf)
+    void            Adc::scan_autoirq   (ASINT e)
 //=============================================================================
 {
-    r.setbit(m_uartx_base + UXSTA, UTXEN, tf);
+    r.clrbit(ADC1CON5, ASINT_CLR<<ASINT_SHIFT);
+    r.setbit(ADC1CON5, e<<ASINT_SHIFT);
 }
 
 //=============================================================================
-    bool        Uart::tx_full           ()
+    void            Adc::write_mode     (WM e)
 //=============================================================================
 {
-    return r.anybit(m_uartx_base + UXSTA, UTXBF);
+    r.clrbit(ADC1CON5, WM_CLR<<WM_SHIFT);
+    r.setbit(ADC1CON5, e<<WM_SHIFT);
 }
 
 //=============================================================================
-    bool        Uart::tx_done           ()
+    void            Adc::compare_mode   (CM e)
 //=============================================================================
 {
-    return r.anybit(m_uartx_base + UXSTA, TRMT);
+    r.clrbit(ADC1CON5, CM_CLR<<CM_SHIFT);
+    r.setbit(ADC1CON5, e<<CM_SHIFT);
+}
+
+//ADC1CHS
+//=============================================================================
+    void            Adc::ch_sel         (CH0SA e)
+//=============================================================================
+{
+    r.val(ADC1CHS, e);
 }
 
 //=============================================================================
-    void        Uart::rx_irq            (URXISEL e)
+    void            Adc::ch_sel         (uint8_t v)
 //=============================================================================
 {
-    r.clrbit(m_uartx_base + UXSTA, URXISEL_CLR<<URXISEL_SHIFT);
-    r.setbit(m_uartx_base + UXSTA, e<<URXISEL_SHIFT);
+    r.val(ADC1CHS, v);
+}
+
+//ADC1SS
+//=============================================================================
+    void            Adc::ch_scan        (CH0SA e, bool tf)
+//=============================================================================
+{
+    r.setbit(ADC1CSS, e, tf);
 }
 
 //=============================================================================
-    void        Uart::rx_addren         (bool tf)
+    void            Adc::ch_scan        (CH0SA* e)
 //=============================================================================
 {
-    r.setbit(m_uartx_base + UXSTA, ADDEN, tf);
+    r.val(ADC1CSS, 0); //clr all
+    for(; *e not_eq END; e++) r.setbit(ADC1CSS, 1<<*e); //set list
 }
 
 //=============================================================================
-    bool        Uart::rx_busy           ()
+    void            Adc::ch_scan        (uint32_t v)
 //=============================================================================
 {
-    return not r.anybit(m_uartx_base + UXSTA, RIDLE);
+    r.val(ADC1CSS, v);
+}
+
+//ADC1CHIT
+//non AN values will return 0 (like VDD)
+//=============================================================================
+    bool            Adc::ch_hit         (CH0SA e)
+//=============================================================================
+{
+    return r.anybit(ADC1CHIT, 1<<e);
 }
 
 //=============================================================================
-    bool        Uart::rx_perr           ()
+    uint32_t        Adc::ch_hit         ()
 //=============================================================================
 {
-    return r.anybit(m_uartx_base + UXSTA, PERR);
-}
-
-//=============================================================================
-    bool        Uart::rx_ferr           ()
-//=============================================================================
-{
-    return r.anybit(m_uartx_base + UXSTA, FERR);
-}
-
-//=============================================================================
-    bool        Uart::rx_oerr           ()
-//=============================================================================
-{
-    return r.anybit(m_uartx_base + UXSTA, OERR);
-}
-
-//=============================================================================
-    bool        Uart::rx_empty          ()
-//=============================================================================
-{
-    return not r.anybit(m_uartx_base + UXSTA, URXDA);
-}
-
-//uxbrg
-//=============================================================================
-    void        Uart::baud_set          (uint32_t v)
-//=============================================================================
-{
-    m_uartx_baud = v;
-    uint8_t bdiv = r.anybit(m_uartx_base, BRGH) ? 4 : 16;
-    v = baud_clk() / v / bdiv - 1;
-    r.val(m_uartx_base + UXBRG, v);
-}
-
-//called by clk_sel(), on(), brg_mode()
-//=============================================================================
-    void        Uart::baud_set          ()
-//=============================================================================
-{
-    //if baud not set, set it to 115200
-    baud_set(m_uartx_baud ? m_uartx_baud : 115200);
-}
-
-//=============================================================================
-    uint32_t    Uart::baud_clk          ()
-//=============================================================================
-{
-    CLKSEL e = (CLKSEL)((r.val(m_uartx_base)>>17) bitand CLKSEL_CLR);
-    if(e == REFO1) return Osc::refo_freq();
-    else if(e == FRC) return Osc::frcclk();
-    return Osc::sysclk(); //pb/sys are the same
+    return r.val(ADC1CHIT);
 }

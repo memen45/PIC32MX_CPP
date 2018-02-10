@@ -18,7 +18,7 @@ class Timer23 {
     //clock sources
     enum CLK { PBCLK = 0, T2CK };
 
-    constexpr Timer23(TMR23);
+    /*constexpr*/ Timer23(TMR23);
 
     void        count       (uint32_t) const;
     uint32_t    count       () const;
@@ -49,14 +49,7 @@ class Timer23 {
     volatile uint32_t* m_txcon;
     volatile uint32_t& m_tmrx;
     volatile uint32_t& m_prx;
+    
+    using vu32ptr = volatile uint32_t*;
 
 };
-
-//=============================================================================
-    constexpr       Timer23::Timer23        (TMR23 e)
-//=============================================================================
-    : m_txcon( (volatile uint32_t*)T1CON+(e*TMR23_SPACING) ),
-      m_tmrx( *((volatile uint32_t*)T1CON+(e*TMR23_SPACING)+4) ),
-      m_prx( *((volatile uint32_t*)T1CON+(e*TMR23_SPACING)+8) )
-{
-}

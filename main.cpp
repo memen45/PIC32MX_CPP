@@ -9,8 +9,8 @@
  =============================================================================*/
 
 //try different apps
-#define MAIN1 //simple blink 2 leds, rgb led's
-//#define MAIN2 //most peripherals touched
+//#define MAIN1 //simple blink 2 leds, rgb led's
+#define MAIN2 //most peripherals touched
 
 
 //=============================================================================
@@ -325,11 +325,11 @@ int main()
  rgb LED's (array test)
 =============================================================================*/
 Pins leds[] = {                 //group leds
-    { Pins::D1, Pins::DOUT },    //RED   //OCM1B
-    { Pins::C3, Pins::DOUT },    //GREEN //OCM2B
-    { Pins::C15, Pins::DOUT },   //BLUE  //OCM3E
-    { Pins::D3, Pins::DOUT },    //LED1 (invert in timer1/timer2/timer3 irq)
-    { Pins::C13, Pins::DOUT }    //LED2 (cp0 irq blinks)
+    { Pins::D1, Pins::OUT },    //RED   //OCM1B
+    { Pins::C3, Pins::OUT },    //GREEN //OCM2B
+    { Pins::C15, Pins::OUT },   //BLUE  //OCM3E
+    { Pins::D3, Pins::OUT },    //LED1 (invert in timer1/timer2/timer3 irq)
+    { Pins::C13, Pins::OUT }    //LED2 (cp0 irq blinks)
 };
 Pins& led1 = leds[3];           //references to specific leds as needed
 Pins& led2 = leds[4];
@@ -339,9 +339,9 @@ Pins& led2 = leds[4];
  Switches - all in array
 =============================================================================*/
 Pins sw[] = {                   //true=lowison
-    { Pins::B9,  Pins::DINPU }, //SW1 (rotate delays))
-    { Pins::C10, Pins::DINPU }, //SW2 cp0 irq blink rate++
-    { Pins::C4,  Pins::DINPU }  //SW3 cp0 irq blink rate--
+    { Pins::B9,  Pins::INPU }, //SW1 (rotate delays))
+    { Pins::C10, Pins::INPU }, //SW2 cp0 irq blink rate++
+    { Pins::C4,  Pins::INPU }  //SW3 cp0 irq blink rate--
 };
 Pins& sw1 = sw[0];              //sw1/2/3 references
 Pins& sw2 = sw[1];

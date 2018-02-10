@@ -1,245 +1,229 @@
-#include "Pins.hpp"
+#include "I2c.hpp"
+#include "Osc.hpp"
 
-//Pins
-
-// AN0/A0/RP1 format - Pins led1(A0), Pins led2(RP1, DOUT), Pins pv(AN0)
-// m = AIN,DIN,DINPU,DINPD,DINL,DOUT,DOUTL (default is AIN)
-// RPN enum encoded as 0xaaaaarrrrrppnnnn (a = ANn, r=RPn, pp=PORT, nnnn=PIN)
 //=============================================================================
-                    Pins::Pins          (RPN e, IOMODE m)
+                I2c::I2c                (I2CX e)
 //=============================================================================
-    : m_pt((vu32_ptr)ANSELA + ((e>>PTSHIFT) bitand PTMASK) * ANSELX_SPACING),
-      m_pn(1<<(e bitand PNMASK)),
-      m_lowison(m bitand ACTL),
-      m_rpn((uint8_t)((e>>RPSHIFT) bitand RPMASK)),
-      m_ppsin(PPSINOFF),
-      m_an((e>>ANSHIFT) bitand ANMASK)
+    : m_i2cx_con((volatile uint32_t*)I2C1CON + (e * I2CX_SPACING)),
+      m_speed(KHZ100)
 {
-    if(m == AIN) analog_in();
-    else if(m bitand IN) digital_in();
-    else digital_out();
-    pullup(m == INPU);
-    pulldn(m == INPD);
+}
+
+//I2C1CON
+//=============================================================================
+    void        I2c::irq_stop           (bool tf)
+//=============================================================================
+{
+    r.setbit(m_i2cx_con, PCIE, tf);
 }
 
 //=============================================================================
-    bool        Pins::pinval        () const
+    void        I2c::irq_start          (bool tf)
 //=============================================================================
 {
-    return r.anybit(m_pt + PORT, m_pn);
+    r.setbit(m_i2cx_con, SCIE, tf);
 }
 
 //=============================================================================
-    bool        Pins::latval        () const
+    void        I2c::overwrite          (bool tf)
 //=============================================================================
 {
-    return r.anybit(m_pt + LAT, m_pn);
+    r.setbit(m_i2cx_con, BOEN, tf);
 }
 
 //=============================================================================
-    void        Pins::latval        (bool tf) const
+    void        I2c::hold_time          (HOLDTIM e)
 //=============================================================================
 {
-    return r.setbit(m_pt + LAT, m_pn, tf);
+    r.setbit(m_i2cx_con, SDAHT, e);
 }
 
 //=============================================================================
-    void        Pins::low           () const
+    void        I2c::irq_collision      (bool tf)
 //=============================================================================
 {
-    r.clrbit(m_pt + LAT, m_pn);
+    r.setbit(m_i2cx_con, SBCDE, tf);
 }
 
 //=============================================================================
-    void        Pins::high          () const
+    void        I2c::on                 (bool tf)
 //=============================================================================
 {
-    r.setbit(m_pt + LAT, m_pn);
+    //always set brg in case clock changed
+    //or speed not changed since init
+    speed(m_speed);
+    r.setbit(m_i2cx_con, ON, tf);
 }
 
 //=============================================================================
-    void        Pins::invert        () const
+    void        I2c::stop_idle          (bool tf)
 //=============================================================================
 {
-    r.flipbit(m_pt + LAT, m_pn);
+    r.setbit(m_i2cx_con, SIDL, tf);
 }
 
 //=============================================================================
-    void        Pins::on            () const
+    void        I2c::clk_release        (bool tf)
 //=============================================================================
 {
-    r.setbit(m_pt + LAT, m_pn, not m_lowison);
+    r.setbit(m_i2cx_con, SCLREL, tf);
 }
 
 //=============================================================================
-    void        Pins::off           () const
+    void        I2c::strict             (bool tf)
 //=============================================================================
 {
-    r.setbit(m_pt + LAT, m_pn, m_lowison);
+    r.setbit(m_i2cx_con, STRICT, tf);
 }
 
 //=============================================================================
-    bool        Pins::ison          () const
+    void        I2c::addr_10bit         (bool tf)
 //=============================================================================
 {
-    return m_lowison ? not pinval() : pinval();
+    r.setbit(m_i2cx_con, A10M, tf);
 }
 
 //=============================================================================
-    void        Pins::icn_flagclr () const
+    void        I2c::slew_rate          (bool tf)
 //=============================================================================
 {
-    r.clrbit(m_pt + CNF, m_pn);
-}
-    
-//=============================================================================
-    void        Pins::lowison           (bool tf)
-//=============================================================================
-{
-    m_lowison = tf;
+    r.setbit(m_i2cx_con, DISSLW, not tf);
 }
 
 //=============================================================================
-    void        Pins::digital_in        () const
+    void        I2c::smb_levels         (bool tf)
 //=============================================================================
 {
-    r.setbit(m_pt + TRIS, m_pn);
-    r.clrbit(m_pt, m_pn);
+    r.setbit(m_i2cx_con, SMEN, tf);
 }
 
 //=============================================================================
-    void        Pins::analog_in         () const
+    void        I2c::irq_gencall        (bool tf)
 //=============================================================================
 {
-    r.setbit(m_pt + TRIS, m_pn);
-    r.setbit(m_pt, m_pn);
+    r.setbit(m_i2cx_con, GCEN, tf);
 }
 
 //=============================================================================
-    void        Pins::digital_out       () const
+    void        I2c::clk_stretch        (bool tf)
 //=============================================================================
 {
-    r.clrbit(m_pt + TRIS, m_pn);
-    r.clrbit(m_pt, m_pn);
+    r.setbit(m_i2cx_con, STREN, tf);
 }
 
 //=============================================================================
-    void        Pins::odrain            (bool tf) const
+    void        I2c::ack                (bool tf)
 //=============================================================================
 {
-    r.setbit(m_pt + ODC, m_pn, tf);
+    r.setbit(m_i2cx_con, ACKDT, not tf); //0=ACK,1=NACK
+    r.setbit(m_i2cx_con, ACKEN);
 }
 
 //=============================================================================
-    void        Pins::pullup            (bool tf) const
+    void        I2c::rx                 (bool tf)
 //=============================================================================
 {
-    r.setbit(m_pt + CNPU, m_pn, tf);
+    r.setbit(m_i2cx_con, RCEN, tf);
 }
 
 //=============================================================================
-    void        Pins::pulldn            (bool tf) const
+    void        I2c::stop               (bool tf)
 //=============================================================================
 {
-    r.setbit(m_pt + CNPD, m_pn, tf);
+    r.setbit(m_i2cx_con, PEN, tf);
 }
 
 //=============================================================================
-    void        Pins::icn               (bool tf) const
+    void        I2c::repstart           (bool tf)
 //=============================================================================
 {
-    r.setbit(m_pt + CNCON, ON, tf);
+    r.setbit(m_i2cx_con, RSEN, tf);
 }
 
 //=============================================================================
-    void        Pins::icn_rising        () const
+    void        I2c::start              (bool tf)
 //=============================================================================
 {
-    r.setbit(m_pt + CNCON, CNSTYLE);
-    r.setbit(m_pt + CNEN0, m_pn);
-    r.clrbit(m_pt + CNEN1, m_pn);
+    r.setbit(m_i2cx_con, SEN, tf);
+}
+
+//I2CXSTAT
+//=============================================================================
+    bool        I2c::stat               (STAT e)
+//=============================================================================
+{
+    return r.anybit(m_i2cx_con + I2CXSTAT, e);
 }
 
 //=============================================================================
-    void        Pins::icn_risefall      () const
+    void        I2c::buscol_clr         ()
 //=============================================================================
 {
-    r.setbit(m_pt + CNCON, CNSTYLE);
-    r.setbit(m_pt + CNEN0, m_pn);
-    r.clrbit(m_pt + CNEN1, m_pn);
+    r.clrbit(m_i2cx_con + I2CXSTAT, BUSCOL);
 }
 
 //=============================================================================
-    void        Pins::icn_falling       () const
+    void        I2c::txcol_clr          ()
 //=============================================================================
 {
-    r.setbit(m_pt + CNCON, CNSTYLE);
-    r.setbit(m_pt + CNEN1, m_pn);
-    r.clrbit(m_pt + CNEN0, m_pn);
+    r.clrbit(m_i2cx_con + I2CXSTAT, TXCOL);
+}
+
+    //=============================================================================
+    void        I2c::rxoflow_clr        ()
+//=============================================================================
+{
+    r.clrbit(m_i2cx_con + I2CXSTAT, RXOFLOW);
+}
+
+//I2CXADDR
+//=============================================================================
+    void        I2c::addr               (uint16_t v)
+//=============================================================================
+{
+    r.val(m_i2cx_con + I2CXADDR, v);
+}
+
+//I2CXMSK
+//=============================================================================
+    void        I2c::addr_mask          (uint16_t v)
+//=============================================================================
+{
+    r.val(m_i2cx_con + I2CXMSK, v);
+}
+
+//I2CXBRG
+//=============================================================================
+    void        I2c::speed              (I2CSPEED e)
+//=============================================================================
+{
+    uint32_t sck = e * 2;
+    uint32_t clk = Osc::sysclk()<<6;
+    clk = clk / sck - clk / 9615384; //1/9615384=104ns=Tpgd
+    brg((clk>>6) - 2);
+    m_speed = e;
 }
 
 //=============================================================================
-    void        Pins::icn_mismatch      () const
+    void        I2c::brg                (uint16_t v)
 //=============================================================================
 {
-    r.setbit(m_pt + CNEN0, m_pn);
-    r.clrbit(m_pt + CNCON, CNSTYLE);
+    if(v < 2) v = 2; //0,1 not allowed
+    r.val(m_i2cx_con + I2CXBRG, v);
 }
 
+//I2CXTRN
 //=============================================================================
-    bool        Pins::icn_flag          () const
+    void        I2c::write              (uint8_t v)
 //=============================================================================
 {
-    return r.anybit(m_pt + CNF, m_pn);
+    r.val(m_i2cx_con + I2CXTRN, v);
 }
 
+//I2CXRCV
 //=============================================================================
-    bool        Pins::icn_stat          () const
-//=============================================================================
-{
-    return r.anybit(m_pt + CNSTAT, m_pn);
-}
-
-//static
-//unlock, write byte, lock
-//=============================================================================
-    void        Pins::pps_do            (uint32_t addr, uint8_t v)
+    uint8_t     I2c::read               ()
 //=============================================================================
 {
-    sys.unlock();
-    r.clrbit(RPCON, IOLOCK);
-    r.val(addr, v);
-    r.setbit(RPCON, IOLOCK);
-    sys.lock();
-}
-
-//pin -> pps peripheral in, or turn off
-//=============================================================================
-    void        Pins::pps_in            (PPSIN e)
-//=============================================================================
-{
-    if(m_rpn == 0) return;      //no pps for this pin
-    if(e not_eq PPSINOFF) m_ppsin = (uint8_t)e; //save peripheral number
-    if(m_ppsin == PPSINOFF) return; //not set previously, nothing to do
-    //set peripheral m_ppsin register to 0 if off, or RPn number
-    pps_do(RPINR1 + ((m_ppsin / 4) * 16) + (m_ppsin % 4), e == PPSINOFF ? 0 : m_rpn);
-    digital_in();
-}
-
-//pps peripheral out -> pin
-//=============================================================================
-    void        Pins::pps_out           (PPSOUT e)
-//=============================================================================
-{
-    if(m_rpn == 0) return; //no pps for this pin
-    uint8_t n = m_rpn - 1; //1 based to 0 based to calc reg addresses
-    pps_do(RPOR0 + ((n / 4) * 16) + (n % 4), e);
-}
-
-//return ANn number for ADC channel select
-//=============================================================================
-    uint8_t     Pins::an_num            ()
-//=============================================================================
-{
-    return m_an;
+    return r.val8(m_i2cx_con + I2CXRCV);
 }

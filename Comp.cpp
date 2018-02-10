@@ -1,101 +1,81 @@
-#include "Timer23.hpp"
+#include "Comp.hpp"
 
-//Timer23
 //=============================================================================
-                Timer23::Timer23        (TMR23 e)
+                Comp::Comp              (CMX e)
 //=============================================================================
-    : m_txcon( (vu32ptr)T1CON + (e * TMR23_SPACING) ),
-      m_tmrx( *((vu32ptr)T1CON + (e * TMR23_SPACING) + 4) ),
-      m_prx( *((vu32ptr)T1CON + (e * TMR23_SPACING) + 8) )
+    : m_cmpx_con((volatile uint32_t*)CM1CON + (e * CMXCON_SPACING))
 {
 }
 
 //=============================================================================
-    void        Timer23::count          (uint32_t n) const
+    void        Comp::on                (bool tf)
 //=============================================================================
 {
-    m_tmrx = n;
-    if(r.anybit(m_txcon, T32)){
-        *((vu32ptr)m_tmrx + TMR23_SPACING) = n>>16;
-    }
+    r.setbit(m_cmpx_con, ON, tf);
 }
 
 //=============================================================================
-    uint32_t    Timer23::count          () const
+    void        Comp::out               (bool tf)
 //=============================================================================
 {
-    uint32_t ret = 0;
-    if(r.anybit(m_txcon, T32)){
-        ret = *((vu32ptr)m_tmrx + TMR23_SPACING)<<16;
-    }
-    return ret | m_tmrx;
+    r.setbit(m_cmpx_con, COE, tf);
 }
 
 //=============================================================================
-    void        Timer23::period         (uint32_t n) const
+    void        Comp::out_inv           (bool tf)
 //=============================================================================
 {
-    m_prx = n;
-    if(r.anybit(m_txcon, T32)){
-        *((vu32ptr)m_prx + TMR23_SPACING) = n>>16;
-    }
+    r.setbit(m_cmpx_con, CPOL, tf);
 }
 
 //=============================================================================
-    uint32_t    Timer23::period         () const
+    bool        Comp::evt_bit           ()
 //=============================================================================
 {
-    uint32_t ret = 0;
-    if(r.anybit(m_txcon, T32)){
-        ret = *((vu32ptr)m_prx + TMR23_SPACING)<<16;
-    }
-    return ret | m_prx;
+    return r.anybit(m_cmpx_con, CEVT);
 }
 
 //=============================================================================
-    void        Timer23::on             (bool tf) const
+    bool        Comp::out_bit           ()
 //=============================================================================
 {
-    r.setbit(m_txcon, ON, tf);
+    return r.anybit(m_cmpx_con, COUT);
 }
 
 //=============================================================================
-    void        Timer23::stop_idle      (bool tf) const
+    void        Comp::evt_sel           (EVPOL e)
 //=============================================================================
 {
-    r.setbit(m_txcon, SIDL, tf);
+    r.clrbit(m_cmpx_con, EVPOL_CLR<<EVPOL_SHIFT);
+    r.setbit(m_cmpx_con, e<<EVPOL_SHIFT);
 }
 
 //=============================================================================
-    void        Timer23::gate           (bool tf) const
+    void        Comp::cref_cxina        (bool tf)
 //=============================================================================
 {
-    r.setbit(m_txcon, TGATE, tf);
+    r.setbit(m_cmpx_con, CREF, not tf);
 }
 
 //=============================================================================
-    void        Timer23::prescale       (PRESCALE e) const
+    void        Comp::ch_sel            (CCH e)
 //=============================================================================
 {
-    r.clrbit(m_txcon, TCKPS_CLR<<TCKPS_SHIFT);
-    r.setbit(m_txcon, e<<TCKPS_SHIFT);
+    r.clrbit(m_cmpx_con, BGAP);
+    r.setbit(m_cmpx_con, e);
+}
+
+//common static functions
+//=============================================================================
+    void        Comp::stop_idle         (bool tf)
+//=============================================================================
+{
+    r.setbit(CMSTAT, SIDL, tf);
 }
 
 //=============================================================================
-    void        Timer23::mode32         (bool tf) const
+    void        Comp::cref_sel          (CVREF e)
 //=============================================================================
 {
-    r.setbit(m_txcon, T32, tf);
-    //if turned on, bit will 'stick'
-    //so must be T2, make sure T3 SIDL is off
-    if(tf and r.anybit(m_txcon, T32)){
-       r.clrbit(m_txcon + TMR23_SPACING, SIDL);
-    }
-}
-
-//=============================================================================
-    void        Timer23::clk_src        (CLK e) const
-//=============================================================================
-{
-    r.setbit(m_txcon, TCS, e);
+    r.setbit(CMSTAT, CVREFSEL, e);
 }

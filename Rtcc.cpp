@@ -1,245 +1,213 @@
-#include "Pins.hpp"
+#include "Rtcc.hpp"
+#include "Osc.hpp"
 
-//Pins
-
-// AN0/A0/RP1 format - Pins led1(A0), Pins led2(RP1, DOUT), Pins pv(AN0)
-// m = AIN,DIN,DINPU,DINPD,DINL,DOUT,DOUTL (default is AIN)
-// RPN enum encoded as 0xaaaaarrrrrppnnnn (a = ANn, r=RPn, pp=PORT, nnnn=PIN)
 //=============================================================================
-                    Pins::Pins          (RPN e, IOMODE m)
+    void        Rtcc::alarm             (bool tf)
 //=============================================================================
-    : m_pt((vu32_ptr)ANSELA + ((e>>PTSHIFT) bitand PTMASK) * ANSELX_SPACING),
-      m_pn(1<<(e bitand PNMASK)),
-      m_lowison(m bitand ACTL),
-      m_rpn((uint8_t)((e>>RPSHIFT) bitand RPMASK)),
-      m_ppsin(PPSINOFF),
-      m_an((e>>ANSHIFT) bitand ANMASK)
 {
-    if(m == AIN) analog_in();
-    else if(m bitand IN) digital_in();
-    else digital_out();
-    pullup(m == INPU);
-    pulldn(m == INPD);
+    conset(RTCCON1, ALARMEN, tf);
 }
 
 //=============================================================================
-    bool        Pins::pinval        () const
+    void        Rtcc::chime             (bool tf)
 //=============================================================================
 {
-    return r.anybit(m_pt + PORT, m_pn);
+    conset(RTCCON1, CHIME, tf);
 }
 
 //=============================================================================
-    bool        Pins::latval        () const
+    void        Rtcc::alarm_interval    (AMASK e)
 //=============================================================================
 {
-    return r.anybit(m_pt + LAT, m_pn);
+    conset(RTCCON1, AMASK_CLR<<AMASK_SHIFT, 0);
+    conset(RTCCON1, e<<AMASK_SHIFT, 1);
 }
 
 //=============================================================================
-    void        Pins::latval        (bool tf) const
+    void        Rtcc::alarm_repeat      (uint8_t v)
 //=============================================================================
 {
-    return r.setbit(m_pt + LAT, m_pn, tf);
+    conset(RTCCON1, ALMRPT_CLR<<ALMRPT_SHIFT, 0);
+    conset(RTCCON1, v<<ALMRPT_SHIFT, 1);
 }
 
 //=============================================================================
-    void        Pins::low           () const
+    void        Rtcc::on                (bool tf)
 //=============================================================================
 {
-    r.clrbit(m_pt + LAT, m_pn);
+    if(tf and r.val16(RTCCON2 + 2)){        //div not set, so
+        clk_div(CLK_DIV_32KHZ);             //init ourselves
+        if(Osc::sosc()) clk_src(SOSC);      //use sosc if on
+        else clk_src(LPRC);                 //else use lprc
+        clk_pre(PRE1);                      //should be already
+    }
+    conset(RTCCON1, ON, tf);
 }
 
 //=============================================================================
-    void        Pins::high          () const
+    void        Rtcc::out               (bool tf)
 //=============================================================================
 {
-    r.setbit(m_pt + LAT, m_pn);
+    conset(RTCCON1, PINON, tf);
 }
 
 //=============================================================================
-    void        Pins::invert        () const
+    void        Rtcc::pin_src           (OUTSEL v)
 //=============================================================================
 {
-    r.flipbit(m_pt + LAT, m_pn);
+    conset(RTCCON1, OUTSEL_CLR<<OUTSEL_SHIFT, 0);
+    conset(RTCCON1, v<<OUTSEL_SHIFT, 1);
 }
 
 //=============================================================================
-    void        Pins::on            () const
+    void        Rtcc::clk_div           (uint16_t v)
 //=============================================================================
 {
-    r.setbit(m_pt + LAT, m_pn, not m_lowison);
+    unlock();
+    r.val(RTCCON2+2, v);
+    lock();
 }
 
 //=============================================================================
-    void        Pins::off           () const
+    void        Rtcc::clk_frdiv         (uint8_t v)
 //=============================================================================
 {
-    r.setbit(m_pt + LAT, m_pn, m_lowison);
+    conset(RTCCON2, FRDIV_CLR<<FRDIV_SHIFT, 0);
+    conset(RTCCON2, (v & FRDIV_CLR)<<FRDIV_SHIFT, 1);
 }
 
 //=============================================================================
-    bool        Pins::ison          () const
+    void        Rtcc::clk_pre           (PS e)
 //=============================================================================
 {
-    return m_lowison ? not pinval() : pinval();
+    conset(RTCCON2, PS_CLR<<PS_SHIFT, 0);
+    conset(RTCCON2, e<<PS_SHIFT, 1);
 }
 
 //=============================================================================
-    void        Pins::icn_flagclr () const
+    void        Rtcc::clk_src           (CLKSEL e)
 //=============================================================================
 {
-    r.clrbit(m_pt + CNF, m_pn);
-}
-    
-//=============================================================================
-    void        Pins::lowison           (bool tf)
-//=============================================================================
-{
-    m_lowison = tf;
+    if(e == SOSC) Osc::sosc(true);
+    conset(RTCCON2, CLKSEL_CLR<<CLKSEL_SHIFT, 0);
+    conset(RTCCON2, e<<CLKSEL_SHIFT, 1);
 }
 
 //=============================================================================
-    void        Pins::digital_in        () const
+    bool        Rtcc::alarm_evt         ()
 //=============================================================================
 {
-    r.setbit(m_pt + TRIS, m_pn);
-    r.clrbit(m_pt, m_pn);
+    return r.anybit(RTCSTAT, ALMSTAT);
 }
 
 //=============================================================================
-    void        Pins::analog_in         () const
+    bool        Rtcc::time_busy         ()
 //=============================================================================
 {
-    r.setbit(m_pt + TRIS, m_pn);
-    r.setbit(m_pt, m_pn);
+    return r.anybit(RTCSTAT, SYSNCSTAT);
 }
 
 //=============================================================================
-    void        Pins::digital_out       () const
+    bool        Rtcc::alarm_busy        ()
 //=============================================================================
 {
-    r.clrbit(m_pt + TRIS, m_pn);
-    r.clrbit(m_pt, m_pn);
+    return r.anybit(RTCSTAT, ALMSYNCSTAT);
 }
 
 //=============================================================================
-    void        Pins::odrain            (bool tf) const
+    bool        Rtcc::half_sec          ()
 //=============================================================================
 {
-    r.setbit(m_pt + ODC, m_pn, tf);
+    return r.anybit(RTCSTAT, HALFSTAT);
+}
+
+//raw time, date
+//=============================================================================
+    uint32_t    Rtcc::time              ()
+//=============================================================================
+{
+    return r.val(RTCTIME);
 }
 
 //=============================================================================
-    void        Pins::pullup            (bool tf) const
+    uint32_t    Rtcc::date              ()
 //=============================================================================
 {
-    r.setbit(m_pt + CNPU, m_pn, tf);
+    return r.val(RTCDATE);
 }
 
 //=============================================================================
-    void        Pins::pulldn            (bool tf) const
+    uint32_t    Rtcc::alarm_time        ()
 //=============================================================================
 {
-    r.setbit(m_pt + CNPD, m_pn, tf);
+    return r.val(ALMTIME);
 }
 
 //=============================================================================
-    void        Pins::icn               (bool tf) const
+    uint32_t    Rtcc::alarm_date        ()
 //=============================================================================
 {
-    r.setbit(m_pt + CNCON, ON, tf);
+    return r.val(ALMDATE);
 }
 
 //=============================================================================
-    void        Pins::icn_rising        () const
+    void        Rtcc::time              (uint32_t v)
 //=============================================================================
 {
-    r.setbit(m_pt + CNCON, CNSTYLE);
-    r.setbit(m_pt + CNEN0, m_pn);
-    r.clrbit(m_pt + CNEN1, m_pn);
+    conval(RTCTIME, v);
+} //wrlock
+//=============================================================================
+    void        Rtcc::date              (uint32_t v)
+//=============================================================================
+{
+    conval(RTCTIME, v);
+} //wrlock
+//=============================================================================
+    void        Rtcc::alarm_time        (uint32_t v)
+//=============================================================================
+{
+    r.val(ALMTIME, v);
 }
 
 //=============================================================================
-    void        Pins::icn_risefall      () const
+    void        Rtcc::alarm_date        (uint32_t v)
 //=============================================================================
 {
-    r.setbit(m_pt + CNCON, CNSTYLE);
-    r.setbit(m_pt + CNEN0, m_pn);
-    r.clrbit(m_pt + CNEN1, m_pn);
+    r.val(ALMTIME, v);
 }
 
+//RTCCON1 lock off by default, these functions will lock RTCCON1 when done
+//private functions
 //=============================================================================
-    void        Pins::icn_falling       () const
-//=============================================================================
-{
-    r.setbit(m_pt + CNCON, CNSTYLE);
-    r.setbit(m_pt + CNEN1, m_pn);
-    r.clrbit(m_pt + CNEN0, m_pn);
-}
-
-//=============================================================================
-    void        Pins::icn_mismatch      () const
-//=============================================================================
-{
-    r.setbit(m_pt + CNEN0, m_pn);
-    r.clrbit(m_pt + CNCON, CNSTYLE);
-}
-
-//=============================================================================
-    bool        Pins::icn_flag          () const
-//=============================================================================
-{
-    return r.anybit(m_pt + CNF, m_pn);
-}
-
-//=============================================================================
-    bool        Pins::icn_stat          () const
-//=============================================================================
-{
-    return r.anybit(m_pt + CNSTAT, m_pn);
-}
-
-//static
-//unlock, write byte, lock
-//=============================================================================
-    void        Pins::pps_do            (uint32_t addr, uint8_t v)
+    void        Rtcc::unlock            ()
 //=============================================================================
 {
     sys.unlock();
-    r.clrbit(RPCON, IOLOCK);
-    r.val(addr, v);
-    r.setbit(RPCON, IOLOCK);
+    r.clrbit(RTCCON1, WRLOCK);
+}
+
+//=============================================================================
+    void        Rtcc::lock              ()
+//=============================================================================
+{
+    r.setbit(RTCCON1, WRLOCK);
     sys.lock();
 }
 
-//pin -> pps peripheral in, or turn off
 //=============================================================================
-    void        Pins::pps_in            (PPSIN e)
+    void        Rtcc::conset            (uint32_t addr, uint32_t v, bool tf)
 //=============================================================================
 {
-    if(m_rpn == 0) return;      //no pps for this pin
-    if(e not_eq PPSINOFF) m_ppsin = (uint8_t)e; //save peripheral number
-    if(m_ppsin == PPSINOFF) return; //not set previously, nothing to do
-    //set peripheral m_ppsin register to 0 if off, or RPn number
-    pps_do(RPINR1 + ((m_ppsin / 4) * 16) + (m_ppsin % 4), e == PPSINOFF ? 0 : m_rpn);
-    digital_in();
+    unlock();
+    r.setbit(addr, v, tf);
+    lock();
 }
 
-//pps peripheral out -> pin
 //=============================================================================
-    void        Pins::pps_out           (PPSOUT e)
-//=============================================================================
-{
-    if(m_rpn == 0) return; //no pps for this pin
-    uint8_t n = m_rpn - 1; //1 based to 0 based to calc reg addresses
-    pps_do(RPOR0 + ((n / 4) * 16) + (n % 4), e);
-}
-
-//return ANn number for ADC channel select
-//=============================================================================
-    uint8_t     Pins::an_num            ()
+    void        Rtcc::conval            (uint32_t addr, uint32_t v)
 //=============================================================================
 {
-    return m_an;
+    unlock();
+    r.val(addr, v);
+    lock();
 }

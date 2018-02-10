@@ -7,7 +7,6 @@
 #include "Sys.hpp"
 #include "Delay.hpp"
 
-
 class Pins : public Delay {
 
     public:
@@ -170,7 +169,7 @@ class Pins : public Delay {
     static Sys sys;
 
     enum { //offsets from base address, in words
-        TRIS = 0x10>>2, PORT_ = 0x20>>2, LAT = 0x30>>2, ODC = 0x40>>2,
+        TRIS = 0x10>>2, PORT = 0x20>>2, LAT = 0x30>>2, ODC = 0x40>>2,
         CNPU = 0x50>>2, CNPD = 0x60>>2, CNCON = 0x70>>2, CNEN0 = 0x80>>2,
         CNSTAT = 0x90>>2, CNEN1 = 0xA0>>2, CNF = 0xB0>>2
     };
@@ -198,94 +197,3 @@ class Pins : public Delay {
     using vu32_ptr = volatile uint32_t*;
 
 };
-
-
-// AN0/A0/RP1 format - Pins led1(A0), Pins led2(RP1, DOUT), Pins pv(AN0)
-// m = AIN,DIN,DINPU,DINPD,DINL,DOUT,DOUTL (default is AIN)
-// RPN enum encoded as 0xaaaaarrrrrppnnnn (a = ANn, r=RPn, pp=PORT, nnnn=PIN)
-//=============================================================================
-                    Pins::Pins          (RPN e, IOMODE m)
-//=============================================================================
-    : m_pt((vu32_ptr)ANSELA + ((e>>PTSHIFT) bitand PTMASK)*ANSELX_SPACING),
-      m_pn(1<<(e bitand PNMASK)),
-      m_lowison(m & ACTL),
-      m_rpn((uint8_t)((e>>RPSHIFT) bitand RPMASK)),
-      m_ppsin(PPSINOFF),
-      m_an((e>>ANSHIFT) & ANMASK)
-{
-    if(m == AIN) analog_in();
-    else if(m bitand IN) digital_in();
-    else digital_out();
-    pullup(m == INPU);
-    pulldn(m == INPD);
-}
-
-//=============================================================================
-    bool        Pins::pinval        () const
-//=============================================================================
-{
-    return r.anybit(m_pt+PORT_, m_pn);
-}
-
-//=============================================================================
-    bool        Pins::latval        () const
-//=============================================================================
-{
-    return r.anybit(m_pt+LAT, m_pn);
-}
-
-//=============================================================================
-    void        Pins::latval        (bool tf) const
-//=============================================================================
-{
-    return r.setbit(m_pt+LAT, m_pn, tf);
-}
-
-//=============================================================================
-    void        Pins::low           () const
-//=============================================================================
-{
-    r.clrbit(m_pt+LAT, m_pn);
-}
-
-//=============================================================================
-    void        Pins::high          () const
-//=============================================================================
-{
-    r.setbit(m_pt+LAT, m_pn);
-}
-
-//=============================================================================
-    void        Pins::invert        () const
-//=============================================================================
-{
-    r.flipbit(m_pt+LAT, m_pn);
-}
-
-//=============================================================================
-    void        Pins::on            () const
-//=============================================================================
-{
-    r.setbit(m_pt+LAT, m_pn, not m_lowison);
-}
-
-//=============================================================================
-    void        Pins::off           () const
-//=============================================================================
-{
-    r.setbit(m_pt+LAT, m_pn, m_lowison);
-}
-
-//=============================================================================
-    bool        Pins::ison          () const
-//=============================================================================
-{
-    return m_lowison ? not pinval() : pinval();
-}
-
-//=============================================================================
-    void        Pins::icn_flagclr () const
-//=============================================================================
-{
-    r.clrbit(m_pt+CNF, m_pn);
-}

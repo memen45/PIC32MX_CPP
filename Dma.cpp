@@ -1,280 +1,324 @@
-#include "Uart.hpp"
-#include "Osc.hpp"
-
-//Uart
+#include "Dma.hpp"
 
 //=============================================================================
-                    Uart::Uart      (UARTX e)
+                    Dma::Dma            (DMAX e)
 //=============================================================================
-    : m_uartx_base((vu32ptr)U1MODE + (e * UARTX_SPACING)),
-      m_uartx_tx(*((vu32ptr)U1MODE + (e * UARTX_SPACING) + UXTXREG)),
-      m_uartx_rx(*((vu32ptr)U1MODE + (e * UARTX_SPACING) + UXRXREG)),
-      m_uartx_baud(0)
-{}
-
-//uxtxreg
-//=============================================================================
-    void            Uart::write     (uint16_t v)
-//=============================================================================
+    : m_dmax_con((volatile uint32_t*)DCH0CON + (e * DCH_SPACING))
 {
-    m_uartx_tx = v;
 }
 
-//uxrxreg
+//common static functions
+//DMACON
 //=============================================================================
-    uint16_t        Uart::read      ()
-//=============================================================================
-{
-    return m_uartx_rx;
-}
-
-
-//uxmode
-//=============================================================================
-    void        Uart::stop_sleep        (bool tf)
+    void            Dma::all_on         (bool tf)
 //=============================================================================
 {
-    r.setbit(m_uartx_base, SLPEN, not tf);
+    r.setbit(DMACON, ON, tf);
 }
 
 //=============================================================================
-    bool        Uart::active            ()
+    void            Dma::all_suspend    (bool tf)
 //=============================================================================
 {
-    return r.anybit(m_uartx_base, ACTIVE);
+    r.setbit(DMACON, SUSPEND, tf);
 }
 
 //=============================================================================
-    void        Uart::clk_sel           (CLKSEL e)
+    bool            Dma::all_suspend    ()
 //=============================================================================
 {
-    r.clrbit(m_uartx_base, CLKSEL_CLR<<CLKSEL_SHIFT);
-    r.setbit(m_uartx_base, e<<CLKSEL_SHIFT);
-    baud_set();
+    return r.anybit(DMACON, SUSPEND);
 }
 
 //=============================================================================
-    void        Uart::oflow_stop        (bool tf)
+    bool            Dma::any_busy       ()
 //=============================================================================
 {
-    r.setbit(m_uartx_base, OVFDIS, not tf);
+    return r.anybit(DMACON, DMABUSY);
+}
+
+//DMASTAT
+//=============================================================================
+    bool            Dma::last_rd        ()
+//=============================================================================
+{
+    return r.anybit(DMASTAT, RDWR);
 }
 
 //=============================================================================
-    void        Uart::on                (bool tf)
+    uint8_t         Dma::last_ch        ()
 //=============================================================================
 {
-    baud_set(); //in case not set
-    r.setbit(m_uartx_base, ON, tf);
+    return r.val8(DMASTAT) & DMACH_CLR;
+}
+
+//DMAADDR
+//=============================================================================
+    uint32_t        Dma::last_addr      ()
+//=============================================================================
+{
+    return r.val(DMAADDR);
+}
+
+//DCRCCON
+//=============================================================================
+    void            Dma::crc_byto       (CRCBYTO e)
+//=============================================================================
+{
+    r.clrbit(DCRCCON, BYTO_CLR<<BYTO_SHIFT);
+    r.setbit(DCRCCON, e<<BYTO_SHIFT);
+    r.setbit(DCRCCON, WBO, (bool)e);
 }
 
 //=============================================================================
-    void        Uart::stop_idle         (bool tf)
+    void            Dma::crc_bito       (CRCBITO e)
 //=============================================================================
 {
-    r.setbit(m_uartx_base, SIDL, tf);
+    r.setbit(DCRCCON, BITO, e);
 }
 
 //=============================================================================
-    void        Uart::irda              (bool tf)
+    void            Dma::crc_polyn      (uint8_t v)
 //=============================================================================
 {
-    r.setbit(m_uartx_base, IREN, tf);
+    r.clrbit(DCRCCON, PLEN_CLR<<PLEN_SHIFT);
+    r.setbit(DCRCCON, (v & PLEN_CLR)<<PLEN_SHIFT);
 }
 
 //=============================================================================
-    void        Uart::rts_mode          (RTSMODE e)
+    void            Dma::crc_on         (bool tf)
 //=============================================================================
 {
-    r.setbit(m_uartx_base, RTSMD, e);
+    r.setbit(DCRCCON, CRCEN, tf);
 }
 
 //=============================================================================
-    void        Uart::wake              (bool tf)
+    void            Dma::crc_append     (bool tf)
 //=============================================================================
 {
-    r.setbit(m_uartx_base, WAKE, tf);
+    r.setbit(DCRCCON, CRCAPP, tf);
 }
 
 //=============================================================================
-    void        Uart::loopback          (bool tf)
+    void            Dma::crc_type       (CRCTYPE e)
 //=============================================================================
 {
-    r.setbit(m_uartx_base, LPBACK, tf);
+    r.setbit(DCRCCON, CRCTYP, e);
 }
 
 //=============================================================================
-    void        Uart::autobaud          (bool tf)
+    void            Dma::crc_ch         (uint8_t v)
 //=============================================================================
 {
-    r.setbit(m_uartx_base, ABAUD, tf);
+    r.clrbit(DCRCCON, CRCCH_CLR<<CRCCH_SHIFT);
+    r.setbit(DCRCCON, (v & CRCCH_CLR)<<CRCCH_SHIFT);
+}
+
+//DCRCDATA
+//=============================================================================
+    void            Dma::crc_seed       (uint32_t v)
+//=============================================================================
+{
+    r.val(DCRCDATA, v);
 }
 
 //=============================================================================
-    void        Uart::rx_pol            (RXPOL e)
+uint32_t            Dma::crc_data       ()
 //=============================================================================
 {
-    r.setbit(m_uartx_base, RXINV, e);
+    return r.val(DCRCDATA);
+}
+
+//DCRCXOR
+//=============================================================================
+    void            Dma::crc_xor        (uint32_t v)
+//=============================================================================
+{
+    r.val(DCRCXOR, v);
+}
+
+//functions for each channel (class instance)
+//DCHXCON
+//=============================================================================
+    bool            Dma::busy           ()
+//=============================================================================
+{
+    return r.anybit(m_dmax_con, CHBUSY);
 }
 
 //=============================================================================
-    void        Uart::hispeed           (bool tf)
+    void            Dma::chain          (CHCHAIN e)
 //=============================================================================
 {
-    r.setbit(m_uartx_base, BRGH, tf);
-    baud_set();
+    r.setbit(m_dmax_con, CHCHNS, e == TOLOWER);
+    r.setbit(m_dmax_con, CHCHN, e not_eq CHAINOFF);
 }
 
 //=============================================================================
-    void        Uart::mode              (MODESEL e)
+    void            Dma::on             (bool tf)
 //=============================================================================
 {
-    r.clrbit(m_uartx_base, MODE_CLR<<MODE_SHIFT);
-    r.setbit(m_uartx_base, e<<MODE_SHIFT);
+    r.setbit(m_dmax_con, CHEN, tf);
+    while(busy() not_eq tf);
 }
 
 //=============================================================================
-//uxsta
-    void        Uart::rx_mask           (uint8_t v)
+    void            Dma::evt_always     (bool tf)
 //=============================================================================
 {
-    r.val((vu8ptr)m_uartx_base + (UXSTA * 4) + 3, v);
+    r.setbit(m_dmax_con, CHAED, tf);
 }
 
 //=============================================================================
-    void        Uart::rx_addr           (uint8_t v)
+    void            Dma::auto_en        (bool tf)
 //=============================================================================
 {
-    r.val((vu8ptr)m_uartx_base + (UXSTA * 4) + 2, v);
+    r.setbit(m_dmax_con, CHAEN, tf);
 }
 
 //=============================================================================
-    void        Uart::tx_irq            (UTXISEL e)
+    bool            Dma::evt            ()
 //=============================================================================
 {
-    r.clrbit(m_uartx_base + UXSTA, UTXISEL_CLR<<UTXISEL_SHIFT);
-    r.setbit(m_uartx_base + UXSTA, e<<UTXISEL_SHIFT);
+    return r.anybit(m_dmax_con, CHEDET);
 }
 
 //=============================================================================
-    void        Uart::tx_pol            (RXPOL e)
+    void            Dma::priority       (CHPRI e)
 //=============================================================================
 {
-    bool b = r.anybit(m_uartx_base, IREN) ? not e : e;
-    r.setbit(m_uartx_base + UXSTA, UTXINV, b);
+    r.clrbit(m_dmax_con, CHPRI_CLR<<CHPRI_SHIFT);
+    r.setbit(m_dmax_con, e<<CHPRI_SHIFT);
+}
+
+//DCHXECON
+//=============================================================================
+    void            Dma::irq_abort      (uint8_t v)
+//=============================================================================
+{
+    r.val((vbyte_ptr)m_dmax_con + (DCHXECON * 4) + 2, v);
+    r.setbit(m_dmax_con + DCHXECON, AIRQEN, v not_eq (uint8_t)IRQOFF);
 }
 
 //=============================================================================
-    void        Uart::rx_on             (bool tf)
+    void            Dma::irq_start      (uint8_t v)
 //=============================================================================
 {
-    r.setbit(m_uartx_base + UXSTA, URXEN, tf);
+    r.val((vbyte_ptr)m_dmax_con + (DCHXECON * 4) + 1, v);
+    r.setbit(m_dmax_con + DCHXECON, SIRQEN, v not_eq (uint8_t)IRQOFF);
 }
 
 //=============================================================================
-    void        Uart::tx_break          ()
+    void            Dma::start          ()
 //=============================================================================
 {
-    r.setbit(m_uartx_base + UXSTA, UTXBRK);
+    r.setbit(m_dmax_con+DCHXECON, CFORCE);
 }
 
 //=============================================================================
-    void        Uart::tx_on             (bool tf)
+    void            Dma::abort          ()
 //=============================================================================
 {
-    r.setbit(m_uartx_base + UXSTA, UTXEN, tf);
+    r.setbit(m_dmax_con+DCHXECON, CABORT);
 }
 
 //=============================================================================
-    bool        Uart::tx_full           ()
+    void            Dma::abort_match    (bool tf)
 //=============================================================================
 {
-    return r.anybit(m_uartx_base + UXSTA, UTXBF);
+    r.setbit(m_dmax_con+DCHXECON, PATEN, tf);
+}
+
+//DCHXINT
+//=============================================================================
+    void            Dma::irq            (IRQENF e, bool tf)
+//=============================================================================
+{
+    r.setbit((vbyte_ptr)m_dmax_con + (DCHXINT * 4) + 2, e, tf);
 }
 
 //=============================================================================
-    bool        Uart::tx_done           ()
+    bool            Dma::flag           (IRQENF e)
 //=============================================================================
 {
-    return r.anybit(m_uartx_base + UXSTA, TRMT);
+    return r.anybit((vbyte_ptr)m_dmax_con + (DCHXINT * 4) + 2, e);
 }
 
 //=============================================================================
-    void        Uart::rx_irq            (URXISEL e)
+    void            Dma::flag_clr       (IRQENF e)
 //=============================================================================
 {
-    r.clrbit(m_uartx_base + UXSTA, URXISEL_CLR<<URXISEL_SHIFT);
-    r.setbit(m_uartx_base + UXSTA, e<<URXISEL_SHIFT);
+    r.clrbit((vbyte_ptr)m_dmax_con + (DCHXINT * 4), e);
 }
 
+//DCHXSSA
 //=============================================================================
-    void        Uart::rx_addren         (bool tf)
+    void            Dma::sstart_addr    (uint32_t v)
 //=============================================================================
 {
-    r.setbit(m_uartx_base + UXSTA, ADDEN, tf);
+    r.val(m_dmax_con + DCHXSSA, r.k2phys(v));
 }
 
+//DCHXDSA
 //=============================================================================
-    bool        Uart::rx_busy           ()
+    void            Dma::dstart_addr    (uint32_t v)
 //=============================================================================
 {
-    return not r.anybit(m_uartx_base + UXSTA, RIDLE);
+    r.val(m_dmax_con + DCHXDSA, r.k2phys(v));
 }
 
+//DCHXSSIZ
 //=============================================================================
-    bool        Uart::rx_perr           ()
+    void            Dma::ssize          (uint16_t v)
 //=============================================================================
 {
-    return r.anybit(m_uartx_base + UXSTA, PERR);
+    r.val(m_dmax_con + DCHXSSIZ, v);
 }
 
+//DCHXDSIZ
 //=============================================================================
-    bool        Uart::rx_ferr           ()
+    void            Dma::dsize          (uint16_t v)
 //=============================================================================
 {
-    return r.anybit(m_uartx_base + UXSTA, FERR);
+    r.val(m_dmax_con + DCHXDSIZ, v);
 }
 
+//DCHXSPTR
 //=============================================================================
-    bool        Uart::rx_oerr           ()
+    void            Dma::spointer       (uint16_t v)
 //=============================================================================
 {
-    return r.anybit(m_uartx_base + UXSTA, OERR);
+    r.val(m_dmax_con + DCHXSPTR, v);
 }
 
+//DCHXDPTR
 //=============================================================================
-    bool        Uart::rx_empty          ()
+    void            Dma::dpointer       (uint16_t v)
 //=============================================================================
 {
-    return not r.anybit(m_uartx_base + UXSTA, URXDA);
+    r.val(m_dmax_con + DCHXDPTR, v);
 }
 
-//uxbrg
+//DCHXCSIZ
 //=============================================================================
-    void        Uart::baud_set          (uint32_t v)
+    void            Dma::csize          (uint16_t v)
 //=============================================================================
 {
-    m_uartx_baud = v;
-    uint8_t bdiv = r.anybit(m_uartx_base, BRGH) ? 4 : 16;
-    v = baud_clk() / v / bdiv - 1;
-    r.val(m_uartx_base + UXBRG, v);
+    r.val(m_dmax_con + DCHXCSIZ, v);
 }
 
-//called by clk_sel(), on(), brg_mode()
+//DCHXCPTR
 //=============================================================================
-    void        Uart::baud_set          ()
+    uint16_t        Dma::cpointer       ()
 //=============================================================================
 {
-    //if baud not set, set it to 115200
-    baud_set(m_uartx_baud ? m_uartx_baud : 115200);
+    return r.val16(m_dmax_con + DCHXCPTR);
 }
 
+//DCHXDAT
 //=============================================================================
-    uint32_t    Uart::baud_clk          ()
+    void            Dma::pattern        (uint8_t v)
 //=============================================================================
 {
-    CLKSEL e = (CLKSEL)((r.val(m_uartx_base)>>17) bitand CLKSEL_CLR);
-    if(e == REFO1) return Osc::refo_freq();
-    else if(e == FRC) return Osc::frcclk();
-    return Osc::sysclk(); //pb/sys are the same
+    r.val(m_dmax_con + DCHXDAT, v);
 }

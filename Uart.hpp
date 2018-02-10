@@ -10,7 +10,7 @@ struct Uart  {
     //instantiate Uart with uart number
     enum UARTX { UART1 = 0, UART2, UART3 };
 
-    constexpr Uart(UARTX);
+    /*constexpr*/ Uart(UARTX);
 
     //uxmode
     enum CLKSEL { PBCLK = 0, SYSCLK, FRC, REFO1 };
@@ -116,35 +116,7 @@ struct Uart  {
 
     uint32_t m_uartx_baud;                          //desired baud
 
-    using vbyte_ptr = volatile uint8_t*;            //access stat as bytes
+    using vu8ptr = volatile uint8_t*;               //access stat as bytes
+    using vu32ptr = volatile uint32_t*;
 
 };
-
-#include "Osc.hpp"
-
-//=============================================================================
-    constexpr       Uart::Uart      (UARTX e)
-//=============================================================================
-    : m_uartx_base((volatile uint32_t*)U1MODE+(e*UARTX_SPACING)),
-      m_uartx_tx(*((volatile uint32_t*)U1MODE+(e*UARTX_SPACING)+UXTXREG)),
-      m_uartx_rx(*((volatile uint32_t*)U1MODE+(e*UARTX_SPACING)+UXRXREG)),
-      m_uartx_baud(0)
-{}
-
-//uxtxreg
-//=============================================================================
-    void            Uart::write     (uint16_t v)
-//=============================================================================
-{
-    m_uartx_tx = v;
-}
-
-//uxrxreg
-//=============================================================================
-    uint16_t        Uart::read      ()
-//=============================================================================
-{
-    return m_uartx_rx;
-}
-
-

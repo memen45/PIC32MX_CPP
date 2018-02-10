@@ -2,8 +2,6 @@
 
 #include <cstdint>
 #include "Reg.hpp"
-#include "Osc.hpp"
-
 
 //SPI 1/2/3
 
@@ -12,7 +10,7 @@ struct Spi  {
     //instantiate Comp123 with comparator number
     enum SPIX { SPI1 = 0, SPI2, SPI3 };
 
-    constexpr Spi(SPIX);
+    /*constexpr*/ Spi(SPIX);
 
     //spixcon
     enum FRMDIR : bool { MASTER = 0, SLAVE };
@@ -143,27 +141,3 @@ struct Spi  {
     using vbyte_ptr = volatile uint8_t*;            //access stat as bytes
 
 };
-
-//=============================================================================
-    constexpr       Spi::Spi        (SPIX e)
-//=============================================================================
-    : m_spix_con((volatile uint32_t*)SPI1CON+(e*SPIX_SPACING)),
-      m_spixbuf(*((volatile uint32_t*)SPI1CON+(e*SPIX_SPACING)+SPIXBUF)),
-      m_spix_freq(0)
-{
-}
-
-//spixbuf
-//=============================================================================
-    void            Spi::write      (uint32_t v)
-//=============================================================================
-{
-    m_spixbuf = v; //m_spibuf&
-}
-
-//=============================================================================
-    uint32_t        Spi::read       ()
-//=============================================================================
-{
-    return m_spixbuf; //m_spibuf&
-}

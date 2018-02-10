@@ -1,0 +1,4 @@
+[Project]
+CreatedFrom=Makefile
+Manager=KDevCustomMakeManager
+Name=test-xc32.X

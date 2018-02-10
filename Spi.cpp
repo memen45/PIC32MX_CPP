@@ -1,6 +1,16 @@
 #include "Spi.hpp"
+#include "Osc.hpp"
 
 //Spi
+
+//=============================================================================
+                Spi::Spi        (SPIX e)
+//=============================================================================
+    : m_spix_con((volatile uint32_t*)SPI1CON + (e * SPIX_SPACING)),
+      m_spixbuf(*((volatile uint32_t*)SPI1CON + (e * SPIX_SPACING) + SPIXBUF)),
+      m_spix_freq(0)
+{
+}
 
 //spixcon
 //=============================================================================
@@ -152,91 +162,91 @@
     uint8_t     Spi::stat_rxcount       ()
 //=============================================================================
 {
-    return r.val8((vbyte_ptr)m_spix_con+(SPIXSTAT*4)+3);
+    return r.val8((vbyte_ptr)m_spix_con + (SPIXSTAT*4) + 3);
 }
 
 //=============================================================================
     uint8_t     Spi::stat_txcount       ()
 //=============================================================================
 {
-    return r.val8((vbyte_ptr)m_spix_con+(SPIXSTAT*4)+2);
+    return r.val8((vbyte_ptr)m_spix_con + (SPIXSTAT*4) + 2);
 }
 
 //=============================================================================
     bool        Spi::stat_ferr          ()
 //=============================================================================
 {
-    return r.anybit(m_spix_con+SPIXSTAT, FRMERR);
+    return r.anybit(m_spix_con + SPIXSTAT, FRMERR);
 }
 
 //=============================================================================
     void        Spi::stat_ferrclr       ()
 //=============================================================================
 {
-    r.clrbit(m_spix_con+SPIXSTAT, FRMERR);
+    r.clrbit(m_spix_con + SPIXSTAT, FRMERR);
 }
 
 //=============================================================================
     bool        Spi::stat_busy          ()
 //=============================================================================
 {
-    return r.anybit(m_spix_con+SPIXSTAT, SPIBUSY);
+    return r.anybit(m_spix_con + SPIXSTAT, SPIBUSY);
 }
 
 //=============================================================================
     bool        Spi::stat_txurun        ()
 //=============================================================================
 {
-    return r.anybit(m_spix_con+SPIXSTAT, SPITUR);
+    return r.anybit(m_spix_con + SPIXSTAT, SPITUR);
 }
 
 //=============================================================================
     bool        Spi::stat_sremty        ()
 //=============================================================================
 {
-    return r.anybit(m_spix_con+SPIXSTAT, SRMT);
+    return r.anybit(m_spix_con + SPIXSTAT, SRMT);
 }
 
 //=============================================================================
     bool        Spi::stat_oerr          ()
 //=============================================================================
 {
-    return r.anybit(m_spix_con+SPIXSTAT, SPIROV);
+    return r.anybit(m_spix_con + SPIXSTAT, SPIROV);
 }
 
 //=============================================================================
     void        Spi::stat_oerrclr       ()
 //=============================================================================
 {
-    r.clrbit(m_spix_con+SPIXSTAT, SPIROV);
+    r.clrbit(m_spix_con + SPIXSTAT, SPIROV);
 }
 
 //=============================================================================
     bool        Spi::stat_rxemty        ()
 //=============================================================================
 {
-    return r.anybit(m_spix_con+SPIXSTAT, SPIRBE);
+    return r.anybit(m_spix_con + SPIXSTAT, SPIRBE);
 }
 
 //=============================================================================
     bool        Spi::stat_txemty        ()
 //=============================================================================
 {
-    return r.anybit(m_spix_con+SPIXSTAT, SPITBE);
+    return r.anybit(m_spix_con + SPIXSTAT, SPITBE);
 }
 
 //=============================================================================
     bool        Spi::stat_txfull        ()
 //=============================================================================
 {
-    return r.anybit(m_spix_con+SPIXSTAT, SPITBF);
+    return r.anybit(m_spix_con + SPIXSTAT, SPITBF);
 }
 
 //=============================================================================
     bool        Spi::stat_rxfull        ()
 //=============================================================================
 {
-     return r.anybit(m_spix_con+SPIXSTAT, SPIRBF);
+     return r.anybit(m_spix_con + SPIXSTAT, SPIRBF);
 }
 
 //spixbrg
@@ -244,7 +254,7 @@
     void        Spi::baud               (uint16_t v)
 //=============================================================================
 {
-    r.val(m_spix_con+SPIXBRG, v);
+    r.val(m_spix_con + SPIXBRG, v);
 }
 
 //set frequency
@@ -270,7 +280,7 @@
     uint32_t clk;
     if(clk_sel() == REFO1) clk = Osc::refo_freq();
     else clk = Osc::sysclk();
-    m_spix_freq = clk / (2 * r.val16(m_spix_con+SPIXBRG) + 1);
+    m_spix_freq = clk / (2 * r.val16(m_spix_con + SPIXBRG) + 1);
     return m_spix_freq;
 }
 
@@ -279,42 +289,42 @@
     void        Spi::sign_ext           (bool tf)
 //=============================================================================
 {
-    r.setbit(m_spix_con+SPIXCON2, SPISGNEXT, tf);
+    r.setbit(m_spix_con + SPIXCON2, SPISGNEXT, tf);
 }
 
 //=============================================================================
     void        Spi::irq_frmerr         (bool tf)
 //=============================================================================
 {
-    r.setbit(m_spix_con+SPIXCON2, FRMERREN, tf);
+    r.setbit(m_spix_con + SPIXCON2, FRMERREN, tf);
 }
 
 //=============================================================================
     void        Spi::irq_oflow          (bool tf)
 //=============================================================================
 {
-    r.setbit(m_spix_con+SPIXCON2, SPIROVEN, tf);
+    r.setbit(m_spix_con + SPIXCON2, SPIROVEN, tf);
 }
 
 //=============================================================================
     void        Spi::irq_urun           (bool tf)
 //=============================================================================
 {
-    r.setbit(m_spix_con+SPIXCON2, SPITUREN, tf);
+    r.setbit(m_spix_con + SPIXCON2, SPITUREN, tf);
 }
 
 //=============================================================================
     void        Spi::ign_oflow          (bool tf)
 //=============================================================================
 {
-    r.setbit(m_spix_con+SPIXCON2, IGNROV, tf);
+    r.setbit(m_spix_con + SPIXCON2, IGNROV, tf);
 }
 
 //=============================================================================
     void        Spi::ign_urun           (bool tf)
 //=============================================================================
 {
-    r.setbit(m_spix_con+SPIXCON2, IGNTUR, tf);
+    r.setbit(m_spix_con + SPIXCON2, IGNTUR, tf);
 }
 
 //=============================================================================
@@ -323,7 +333,7 @@
 {
     bool ison = r.anybit(m_spix_con, ON);
     on(false);
-    r.setbit(m_spix_con+SPIXCON2, AUDEN, tf);
+    r.setbit(m_spix_con + SPIXCON2, AUDEN, tf);
     on(ison);
 }
 
@@ -333,7 +343,7 @@
 {
     bool ison = r.anybit(m_spix_con, ON);
     on(false);
-    r.setbit(m_spix_con+SPIXCON2, AUDOMONO, tf);
+    r.setbit(m_spix_con + SPIXCON2, AUDOMONO, tf);
     on(ison);
 }
 
@@ -343,7 +353,22 @@
 {
     bool ison = r.anybit(m_spix_con, ON);
     on(false);
-    r.clrbit(m_spix_con+SPIXCON2, PCMDSP);
-    r.setbit(m_spix_con+SPIXCON2, e);
+    r.clrbit(m_spix_con + SPIXCON2, PCMDSP);
+    r.setbit(m_spix_con + SPIXCON2, e);
     on(ison);
+}
+
+//spixbuf
+//=============================================================================
+    void            Spi::write      (uint32_t v)
+//=============================================================================
+{
+    m_spixbuf = v; //m_spibuf&
+}
+
+//=============================================================================
+    uint32_t        Spi::read       ()
+//=============================================================================
+{
+    return m_spixbuf; //m_spibuf&
 }

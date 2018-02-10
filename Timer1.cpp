@@ -1,101 +1,90 @@
-#include "Timer23.hpp"
+#include "Timer1.hpp"
+#include "Osc.hpp"
 
-//Timer23
 //=============================================================================
-                Timer23::Timer23        (TMR23 e)
+    void        Timer1::timer           (uint16_t n)
 //=============================================================================
-    : m_txcon( (vu32ptr)T1CON + (e * TMR23_SPACING) ),
-      m_tmrx( *((vu32ptr)T1CON + (e * TMR23_SPACING) + 4) ),
-      m_prx( *((vu32ptr)T1CON + (e * TMR23_SPACING) + 8) )
 {
+    r.val(TMR1, n);
 }
 
 //=============================================================================
-    void        Timer23::count          (uint32_t n) const
+    uint16_t    Timer1::timer           ()
 //=============================================================================
 {
-    m_tmrx = n;
-    if(r.anybit(m_txcon, T32)){
-        *((vu32ptr)m_tmrx + TMR23_SPACING) = n>>16;
-    }
+    return r.val16(TMR1);
 }
 
 //=============================================================================
-    uint32_t    Timer23::count          () const
+    void        Timer1::period          (uint16_t n)
 //=============================================================================
 {
-    uint32_t ret = 0;
-    if(r.anybit(m_txcon, T32)){
-        ret = *((vu32ptr)m_tmrx + TMR23_SPACING)<<16;
-    }
-    return ret | m_tmrx;
+    r.val(PR1, n);
 }
 
 //=============================================================================
-    void        Timer23::period         (uint32_t n) const
+    uint16_t    Timer1::period          ()
 //=============================================================================
 {
-    m_prx = n;
-    if(r.anybit(m_txcon, T32)){
-        *((vu32ptr)m_prx + TMR23_SPACING) = n>>16;
-    }
+    return r.val16(PR1);
 }
 
 //=============================================================================
-    uint32_t    Timer23::period         () const
+    void        Timer1::on              (bool tf)
 //=============================================================================
 {
-    uint32_t ret = 0;
-    if(r.anybit(m_txcon, T32)){
-        ret = *((vu32ptr)m_prx + TMR23_SPACING)<<16;
-    }
-    return ret | m_prx;
+    r.setbit(T1CON, ON, tf);
 }
 
 //=============================================================================
-    void        Timer23::on             (bool tf) const
+    void        Timer1::stop_idle       (bool tf)
 //=============================================================================
 {
-    r.setbit(m_txcon, ON, tf);
+    r.setbit(T1CON, SIDL, tf);
 }
 
 //=============================================================================
-    void        Timer23::stop_idle      (bool tf) const
+    void        Timer1::wr_async        (bool tf)
 //=============================================================================
 {
-    r.setbit(m_txcon, SIDL, tf);
+    r.setbit(T1CON, TWDIS, not tf);
 }
 
 //=============================================================================
-    void        Timer23::gate           (bool tf) const
+    bool        Timer1::wr_busy         ()
 //=============================================================================
 {
-    r.setbit(m_txcon, TGATE, tf);
+    return r.anybit(T1CON, TWIP);
 }
 
 //=============================================================================
-    void        Timer23::prescale       (PRESCALE e) const
+    void        Timer1::clk_src         (CLK e)
 //=============================================================================
 {
-    r.clrbit(m_txcon, TCKPS_CLR<<TCKPS_SHIFT);
-    r.setbit(m_txcon, e<<TCKPS_SHIFT);
+    if(e == SOSC) Osc::sosc(true);
+    r.clrbit(T1CON, CLK_CLR);
+    r.setbit(T1CON, e);
 }
 
 //=============================================================================
-    void        Timer23::mode32         (bool tf) const
+    void        Timer1::tgate           (bool tf)
 //=============================================================================
 {
-    r.setbit(m_txcon, T32, tf);
-    //if turned on, bit will 'stick'
-    //so must be T2, make sure T3 SIDL is off
-    if(tf and r.anybit(m_txcon, T32)){
-       r.clrbit(m_txcon + TMR23_SPACING, SIDL);
-    }
+    r.setbit(T1CON, TGATE, tf);
 }
 
 //=============================================================================
-    void        Timer23::clk_src        (CLK e) const
+    void        Timer1::prescale        (TCKPS e)
 //=============================================================================
 {
-    r.setbit(m_txcon, TCS, e);
+    r.clrbit(T1CON, TCKPS_CLR<<TCKPS_SHIFT);
+    r.setbit(T1CON, e<<TCKPS_SHIFT);
 }
+
+//=============================================================================
+    void        Timer1::tsync           (bool tf)
+//=============================================================================
+{
+    r.setbit(T1CON, TSYNC, tf);
+}
+

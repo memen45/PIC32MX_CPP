@@ -12,7 +12,7 @@ struct Ccp  {
         CCP1 = 0, CCP2, CCP3, CCP4, CCP5, CCP6, CCP7, CCP8, CCP9
     };
 
-    constexpr Ccp(CCPX);
+    /*constexpr*/ Ccp(CCPX);
 
     //ccpxcon1
     enum OPOSTSRC : bool { TMRIRQ = 0, EVTTRG };
@@ -255,16 +255,6 @@ struct Ccp  {
 
     vword_ptr m_ccpx_con;
 };
-
-#include "Osc.hpp"
-
-//=============================================================================
-    constexpr       Ccp::Ccp        (CCPX e)
-//=============================================================================
-    : m_ccpx_con((vword_ptr)CCP1CON1+(e*CCPX_SPACING))
-{
-}
-
 
 /*
 clock source -> CLKSEL -> TMRPS -> TMRSYNC -> SSDG ->
