@@ -23,7 +23,6 @@
 #include "Delay.hpp"
 #include "Resets.hpp"
 #include "Ccp.hpp"
-#include "Vin.hpp"
 
 
 //svg colors for rgb led
@@ -227,17 +226,13 @@ struct Rgb {
 
 
 
-//check pot val via adc (0-4096 -> 0-256)
-Vin pot(Pins::AN14);
-
-
 //alternate led/led2 at rate determined by pot via adc
 //if very low value, turn off led's
 struct Led12 {
 
     void update(){
         if(not m_led1.expired()) return;
-        uint8_t t = pot.adcval()>>2;
+        uint8_t t = m_pot.adcval()>>2; //(0-4096 -> 0-256)
         if(t < 100){
             t = 100;
             m_led1.off();
@@ -252,6 +247,7 @@ struct Led12 {
 
     private:
 
+    Pins m_pot{Pins::AN14}; //check pot val via adc 
     Pins m_led1{Pins::D3, Pins::OUT};
     Pins m_led2{Pins::C13, Pins::OUT};
     bool m_led1_state{false};

@@ -1,4 +1,5 @@
 #include "Pins.hpp"
+#include "Adc.hpp"
 
 //Pins
 
@@ -41,6 +42,22 @@
 //=============================================================================
 {
     return r.setbit(m_pt + LAT, m_pn, tf);
+}
+
+//=============================================================================
+    uint16_t    Pins::adcval         () const
+//=============================================================================
+{
+    Adc adc;
+    adc.mode_12bit(true);           //12bit mode
+    adc.trig_sel(adc.AUTO);         //adc starts conversion
+    adc.samp_time(31);              //max sampling time- 31Tad
+    adc.conv_time(adc.PBCLK12BIT);  //if no arg,default is 4 (for 24MHz)
+    adc.ch_sel(m_an);               //ANn (AVss if no ANn for pin)
+    adc.on(true);
+    adc.samp(true);
+    while(not Adc::done());         //blocking
+    return Adc::read();             //buf[0]
 }
 
 //=============================================================================
@@ -91,7 +108,7 @@
 {
     r.clrbit(m_pt + CNF, m_pn);
 }
-    
+
 //=============================================================================
     void        Pins::lowison           (bool tf)
 //=============================================================================

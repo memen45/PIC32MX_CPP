@@ -110,6 +110,7 @@ class Pins : public Delay {
     bool        pinval          () const;
     bool        latval          () const;
     void        latval          (bool) const;
+    uint16_t    adcval          () const;
     void        low             () const;
     void        high            () const;
     void        invert          () const;
