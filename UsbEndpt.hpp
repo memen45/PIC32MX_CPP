@@ -148,7 +148,7 @@ ______________________________________________________________________________*/
 void UsbEndptTRx::options(uint8_t v)
 //=============================================================================
 {
-    m_options = (v & 0x78); //bits x6543xxx
+    m_options = (v bitand 0x78); //bits x6543xxx
 }
 
 /*______________________________________________________________________________
@@ -393,8 +393,8 @@ UsbEndpt::UsbEndpt(uint8_t n, TR tr, uint16_t max) :
     m_setup_pkt{0},
     m_setup_stage(COMPLETE),
     m_rxbuf{tr&RX?UsbBuf::get():0,tr&RX?UsbBuf::get():0},
-    m_RX(&m_bdt[n*4], tr & RX ? max : 0),
-    m_TX(&m_bdt[n*4+2], tr & TX ? max : 0)
+    m_RX(&m_bdt[n*4], tr bitand RX ? max : 0),
+    m_TX(&m_bdt[n*4+2], tr bitand TX ? max : 0)
 {
     epreg(0);
 }

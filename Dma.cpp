@@ -49,7 +49,7 @@
     uint8_t         Dma::last_ch        ()
 //=============================================================================
 {
-    return r.val8(DMASTAT) & DMACH_CLR;
+    return r.val8(DMASTAT) bitand DMACH_CLR;
 }
 
 //DMAADDR
@@ -82,7 +82,7 @@
 //=============================================================================
 {
     r.clrbit(DCRCCON, PLEN_CLR<<PLEN_SHIFT);
-    r.setbit(DCRCCON, (v & PLEN_CLR)<<PLEN_SHIFT);
+    r.setbit(DCRCCON, (v bitand PLEN_CLR)<<PLEN_SHIFT);
 }
 
 //=============================================================================
@@ -111,7 +111,7 @@
 //=============================================================================
 {
     r.clrbit(DCRCCON, CRCCH_CLR<<CRCCH_SHIFT);
-    r.setbit(DCRCCON, (v & CRCCH_CLR)<<CRCCH_SHIFT);
+    r.setbit(DCRCCON, (v bitand CRCCH_CLR)<<CRCCH_SHIFT);
 }
 
 //DCRCDATA

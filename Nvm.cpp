@@ -19,8 +19,8 @@
 //=============================================================================
 {
     *(vword_ptr)NVMKEY = 0;
-    if(v & 1) ir.enable_all();
-    if(v & 2) return;
+    if(v bitand 1) ir.enable_all();
+    if(v bitand 2) return;
     Dma::all_suspend(false);
 }
 
@@ -95,7 +95,7 @@
     uint8_t     Nvm::error          ()
 //=============================================================================
 {
-    uint8_t err = (r.val16(NVMCON)>>12) & 3;
+    uint8_t err = (r.val16(NVMCON)>>12) bitand 3;
     if(err) write_nop();
     return err;
 }
@@ -106,7 +106,7 @@
 //=============================================================================
 {
     uint8_t stat = unlock();
-    r.val(NVMPWP, (v & PWP_CLR) | not tf<<PWPULOCK_SHIFT);
+    r.val(NVMPWP, (v bitand PWP_CLR) | not tf<<PWPULOCK_SHIFT);
     lock(stat);
 }
 

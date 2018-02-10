@@ -24,7 +24,7 @@ static uint32_t boot_flags;
     // because sleep also has idle set)
     uint8_t ret = EXTR;
     for(; ret > POR; ret >>= 1){
-        if(boot_flags & ret) break;
+        if(boot_flags bitand ret) break;
     }
     return (CAUSE)ret;
 }
@@ -34,7 +34,7 @@ static uint32_t boot_flags;
     bool        Resets::config_err          ()
 //=============================================================================
 {
-    return boot_flags & (BCFGERR | BCFGFAIL | CMR);
+    return boot_flags bitand (BCFGERR | BCFGFAIL | CMR);
 }
 
 //RSWRST

@@ -30,7 +30,7 @@
 //=============================================================================
 {
     r.clrbit(m_ccpx_con, OPS_CLR<<OPS_SHIFT);
-    r.setbit(m_ccpx_con, (v & OPS_CLR)<<OPS_SHIFT);
+    r.setbit(m_ccpx_con, (v bitand OPS_CLR)<<OPS_SHIFT);
 }
 
 //=============================================================================
@@ -206,7 +206,7 @@
 //=============================================================================
 {
     r.clrbit(m_ccpx_con + CCPXCON3, OSCNT_CLR<<OSCNT_SHIFT);
-    r.setbit(m_ccpx_con + CCPXCON3, (v & OSCNT_CLR)<<OSCNT_SHIFT);
+    r.setbit(m_ccpx_con + CCPXCON3, (v bitand OSCNT_CLR)<<OSCNT_SHIFT);
 }
 
 //=============================================================================
@@ -252,7 +252,7 @@
 //=============================================================================
 {
     r.clrbit(m_ccpx_con + CCPXCON3, DT_CLR<<DT_SHIFT);
-    r.setbit(m_ccpx_con + CCPXCON3, (v & DT_CLR)<<DT_SHIFT);
+    r.setbit(m_ccpx_con + CCPXCON3, (v bitand DT_CLR)<<DT_SHIFT);
 }
 
 //ccpxstat

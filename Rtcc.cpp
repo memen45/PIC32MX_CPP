@@ -73,7 +73,7 @@
 //=============================================================================
 {
     conset(RTCCON2, FRDIV_CLR<<FRDIV_SHIFT, 0);
-    conset(RTCCON2, (v & FRDIV_CLR)<<FRDIV_SHIFT, 1);
+    conset(RTCCON2, (v bitand FRDIV_CLR)<<FRDIV_SHIFT, 1);
 }
 
 //=============================================================================

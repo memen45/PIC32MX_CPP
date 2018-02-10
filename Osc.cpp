@@ -34,8 +34,8 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 //=============================================================================
 {
     sys.lock();
-    if(not (uint8_t)idstat & DMA) Dma::all_suspend(false);
-    if((uint8_t)idstat & IRQ) ir.enable_all();
+    if(not (uint8_t)idstat bitand DMA) Dma::all_suspend(false);
+    if((uint8_t)idstat bitand IRQ) ir.enable_all();
 }
 
 //osccon

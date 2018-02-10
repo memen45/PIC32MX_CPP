@@ -126,7 +126,7 @@ static UsbBuf2::m_buffer_t m_buffers2 = {0};
 //=============================================================================
 {
     for(auto i = 0; i < 16; i++){
-        if(m_buffers2.status & (1<<i)) continue;
+        if(m_buffers2.status bitand (1<<i)) continue;
         m_buffers2.status or_eq 1<<i; //inuse
         m_buffers2.buffer64[i].buf_size = 64;
         return &m_buffers2.buffer64[i];
@@ -139,7 +139,7 @@ static UsbBuf2::m_buffer_t m_buffers2 = {0};
 //=============================================================================
 {
     for(auto i = 16; i < 20; i++){
-        if(m_buffers2.status & (1<<i)) continue;
+        if(m_buffers2.status bitand (1<<i)) continue;
         m_buffers2.status or_eq 1<<i; //inuse
         i >>= 16;
         m_buffers2.buffer512[i].buf_size = 512;

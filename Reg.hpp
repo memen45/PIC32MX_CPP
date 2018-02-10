@@ -152,25 +152,25 @@ template <typename T, typename V> void Reg::flipbit(T r, V v){
 //anybit
 template <typename T, typename V> bool Reg::anybit(T r, V v){
     using vtype = typename getVsiz<V>::type;
-    return *(volatile vtype*)r & v;
+    return *(volatile vtype*)r bitand v;
 }
 
 //anybit0
 template <typename T, typename V> bool Reg::anybit0(T r, V v){
     using vtype = typename getVsiz<V>::type;
-    return (compl *(volatile vtype*)r) & v;
+    return (compl *(volatile vtype*)r) bitand v;
 }
 
 //allbit
 template <typename T, typename V> bool Reg::allbit(T r, V v){
     using vtype = typename getVsiz<V>::type;
-    return *(volatile vtype*)r & v == v;
+    return *(volatile vtype*)r bitand v == v;
 }
 
 //allbit0
 template <typename T, typename V> bool Reg::allbit0(T r, V v){
     using vtype = typename getVsiz<V>::type;
-    return (compl *(volatile vtype*)r) & v == v;
+    return (compl *(volatile vtype*)r) bitand v == v;
 }
 
 
@@ -198,11 +198,11 @@ template <typename T, typename V> void Reg::val(T r, V v){
 
 //physical to kseg0/1 addr, kseg to physical addr
 template <typename T> uint32_t Reg::p2kseg1(T r){
-    return (uint32_t)r | 0xA0000000; //A0=0b1010_0000
+    return (uint32_t)r bitor 0xA0000000; //A0=0b1010_0000
 }
 template <typename T> uint32_t Reg::p2kseg0(T r){
-    return (uint32_t)r | 0x80000000; //80=0b1000_0000
+    return (uint32_t)r bitor 0x80000000; //80=0b1000_0000
 }
 template <typename T> uint32_t Reg::k2phys(T r){
-    return (uint32_t)r & 0x1FFFFFFF; //1F=0b0001_1111
+    return (uint32_t)r bitand 0x1FFFFFFF; //1F=0b0001_1111
 }
