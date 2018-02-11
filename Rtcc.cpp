@@ -1,5 +1,37 @@
 #include "Rtcc.hpp"
 #include "Osc.hpp"
+#include "Reg.hpp"
+#include "Sys.hpp"
+
+enum : uint32_t {
+    RTCCON1 = 0xBF800000,
+        ALARMEN = 1u<<31,
+        CHIME = 1<<30,
+        AMASK_SHIFT = 24, AMASK_CLR = 15,
+        ALMRPT_SHIFT = 16, ALMRPT_CLR = 255,
+        ON = 1<<15,
+        WRLOCK = 1<<11,
+        PINON = 1<<7,
+        OUTSEL_SHIFT = 4, OUTSEL_CLR = 7,
+    RTCCON2 = 0xBF800010,
+        FRDIV_SHIFT = 11, FRDIV_CLR = 31,
+        PS_SHIFT = 4, PS_CLR = 3,
+        CLKSEL_SHIFT = 9, CLKSEL_CLR = 3,
+    RTCSTAT = 0xBF800030,
+        ALMSTAT = 1<<5,
+        SYSNCSTAT = 1<<2,
+        ALMSYNCSTAT = 1<<1,
+        HALFSTAT = 1<<0,
+    RTCTIME = 0xBF800040,
+    RTCDATE = 0xBF800050,
+    ALMTIME = 0xBF800060,
+    ALMDATE = 0xBF800070,
+};
+
+//clock divide precomputed for 32khz (prescale default 1:1)
+//need 2Hz
+enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
+
 
 //=============================================================================
     void        Rtcc::alarm             (bool tf)
@@ -35,7 +67,7 @@
     void        Rtcc::on                (bool tf)
 //=============================================================================
 {
-    if(tf and r.val16(RTCCON2 + 2)){        //div not set, so
+    if(tf and Reg::val16(RTCCON2 + 2)){        //div not set, so
         clk_div(CLK_DIV_32KHZ);             //init ourselves
         if(Osc::sosc()) clk_src(SOSC);      //use sosc if on
         else clk_src(LPRC);                 //else use lprc
@@ -64,7 +96,7 @@
 //=============================================================================
 {
     unlock();
-    r.val(RTCCON2+2, v);
+    Reg::val(RTCCON2+2, v);
     lock();
 }
 
@@ -97,28 +129,28 @@
     bool        Rtcc::alarm_evt         ()
 //=============================================================================
 {
-    return r.anybit(RTCSTAT, ALMSTAT);
+    return Reg::anybit(RTCSTAT, ALMSTAT);
 }
 
 //=============================================================================
     bool        Rtcc::time_busy         ()
 //=============================================================================
 {
-    return r.anybit(RTCSTAT, SYSNCSTAT);
+    return Reg::anybit(RTCSTAT, SYSNCSTAT);
 }
 
 //=============================================================================
     bool        Rtcc::alarm_busy        ()
 //=============================================================================
 {
-    return r.anybit(RTCSTAT, ALMSYNCSTAT);
+    return Reg::anybit(RTCSTAT, ALMSYNCSTAT);
 }
 
 //=============================================================================
     bool        Rtcc::half_sec          ()
 //=============================================================================
 {
-    return r.anybit(RTCSTAT, HALFSTAT);
+    return Reg::anybit(RTCSTAT, HALFSTAT);
 }
 
 //raw time, date
@@ -126,28 +158,28 @@
     uint32_t    Rtcc::time              ()
 //=============================================================================
 {
-    return r.val(RTCTIME);
+    return Reg::val(RTCTIME);
 }
 
 //=============================================================================
     uint32_t    Rtcc::date              ()
 //=============================================================================
 {
-    return r.val(RTCDATE);
+    return Reg::val(RTCDATE);
 }
 
 //=============================================================================
     uint32_t    Rtcc::alarm_time        ()
 //=============================================================================
 {
-    return r.val(ALMTIME);
+    return Reg::val(ALMTIME);
 }
 
 //=============================================================================
     uint32_t    Rtcc::alarm_date        ()
 //=============================================================================
 {
-    return r.val(ALMDATE);
+    return Reg::val(ALMDATE);
 }
 
 //=============================================================================
@@ -166,14 +198,14 @@
     void        Rtcc::alarm_time        (uint32_t v)
 //=============================================================================
 {
-    r.val(ALMTIME, v);
+    Reg::val(ALMTIME, v);
 }
 
 //=============================================================================
     void        Rtcc::alarm_date        (uint32_t v)
 //=============================================================================
 {
-    r.val(ALMTIME, v);
+    Reg::val(ALMTIME, v);
 }
 
 //RTCCON1 lock off by default, these functions will lock RTCCON1 when done
@@ -182,16 +214,16 @@
     void        Rtcc::unlock            ()
 //=============================================================================
 {
-    sys.unlock();
-    r.clrbit(RTCCON1, WRLOCK);
+    Sys::unlock();
+    Reg::clrbit(RTCCON1, WRLOCK);
 }
 
 //=============================================================================
     void        Rtcc::lock              ()
 //=============================================================================
 {
-    r.setbit(RTCCON1, WRLOCK);
-    sys.lock();
+    Reg::setbit(RTCCON1, WRLOCK);
+    Sys::lock();
 }
 
 //=============================================================================
@@ -199,7 +231,7 @@
 //=============================================================================
 {
     unlock();
-    r.setbit(addr, v, tf);
+    Reg::setbit(addr, v, tf);
     lock();
 }
 
@@ -208,6 +240,6 @@
 //=============================================================================
 {
     unlock();
-    r.val(addr, v);
+    Reg::val(addr, v);
     lock();
 }

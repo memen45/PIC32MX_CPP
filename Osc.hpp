@@ -32,9 +32,6 @@
 */
 
 #include <cstdint>
-#include "Reg.hpp"
-#include "Sys.hpp"
-#include "Irq.hpp"
 
 struct Osc {
 
@@ -42,13 +39,14 @@ struct Osc {
     enum DIVS : uint8_t { //upper byte of osccon, spllcon
         DIV1, DIV2, DIV4, DIV8, DIV16, DIV32, DIV64, DIV256
     };
+    static void         frc_div     (DIVS);     //set
+    static DIVS         frc_div     ();         //get
+
     enum CNOSC : uint8_t { //cosc/nosc in second byte of osccon
          FRCDIV = 0, SPLL, POSC, SOSC = 4, LPRC
     };
-
-    static void         frc_div     (DIVS);     //set
-    static DIVS         frc_div     ();         //get
     static CNOSC        clk_src     ();         //get current osc source
+
     static void         clk_src     (CNOSC);    //start switch to nosc
     static void         clk_lock    ();         //lock nosc/oswen until reset
     static void         sleep       ();         //sleep, wait
@@ -60,15 +58,19 @@ struct Osc {
                                                 //if enabled, assume its there
 
     //spllcon
+    //enum DIVS : uint8_t { //upper byte of osccon, spllcon
+    //    DIV1, DIV2, DIV4, DIV8, DIV16, DIV32, DIV64, DIV256
+    //}; duplicate
+    static DIVS         pll_div     ();         //get pll divider
+
     enum PLLMUL : uint8_t {
         MUL2 = 0, MUL3, MUL4, MUL6, MUL8, MUL12, MUL24
     };
+    static PLLMUL       pll_mul     ();         //get pll multiplier
 
     enum PLLSRC : bool { EXT, FRC };
-
-    static DIVS         pll_div     ();         //get pll divider
-    static PLLMUL       pll_mul     ();         //get pll multiplier
     static PLLSRC       pll_src     ();         //get pll src
+
     private:
     static void         pll_src     (PLLSRC);   //set pll src
     public:
@@ -76,20 +78,25 @@ struct Osc {
                                                 //set pll mul/div, pll src
 
     //refo1con, refo1trim
-    enum ROSEL : uint8_t {
-        RSYSCLK = 0, RPOSC = 2, RFRC, RLPRC, RSOSC, RPLLVCO = 7
-    };
-
     static void         refo_div    (uint16_t); //divisor value
     static void         refo_trim   (uint16_t); //trim value
     static void         refo_on     ();         //refo on
+
+    enum ROSEL : uint8_t {
+        RSYSCLK = 0, RPOSC = 2, RFRC, RLPRC, RSOSC, RPLLVCO = 7
+    };
     static void         refo_on     (ROSEL);    //refo on, src sel
+
     static void         refo_off    ();         //refo off
     static void         refo_idle   (bool);     //true = stop in idle mode
     static void         refo_out    (bool);     //true = clk out to REFO1 pin
     static void         refo_sleep  (bool);     //true = run in sleep
     static void         refo_divsw  ();         //do divider switch
     static bool         refo_active ();         //true = active
+
+    //enum ROSEL : uint8_t {
+    //    RSYSCLK = 0, RPOSC = 2, RFRC, RLPRC, RSOSC, RPLLVCO = 7
+    //}; duplicate
     static void         refo_src    (ROSEL);    //clk source select
     static uint32_t     refoclk     ();         //get refo in clk freq
     static void         refo_freq   (uint32_t); //set refo frequency
@@ -100,15 +107,15 @@ struct Osc {
         FRCRDY = 1<<0, SPLLDIVRDY = 1<<1, POSCRDY = 1<<2,
         SOSCRDY = 1<<4, LPRCRDY = 1<<5, USBRDY = 1<<6, SPLLRDY = 1<<7
     };
-
     static bool         ready       (CLKRDY);   //clock ready?
 
     //osctun
-    enum TUNSRC : bool { TSOSC, TUSB };
-
     static void         tun_auto    (bool);     //osc tune on
     static void         tun_idle    (bool);     //stop in idle
+
+    enum TUNSRC : bool { TSOSC, TUSB };
     static void         tun_src     (TUNSRC);   //src, 0=sosc 1=usb
+
     static bool         tun_lock    ();         //lock status
     static void         tun_lpol    (bool);     //irq polarity, 1=0 0=1
     static bool         tun_rng     ();         //out of range status
@@ -124,10 +131,6 @@ struct Osc {
 
     private:
 
-    static Reg r;                               //for static class access
-    static Sys sys;                             //alternate to  ::
-    static Irq ir;
-
     static uint32_t m_sysclk;                    //store calculated cpu freq
     static uint32_t m_refoclk;                   //store calculated refo in clk
     static uint32_t m_extclk;
@@ -138,36 +141,8 @@ struct Osc {
     static const uint8_t m_mul_lookup[7];
 
     enum IDSTAT { IRQ = 1, DMA = 2 };           //irq,dma status
-
     static IDSTAT       unlock_irq  ();         //unlock- irq's off, dma susp
     static void         lock_irq    (IDSTAT);   //lock-, restore irq, dma
-
-    enum {
-        OSCCON = 0xBF802680,
-            CLKLOCK = 1<<7,
-            SLPEN = 1<<4,
-            CF = 1<<3,
-            SOSCEN = 1<<1,
-            OSWEN = 1<<0,
-        SPLLCON = 0xBF8026A0,
-            PLLICLK = 1<<7,
-        REFO1CON = 0xBF802720,
-            ON = 1<<15,
-            SIDL = 1<<13,
-            OE = 1<<12,
-            RSLP = 1<<11,
-            DIVSWEN = 1<<9,
-            ACTIVE = 1<<8,
-        REFO1TRIM = 0xBF802730,
-        CLKSTAT = 0xBF802770,
-        OSCTUN = 0xBF802880,
-            /* ON = 1<<15, SIDL = 1<<13, from refo1con*/
-            SRC = 1<<12,
-            LOCK = 1<<11,
-            POL = 1<<10,
-            ORNG = 1<<9,
-            ORPOL = 1<<8
-    };
 
 };
 

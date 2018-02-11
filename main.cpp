@@ -9,8 +9,8 @@
  =============================================================================*/
 
 //try different apps
-#define MAIN1 //simple blink 2 leds, rgb led's
-//#define MAIN2 //most peripherals touched
+//#define MAIN1 //simple blink 2 leds, rgb led's
+#define MAIN2 //most peripherals touched
 
 
 //=============================================================================
@@ -247,7 +247,7 @@ struct Led12 {
 
     private:
 
-    Pins m_pot{Pins::AN14}; //check pot val via adc 
+    Pins m_pot{Pins::AN14}; //check pot val via adc
     Pins m_led1{Pins::D3, Pins::OUT};
     Pins m_led2{Pins::C13, Pins::OUT};
     bool m_led1_state{false};

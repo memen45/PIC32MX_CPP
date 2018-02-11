@@ -3,8 +3,6 @@
 //Delay using Coprocessor0 Count
 
 #include <cstdint>
-#include "Cp0.hpp"
-#include "Osc.hpp"
 
 /*
     all delays limited to 300sec (if exceeded, will be 300sec)
@@ -31,9 +29,6 @@ class Delay {
     void    set_s       (uint16_t);     //set s wait time, no block (poll)
 
     private:
-
-    static Cp0 cp0;
-    static Osc osc;
 
     void    set_count   (uint32_t);
 

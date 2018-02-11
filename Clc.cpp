@@ -1,4 +1,18 @@
 #include "Clc.hpp"
+#include "Reg.hpp"
+
+enum {
+    CLC1CON = 0xBF802480, CLCXCON_SPACING = 32, //spacing in words
+        ON = 1<<15,
+        SIDL = 1<<13,
+        INTP = 1<<11,
+        INTN = 1<<10,
+        LCOE = 1<<7,
+        LCOUT = 1<<6,
+        LCPOL = 1<<5,
+    CLCXSEL = 4, //offsets in words
+    CLCXGLS = 8, //offsets in words
+};
 
 //=============================================================================
                     Clc::Clc        (CLCX e)
@@ -11,64 +25,64 @@
     void            Clc::gate_inv       (GXPOL e, bool tf)
 //=============================================================================
 {
-    r.setbit(m_clcx_con, e, tf);
+    Reg::setbit(m_clcx_con, e, tf);
 }
 
 //=============================================================================
     void            Clc::on             (bool tf)
 //=============================================================================
 {
-    r.setbit(m_clcx_con, ON, tf);
+    Reg::setbit(m_clcx_con, ON, tf);
 }
 
 //=============================================================================
     void            Clc::stop_idle      (bool tf)
 //=============================================================================
 {
-    r.setbit(m_clcx_con, SIDL, tf);
+    Reg::setbit(m_clcx_con, SIDL, tf);
 }
 
 //=============================================================================
     void            Clc::intp           (bool tf)
 //=============================================================================
 {
-    r.setbit(m_clcx_con, INTP, tf);
+    Reg::setbit(m_clcx_con, INTP, tf);
 }
 
 //=============================================================================
     void            Clc::intn           (bool tf)
 //=============================================================================
 {
-    r.setbit(m_clcx_con, INTN, tf);
+    Reg::setbit(m_clcx_con, INTN, tf);
 }
 
 //=============================================================================
     void            Clc::out            (bool tf)
 //=============================================================================
 {
-    r.setbit(m_clcx_con, LCOE, tf);
+    Reg::setbit(m_clcx_con, LCOE, tf);
 }
 
 //=============================================================================
     bool            Clc::out            ()
 //=============================================================================
 {
-    return r.anybit(m_clcx_con, LCOUT);
+    return Reg::anybit(m_clcx_con, LCOUT);
 }
 
 //=============================================================================
     void            Clc::out_inv        (bool tf)
 //=============================================================================
 {
-    r.setbit(m_clcx_con, LCPOL, tf);
+    Reg::setbit(m_clcx_con, LCPOL, tf);
 }
 
 //=============================================================================
     void            Clc::mode           (MODE e)
 //=============================================================================
 {
-    r.clrbit(m_clcx_con, LSR);
-    r.setbit(m_clcx_con, e);
+    Reg::clrbit(m_clcx_con, LSR);
+    Reg::setbit(m_clcx_con, e);
 }
 
 //input select, n = 1-4, v = 0-7 (invalid args masked to good vals)
@@ -77,8 +91,8 @@
 //=============================================================================
 {
     n -= 1; n and_eq 3; n <<= 2; v and_eq 7;
-    r.clrbit(m_clcx_con + CLCXSEL, 7<<n);
-    r.setbit(m_clcx_con + CLCXSEL, v<<n);
+    Reg::clrbit(m_clcx_con + CLCXSEL, 7<<n);
+    Reg::setbit(m_clcx_con + CLCXSEL, v<<n);
 }
 
 //or all in in shot with precomputed value
@@ -86,7 +100,7 @@
     void            Clc::in_sel         (uint32_t v)
 //=============================================================================
 {
-    r.val(m_clcx_con + CLCXSEL, v);
+    Reg::val(m_clcx_con + CLCXSEL, v);
 }
 
 //gate select, n = 1-4 (invalid gate masked to good gate)
@@ -95,8 +109,8 @@
 //=============================================================================
 {
     n -= 1; n and_eq 3; n <<= 3;
-    r.clrbit(m_clcx_con + CLCXGLS, 15<<n);
-    r.setbit(m_clcx_con + CLCXGLS, v<<n);
+    Reg::clrbit(m_clcx_con + CLCXGLS, 15<<n);
+    Reg::setbit(m_clcx_con + CLCXGLS, v<<n);
 }
 
 //or all in in shot with precomputed value
@@ -104,5 +118,5 @@
     void            Clc::gate_sel       (uint32_t v)
 //=============================================================================
 {
-    r.val(m_clcx_con+CLCXGLS, v);
+    Reg::val(m_clcx_con+CLCXGLS, v);
 }

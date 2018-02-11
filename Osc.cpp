@@ -1,10 +1,39 @@
 #include "Osc.hpp"
-
 #include "Timer1.hpp"
 #include "Cp0.hpp"
 #include "Dma.hpp"
 #include "Wdt.hpp"
 #include "Resets.hpp"
+#include "Reg.hpp"
+#include "Sys.hpp"
+#include "Irq.hpp"
+
+enum {
+    OSCCON = 0xBF802680,
+        CLKLOCK = 1<<7,
+        SLPEN = 1<<4,
+        CF = 1<<3,
+        SOSCEN = 1<<1,
+        OSWEN = 1<<0,
+    SPLLCON = 0xBF8026A0,
+        PLLICLK = 1<<7,
+    REFO1CON = 0xBF802720,
+        ON = 1<<15,
+        SIDL = 1<<13,
+        OE = 1<<12,
+        RSLP = 1<<11,
+        DIVSWEN = 1<<9,
+        ACTIVE = 1<<8,
+    REFO1TRIM = 0xBF802730,
+    CLKSTAT = 0xBF802770,
+    OSCTUN = 0xBF802880,
+        /* ON = 1<<15, SIDL = 1<<13, from refo1con*/
+        SRC = 1<<12,
+        LOCK = 1<<11,
+        POL = 1<<10,
+        ORNG = 1<<9,
+        ORPOL = 1<<8
+};
 
 uint32_t Osc::m_sysclk = 0;
 uint32_t Osc::m_refoclk = 0;
@@ -20,11 +49,11 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     auto            Osc::unlock_irq     () -> IDSTAT
 //=============================================================================
 {
-    uint8_t idstat = ir.all_ison();
-    ir.disable_all();
+    uint8_t idstat = Irq::all_ison();
+    Irq::disable_all();
     idstat or_eq Dma::all_suspend()<<1;
     Dma::all_suspend(true);
-    sys.unlock();
+    Sys::unlock();
     return (IDSTAT)idstat;
 }
 
@@ -33,9 +62,9 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     void            Osc::lock_irq       (IDSTAT idstat)
 //=============================================================================
 {
-    sys.lock();
+    Sys::lock();
     if(not (uint8_t)idstat bitand DMA) Dma::all_suspend(false);
-    if((uint8_t)idstat bitand IRQ) ir.enable_all();
+    if((uint8_t)idstat bitand IRQ) Irq::enable_all();
 }
 
 //osccon
@@ -43,23 +72,23 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     void            Osc::frc_div        (DIVS e)
 //=============================================================================
 {
-    sys.unlock();
-    r.val(OSCCON + 3, e);
-    sys.lock();
+    Sys::unlock();
+    Reg::val(OSCCON + 3, e);
+    Sys::lock();
 }
 
 //=============================================================================
     auto            Osc::frc_div        () -> DIVS
 //=============================================================================
 {
-    return (DIVS)r.val8(OSCCON + 3);
+    return (DIVS)Reg::val8(OSCCON + 3);
 }
 
 //=============================================================================
     auto            Osc::clk_src        () -> CNOSC
 //=============================================================================
 {
-    return (CNOSC)(r.val8(OSCCON + 1)>>4);
+    return (CNOSC)(Reg::val8(OSCCON + 1)>>4);
 }
 
 //=============================================================================
@@ -67,9 +96,9 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 //=============================================================================
 {
     IDSTAT irstat = unlock_irq();
-    r.val(OSCCON + 1, e);
-    r.setbit(OSCCON, OSWEN);
-    while(r.anybit(OSCCON, OSWEN));
+    Reg::val(OSCCON + 1, e);
+    Reg::setbit(OSCCON, OSWEN);
+    while(Reg::anybit(OSCCON, OSWEN));
     lock_irq(irstat);
     m_sysclk = 0;
     sysclk();
@@ -79,7 +108,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     void            Osc::clk_lock       ()
 //=============================================================================
 {
-    r.setbit(OSCCON, CLKLOCK);
+    Reg::setbit(OSCCON, CLKLOCK);
 }
 
 //=============================================================================
@@ -87,14 +116,14 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 //=============================================================================
 {
     //sleep bit only enabled here, then disabled when wakes
-    sys.unlock();
-    r.setbit(OSCCON, SLPEN);
-    sys.lock();
+    Sys::unlock();
+    Reg::setbit(OSCCON, SLPEN);
+    Sys::lock();
     Wdt::reset();
     __asm__ __volatile__ ("wait");
-    sys.unlock();
-    r.clrbit(OSCCON, SLPEN);
-    sys.lock();
+    Sys::unlock();
+    Reg::clrbit(OSCCON, SLPEN);
+    Sys::lock();
 }
 
 //=============================================================================
@@ -119,16 +148,16 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     bool            Osc::clk_bad        ()
 //=============================================================================
 {
-    return r.anybit(OSCCON, CF);
+    return Reg::anybit(OSCCON, CF);
 }
 
 //=============================================================================
     void            Osc::sosc           (bool tf)
 //=============================================================================
 {
-    sys.unlock();
-    r.setbit(OSCCON, SOSCEN, tf);
-    sys.lock();
+    Sys::unlock();
+    Reg::setbit(OSCCON, SOSCEN, tf);
+    Sys::lock();
     while(tf and not ready(SOSCRDY));
 }
 
@@ -136,7 +165,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     bool            Osc::sosc           ()
 //=============================================================================
 {
-    return r.anybit(OSCCON, SOSCEN);
+    return Reg::anybit(OSCCON, SOSCEN);
 }
 
 //spllcon
@@ -144,21 +173,21 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     auto            Osc::pll_div        () -> DIVS
 //=============================================================================
 {
-    return (DIVS)r.val8(SPLLCON + 3);
+    return (DIVS)Reg::val8(SPLLCON + 3);
 }
 
 //=============================================================================
     auto            Osc::pll_mul        () -> PLLMUL
 //=============================================================================
 {
-    return (PLLMUL)r.val8(SPLLCON + 2);
+    return (PLLMUL)Reg::val8(SPLLCON + 2);
 }
 
 //=============================================================================
     auto            Osc::pll_src        () -> PLLSRC
 //=============================================================================
 {
-    return (PLLSRC)r.anybit(SPLLCON, PLLICLK);
+    return (PLLSRC)Reg::anybit(SPLLCON, PLLICLK);
 }
 
 //private, use pll_set to change src
@@ -166,7 +195,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     void            Osc::pll_src        (PLLSRC e)
 //=============================================================================
 {
-    r.setbit(SPLLCON, PLLICLK, e);
+    Reg::setbit(SPLLCON, PLLICLK, e);
     m_refoclk = 0;  //recalculate refo clock
     refoclk();     //as input now may be different
 }
@@ -182,8 +211,8 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     //switch to frc (hardware does nothing if already frc)
     clk_src(FRCDIV);
     //set new pll vals
-    r.val(SPLLCON + 3, d);
-    r.val(SPLLCON + 2, m);
+    Reg::val(SPLLCON + 3, d);
+    Reg::val(SPLLCON + 2, m);
     //pll select
     pll_src(frc); //do after m, so refoclk() sees new m value
     //source to SPLL
@@ -196,14 +225,14 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     void            Osc::refo_div       (uint16_t v)
 //=============================================================================
 {
-    r.val(REFO1CON, v);
+    Reg::val(REFO1CON, v);
 }
 
 //=============================================================================
     void            Osc::refo_trim      (uint16_t v)
 //=============================================================================
 {
-    r.val(REFO1TRIM + 2, v<<7);
+    Reg::val(REFO1TRIM + 2, v<<7);
 }
 
 //=============================================================================
@@ -211,7 +240,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 //=============================================================================
 {
     refoclk(); //calculate if needed
-    r.setbit(REFO1CON, ON);
+    Reg::setbit(REFO1CON, ON);
     while(refo_active() == 0);
 }
 
@@ -227,7 +256,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     void            Osc::refo_off       ()
 //=============================================================================
 {
-    r.clrbit(REFO1CON, ON);
+    Reg::clrbit(REFO1CON, ON);
     while(refo_active());
 }
 
@@ -235,36 +264,36 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     void            Osc::refo_idle      (bool tf)
 //=============================================================================
 {
-    r.setbit(REFO1CON, SIDL, tf);
+    Reg::setbit(REFO1CON, SIDL, tf);
 }
 
 //=============================================================================
     void            Osc::refo_out       (bool tf)
 //=============================================================================
 {
-    r.setbit(REFO1CON, OE, tf);
+    Reg::setbit(REFO1CON, OE, tf);
 }
 
 //=============================================================================
     void            Osc::refo_sleep     (bool tf)
 //=============================================================================
 {
-    r.setbit(REFO1CON, RSLP, tf);
+    Reg::setbit(REFO1CON, RSLP, tf);
 }
 
 //=============================================================================
     void            Osc::refo_divsw     ()
 //=============================================================================
 {
-    r.setbit(REFO1CON, DIVSWEN);
-    while(r.anybit(REFO1CON, DIVSWEN));
+    Reg::setbit(REFO1CON, DIVSWEN);
+    while(Reg::anybit(REFO1CON, DIVSWEN));
 }
 
 //=============================================================================
     bool            Osc::refo_active    ()
 //=============================================================================
 {
-    return r.anybit(REFO1CON, ACTIVE);
+    return Reg::anybit(REFO1CON, ACTIVE);
 }
 
 //anytime source set, get new m_refoclk
@@ -273,10 +302,10 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     void            Osc::refo_src       (ROSEL e)
 //=============================================================================
 {
-    bool ison = r.anybit(REFO1CON, ON);
+    bool ison = Reg::anybit(REFO1CON, ON);
     refo_off();
     if(e == RSOSC) sosc(true);
-    r.val(REFO1CON, e);
+    Reg::val(REFO1CON, e);
     if(ison) refo_on();
     m_refoclk = 0;
     refoclk();
@@ -288,7 +317,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 //=============================================================================
 {
     if(m_refoclk) return m_refoclk; //previously calculated
-    switch(r.val8(REFO1CON)){
+    switch(Reg::val8(REFO1CON)){
         case RSYSCLK:   m_refoclk = sysclk();       break;
         case RPOSC:     m_refoclk = extclk();       break;
         case RFRC:      m_refoclk = m_frcosc_freq;  break;
@@ -332,7 +361,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     bool            Osc::ready          (CLKRDY e)
 //=============================================================================
 {
-    return r.anybit(CLKSTAT, e);
+    return Reg::anybit(CLKSTAT, e);
 }
 
 //osctun
@@ -340,18 +369,18 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     void            Osc::tun_auto       (bool tf)
 //=============================================================================
 {
-    sys.unlock();
-    r.setbit(OSCTUN, ON, tf);
-    sys.lock();
+    Sys::unlock();
+    Reg::setbit(OSCTUN, ON, tf);
+    Sys::lock();
 }
 
 //=============================================================================
     void            Osc::tun_idle       (bool tf)
 //=============================================================================
 {
-    sys.unlock();
-    r.setbit(OSCTUN, SIDL, tf);
-    sys.lock();
+    Sys::unlock();
+    Reg::setbit(OSCTUN, SIDL, tf);
+    Sys::lock();
 }
 
 //=============================================================================
@@ -359,41 +388,41 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 //=============================================================================
 {
     if(e == TSOSC) sosc(true);
-    sys.unlock();
-    r.setbit(OSCTUN, SRC, e);
-    sys.lock();
+    Sys::unlock();
+    Reg::setbit(OSCTUN, SRC, e);
+    Sys::lock();
 }
 
 //=============================================================================
     bool            Osc::tun_lock       ()
 //=============================================================================
 {
-    return r.anybit(OSCTUN, LOCK);
+    return Reg::anybit(OSCTUN, LOCK);
 }
 
 //=============================================================================
     void            Osc::tun_lpol       (bool tf)
 //=============================================================================
 {
-    sys.unlock();
-    r.setbit(OSCTUN, POL, not tf);
-    sys.lock();
+    Sys::unlock();
+    Reg::setbit(OSCTUN, POL, not tf);
+    Sys::lock();
 }
 
 //=============================================================================
     bool            Osc::tun_rng        ()
 //=============================================================================
 {
-    return r.anybit(OSCTUN, ORNG);
+    return Reg::anybit(OSCTUN, ORNG);
 }
 
 //=============================================================================
     void            Osc::tun_rpol       (bool tf)
 //=============================================================================
 {
-    sys.unlock();
-    r.setbit(OSCTUN, ORPOL, not tf);
-    sys.lock();
+    Sys::unlock();
+    Reg::setbit(OSCTUN, ORPOL, not tf);
+    Sys::lock();
 }
 
 //=============================================================================
@@ -403,16 +432,16 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     //linit -32 to +31
     if(v > 31) v = 31;
     if(v < -32) v = -32;
-    sys.unlock();
-    r.val(OSCTUN, v);
-    sys.lock();
+    Sys::unlock();
+    Reg::val(OSCTUN, v);
+    Sys::lock();
 }
 
 //=============================================================================
     int8_t          Osc::tun_val        ()
 //=============================================================================
 {
-    int8_t v = r.val8(OSCTUN);
+    int8_t v = Reg::val8(OSCTUN);
     if(v > 31) v or_eq 0xc0; //is negative, sign extend to 8bits
     return v;
 }

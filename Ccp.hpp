@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include "Reg.hpp"
 
 //MCCP 1-3, SCCP 4-9
 
@@ -11,17 +10,30 @@ struct Ccp  {
     enum CCPX {
         CCP1 = 0, CCP2, CCP3, CCP4, CCP5, CCP6, CCP7, CCP8, CCP9
     };
-
-    /*constexpr*/ Ccp(CCPX);
+    Ccp(CCPX);
 
     //ccpxcon1
     enum OPOSTSRC : bool { TMRIRQ = 0, EVTTRG };
+    void            outscale_src    (OPOSTSRC);
+
+    void            retrigger       (bool);
+    void            outscale        (uint8_t);
+    void            trig_mode       ();
+    void            sync_mode       ();
+    void            oneshot         (bool);
+    void            sync_altout     (bool);
 
     enum SYNC : uint8_t {
         PR = 0, MCCPME, MCCP1, SCCP2, SCCP3, INT0 = 9, INT1, INT2, INT3, INT4,
         SCCP8, SCCP9, CLC1, CLC2, CLC3, CLC4, COMP1 = 24, COMP2, COMP3, ADC,
         TMR = 31, TRIGSOFT = 31
     };
+    void            sync_src        (SYNC);
+
+    void            on              (bool);
+    void            stop_idle       (bool);
+    void            stop_sleep      (bool);
+    void            sync_tmr        (bool);
 
     enum CLKSEL : uint8_t {
         SYSCLK = 0, REFO1, SOSC,
@@ -29,8 +41,10 @@ struct Ccp  {
         CLC2SCCP5 = 3, CLC3SCCP6 = 3, CLC4SCCP7 = 3, CLC1SCCP8 = 3,
         CLC1SCCP9 = 3, TCKIB = 6, TCKIA = 7
     };
+    void            clk_src         (CLKSEL);
 
     enum TMRPS : uint8_t { PS1 = 0, PS4, PS16, PS64 };
+    void            tmr_prescale    (TMRPS);
 
     enum MODE : uint8_t {
         //mode          <5>     <4>        <3:0>
@@ -63,36 +77,31 @@ struct Ccp  {
         CAP16RISE16 =   0<<5|   1<<4|       5,
         CAP16RISE32 =   1<<5|   1<<4|       5
     };
-
-    void            outscale_src    (OPOSTSRC);
-    void            retrigger       (bool);
-    void            outscale        (uint8_t);
-    void            trig_mode       ();
-    void            sync_mode       ();
-    void            oneshot         (bool);
-    void            sync_altout     (bool);
-    void            sync_src        (SYNC);
-    void            on              (bool);
-    void            stop_idle       (bool);
-    void            stop_sleep      (bool);
-    void            sync_tmr        (bool);
-    void            clk_src         (CLKSEL);
-    void            tmr_prescale    (TMRPS);
     void            mode            (MODE);
 
     //ccpxcon2
+    void            out_sync        (bool);
+
     enum OUTPINS : uint8_t {
         OCF = 1<<5, OCE = 1<<4, OCD = 1<<3,
         OCC = 1<<2, OCB = 1<<1, OCA = 1<<0
     };
+    void            out_pins        (OUTPINS);
 
     enum ICGSM : uint8_t { LEVEL = 0, RISEON, FALLOFF  };
+    void            gate_mode       (ICGSM);
 
     enum AUXOUT : uint8_t { OFF = 0, ROLLOVER, SIGNALOUT, CAPCOMPEVT };
+    void            out_aux         (AUXOUT);
 
     enum ICS : uint8_t {
         ICMX = 0, ICOMP1, ICOMP2, ICOMP3, ICLC1, ICLC2, ICLC3, ICLC4
     };
+    void            cap_src         (ICS);
+
+    void            pwm_restart     (bool);
+    void            gate_auto       (bool);
+    void            gate_now        (bool);
 
     enum GATEAUTOSRC : uint8_t {
         OCFB = 1<<7, OCFA = 1<<6,
@@ -103,34 +112,26 @@ struct Ccp  {
         SCCP5_MCCP123 = 1<<3, MCCP2_SCCP4TO9 = 1<<4,
         COMP_3 = 1<<2, COMP_2 = 1<<1, COMP_1 = 1<<0
     };
-
-    void            out_sync        (bool);
-    void            out_pins        (OUTPINS);
-    void            gate_mode       (ICGSM);
-    void            out_aux         (AUXOUT);
-    void            cap_src         (ICS);
-    void            pwm_restart     (bool);
-    void            gate_auto       (bool);
-    void            gate_now        (bool);
     void            gate_autosrc    (GATEAUTOSRC);
 
 
     //ccpxcon3
+    void            out_trigwait    (bool);
+    void            oneshot_extend  (uint8_t);
+
     enum OUTM : uint8_t {
         STEERABLE = 0, PUSHPULL, HALFBRIDGE, BRUSHREV = 4, BRUSHFWD, SCAN
     };
+    void            out_mode        (OUTM);
 
     enum POLARITY : bool { ACTHIGH = 0, ACTLOW };
-
-    enum SHUTDOWN : uint8_t { HIGHIMP = 0, INACTIVE, ACTIVE };
-
-    void            out_trigwait    (bool);
-    void            oneshot_extend  (uint8_t);
-    void            out_mode        (OUTM);
     void            polarity_ace    (POLARITY);
     void            polarity_bdf    (POLARITY);
+
+    enum SHUTDOWN : uint8_t { HIGHIMP = 0, INACTIVE, ACTIVE };
     void            shutdown_ace    (SHUTDOWN);
     void            shutdown_bdf    (SHUTDOWN);
+
     void            dead_time       (uint8_t);
 
     //ccpxstat
@@ -182,78 +183,7 @@ struct Ccp  {
 
     private:
 
-    Reg r;
-
-    enum : uint32_t {
-        CCP1CON1 = 0xBF800100, CCPX_SPACING = 0x40,  //spacing in words
-            OPSSRC = 1u<<31,
-            RTRGEN = 1<<30,
-            OPS_SHIFT = 24, OPS_CLR = 15,
-            TRIGEN = 1<<23,
-            ONESHOT = 1<<22,
-            ALTSYNC = 1<<21,
-            SYNC_SHIFT = 16, SYNC_CLR = 31,
-            ON = 1<<15,
-            SIDL = 1<<13,
-            CCPSLP = 1<<12,
-            TMRSYNC = 1<<11,
-            CLKSEL_SHIFT = 8, CLKSEL_CLR = 7,
-            TMRPS_SHIFT = 6, TMRPS_CLR = 3,
-            T32 = 1<<5, //combined into MODE
-            CCSEL = 1<<4, //combined into MODE
-            MOD_SHIFT = 0, MOD_CLR = 15,
-            MODE_SHIFT = 0, MODE_CLR = 63,
-        CCPXCON2 = 4, //offset in words from ccp1con1
-            OENSYNC = 1u<<31,
-            OCFEN = 1<<29,
-            OCEEN = 1<<28,
-            OCDEN = 1<<27,
-            OCCEN = 1<<26,
-            OCBEN = 1<<25,
-            OCAEN = 1<<24,
-            OCPINS_SHIFT = 24, OCPINS_CLR = 63,
-            ICGSM_SHIFT = 22, ICGSM_CLR = 3,
-            AUXOUT_SHIFT = 19, AUXOUT_CLR = 3,
-            ICS_SHIFT = 16, ICS_CLR = 7,
-            PWMRSEN = 1<<15,
-            ASDGM = 1<<14,
-            SSDG = 1<<12,
-            ASDG_SHIFT = 0, ASDG_CLR = 255,
-        CCPXCON3 = 8,
-            OETRIG = 1u<<31,
-            OSCNT_SHIFT = 28, OSCNT_CLR = 7,
-            OUTM_SHIFT = 24, OUTM_CLR = 7,
-            POLACE = 1<<21,
-            POLBDF = 1<<20,
-            PSSACE_SHIFT = 18, PSSACE_CLR = 3,
-            PSSBDF_SHIFT = 16, PSSBDF_CLR = 3,
-            DT_SHIFT = 0, DT_CLR = 63,
-        CCPXSTAT = 12,
-            PRLWIP = 1<<20,
-            TMRHWIP = 1<<19,
-            TMRLWIP = 1<<18,
-            RBWIP = 1<<17,
-            RAWIP = 1<<16,
-            ICGARM = 1<<10,
-            CCPTRIG = 1<<7,
-            TRSET = 1<<6,
-            TRCLR = 1<<5,
-            ASEVT = 1<<4,
-            SCEVT = 1<<3,
-            ICDIS = 1<<2,
-            ICOV = 1<<1,
-            ICBNE = 1<<0,
-        CCPXTMR = 16,
-        CCPXPR = 20,
-        CCPXRA = 24,
-        CCPXRB = 28,
-        CCPXBUF = 32,
-    };
-
-    using vbyte_ptr = volatile uint8_t*;
-    using vword_ptr = volatile uint32_t*;
-
-    vword_ptr m_ccpx_con;
+    volatile uint32_t* m_ccpx_con;
 };
 
 /*

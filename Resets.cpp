@@ -1,5 +1,28 @@
 #include "Resets.hpp"
 #include "Irq.hpp"
+#include "Sys.hpp"
+#include "Reg.hpp"
+
+enum : uint32_t {
+    RCON = 0xBF8026E0,
+        PORIO = 1u<<31,
+        PORCORE = 1<<30,
+        BCFGERR = 1<<27,
+        BCFGFAIL = 1<<26,
+        CMR = 1<<9,
+    RSWRST = 0xBF8026F0,
+        SWRST = 1,
+    RNMICON = 0xBF802700,
+        WDTR = 1<<24,
+        SWNMI = 1<<23,
+        GNMI = 1<<19,
+        CF = 1<<17,
+        WDTS = 1<<16,
+    PWRCON = 0xBF802710,
+        SBOREN = 1<<2,
+        RETEN = 1<<0,
+        VREGS = 1<<0
+};
 
 //save rcon on boot (only one time)
 static uint32_t boot_flags;
@@ -14,8 +37,8 @@ static uint32_t boot_flags;
     //boot_flags var will be 0 on any reset as c runtime will clear
     //before this function can run
     if(boot_flags == 0){
-        boot_flags = r.val(RCON);  //save
-        r.val(RCON, 0);            //then clear all flags (for next reset)
+        boot_flags = Reg::val(RCON);  //save
+        Reg::val(RCON, 0);            //then clear all flags (for next reset)
     }
     //check for por first- specific combo
     if(boot_flags == (PORIO | PORCORE | BOR | POR)) return POR;
@@ -44,9 +67,9 @@ static uint32_t boot_flags;
 //=============================================================================
 {
     Irq::disable_all();
-    sys.unlock();
-    r.setbit(RSWRST, SWRST);
-    r.val(RSWRST);
+    Sys::unlock();
+    Reg::setbit(RSWRST, SWRST);
+    Reg::val(RSWRST);
     for(;;);
 }
 
@@ -55,47 +78,47 @@ static uint32_t boot_flags;
     bool        Resets::nmi_wdt             ()
 //=============================================================================
 {
-    return r.anybit(RNMICON, WDTR);
+    return Reg::anybit(RNMICON, WDTR);
 }
 
 //=============================================================================
     bool        Resets::nmi_sw              ()
 //=============================================================================
 {
-    return r.anybit(RNMICON, SWNMI);
+    return Reg::anybit(RNMICON, SWNMI);
 }
     bool        Resets::nmi_gen             ()
 //=============================================================================
 {
-    return r.anybit(RNMICON, GNMI);
+    return Reg::anybit(RNMICON, GNMI);
 }
 
 //=============================================================================
     bool        Resets::nmi_clkf            ()
 //=============================================================================
 {
-    return r.anybit(RNMICON, CF);
+    return Reg::anybit(RNMICON, CF);
 }
 
 //=============================================================================
     bool        Resets::nmi_wdts            ()
 //=============================================================================
 {
-    return r.anybit(RNMICON, WDTS);
+    return Reg::anybit(RNMICON, WDTS);
 }
 
 //=============================================================================
     void        Resets::nmi_wdtcount        (uint16_t v)
 //=============================================================================
 {
-    r.val(RNMICON, v);
+    Reg::val(RNMICON, v);
 }
 
 //=============================================================================
     void        Resets::nmi_wdtclr          ()
 //=============================================================================
 {
-    r.clrbit(RNMICON, WDTR);
+    Reg::clrbit(RNMICON, WDTR);
 }
 
 //PWRCON
@@ -103,25 +126,25 @@ static uint32_t boot_flags;
     void        Resets::bor                 (bool tf)
 //=============================================================================
 {
-    sys.unlock();
-    r.setbit(PWRCON, SBOREN, tf);
-    sys.lock();
+    Sys::unlock();
+    Reg::setbit(PWRCON, SBOREN, tf);
+    Sys::lock();
 }
 
 //=============================================================================
     void        Resets::reten               (bool tf)
 //=============================================================================
 {
-    sys.unlock();
-    r.setbit(PWRCON, RETEN, tf);
-    sys.lock();
+    Sys::unlock();
+    Reg::setbit(PWRCON, RETEN, tf);
+    Sys::lock();
 }
 
 //=============================================================================
     void        Resets::vregs               (bool tf)
 //=============================================================================
 {
-    sys.unlock();
-    r.setbit(PWRCON, VREGS, tf);
-    sys.lock();
+    Sys::unlock();
+    Reg::setbit(PWRCON, VREGS, tf);
+    Sys::lock();
 }

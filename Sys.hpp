@@ -1,18 +1,17 @@
 #pragma once
 
-#include "Irq.hpp"
-#include "Reg.hpp"
-#include "Dma.hpp"
+#include <cstdint>
 
 class Sys {
 
     public:
 
     //cfgcon
-    enum BMXARB : uint8_t { CPUHIGH = 0, CPULOW, RROBIN };
-
     static void     bus_err     (bool);
+
+    enum BMXARB : uint8_t { CPUHIGH = 0, CPULOW, RROBIN };
     static void     bus_mode    (BMXARB);
+
     static void     ram_exec    (uint8_t);
     static void     jtag        (bool);
 
@@ -34,34 +33,6 @@ class Sys {
     //misc
     //static uint32_t flash_size  ();
     //static uint32_t ram_size    ();
-
-    private:
-
-    static Reg r;
-    static Irq ir;
-
-    enum {
-        CFGCON = 0xBF803640,
-            BMXERRDIS = 1<<27,
-            BMXARB_SHIFT = 24, BMXARB_CLR = 3,
-            EXECADDR_SHIFT = 16, EXECADDR_CLR = 255,
-            JTAGEN = 1<<3,
-        DEVID = 0xBF803660,
-            VER_SHIFT = 28, VER_CLR = 15,
-            ID_SHIFT = 0, ID_CLR = 0xFFFFFFF,
-        SYSKEY = 0xBF803670,
-            MAGIC1 = 0xAA996655,
-            MAGIC2 = 0x556699AA,
-        ANCFG = 0xBF802300,
-            VBGADC = 1<<2,
-            VBGCMP = 1<<1,
-        UDID1 = 0xBF801840,
-        UDID2 = 0xBF801850,
-        UDID3 = 0xBF801860,
-        UDID4 = 0xBF801870,
-        UDID5 = 0xBF801880,
-
-    };
 
 };
 

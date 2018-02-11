@@ -3,8 +3,6 @@
 //Peripheral Module Disable
 
 #include <cstdint>
-#include "Reg.hpp"
-#include "Sys.hpp"
 
 struct Pmd {
 
@@ -31,16 +29,7 @@ struct Pmd {
 
     private:
 
-    static Reg r;
-    static Sys sys;
-
     static void     unlock  ();
     static void     lock    ();
-
-    enum {
-        PMDCON = 0xBF8035B0,
-            PMDLOCK = 1<<11,
-        PMD1 = 0xBF8035C0
-    };
 
 };

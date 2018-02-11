@@ -3,48 +3,8 @@
 //ADC
 
 #include <cstdint>
-#include "Reg.hpp"
 
 struct Adc {
-
-    //adc data format
-    enum FORM : uint8_t {
-        INT16 = 0, SINT16, FR16, SFR16, INT32, SINT32, FR32, SFR32
-    };
-
-    //trigger source select
-    enum SSRC : uint8_t {
-        SOFT = 0, INT0, TMR3, TMR1 = 5, TMR1SLEP, AUTO, MCCP1, MCCP2, MCCP3,
-        SCCP4, SCCP5, SCCP6, CLC1, CLC2
-    };
-
-    //vref config
-    enum VCFG :uint8_t {
-        VDD_VSS = 0, VDD_EXTN, EXTP_VSS, EXTP_EXTN
-    };
-
-    //auto-scan interrupt mode
-    enum ASINT : uint8_t { NONE = 0, DET, COMP, DETCOMP };
-
-    //write mode
-    enum WM : uint8_t { LEGACY = 0, CONVSAV, COMPONLY };
-
-    //compare mode
-    enum CM :uint8_t { LT = 0, GT, INWIN, OUTWIN };
-
-    //channel select
-    enum CH0SA : uint8_t {
-        AN0 = 0, AN1, AN2, AN3, AN4, AN5, AN6, AN7, AN8, AN9, AN10, AN11,
-        AN12,AN13, AN14, AN15, AN16, AN17, AN18, AN19,
-        VDD = 27, VBG, AVSS, AVDD,
-        END = 255
-    };
-
-    //minimal conversion times for frc/pbclk(24MHz) for 10/12bits
-    enum CONVTIME { FRC10BIT = 1, FRC12BIT, PBCLK10BIT, PBCLK12BIT };
-
-    //clock source
-    enum CLK { PBCLK = 0, FRC };
 
     //ADC1BUFn
     static uint16_t     read            (uint8_t);
@@ -53,8 +13,18 @@ struct Adc {
     //ADC1CON1
     static void         on              (bool);
     static void         stop_idle       (bool);
+
+    enum FORM : uint8_t {
+        INT16 = 0, SINT16, FR16, SFR16, INT32, SINT32, FR32, SFR32
+    };
     static void         format          (FORM);
+
+    enum SSRC : uint8_t {
+        SOFT = 0, INT0, TMR3, TMR1 = 5, TMR1SLEP, AUTO, MCCP1, MCCP2, MCCP3,
+        SCCP4, SCCP5, SCCP6, CLC1, CLC2
+    };
     static void         trig_sel        (SSRC);
+
     static void         mode_12bit      (bool);
     static void         samp_auto       (bool);
     static void         samp            (bool);
@@ -62,7 +32,11 @@ struct Adc {
     static bool         done            ();
 
     //ADC1CON2
+    enum VCFG :uint8_t {
+        VDD_VSS = 0, VDD_EXTN, EXTP_VSS, EXTP_EXTN
+    };
     static void         vref_cfg        (VCFG);
+
     static void         offset_cal      (bool);
     static void         buf_reg         (bool);
     static void         scan            (bool);
@@ -71,7 +45,9 @@ struct Adc {
     static void         buf_split       (bool);
 
     //ADC1CON3
+    enum CLK { PBCLK = 0, FRC };
     static void         clk_src         (CLK);
+
     static void         samp_extend     (bool);
     static void         samp_time       (uint8_t);
     static void         conv_time       (uint8_t = 4);
@@ -80,62 +56,38 @@ struct Adc {
     static void         scan_auto       (bool);
     static void         low_power       (bool);
     static void         bandgap         (bool);
+
+    enum ASINT : uint8_t { NONE = 0, DET, COMP, DETCOMP };
     static void         scan_autoirq    (ASINT);
+
+    enum WM : uint8_t { LEGACY = 0, CONVSAV, COMPONLY };
     static void         write_mode      (WM);
+
+    enum CM :uint8_t { LT = 0, GT, INWIN, OUTWIN };
     static void         compare_mode    (CM);
 
     //ADC1CHS
+    enum CH0SA : uint8_t {
+        AN0 = 0, AN1, AN2, AN3, AN4, AN5, AN6, AN7, AN8, AN9, AN10, AN11,
+        AN12,AN13, AN14, AN15, AN16, AN17, AN18, AN19,
+        VDD = 27, VBG, AVSS, AVDD,
+        END = 255
+    };
     static void         ch_sel          (CH0SA);
     static void         ch_sel          (uint8_t);
 
     //ADC1SS
     static void         ch_scan         (CH0SA, bool);
     static void         ch_scan         (CH0SA*);
+
     static void         ch_scan         (uint32_t);
 
     //ADC1CHIT
     static bool         ch_hit          (CH0SA);
     static uint32_t     ch_hit          ();
 
-    private:
-
-    static Reg r;
-
-    enum {
-        ADC1BUF0 = 0xBF802100, ADC1BUF_SPACING = 0x10, ADC1BUF_LAST = 21,
-        ADC1CON1 = 0xBF802260,
-            ON = 1<<15,
-            SIDL = 1<<13,
-            FORM_SHIFT = 8, FORM_CLR = 7,
-            SSRC_SHIFT = 4, SSRC_CLR = 15,
-            MODE12 = 1<<3,
-            ASAM = 1<<2,
-            SAMP = 1<<1,
-            DONE = 1<<0,
-        ADC1CON2 = 0xBF802270,
-            VCFG_SHIFT = 13, VCFG_CLR = 7,
-            OFFCAL = 1<<12,
-            BUFREGEN = 1<<11,
-            CSCNA = 1<<10,
-            BUFS = 1<<7,
-            SMPI_SHIFT = 2, SMPI_CLR = 7,
-            BUFM = 1<<1,
-        ADC1CON3 = 0xBF802280,
-            ADRC = 1<<15,
-            EXTSAM = 1<<14,
-            SAMC_SHIFT = 8, SAMC_CLR = 31,
-        ADC1CHS = 0xBF802290,
-        ADC1CSS = 0xBF8022A0,
-        ADC1CON5 = 0xBF8022C0,
-            ASEN = 1<<15,
-            LPEN = 1<<14,
-            BGREQ = 1<<12,
-            ASINT_SHIFT = 8, ASINT_CLR = 3,
-            WM_SHIFT = 2, WM_CLR = 3,
-            CM_SHIFT = 0, CM_CLR = 3,
-        ADC1CHIT = 0xBF8022D0
-    };
-
+    //minimal conversion times for frc/pbclk(24MHz) for 10/12bits
+    enum CONVTIME { FRC10BIT = 1, FRC12BIT, PBCLK10BIT, PBCLK12BIT };
 };
 
 

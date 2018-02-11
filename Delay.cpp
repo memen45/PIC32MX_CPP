@@ -1,4 +1,6 @@
 #include "Delay.hpp"
+#include "Cp0.hpp"
+#include "Osc.hpp"
 
 //Delay functions
 
@@ -6,7 +8,7 @@
     bool        Delay::expired              ()
 //=============================================================================
 {
-    if((cp0.count() - m_start) >= m_countn) m_expired = true;
+    if((Cp0::count() - m_start) >= m_countn) m_expired = true;
     return m_expired;
 }
 
@@ -14,7 +16,7 @@
     void        Delay::restart              ()
 //=============================================================================
 {
-    m_start = cp0.count();
+    m_start = Cp0::count();
     m_expired = false;
 }
 
@@ -73,7 +75,7 @@
 //=============================================================================
 {
     restart();
-    m_countn = osc.sysclk() / 2000000 * n;
+    m_countn = Osc::sysclk() / 2000000 * n;
 }
 
 

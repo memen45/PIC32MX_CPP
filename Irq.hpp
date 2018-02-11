@@ -3,9 +3,20 @@
 //Interrupt
 
 #include <cstdint>
-#include "Reg.hpp"
 
 struct Irq {
+
+    static void     disable_all     ();
+    static void     enable_all      ();
+    static bool     all_ison        ();
+    static void     proxtimer       (uint8_t);
+
+    enum EINTXPOL : bool { FALLING = 0, RISING };
+    static void     eint4_pol       (EINTXPOL);
+    static void     eint3_pol       (EINTXPOL);
+    static void     eint2_pol       (EINTXPOL);
+    static void     eint1_pol       (EINTXPOL);
+    static void     eint0_pol       (EINTXPOL);
 
     //irq vector numbers
     enum IRQ_VN : uint8_t {
@@ -51,8 +62,10 @@ struct Irq {
         DMA0 = 98, DMA1, DMA2, DMA3 = 101,
         END = 255
     };
-
-    enum EINTXPOL : bool { FALLING = 0, RISING };
+    static void     flag_clr        (IRQ_VN);
+    static bool     flag            (IRQ_VN);
+    static void     on              (IRQ_VN, bool);
+    static void     init            (IRQ_VN, uint8_t, uint8_t, bool);
 
     //to create a list (array) of irq's to init/enable
     using irq_list_t = struct {
@@ -61,41 +74,9 @@ struct Irq {
         uint8_t s;      //sub-priority
         bool en;        //enable
     };
-
-    static void     disable_all     ();
-    static void     enable_all      ();
-    static bool     all_ison        ();
-    static void     proxtimer       (uint8_t);
-    static void     eint4_pol       (EINTXPOL);
-    static void     eint3_pol       (EINTXPOL);
-    static void     eint2_pol       (EINTXPOL);
-    static void     eint1_pol       (EINTXPOL);
-    static void     eint0_pol       (EINTXPOL);
-    static void     flag_clr        (IRQ_VN);
-    static bool     flag            (IRQ_VN);
-    static void     on              (IRQ_VN, bool);
-    static void     init            (IRQ_VN, uint8_t, uint8_t, bool);
     static void     init            (irq_list_t*);
+
     static void     shadow_set      (uint8_t, bool);
-
-    private:
-
-    static Reg r;
-
-    enum {
-        INTCON = 0xBF80F000,
-            TPC_SHIFT = 8, TPC_CLR = 7,
-            INT4EP = 1<<4,
-            INT3EP = 1<<3,
-            INT2EP = 1<<2,
-            INT1EP = 1<<1,
-            INT0EP = 1<<0,
-        PRISS = 0xBF80F010,
-        INTSTAT = 0xBF80F020,
-        IFS_BASE = 0xBF80F040,
-        IEC_BASE = 0xBF80F0C0,
-        IPC_BASE = 0xBF80F140
-    };
 
 };
 

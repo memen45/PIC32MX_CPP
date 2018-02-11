@@ -1,4 +1,20 @@
 #include "Irq.hpp"
+#include "Reg.hpp"
+
+enum {
+    INTCON = 0xBF80F000,
+        TPC_SHIFT = 8, TPC_CLR = 7,
+        INT4EP = 1<<4,
+        INT3EP = 1<<3,
+        INT2EP = 1<<2,
+        INT1EP = 1<<1,
+        INT0EP = 1<<0,
+    PRISS = 0xBF80F010,
+    INTSTAT = 0xBF80F020,
+    IFS_BASE = 0xBF80F040,
+    IEC_BASE = 0xBF80F0C0,
+    IPC_BASE = 0xBF80F140
+};
 
 //=============================================================================
     void        Irq::disable_all        ()
@@ -25,43 +41,43 @@
     void        Irq::proxtimer          (uint8_t n)
 //=============================================================================
 { //n = priority 0-7
-    r.clrbit(INTCON, TPC_CLR<<TPC_SHIFT);
-    r.setbit(INTCON, (n bitand TPC_CLR)<<TPC_SHIFT);
+    Reg::clrbit(INTCON, TPC_CLR<<TPC_SHIFT);
+    Reg::setbit(INTCON, (n bitand TPC_CLR)<<TPC_SHIFT);
 }
 
 //=============================================================================
     void        Irq::eint4_pol          (EINTXPOL e)
 //=============================================================================
 {
-    r.setbit(INTCON, INT4EP, e);
+    Reg::setbit(INTCON, INT4EP, e);
 }
 
 //=============================================================================
     void        Irq::eint3_pol          (EINTXPOL e)
 //=============================================================================
 {
-    r.setbit(INTCON, INT3EP, e);
+    Reg::setbit(INTCON, INT3EP, e);
 }
 
 //=============================================================================
     void        Irq::eint2_pol          (EINTXPOL e)
 //=============================================================================
 {
-    r.setbit(INTCON, INT2EP, e);
+    Reg::setbit(INTCON, INT2EP, e);
 }
 
 //=============================================================================
     void        Irq::eint1_pol          (EINTXPOL e)
 //=============================================================================
 {
-    r.setbit(INTCON, INT1EP, e);
+    Reg::setbit(INTCON, INT1EP, e);
 }
 
 //=============================================================================
     void        Irq::eint0_pol          (EINTXPOL e)
 //=============================================================================
 {
-    r.setbit(INTCON, INT0EP, e);
+    Reg::setbit(INTCON, INT0EP, e);
 }
 
 //note- the following offsets calculated in bytes as the register
@@ -76,21 +92,21 @@
     void        Irq::flag_clr           (IRQ_VN e)
 //=============================================================================
 {
-    r.clrbit(IFS_BASE + ((e / 32) * 16), 1u<<(e % 32));
+    Reg::clrbit(IFS_BASE + ((e / 32) * 16), 1u<<(e % 32));
 }
 
 //=============================================================================
     bool        Irq::flag               (IRQ_VN e)
 //=============================================================================
 {
-    return r.anybit(IFS_BASE + ((e / 32) * 16), 1u<<(e % 32));
+    return Reg::anybit(IFS_BASE + ((e / 32) * 16), 1u<<(e % 32));
 }
 
 //=============================================================================
     void        Irq::on                 (IRQ_VN e, bool tf)
 //=============================================================================
 {
-    r.setbit(IEC_BASE + ((e / 32) * 16), 1u<<(e % 32), tf);
+    Reg::setbit(IEC_BASE + ((e / 32) * 16), 1u<<(e % 32), tf);
 }
 
 //vector 17 example
@@ -107,8 +123,8 @@
 {
     uint32_t priority_shift = 8 * (e % 4);
     pri and_eq 7; sub and_eq 3; pri <<= 2; pri or_eq sub;
-    r.clrbit(IPC_BASE + ((e / 4) * 16), (31<<priority_shift));
-    r.setbit(IPC_BASE + ((e / 4) * 16), (pri<<priority_shift));
+    Reg::clrbit(IPC_BASE + ((e / 4) * 16), (31<<priority_shift));
+    Reg::setbit(IPC_BASE + ((e / 4) * 16), (pri<<priority_shift));
     flag_clr(e);
     on(e, tf);
 }
@@ -132,7 +148,7 @@
 //=============================================================================
 {
     pri and_eq 7; pri <<= 2; //0*4=0 1*4=4, 7*4=28
-    r.setbit(PRISS, 1<<pri, tf);
+    Reg::setbit(PRISS, 1<<pri, tf);
 }
 
 

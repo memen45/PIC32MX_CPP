@@ -1,4 +1,19 @@
 #include "Comp.hpp"
+#include "Reg.hpp"
+
+enum {
+    CMSTAT = 0xBF802300, //same for all
+        SIDL = 1<<13,
+        CVREFSEL = 1<<8,
+    CM1CON = 0xBF802310, CMXCON_SPACING = 8, //spacing in words
+        ON = 1<<15,
+        COE = 1<<14,
+        CPOL = 1<<13,
+        CEVT = 1<<9,
+        COUT = 1<<8,
+        EVPOL_SHIFT = 6, EVPOL_CLR = 3,
+        CREF = 1<<4
+};
 
 //=============================================================================
                 Comp::Comp              (CMX e)
@@ -11,58 +26,58 @@
     void        Comp::on                (bool tf)
 //=============================================================================
 {
-    r.setbit(m_cmpx_con, ON, tf);
+    Reg::setbit(m_cmpx_con, ON, tf);
 }
 
 //=============================================================================
     void        Comp::out               (bool tf)
 //=============================================================================
 {
-    r.setbit(m_cmpx_con, COE, tf);
+    Reg::setbit(m_cmpx_con, COE, tf);
 }
 
 //=============================================================================
     void        Comp::out_inv           (bool tf)
 //=============================================================================
 {
-    r.setbit(m_cmpx_con, CPOL, tf);
+    Reg::setbit(m_cmpx_con, CPOL, tf);
 }
 
 //=============================================================================
     bool        Comp::evt_bit           ()
 //=============================================================================
 {
-    return r.anybit(m_cmpx_con, CEVT);
+    return Reg::anybit(m_cmpx_con, CEVT);
 }
 
 //=============================================================================
     bool        Comp::out_bit           ()
 //=============================================================================
 {
-    return r.anybit(m_cmpx_con, COUT);
+    return Reg::anybit(m_cmpx_con, COUT);
 }
 
 //=============================================================================
     void        Comp::evt_sel           (EVPOL e)
 //=============================================================================
 {
-    r.clrbit(m_cmpx_con, EVPOL_CLR<<EVPOL_SHIFT);
-    r.setbit(m_cmpx_con, e<<EVPOL_SHIFT);
+    Reg::clrbit(m_cmpx_con, EVPOL_CLR<<EVPOL_SHIFT);
+    Reg::setbit(m_cmpx_con, e<<EVPOL_SHIFT);
 }
 
 //=============================================================================
     void        Comp::cref_cxina        (bool tf)
 //=============================================================================
 {
-    r.setbit(m_cmpx_con, CREF, not tf);
+    Reg::setbit(m_cmpx_con, CREF, not tf);
 }
 
 //=============================================================================
     void        Comp::ch_sel            (CCH e)
 //=============================================================================
 {
-    r.clrbit(m_cmpx_con, BGAP);
-    r.setbit(m_cmpx_con, e);
+    Reg::clrbit(m_cmpx_con, BGAP);
+    Reg::setbit(m_cmpx_con, e);
 }
 
 //common static functions
@@ -70,12 +85,12 @@
     void        Comp::stop_idle         (bool tf)
 //=============================================================================
 {
-    r.setbit(CMSTAT, SIDL, tf);
+    Reg::setbit(CMSTAT, SIDL, tf);
 }
 
 //=============================================================================
     void        Comp::cref_sel          (CVREF e)
 //=============================================================================
 {
-    r.setbit(CMSTAT, CVREFSEL, e);
+    Reg::setbit(CMSTAT, CVREFSEL, e);
 }

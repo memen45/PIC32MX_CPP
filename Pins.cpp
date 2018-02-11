@@ -1,5 +1,40 @@
 #include "Pins.hpp"
 #include "Adc.hpp"
+#include "Reg.hpp"
+#include "Sys.hpp"
+
+enum { //offsets from base address, in words
+    TRIS = 0x10>>2, PORT = 0x20>>2, LAT = 0x30>>2, ODC = 0x40>>2,
+    CNPU = 0x50>>2, CNPD = 0x60>>2, CNCON = 0x70>>2, CNEN0 = 0x80>>2,
+    CNSTAT = 0x90>>2, CNEN1 = 0xA0>>2, CNF = 0xB0>>2
+};
+
+enum {
+    ANSELA = 0xBF802BB0, ANSELX_SPACING = 64, //spacing in words
+    //CNCONx
+        ON = 1<<15,
+        CNSTYLE = 1<<11,
+    RPCON = 0xBF802A00,
+        IOLOCK = 1<<11,
+    RPINR1 = 0xBF802A10,
+    RPOR0 = 0xBF802B10
+};
+
+//IOMODE
+// bit  | 4  | 3  |  2   |  1   |  0  |
+//      | PD | PU | ACTL | DOUT | DIN |
+//-----------------------------------------
+//AIN   |    |    |      |      |     | 0
+//IN    |    |    |      |      |  1  | 1
+//INPU  |    |  1 |  1   |      |  1  | 13
+//INPD  |  1 |    |      |      |  1  | 17
+//INL   |    |    |  1   |      |  1  | 5
+//OUT   |    |    |      |   1  |     | 2
+//OUTL  |    |    |  1   |   1  |     | 6
+
+enum : uint8_t { ACTL = 1<<2  }; //IOMODE ACTL bit (active low bit)
+
+using vu32_ptr = volatile uint32_t*;
 
 //Pins
 
@@ -27,21 +62,21 @@
     bool        Pins::pinval        () const
 //=============================================================================
 {
-    return r.anybit(m_pt + PORT, m_pn);
+    return Reg::anybit(m_pt + PORT, m_pn);
 }
 
 //=============================================================================
     bool        Pins::latval        () const
 //=============================================================================
 {
-    return r.anybit(m_pt + LAT, m_pn);
+    return Reg::anybit(m_pt + LAT, m_pn);
 }
 
 //=============================================================================
     void        Pins::latval        (bool tf) const
 //=============================================================================
 {
-    return r.setbit(m_pt + LAT, m_pn, tf);
+    return Reg::setbit(m_pt + LAT, m_pn, tf);
 }
 
 //=============================================================================
@@ -64,35 +99,35 @@
     void        Pins::low           () const
 //=============================================================================
 {
-    r.clrbit(m_pt + LAT, m_pn);
+    Reg::clrbit(m_pt + LAT, m_pn);
 }
 
 //=============================================================================
     void        Pins::high          () const
 //=============================================================================
 {
-    r.setbit(m_pt + LAT, m_pn);
+    Reg::setbit(m_pt + LAT, m_pn);
 }
 
 //=============================================================================
     void        Pins::invert        () const
 //=============================================================================
 {
-    r.flipbit(m_pt + LAT, m_pn);
+    Reg::flipbit(m_pt + LAT, m_pn);
 }
 
 //=============================================================================
     void        Pins::on            () const
 //=============================================================================
 {
-    r.setbit(m_pt + LAT, m_pn, not m_lowison);
+    Reg::setbit(m_pt + LAT, m_pn, not m_lowison);
 }
 
 //=============================================================================
     void        Pins::off           () const
 //=============================================================================
 {
-    r.setbit(m_pt + LAT, m_pn, m_lowison);
+    Reg::setbit(m_pt + LAT, m_pn, m_lowison);
 }
 
 //=============================================================================
@@ -106,7 +141,7 @@
     void        Pins::icn_flagclr () const
 //=============================================================================
 {
-    r.clrbit(m_pt + CNF, m_pn);
+    Reg::clrbit(m_pt + CNF, m_pn);
 }
 
 //=============================================================================
@@ -120,101 +155,101 @@
     void        Pins::digital_in        () const
 //=============================================================================
 {
-    r.setbit(m_pt + TRIS, m_pn);
-    r.clrbit(m_pt, m_pn);
+    Reg::setbit(m_pt + TRIS, m_pn);
+    Reg::clrbit(m_pt, m_pn);
 }
 
 //=============================================================================
     void        Pins::analog_in         () const
 //=============================================================================
 {
-    r.setbit(m_pt + TRIS, m_pn);
-    r.setbit(m_pt, m_pn);
+    Reg::setbit(m_pt + TRIS, m_pn);
+    Reg::setbit(m_pt, m_pn);
 }
 
 //=============================================================================
     void        Pins::digital_out       () const
 //=============================================================================
 {
-    r.clrbit(m_pt + TRIS, m_pn);
-    r.clrbit(m_pt, m_pn);
+    Reg::clrbit(m_pt + TRIS, m_pn);
+    Reg::clrbit(m_pt, m_pn);
 }
 
 //=============================================================================
     void        Pins::odrain            (bool tf) const
 //=============================================================================
 {
-    r.setbit(m_pt + ODC, m_pn, tf);
+    Reg::setbit(m_pt + ODC, m_pn, tf);
 }
 
 //=============================================================================
     void        Pins::pullup            (bool tf) const
 //=============================================================================
 {
-    r.setbit(m_pt + CNPU, m_pn, tf);
+    Reg::setbit(m_pt + CNPU, m_pn, tf);
 }
 
 //=============================================================================
     void        Pins::pulldn            (bool tf) const
 //=============================================================================
 {
-    r.setbit(m_pt + CNPD, m_pn, tf);
+    Reg::setbit(m_pt + CNPD, m_pn, tf);
 }
 
 //=============================================================================
     void        Pins::icn               (bool tf) const
 //=============================================================================
 {
-    r.setbit(m_pt + CNCON, ON, tf);
+    Reg::setbit(m_pt + CNCON, ON, tf);
 }
 
 //=============================================================================
     void        Pins::icn_rising        () const
 //=============================================================================
 {
-    r.setbit(m_pt + CNCON, CNSTYLE);
-    r.setbit(m_pt + CNEN0, m_pn);
-    r.clrbit(m_pt + CNEN1, m_pn);
+    Reg::setbit(m_pt + CNCON, CNSTYLE);
+    Reg::setbit(m_pt + CNEN0, m_pn);
+    Reg::clrbit(m_pt + CNEN1, m_pn);
 }
 
 //=============================================================================
     void        Pins::icn_risefall      () const
 //=============================================================================
 {
-    r.setbit(m_pt + CNCON, CNSTYLE);
-    r.setbit(m_pt + CNEN0, m_pn);
-    r.clrbit(m_pt + CNEN1, m_pn);
+    Reg::setbit(m_pt + CNCON, CNSTYLE);
+    Reg::setbit(m_pt + CNEN0, m_pn);
+    Reg::clrbit(m_pt + CNEN1, m_pn);
 }
 
 //=============================================================================
     void        Pins::icn_falling       () const
 //=============================================================================
 {
-    r.setbit(m_pt + CNCON, CNSTYLE);
-    r.setbit(m_pt + CNEN1, m_pn);
-    r.clrbit(m_pt + CNEN0, m_pn);
+    Reg::setbit(m_pt + CNCON, CNSTYLE);
+    Reg::setbit(m_pt + CNEN1, m_pn);
+    Reg::clrbit(m_pt + CNEN0, m_pn);
 }
 
 //=============================================================================
     void        Pins::icn_mismatch      () const
 //=============================================================================
 {
-    r.setbit(m_pt + CNEN0, m_pn);
-    r.clrbit(m_pt + CNCON, CNSTYLE);
+    Reg::setbit(m_pt + CNEN0, m_pn);
+    Reg::clrbit(m_pt + CNCON, CNSTYLE);
 }
 
 //=============================================================================
     bool        Pins::icn_flag          () const
 //=============================================================================
 {
-    return r.anybit(m_pt + CNF, m_pn);
+    return Reg::anybit(m_pt + CNF, m_pn);
 }
 
 //=============================================================================
     bool        Pins::icn_stat          () const
 //=============================================================================
 {
-    return r.anybit(m_pt + CNSTAT, m_pn);
+    return Reg::anybit(m_pt + CNSTAT, m_pn);
 }
 
 //static
@@ -223,11 +258,11 @@
     void        Pins::pps_do            (uint32_t addr, uint8_t v)
 //=============================================================================
 {
-    sys.unlock();
-    r.clrbit(RPCON, IOLOCK);
-    r.val(addr, v);
-    r.setbit(RPCON, IOLOCK);
-    sys.lock();
+    Sys::unlock();
+    Reg::clrbit(RPCON, IOLOCK);
+    Reg::val(addr, v);
+    Reg::setbit(RPCON, IOLOCK);
+    Sys::lock();
 }
 
 //pin -> pps peripheral in, or turn off

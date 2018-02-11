@@ -1,25 +1,33 @@
 #include "Cvref.hpp"
+#include "Reg.hpp"
+
+enum {
+    DAC1CON = 0xBF802380,
+        ON = 1<<15,
+        DACOE = 1<<8,
+        REFSEL_SHIFT = 0, REFSEL_CLR = 3
+};
 
 //=============================================================================
     void        Cvref::on               (bool tf)
 //=============================================================================
 {
-    r.setbit(DAC1CON, ON, tf);
+    Reg::setbit(DAC1CON, ON, tf);
 }
 
 //=============================================================================
     void        Cvref::out              (bool tf)
 //=============================================================================
 {
-    r.setbit(DAC1CON, DACOE, tf);
+    Reg::setbit(DAC1CON, DACOE, tf);
 }
 
 //=============================================================================
     void        Cvref::refsel           (REFSEL e)
 //=============================================================================
 {
-    r.clrbit(DAC1CON, REFSEL_CLR<<REFSEL_SHIFT);
-    r.setbit(DAC1CON, e<<REFSEL_SHIFT);
+    Reg::clrbit(DAC1CON, REFSEL_CLR<<REFSEL_SHIFT);
+    Reg::setbit(DAC1CON, e<<REFSEL_SHIFT);
 }
 
 //dac level 0-31
@@ -27,5 +35,5 @@
     void        Cvref::dacdat           (uint8_t v)
 //=============================================================================
 {
-    r.val(DAC1CON + 2, v);
+    Reg::val(DAC1CON + 2, v);
 }

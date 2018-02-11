@@ -3,42 +3,11 @@
 //I/O pins
 
 #include <cstdint>
-#include "Reg.hpp"
-#include "Sys.hpp"
 #include "Delay.hpp"
 
-class Pins : public Delay {
+struct Pins : public Delay {
 
-    public:
-
-    //pps_in peripheral names
-    enum PPSIN : uint8_t {
-        //byte offset from RPINR1
-        INT4 = 0,                                   //R1
-        ICM1 = 6, ICM2 = 7,                         //R2
-        ICM3 = 8, ICM4 = 9,                         //R3
-
-        OCFA = 14, OCFB = 15,                       //R5
-        TCKIA = 16, TCKIB = 17,                     //R6
-        ICM5 = 20, ICM6 = 21, ICM7 = 22, ICM8 = 23, //R7
-        ICM9 = 24, U3RX = 27,                       //R8
-        U2RX = 30, U2CTS = 31,                      //R9
-        U3CTS = 35,                                 //R10
-        SDI2 = 36, SCK2IN = 37, SS2IN = 38,         //R11
-        CLCINA = 42, CLCINB = 43,                   //R12
-        PPSINOFF = 255
-    };
-
-    //pps_out peripheral names
-    enum PPSOUT : uint8_t {
-        PPSLAT = 0,
-        C1OUT, C2OUT, C3OUT,
-        U2TX, U2RTS, U3TX, U3RTS,
-        SDO2, SCK2OUT, SS2OUT,
-        OCM4, OCM5, OCM6, OCM7, OCM8, OCM9,
-        CLC1OUT, CLC2OUT, CLC3OUT, CLC4OUT,
-    };
-
+    //helper enum
     enum : uint8_t {
         PTSHIFT = 4, PTMASK = 3,
         PNSHIFT = 0, PNMASK = 15,
@@ -105,6 +74,13 @@ class Pins : public Delay {
         AN13 = C1, AN14 = C8, AN15 = C5, AN16 = A13, AN17 = A12, AN18 = A11,
         AN19 = A6
     };
+    enum IOMODE : uint8_t {
+        AIN = 0,
+        IN = 1, INPU = 1<<3|1<<2|IN, INPD = 1<<4|IN, INL = 1<<2|IN,
+        OUT = 2, OUTL = 1<<2|OUT
+    };
+    //constructor
+    Pins            (RPN, IOMODE = AIN);
 
     //r/w pins
     bool        pinval          () const;
@@ -138,53 +114,38 @@ class Pins : public Delay {
     void        icn_flagclr     () const;
 
     //pps
+    enum PPSIN : uint8_t {
+        //byte offset from RPINR1
+        INT4 = 0,                                   //R1
+        ICM1 = 6, ICM2 = 7,                         //R2
+        ICM3 = 8, ICM4 = 9,                         //R3
+
+        OCFA = 14, OCFB = 15,                       //R5
+        TCKIA = 16, TCKIB = 17,                     //R6
+        ICM5 = 20, ICM6 = 21, ICM7 = 22, ICM8 = 23, //R7
+        ICM9 = 24, U3RX = 27,                       //R8
+        U2RX = 30, U2CTS = 31,                      //R9
+        U3CTS = 35,                                 //R10
+        SDI2 = 36, SCK2IN = 37, SS2IN = 38,         //R11
+        CLCINA = 42, CLCINB = 43,                   //R12
+        PPSINOFF = 255
+    };
     void        pps_in          (PPSIN);
+
+    enum PPSOUT : uint8_t {
+        PPSLAT = 0,
+        C1OUT, C2OUT, C3OUT,
+        U2TX, U2RTS, U3TX, U3RTS,
+        SDO2, SCK2OUT, SS2OUT,
+        OCM4, OCM5, OCM6, OCM7, OCM8, OCM9,
+        CLC1OUT, CLC2OUT, CLC3OUT, CLC4OUT,
+    };
     void        pps_out         (PPSOUT);
 
     //get adc #
     uint8_t     an_num          ();
 
-    // bit  | 4  | 3  |  2   |  1   |  0  |
-    //      | PD | PU | ACTL | DOUT | DIN |
-    //-----------------------------------------
-    //AIN   |    |    |      |      |     | 0
-    //IN    |    |    |      |      |  1  | 1
-    //INPU  |    |  1 |  1   |      |  1  | 13
-    //INPD  |  1 |    |      |      |  1  | 17
-    //INL   |    |    |  1   |      |  1  | 5
-    //OUT   |    |    |      |   1  |     | 2
-    //OUTL  |    |    |  1   |   1  |     | 6
-    enum IOMODE : uint8_t {
-        AIN = 0,
-        IN = 1, INPU = 1<<3|1<<2|IN, INPD = 1<<4|IN, INL = 1<<2|IN,
-        OUT = 2, OUTL = 1<<2|OUT
-    };
-    enum : uint8_t { ACTL = 1<<2  };
-
-    //constructor
-                Pins            (RPN, IOMODE = AIN);
-
     private:
-
-    static Reg r;
-    static Sys sys;
-
-    enum { //offsets from base address, in words
-        TRIS = 0x10>>2, PORT = 0x20>>2, LAT = 0x30>>2, ODC = 0x40>>2,
-        CNPU = 0x50>>2, CNPD = 0x60>>2, CNCON = 0x70>>2, CNEN0 = 0x80>>2,
-        CNSTAT = 0x90>>2, CNEN1 = 0xA0>>2, CNF = 0xB0>>2
-    };
-
-    enum {
-        ANSELA = 0xBF802BB0, ANSELX_SPACING = 64, //spacing in words
-        //CNCONx
-            ON = 1<<15,
-            CNSTYLE = 1<<11,
-        RPCON = 0xBF802A00,
-            IOLOCK = 1<<11,
-        RPINR1 = 0xBF802A10,
-        RPOR0 = 0xBF802B10
-    };
 
     static void     pps_do      (uint32_t, uint8_t);
 
@@ -194,7 +155,5 @@ class Pins : public Delay {
     const uint8_t       m_rpn;      //RPn value
     uint8_t             m_ppsin;    //store ppsin peripheral
     const uint8_t       m_an;       //ANn value
-
-    using vu32_ptr = volatile uint32_t*;
 
 };
