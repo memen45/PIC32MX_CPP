@@ -194,25 +194,25 @@ struct Rgb {
 
     //cycle through svg colors
     void update(){
-        if(not m_ledR.expired()) return;
+        if(not m_delay.expired()) return;
 
         uint16_t t = m_delay_long;
         for(uint8_t i = 0; i < 3; i++){
             uint16_t v = m_ccp[i].compb();
             uint16_t s = svg[m_idx][i]<<8;
             if(v == s) continue;
-            t = m_delay;
+            t = m_delay_short;
             if(v < s) v += 256; else v -= 256;
             m_ccp[i].compb(v);
         }
-        m_ledR.set_ms(t);
-        if(t == m_delay) return;
+        m_delay.set_ms(t);
+        if(t == m_delay_short) return;
         if(++m_idx >= sizeof(svg)/sizeof(svg[0])) m_idx = 0;
     };
 
     private:
 
-    static const uint16_t m_delay{3};
+    static const uint16_t m_delay_short{3};
     static const uint16_t m_delay_long{1000};
     uint8_t m_idx;
     //pwm to rgb pins
@@ -222,6 +222,8 @@ struct Rgb {
     Pins m_ledR{Pins::D1, Pins::OUT},
          m_ledG{Pins::C3, Pins::OUT},
          m_ledB{Pins::C15, Pins::OUT};
+
+    Delay m_delay;
 };
 
 
@@ -231,7 +233,7 @@ struct Rgb {
 struct Led12 {
 
     void update(){
-        if(not m_led1.expired()) return;
+        if(not m_delay.expired()) return;
         uint8_t t = m_pot.adcval()>>2; //(0-4096 -> 0-256)
         if(t < 100){
             t = 100;
@@ -242,7 +244,7 @@ struct Led12 {
             m_led1.latval(m_led1_state);
             m_led2.latval(not m_led1_state); //always opposite
         }
-        m_led1.set_ms(t);
+        m_delay.set_ms(t);
     };
 
     private:
@@ -251,6 +253,7 @@ struct Led12 {
     Pins m_led1{Pins::D3, Pins::OUT};
     Pins m_led2{Pins::C13, Pins::OUT};
     bool m_led1_state{false};
+    Delay m_delay;
 
 };
 

@@ -3,9 +3,8 @@
 //I/O pins
 
 #include <cstdint>
-#include "Delay.hpp"
 
-struct Pins : public Delay {
+struct Pins {
 
     //helper enum
     enum : uint8_t {
