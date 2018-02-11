@@ -80,7 +80,7 @@ struct Pins : public Delay {
         OUT = 2, OUTL = 1<<2|OUT
     };
     //constructor
-    Pins            (RPN, IOMODE = AIN);
+    Pins(RPN, IOMODE = AIN);
 
     //r/w pins
     bool        pinval          () const;
