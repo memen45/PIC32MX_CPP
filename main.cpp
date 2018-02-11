@@ -9,8 +9,8 @@
  =============================================================================*/
 
 //try different apps
-//#define MAIN1 //simple blink 2 leds, rgb led's
-#define MAIN2 //most peripherals touched
+#define MAIN1 //simple blink 2 leds, rgb led's
+//#define MAIN2 //most peripherals touched
 
 
 //=============================================================================
