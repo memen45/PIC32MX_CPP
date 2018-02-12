@@ -126,8 +126,7 @@ struct Reg {
 
 //setbit, specify 1/0
 template <typename T, typename V> void Reg::setbit(T r, V v, bool sc){
-    using vtype = typename getVsiz<V>::type;
-    *((volatile vtype*)r+(Vsiz<sizeof(V)>::CLR<<sc)) = v;
+    if(sc) setbit(r,v); else clrbit(r,v);
 }
 
 //setbit

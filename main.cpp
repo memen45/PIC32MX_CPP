@@ -212,8 +212,8 @@ struct Rgb {
 
     private:
 
-    static const uint16_t m_delay_short{3};
-    static const uint16_t m_delay_long{1000};
+    static const uint16_t m_delay_short{10};
+    static const uint16_t m_delay_long{200};
     uint8_t m_idx;
     //pwm to rgb pins
     //mccp 1-3 pwm to rgb led's

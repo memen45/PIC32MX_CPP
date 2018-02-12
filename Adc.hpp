@@ -32,7 +32,7 @@ struct Adc {
     static bool         done            ();
 
     //ADC1CON2
-    enum VCFG :uint8_t {
+    enum VCFG : uint8_t {
         VDD_VSS = 0, VDD_EXTN, EXTP_VSS, EXTP_EXTN
     };
     static void         vref_cfg        (VCFG);
