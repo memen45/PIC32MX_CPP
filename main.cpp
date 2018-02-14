@@ -24,7 +24,6 @@
 #include "Resets.hpp"
 #include "Ccp.hpp"
 
-#include <vector>
 
 //svg colors for rgb led
 const uint8_t svg[][3]{
@@ -268,9 +267,6 @@ void Osc_init(){
 
 int main()
 {
-    std::vector<int> v(4,100);
-    for(auto i : v){ v.push_back(i); v.pop_back(); v.insert(v.begin(),1); }
-
     //just get/store resets cause (not used here,though)
     Resets::cause();
 
