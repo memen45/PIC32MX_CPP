@@ -24,6 +24,7 @@
 #include "Resets.hpp"
 #include "Ccp.hpp"
 
+#include <vector>
 
 //svg colors for rgb led
 const uint8_t svg[][3]{
@@ -86,7 +87,7 @@ const uint8_t svg[][3]{
 ///*honeydew*/ {240,255,240},
 /*hotpink*/ {255,105,180},
 ///*indianred*/ {205,92,92},
-/*indigo*/ {75,0,130},
+///*indigo*/ {75,0,130},
 ///*ivory*/ {255,255,240},
 ///*khaki*/ {240,230,140},
 ///*lavender*/ {230,230,250},
@@ -116,12 +117,12 @@ const uint8_t svg[][3]{
 ///*mediumaquamarine*/ {102,205,170},
 ///*mediumblue*/ {0,0,205},
 ///*mediumorchid*/ {186,85,211},
-/*mediumpurple*/ {147,112,219},
+///*mediumpurple*/ {147,112,219},
 ///*mediumseagreen*/ {60,179,113},
 ///*mediumslateblue*/ {123,104,238},
 ///*mediumspringgreen*/ {0,250,154},
 ///*mediumturquoise*/ {72,209,204},
-/*mediumvioletred*/ {199,21,133},
+///*mediumvioletred*/ {199,21,133},
 ///*midnightblue*/ {25,25,112},
 ///*mintcream*/ {245,255,250},
 ///*mistyrose*/ {255,228,225},
@@ -142,7 +143,7 @@ const uint8_t svg[][3]{
 ///*peachpuff*/ {255,218,185},
 ///*peru*/ {205,133,63},
 ///*pink*/ {255,192,203},
-/*plum*/ {221,160,221},
+///*plum*/ {221,160,221},
 ///*powderblue*/ {176,224,230},
 /*purple*/ {128,0,128},
 /*red*/ {255,0,0},
@@ -165,11 +166,11 @@ const uint8_t svg[][3]{
 ///*tan*/ {210,180,140},
 ///*teal*/ {0,128,128},
 ///*thistle*/ {216,191,216},
-/*tomato*/ {255,99,71},
+///*tomato*/ {255,99,71},
 ///*turquoise*/ {64,224,208},
 ///*violet*/ {238,130,238},
 ///*wheat*/ {245,222,179},
-/*white*/ {255,255,255},
+///*white*/ {255,255,255},
 ///*whitesmoke*/ {245,245,245},
 /*yellow*/ {255,255,0},
 ///*yellowgreen*/ {154,205,50},
@@ -267,6 +268,9 @@ void Osc_init(){
 
 int main()
 {
+    std::vector<int> v(4,100);
+    for(auto i : v){ v.push_back(i); v.pop_back(); v.insert(v.begin(),1); }
+
     //just get/store resets cause (not used here,though)
     Resets::cause();
 
