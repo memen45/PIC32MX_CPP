@@ -4,11 +4,11 @@
 enum {
     INTCON = 0xBF80F000,
         TPC_SHIFT = 8, TPC_CLR = 7,
-        INT4EP = 1<<4,
-        INT3EP = 1<<3,
-        INT2EP = 1<<2,
-        INT1EP = 1<<1,
-        INT0EP = 1<<0,
+        INT4EP = 4,
+        INT3EP = 3,
+        INT2EP = 2,
+        INT1EP = 1,
+        INT0EP = 0,
     PRISS = 0xBF80F010,
     INTSTAT = 0xBF80F020,
     IFS_BASE = 0xBF80F040,
@@ -49,35 +49,35 @@ enum {
     void        Irq::eint4_pol          (EINTXPOL e)
 //=============================================================================
 {
-    Reg::setbit(INTCON, INT4EP, e);
+    Reg::setbit(INTCON, 1<<INT4EP, e);
 }
 
 //=============================================================================
     void        Irq::eint3_pol          (EINTXPOL e)
 //=============================================================================
 {
-    Reg::setbit(INTCON, INT3EP, e);
+    Reg::setbit(INTCON, 1<<INT3EP, e);
 }
 
 //=============================================================================
     void        Irq::eint2_pol          (EINTXPOL e)
 //=============================================================================
 {
-    Reg::setbit(INTCON, INT2EP, e);
+    Reg::setbit(INTCON, 1<<INT2EP, e);
 }
 
 //=============================================================================
     void        Irq::eint1_pol          (EINTXPOL e)
 //=============================================================================
 {
-    Reg::setbit(INTCON, INT1EP, e);
+    Reg::setbit(INTCON, 1<<INT1EP, e);
 }
 
 //=============================================================================
     void        Irq::eint0_pol          (EINTXPOL e)
 //=============================================================================
 {
-    Reg::setbit(INTCON, INT0EP, e);
+    Reg::setbit(INTCON, 1<<INT0EP, e);
 }
 
 //note- the following offsets calculated in bytes as the register

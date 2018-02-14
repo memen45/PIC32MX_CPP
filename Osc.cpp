@@ -10,29 +10,29 @@
 
 enum {
     OSCCON = 0xBF802680,
-        CLKLOCK = 1<<7,
-        SLPEN = 1<<4,
-        CF = 1<<3,
-        SOSCEN = 1<<1,
-        OSWEN = 1<<0,
+        CLKLOCK = 7,
+        SLPEN = 4,
+        CF = 3,
+        SOSCEN = 1,
+        OSWEN = 0,
     SPLLCON = 0xBF8026A0,
-        PLLICLK = 1<<7,
+        PLLICLK = 7,
     REFO1CON = 0xBF802720,
-        ON = 1<<15,
-        SIDL = 1<<13,
-        OE = 1<<12,
-        RSLP = 1<<11,
-        DIVSWEN = 1<<9,
-        ACTIVE = 1<<8,
+        ON = 15,
+        SIDL = 13,
+        OE = 12,
+        RSLP = 11,
+        DIVSWEN = 9,
+        ACTIVE = 8,
     REFO1TRIM = 0xBF802730,
     CLKSTAT = 0xBF802770,
     OSCTUN = 0xBF802880,
-        /* ON = 1<<15, SIDL = 1<<13, from refo1con*/
-        SRC = 1<<12,
-        LOCK = 1<<11,
-        POL = 1<<10,
-        ORNG = 1<<9,
-        ORPOL = 1<<8
+        /* ON = 15, SIDL = 13, from refo1con*/
+        SRC = 12,
+        LOCK = 11,
+        POL = 10,
+        ORNG = 9,
+        ORPOL = 8
 };
 
 uint32_t Osc::m_sysclk = 0;
@@ -97,8 +97,8 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 {
     IDSTAT irstat = unlock_irq();
     Reg::val(OSCCON + 1, e);
-    Reg::setbit(OSCCON, OSWEN);
-    while(Reg::anybit(OSCCON, OSWEN));
+    Reg::setbit(OSCCON, 1<<OSWEN);
+    while(Reg::anybit(OSCCON, 1<<OSWEN));
     lock_irq(irstat);
     m_sysclk = 0;
     sysclk();
@@ -108,7 +108,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     void            Osc::clk_lock       ()
 //=============================================================================
 {
-    Reg::setbit(OSCCON, CLKLOCK);
+    Reg::setbit(OSCCON, 1<<CLKLOCK);
 }
 
 //=============================================================================
@@ -117,12 +117,12 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 {
     //sleep bit only enabled here, then disabled when wakes
     Sys::unlock();
-    Reg::setbit(OSCCON, SLPEN);
+    Reg::setbit(OSCCON, 1<<SLPEN);
     Sys::lock();
     Wdt::reset();
     __asm__ __volatile__ ("wait");
     Sys::unlock();
-    Reg::clrbit(OSCCON, SLPEN);
+    Reg::clrbit(OSCCON, 1<<SLPEN);
     Sys::lock();
 }
 
@@ -148,7 +148,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     bool            Osc::clk_bad        ()
 //=============================================================================
 {
-    return Reg::anybit(OSCCON, CF);
+    return Reg::anybit(OSCCON, 1<<CF);
 }
 
 //=============================================================================
@@ -156,7 +156,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 //=============================================================================
 {
     Sys::unlock();
-    Reg::setbit(OSCCON, SOSCEN, tf);
+    Reg::setbit(OSCCON, 1<<SOSCEN, tf);
     Sys::lock();
     while(tf and not ready(SOSCRDY));
 }
@@ -165,7 +165,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     bool            Osc::sosc           ()
 //=============================================================================
 {
-    return Reg::anybit(OSCCON, SOSCEN);
+    return Reg::anybit(OSCCON, 1<<SOSCEN);
 }
 
 //spllcon
@@ -187,7 +187,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     auto            Osc::pll_src        () -> PLLSRC
 //=============================================================================
 {
-    return (PLLSRC)Reg::anybit(SPLLCON, PLLICLK);
+    return (PLLSRC)Reg::anybit(SPLLCON, 1<<PLLICLK);
 }
 
 //private, use pll_set to change src
@@ -195,7 +195,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     void            Osc::pll_src        (PLLSRC e)
 //=============================================================================
 {
-    Reg::setbit(SPLLCON, PLLICLK, e);
+    Reg::setbit(SPLLCON, 1<<PLLICLK, e);
     m_refoclk = 0;  //recalculate refo clock
     refoclk();     //as input now may be different
 }
@@ -240,7 +240,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 //=============================================================================
 {
     refoclk(); //calculate if needed
-    Reg::setbit(REFO1CON, ON);
+    Reg::setbit(REFO1CON, 1<<ON);
     while(refo_active() == 0);
 }
 
@@ -256,7 +256,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     void            Osc::refo_off       ()
 //=============================================================================
 {
-    Reg::clrbit(REFO1CON, ON);
+    Reg::clrbit(REFO1CON, 1<<ON);
     while(refo_active());
 }
 
@@ -264,36 +264,36 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     void            Osc::refo_idle      (bool tf)
 //=============================================================================
 {
-    Reg::setbit(REFO1CON, SIDL, tf);
+    Reg::setbit(REFO1CON, 1<<SIDL, tf);
 }
 
 //=============================================================================
     void            Osc::refo_out       (bool tf)
 //=============================================================================
 {
-    Reg::setbit(REFO1CON, OE, tf);
+    Reg::setbit(REFO1CON, 1<<OE, tf);
 }
 
 //=============================================================================
     void            Osc::refo_sleep     (bool tf)
 //=============================================================================
 {
-    Reg::setbit(REFO1CON, RSLP, tf);
+    Reg::setbit(REFO1CON, 1<<RSLP, tf);
 }
 
 //=============================================================================
     void            Osc::refo_divsw     ()
 //=============================================================================
 {
-    Reg::setbit(REFO1CON, DIVSWEN);
-    while(Reg::anybit(REFO1CON, DIVSWEN));
+    Reg::setbit(REFO1CON, 1<<DIVSWEN);
+    while(Reg::anybit(REFO1CON, 1<<DIVSWEN));
 }
 
 //=============================================================================
     bool            Osc::refo_active    ()
 //=============================================================================
 {
-    return Reg::anybit(REFO1CON, ACTIVE);
+    return Reg::anybit(REFO1CON, 1<<ACTIVE);
 }
 
 //anytime source set, get new m_refoclk
@@ -302,7 +302,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     void            Osc::refo_src       (ROSEL e)
 //=============================================================================
 {
-    bool ison = Reg::anybit(REFO1CON, ON);
+    bool ison = Reg::anybit(REFO1CON, 1<<ON);
     refo_off();
     if(e == RSOSC) sosc(true);
     Reg::val(REFO1CON, e);
@@ -370,7 +370,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 //=============================================================================
 {
     Sys::unlock();
-    Reg::setbit(OSCTUN, ON, tf);
+    Reg::setbit(OSCTUN, 1<<ON, tf);
     Sys::lock();
 }
 
@@ -379,7 +379,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 //=============================================================================
 {
     Sys::unlock();
-    Reg::setbit(OSCTUN, SIDL, tf);
+    Reg::setbit(OSCTUN, 1<<SIDL, tf);
     Sys::lock();
 }
 
@@ -389,7 +389,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 {
     if(e == TSOSC) sosc(true);
     Sys::unlock();
-    Reg::setbit(OSCTUN, SRC, e);
+    Reg::setbit(OSCTUN, 1<<SRC, e);
     Sys::lock();
 }
 
@@ -397,7 +397,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     bool            Osc::tun_lock       ()
 //=============================================================================
 {
-    return Reg::anybit(OSCTUN, LOCK);
+    return Reg::anybit(OSCTUN, 1<<LOCK);
 }
 
 //=============================================================================
@@ -405,7 +405,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 //=============================================================================
 {
     Sys::unlock();
-    Reg::setbit(OSCTUN, POL, not tf);
+    Reg::setbit(OSCTUN, 1<<POL, not tf);
     Sys::lock();
 }
 
@@ -413,7 +413,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     bool            Osc::tun_rng        ()
 //=============================================================================
 {
-    return Reg::anybit(OSCTUN, ORNG);
+    return Reg::anybit(OSCTUN, 1<<ORNG);
 }
 
 //=============================================================================
@@ -421,7 +421,7 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 //=============================================================================
 {
     Sys::unlock();
-    Reg::setbit(OSCTUN, ORPOL, not tf);
+    Reg::setbit(OSCTUN, 1<<ORPOL, not tf);
     Sys::lock();
 }
 

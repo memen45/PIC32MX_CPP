@@ -3,38 +3,39 @@
 #include "Osc.hpp"
 
 enum {
-    U1MODE = 0xBF801800, UARTX_SPACING = 0x40,  //spacing in words
-        SLPEN = 1<<23,
-        ACTIVE = 1<<22,
-        CLKSEL_SHIFT = 17, CLKSEL_CLR = 3,
-        OVFDIS = 1<<16,
-        ON = 1<<15,
-        SIDL = 1<<13,
-        IREN = 1<<12,
-        RTSMD = 1<<11,
-        WAKE = 1<<7,
-        LPBACK = 1<<6,
-        ABAUD = 1<<5,
-        RXINV = 1<<4,
-        BRGH = 1<<3,
-        MODE_SHIFT = 0, MODE_CLR = 7,
+    UARTX_SPACING = 0x40,  //spacing in words
+    U1MODE = 0xBF801800,
+        SLPEN = 23,
+        ACTIVE = 22,
+        CLKSEL_SHIFT = 17, CLKSEL_MASK = 3,
+        OVFDIS = 16,
+        ON = 15,
+        SIDL = 13,
+        IREN = 12,
+        RTSMD = 11,
+        WAKE = 7,
+        LPBACK = 6,
+        ABAUD = 5,
+        RXINV = 4,
+        BRGH = 3,
+        MODE_SHIFT = 0, MODE_MASK = 7,
     UXSTA = 4, //offset from UXMODE in words
-        MASK_SHIFT = 24, MASK_CLR = 255, //is byte3
-        ADDR_SHIFT = 16, ADDR_CLR = 255, //is byte2
-        UTXISEL_SHIFT = 14, UTXISEL_CLR = 3,
-        UTXINV = 1<<13,
-        URXEN = 1<<12,
-        UTXBRK = 1<<11,
-        UTXEN = 1<<10,
-        UTXBF = 1<<9,
-        TRMT = 1<<8,
-        URXISEL_SHIFT = 6, URXISEL_CLR = 3,
-        ADDEN = 1<<5,
-        RIDLE = 1<<4,
-        PERR = 1<<3,
-        FERR = 1<<2,
-        OERR = 1<<1,
-        URXDA = 1<<0,
+        MASK_SHIFT = 24, MASK_MASK = 255, //is byte3
+        ADDR_SHIFT = 16, ADDR_MASK = 255, //is byte2
+        UTXISEL_SHIFT = 14, UTXISEL_MASK = 3,
+        UTXINV = 13,
+        URXEN = 12,
+        UTXBRK = 11,
+        UTXEN = 10,
+        UTXBF = 9,
+        TRMT = 8,
+        URXISEL_SHIFT = 6, URXISEL_MASK = 3,
+        ADDEN = 5,
+        RIDLE = 4,
+        PERR = 3,
+        FERR = 2,
+        OERR = 1,
+        URXDA = 0,
     UXTXREG = 8,
     UXRXREG = 12,
     UXBRG = 16
@@ -76,21 +77,21 @@ using vu32ptr = volatile uint32_t*;
     void        Uart::stop_sleep        (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_uartx_base, SLPEN, not tf);
+    Reg::setbit(m_uartx_base, 1<<SLPEN, not tf);
 }
 
 //=============================================================================
     bool        Uart::active            ()
 //=============================================================================
 {
-    return Reg::anybit(m_uartx_base, ACTIVE);
+    return Reg::anybit(m_uartx_base, 1<<ACTIVE);
 }
 
 //=============================================================================
     void        Uart::clk_sel           (CLKSEL e)
 //=============================================================================
 {
-    Reg::clrbit(m_uartx_base, CLKSEL_CLR<<CLKSEL_SHIFT);
+    Reg::clrbit(m_uartx_base, CLKSEL_MASK<<CLKSEL_SHIFT);
     Reg::setbit(m_uartx_base, e<<CLKSEL_SHIFT);
     baud_set();
 }
@@ -99,7 +100,7 @@ using vu32ptr = volatile uint32_t*;
     void        Uart::oflow_stop        (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_uartx_base, OVFDIS, not tf);
+    Reg::setbit(m_uartx_base, 1<<OVFDIS, not tf);
 }
 
 //=============================================================================
@@ -107,63 +108,63 @@ using vu32ptr = volatile uint32_t*;
 //=============================================================================
 {
     baud_set(); //in case not set
-    Reg::setbit(m_uartx_base, ON, tf);
+    Reg::setbit(m_uartx_base, 1<<ON, tf);
 }
 
 //=============================================================================
     void        Uart::stop_idle         (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_uartx_base, SIDL, tf);
+    Reg::setbit(m_uartx_base, 1<<SIDL, tf);
 }
 
 //=============================================================================
     void        Uart::irda              (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_uartx_base, IREN, tf);
+    Reg::setbit(m_uartx_base, 1<<IREN, tf);
 }
 
 //=============================================================================
     void        Uart::rts_mode          (RTSMODE e)
 //=============================================================================
 {
-    Reg::setbit(m_uartx_base, RTSMD, e);
+    Reg::setbit(m_uartx_base, 1<<RTSMD, e);
 }
 
 //=============================================================================
     void        Uart::wake              (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_uartx_base, WAKE, tf);
+    Reg::setbit(m_uartx_base, 1<<WAKE, tf);
 }
 
 //=============================================================================
     void        Uart::loopback          (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_uartx_base, LPBACK, tf);
+    Reg::setbit(m_uartx_base, 1<<LPBACK, tf);
 }
 
 //=============================================================================
     void        Uart::autobaud          (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_uartx_base, ABAUD, tf);
+    Reg::setbit(m_uartx_base, 1<<ABAUD, tf);
 }
 
 //=============================================================================
     void        Uart::rx_pol            (RXPOL e)
 //=============================================================================
 {
-    Reg::setbit(m_uartx_base, RXINV, e);
+    Reg::setbit(m_uartx_base, 1<<RXINV, e);
 }
 
 //=============================================================================
     void        Uart::hispeed           (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_uartx_base, BRGH, tf);
+    Reg::setbit(m_uartx_base, 1<<BRGH, tf);
     baud_set();
 }
 
@@ -171,7 +172,7 @@ using vu32ptr = volatile uint32_t*;
     void        Uart::mode              (MODESEL e)
 //=============================================================================
 {
-    Reg::clrbit(m_uartx_base, MODE_CLR<<MODE_SHIFT);
+    Reg::clrbit(m_uartx_base, MODE_MASK<<MODE_SHIFT);
     Reg::setbit(m_uartx_base, e<<MODE_SHIFT);
 }
 
@@ -194,7 +195,7 @@ using vu32ptr = volatile uint32_t*;
     void        Uart::tx_irq            (UTXISEL e)
 //=============================================================================
 {
-    Reg::clrbit(m_uartx_base + UXSTA, UTXISEL_CLR<<UTXISEL_SHIFT);
+    Reg::clrbit(m_uartx_base + UXSTA, UTXISEL_MASK<<UTXISEL_SHIFT);
     Reg::setbit(m_uartx_base + UXSTA, e<<UTXISEL_SHIFT);
 }
 
@@ -202,50 +203,50 @@ using vu32ptr = volatile uint32_t*;
     void        Uart::tx_pol            (RXPOL e)
 //=============================================================================
 {
-    bool b = Reg::anybit(m_uartx_base, IREN) ? not e : e;
-    Reg::setbit(m_uartx_base + UXSTA, UTXINV, b);
+    bool b = Reg::anybit(m_uartx_base, 1<<IREN) ? not e : e;
+    Reg::setbit(m_uartx_base + UXSTA, 1<<UTXINV, b);
 }
 
 //=============================================================================
     void        Uart::rx_on             (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_uartx_base + UXSTA, URXEN, tf);
+    Reg::setbit(m_uartx_base + UXSTA, 1<<URXEN, tf);
 }
 
 //=============================================================================
     void        Uart::tx_break          ()
 //=============================================================================
 {
-    Reg::setbit(m_uartx_base + UXSTA, UTXBRK);
+    Reg::setbit(m_uartx_base + UXSTA, 1<<UTXBRK);
 }
 
 //=============================================================================
     void        Uart::tx_on             (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_uartx_base + UXSTA, UTXEN, tf);
+    Reg::setbit(m_uartx_base + UXSTA, 1<<UTXEN, tf);
 }
 
 //=============================================================================
     bool        Uart::tx_full           ()
 //=============================================================================
 {
-    return Reg::anybit(m_uartx_base + UXSTA, UTXBF);
+    return Reg::anybit(m_uartx_base + UXSTA, 1<<UTXBF);
 }
 
 //=============================================================================
     bool        Uart::tx_done           ()
 //=============================================================================
 {
-    return Reg::anybit(m_uartx_base + UXSTA, TRMT);
+    return Reg::anybit(m_uartx_base + UXSTA, 1<<TRMT);
 }
 
 //=============================================================================
     void        Uart::rx_irq            (URXISEL e)
 //=============================================================================
 {
-    Reg::clrbit(m_uartx_base + UXSTA, URXISEL_CLR<<URXISEL_SHIFT);
+    Reg::clrbit(m_uartx_base + UXSTA, URXISEL_MASK<<URXISEL_SHIFT);
     Reg::setbit(m_uartx_base + UXSTA, e<<URXISEL_SHIFT);
 }
 
@@ -253,42 +254,42 @@ using vu32ptr = volatile uint32_t*;
     void        Uart::rx_addren         (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_uartx_base + UXSTA, ADDEN, tf);
+    Reg::setbit(m_uartx_base + UXSTA, 1<<ADDEN, tf);
 }
 
 //=============================================================================
     bool        Uart::rx_busy           ()
 //=============================================================================
 {
-    return not Reg::anybit(m_uartx_base + UXSTA, RIDLE);
+    return not Reg::anybit(m_uartx_base + UXSTA, 1<<RIDLE);
 }
 
 //=============================================================================
     bool        Uart::rx_perr           ()
 //=============================================================================
 {
-    return Reg::anybit(m_uartx_base + UXSTA, PERR);
+    return Reg::anybit(m_uartx_base + UXSTA, 1<<PERR);
 }
 
 //=============================================================================
     bool        Uart::rx_ferr           ()
 //=============================================================================
 {
-    return Reg::anybit(m_uartx_base + UXSTA, FERR);
+    return Reg::anybit(m_uartx_base + UXSTA, 1<<FERR);
 }
 
 //=============================================================================
     bool        Uart::rx_oerr           ()
 //=============================================================================
 {
-    return Reg::anybit(m_uartx_base + UXSTA, OERR);
+    return Reg::anybit(m_uartx_base + UXSTA, 1<<OERR);
 }
 
 //=============================================================================
     bool        Uart::rx_empty          ()
 //=============================================================================
 {
-    return not Reg::anybit(m_uartx_base + UXSTA, URXDA);
+    return not Reg::anybit(m_uartx_base + UXSTA, 1<<URXDA);
 }
 
 //uxbrg
@@ -297,7 +298,7 @@ using vu32ptr = volatile uint32_t*;
 //=============================================================================
 {
     m_uartx_baud = v;
-    uint8_t bdiv = Reg::anybit(m_uartx_base, BRGH) ? 4 : 16;
+    uint8_t bdiv = Reg::anybit(m_uartx_base, 1<<BRGH) ? 4 : 16;
     v = baud_clk() / v / bdiv - 1;
     Reg::val(m_uartx_base + UXBRG, v);
 }
@@ -315,7 +316,7 @@ using vu32ptr = volatile uint32_t*;
     uint32_t    Uart::baud_clk          ()
 //=============================================================================
 {
-    CLKSEL e = (CLKSEL)((Reg::val(m_uartx_base)>>17) bitand CLKSEL_CLR);
+    CLKSEL e = (CLKSEL)((Reg::val(m_uartx_base)>>17) bitand CLKSEL_MASK);
     if(e == REFO1) return Osc::refo_freq();
     else if(e == FRC) return Osc::frcclk();
     return Osc::sysclk(); //pb/sys are the same

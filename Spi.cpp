@@ -3,46 +3,47 @@
 #include "Reg.hpp"
 
 enum :uint32_t {
-    SPI1CON = 0xBF808100, SPIX_SPACING = 0x40, //spacing in words
-        FRMEN = 1u<<31,
-        FRMSYNC = 1<<30,
-        FRMPOL = 1<<29,
-        MSSEN = 1<<28,
-        FRMSYPW = 1<<27,
-        FRMCNT_SHIFT = 24, FRMCNT_CLR = 7,
-        MCLKSEL = 1<<23,
-        SPIFE = 1<<17,
-        ENHBUF = 1<<16,
-        ON = 1<<15,
-        MODE_SHIFT = 10, MODE_CLR = 3,
-        SMP = 1<<9,
-        CKE = 1<<8,
-        SSEN = 1<<7,
-        CKP = 1<<6,
-        MSTEN = 1<<5,
-        STXISEL_SHIFT = 2, STXISEL_CLR = 3,
-        SRXISEL_SHIFT = 0, SRXISEL_CLR = 3,
+    SPIX_SPACING = 0x40, //spacing in words
+    SPI1CON = 0xBF808100,
+        FRMEN = 31,
+        FRMSYNC = 30,
+        FRMPOL = 29,
+        MSSEN = 28,
+        FRMSYPW = 27,
+        FRMCNT_SHIFT = 24, FRMCNT_MASK = 7,
+        MCLKSEL = 23,
+        SPIFE = 17,
+        ENHBUF = 16,
+        ON = 15,
+        MODE_SHIFT = 10, MODE_MASK = 3,
+        SMP = 9,
+        CKE = 8,
+        SSEN = 7,
+        CKP = 6,
+        MSTEN = 5,
+        STXISEL_SHIFT = 2, STXISEL_MASK = 3,
+        SRXISEL_SHIFT = 0, SRXISEL_MASK = 3,
     SPIXSTAT = 4, //offset from SPIXCON in words
-        FRMERR = 1<<12,
-        SPIBUSY = 1<<11,
-        SPITUR = 1<<8,
-        SRMT = 1<<7,
-        SPIROV = 1<<6,
-        SPIRBE = 1<<5,
-        SPITBE = 1<<3,
-        SPITBF = 1<<1,
-        SPIRBF = 1<<0,
+        FRMERR = 12,
+        SPIBUSY = 11,
+        SPITUR = 8,
+        SRMT = 7,
+        SPIROV = 6,
+        SPIRBE = 5,
+        SPITBE = 3,
+        SPITBF = 1,
+        SPIRBF = 0,
     SPIXBUF = 8, //offset from SPIXCON in words
     SPIXBRG = 12, //offset from SPIXCON in words
     SPIXCON2 = 16, //offset from SPIXCON in words
-        SPISGNEXT = 1<<15,
-        FRMERREN = 1<<12,
-        SPIROVEN = 1<<11,
-        SPITUREN = 1<<10,
-        IGNROV = 1<<9,
-        IGNTUR = 1<<8,
-        AUDEN = 1<<7,
-        AUDOMONO = 1<<3
+        SPISGNEXT = 15,
+        FRMERREN = 12,
+        SPIROVEN = 11,
+        SPITUREN = 10,
+        IGNROV = 9,
+        IGNTUR = 8,
+        AUDEN = 7,
+        AUDOMONO = 3
 };
 
 using vu8ptr = volatile uint8_t*;            //access stat as bytes
@@ -64,42 +65,42 @@ using vu32ptr = volatile uint32_t*;
     void        Spi::frame              (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_spix_con, FRMEN, tf);
+    Reg::setbit(m_spix_con, 1<<FRMEN, tf);
 }
 
 //=============================================================================
     void        Spi::frame_dir          (FRMDIR e)
 //=============================================================================
 {
-    Reg::setbit(m_spix_con, FRMSYNC, e);
+    Reg::setbit(m_spix_con, 1<<FRMSYNC, e);
 }
 
 //=============================================================================
     void        Spi::frame_pol          (FRMHL e)
 //=============================================================================
 {
-    Reg::setbit(m_spix_con, FRMPOL, e);
+    Reg::setbit(m_spix_con, 1<<FRMPOL, e);
 }
 
 //=============================================================================
     void        Spi::slave_sel          (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_spix_con, MSSEN, tf);
+    Reg::setbit(m_spix_con, 1<<MSSEN, tf);
 }
 
 //=============================================================================
     void        Spi::frame_pwidth       (FRMPW e)
 //=============================================================================
 {
-    Reg::setbit(m_spix_con, FRMSYPW, e);
+    Reg::setbit(m_spix_con, 1<<FRMSYPW, e);
 }
 
 //=============================================================================
     void        Spi::frame_count        (FRMCNT e)
 //=============================================================================
 {
-    Reg::clrbit(m_spix_con, FRMCNT_CLR<<FRMCNT_SHIFT);
+    Reg::clrbit(m_spix_con, FRMCNT_MASK<<FRMCNT_SHIFT);
     Reg::setbit(m_spix_con, e<<FRMCNT_SHIFT);
 }
 
@@ -109,7 +110,7 @@ using vu32ptr = volatile uint32_t*;
 {
     bool ison = Reg::anybit(m_spix_con, ON);
     on(false);
-    Reg::setbit(m_spix_con, MCLKSEL, e);
+    Reg::setbit(m_spix_con, 1<<MCLKSEL, e);
     freq(); //recaluclate
     on(ison);
 }
@@ -118,23 +119,23 @@ using vu32ptr = volatile uint32_t*;
     auto        Spi::clk_sel            () -> CLKSEL
 //=============================================================================
 {
-    return (CLKSEL)Reg::anybit(m_spix_con, MCLKSEL);
+    return (CLKSEL)Reg::anybit(m_spix_con, 1<<MCLKSEL);
 }
 
 //=============================================================================
     void        Spi::frame_edge         (FRMEDGE e)
 //=============================================================================
 {
-    Reg::setbit(m_spix_con, SPIFE, e);
+    Reg::setbit(m_spix_con, 1<<SPIFE, e);
 }
 
 //=============================================================================
     void        Spi::enhanced           (bool tf)
 //=============================================================================
 {
-    bool ison = Reg::anybit(m_spix_con, ON);
+    bool ison = Reg::anybit(m_spix_con, 1<<ON);
     on(false);
-    Reg::setbit(m_spix_con, ENHBUF, tf);
+    Reg::setbit(m_spix_con, 1<<ENHBUF, tf);
     on(ison);
 }
 
@@ -142,14 +143,14 @@ using vu32ptr = volatile uint32_t*;
     void        Spi::on                 (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_spix_con, ON, tf);
+    Reg::setbit(m_spix_con, 1<<ON, tf);
 }
 
 //=============================================================================
     void        Spi::mode               (MODE e)
 //=============================================================================
 {
-    Reg::clrbit(m_spix_con, MODE_CLR<<MODE_SHIFT);
+    Reg::clrbit(m_spix_con, MODE_MASK<<MODE_SHIFT);
     Reg::setbit(m_spix_con, e<<MODE_SHIFT);
 }
 
@@ -157,42 +158,42 @@ using vu32ptr = volatile uint32_t*;
     void        Spi::phase              (PHASE e)
 //=============================================================================
 {
-    Reg::setbit(m_spix_con, SMP, e);
+    Reg::setbit(m_spix_con, 1<<SMP, e);
 }
 
 //=============================================================================
     void        Spi::clk_edge           (CLKEDGE e)
 //=============================================================================
 {
-    Reg::setbit(m_spix_con, CKE, e);
+    Reg::setbit(m_spix_con, 1<<CKE, e);
 }
 
 //=============================================================================
     void        Spi::ss                 (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_spix_con, SSEN, tf);
+    Reg::setbit(m_spix_con, 1<<SSEN, tf);
 }
 
 //=============================================================================
     void        Spi::clk_pol            (CLKPOL e)
 //=============================================================================
 {
-    Reg::setbit(m_spix_con, CKP, e);
+    Reg::setbit(m_spix_con, 1<<CKP, e);
 }
 
 //=============================================================================
     void        Spi::master             (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_spix_con, MSTEN, tf);
+    Reg::setbit(m_spix_con, 1<<MSTEN, tf);
 }
 
 //=============================================================================
     void        Spi::tx_irq             (TXIRQ e)
 //=============================================================================
 {
-    Reg::clrbit(m_spix_con, STXISEL_CLR<<STXISEL_SHIFT);
+    Reg::clrbit(m_spix_con, STXISEL_MASK<<STXISEL_SHIFT);
     Reg::setbit(m_spix_con, e<<STXISEL_SHIFT);
 }
 
@@ -200,7 +201,7 @@ using vu32ptr = volatile uint32_t*;
     void        Spi::rx_irq             (RXIRQ e)
 //=============================================================================
 {
-    Reg::clrbit(m_spix_con, SRXISEL_CLR<<SRXISEL_SHIFT);
+    Reg::clrbit(m_spix_con, SRXISEL_MASK<<SRXISEL_SHIFT);
     Reg::setbit(m_spix_con, e<<SRXISEL_SHIFT);
 }
 
@@ -223,77 +224,77 @@ using vu32ptr = volatile uint32_t*;
     bool        Spi::stat_ferr          ()
 //=============================================================================
 {
-    return Reg::anybit(m_spix_con + SPIXSTAT, FRMERR);
+    return Reg::anybit(m_spix_con + SPIXSTAT, 1<<FRMERR);
 }
 
 //=============================================================================
     void        Spi::stat_ferrclr       ()
 //=============================================================================
 {
-    Reg::clrbit(m_spix_con + SPIXSTAT, FRMERR);
+    Reg::clrbit(m_spix_con + SPIXSTAT, 1<<FRMERR);
 }
 
 //=============================================================================
     bool        Spi::stat_busy          ()
 //=============================================================================
 {
-    return Reg::anybit(m_spix_con + SPIXSTAT, SPIBUSY);
+    return Reg::anybit(m_spix_con + SPIXSTAT, 1<<SPIBUSY);
 }
 
 //=============================================================================
     bool        Spi::stat_txurun        ()
 //=============================================================================
 {
-    return Reg::anybit(m_spix_con + SPIXSTAT, SPITUR);
+    return Reg::anybit(m_spix_con + SPIXSTAT, 1<<SPITUR);
 }
 
 //=============================================================================
     bool        Spi::stat_sremty        ()
 //=============================================================================
 {
-    return Reg::anybit(m_spix_con + SPIXSTAT, SRMT);
+    return Reg::anybit(m_spix_con + SPIXSTAT, 1<<SRMT);
 }
 
 //=============================================================================
     bool        Spi::stat_oerr          ()
 //=============================================================================
 {
-    return Reg::anybit(m_spix_con + SPIXSTAT, SPIROV);
+    return Reg::anybit(m_spix_con + SPIXSTAT, 1<<SPIROV);
 }
 
 //=============================================================================
     void        Spi::stat_oerrclr       ()
 //=============================================================================
 {
-    Reg::clrbit(m_spix_con + SPIXSTAT, SPIROV);
+    Reg::clrbit(m_spix_con + SPIXSTAT, 1<<SPIROV);
 }
 
 //=============================================================================
     bool        Spi::stat_rxemty        ()
 //=============================================================================
 {
-    return Reg::anybit(m_spix_con + SPIXSTAT, SPIRBE);
+    return Reg::anybit(m_spix_con + SPIXSTAT, 1<<SPIRBE);
 }
 
 //=============================================================================
     bool        Spi::stat_txemty        ()
 //=============================================================================
 {
-    return Reg::anybit(m_spix_con + SPIXSTAT, SPITBE);
+    return Reg::anybit(m_spix_con + SPIXSTAT, 1<<SPITBE);
 }
 
 //=============================================================================
     bool        Spi::stat_txfull        ()
 //=============================================================================
 {
-    return Reg::anybit(m_spix_con + SPIXSTAT, SPITBF);
+    return Reg::anybit(m_spix_con + SPIXSTAT, 1<<SPITBF);
 }
 
 //=============================================================================
     bool        Spi::stat_rxfull        ()
 //=============================================================================
 {
-     return Reg::anybit(m_spix_con + SPIXSTAT, SPIRBF);
+     return Reg::anybit(m_spix_con + SPIXSTAT, 1<<SPIRBF);
 }
 
 //spixbrg
@@ -336,51 +337,51 @@ using vu32ptr = volatile uint32_t*;
     void        Spi::sign_ext           (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_spix_con + SPIXCON2, SPISGNEXT, tf);
+    Reg::setbit(m_spix_con + SPIXCON2, 1<<SPISGNEXT, tf);
 }
 
 //=============================================================================
     void        Spi::irq_frmerr         (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_spix_con + SPIXCON2, FRMERREN, tf);
+    Reg::setbit(m_spix_con + SPIXCON2, 1<<FRMERREN, tf);
 }
 
 //=============================================================================
     void        Spi::irq_oflow          (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_spix_con + SPIXCON2, SPIROVEN, tf);
+    Reg::setbit(m_spix_con + SPIXCON2, 1<<SPIROVEN, tf);
 }
 
 //=============================================================================
     void        Spi::irq_urun           (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_spix_con + SPIXCON2, SPITUREN, tf);
+    Reg::setbit(m_spix_con + SPIXCON2, 1<<SPITUREN, tf);
 }
 
 //=============================================================================
     void        Spi::ign_oflow          (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_spix_con + SPIXCON2, IGNROV, tf);
+    Reg::setbit(m_spix_con + SPIXCON2, 1<<IGNROV, tf);
 }
 
 //=============================================================================
     void        Spi::ign_urun           (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_spix_con + SPIXCON2, IGNTUR, tf);
+    Reg::setbit(m_spix_con + SPIXCON2, 1<<IGNTUR, tf);
 }
 
 //=============================================================================
     void        Spi::audio              (bool tf)
 //=============================================================================
 {
-    bool ison = Reg::anybit(m_spix_con, ON);
+    bool ison = Reg::anybit(m_spix_con, 1<<ON);
     on(false);
-    Reg::setbit(m_spix_con + SPIXCON2, AUDEN, tf);
+    Reg::setbit(m_spix_con + SPIXCON2, 1<<AUDEN, tf);
     on(ison);
 }
 
@@ -388,9 +389,9 @@ using vu32ptr = volatile uint32_t*;
     void        Spi::mono               (bool tf)
 //=============================================================================
 {
-    bool ison = Reg::anybit(m_spix_con, ON);
+    bool ison = Reg::anybit(m_spix_con, 1<<ON);
     on(false);
-    Reg::setbit(m_spix_con + SPIXCON2, AUDOMONO, tf);
+    Reg::setbit(m_spix_con + SPIXCON2, 1<<AUDOMONO, tf);
     on(ison);
 }
 
@@ -398,7 +399,7 @@ using vu32ptr = volatile uint32_t*;
     void        Spi::audio_mode         (AUDMOD e)
 //=============================================================================
 {
-    bool ison = Reg::anybit(m_spix_con, ON);
+    bool ison = Reg::anybit(m_spix_con, 1<<ON);
     on(false);
     Reg::clrbit(m_spix_con + SPIXCON2, PCMDSP);
     Reg::setbit(m_spix_con + SPIXCON2, e);

@@ -4,7 +4,7 @@
 
 enum {
     PMDCON = 0xBF8035B0,
-        PMDLOCK = 1<<11,
+        PMDLOCK = 11,
     PMD1 = 0xBF8035C0
 };
 
@@ -13,14 +13,14 @@ enum {
 //=============================================================================
 {
     Sys::unlock();
-    Reg::clrbit(PMDCON, PMDLOCK);
+    Reg::clrbit(PMDCON, 1<<PMDLOCK);
 }
 
 //=============================================================================
     void        Pmd::lock               ()
 //=============================================================================
 {
-    Reg::setbit(PMDCON, PMDLOCK);
+    Reg::setbit(PMDCON, 1<<PMDLOCK);
     Sys::lock();
 }
 

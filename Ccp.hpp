@@ -6,13 +6,14 @@
 
 struct Ccp  {
 
-    //instantiate Ccp with ccp number
+    //instantiate Ccp with CCPn
     enum CCPX {
         CCP1 = 0, CCP2, CCP3, CCP4, CCP5, CCP6, CCP7, CCP8, CCP9
     };
     Ccp(CCPX);
 
-    //ccpxcon1
+//CCPxCON1
+
     enum OPOSTSRC : bool { TMRIRQ = 0, EVTTRG };
     void            outscale_src    (OPOSTSRC);
 
@@ -32,7 +33,7 @@ struct Ccp  {
 
     void            on              (bool);
     void            stop_idle       (bool);
-    void            stop_sleep      (bool);
+    void            run_sleep       (bool);
     void            sync_tmr        (bool);
 
     enum CLKSEL : uint8_t {
@@ -79,7 +80,8 @@ struct Ccp  {
     };
     void            mode            (MODE);
 
-    //ccpxcon2
+//CCPxCON2
+
     void            out_sync        (bool);
 
     enum OUTPINS : uint8_t {
@@ -115,7 +117,8 @@ struct Ccp  {
     void            gate_autosrc    (GATEAUTOSRC);
 
 
-    //ccpxcon3
+//CCPxCON3
+
     void            out_trigwait    (bool);
     void            oneshot_extend  (uint8_t);
 
@@ -134,7 +137,8 @@ struct Ccp  {
 
     void            dead_time       (uint8_t);
 
-    //ccpxstat
+//CCPxSTAT
+
     bool            pr16_busy       ();
     bool            tmr32_busy      ();
     bool            tmr16_busy      ();
@@ -150,7 +154,8 @@ struct Ccp  {
     bool            stat_oflow      ();
     bool            stat_bufany     ();
 
-    //ccpxtmr
+//CCPxTMR
+
     void            tmr16           (uint16_t);
     void            tmr16h          (uint16_t);
     void            tmr32           (uint32_t);
@@ -158,7 +163,8 @@ struct Ccp  {
     uint16_t        tmr16h          ();
     uint32_t        tmr32           ();
 
-    //ccpxpr
+//CCPxPR
+
     void            pr16            (uint16_t);
     void            pr16h           (uint16_t);
     void            pr32            (uint32_t);
@@ -166,7 +172,8 @@ struct Ccp  {
     uint16_t        pr16h           ();
     uint32_t        pr32            ();
 
-    //ccpxra, ccpxrb
+//CCPxRA, CCPxRB
+
     void            compa           (uint16_t);
     void            compb           (uint16_t);
     void            comp32          (uint32_t);
@@ -174,11 +181,13 @@ struct Ccp  {
     uint16_t        compb           ();
     uint32_t        comp32          ();
 
-    //ccpxbuf
+//CCPxBUF
+
     uint16_t        buf16           ();
     uint32_t        buf32           ();
 
-    //misc
+//misc
+
     uint8_t         ccp_num         ();             //which ccp number am I
 
     private:

@@ -6,7 +6,7 @@
 
 struct Clc {
 
-    //instantiate Clc with clc number
+    //instantiate Clc with CLCn
     enum CLCX { CLC1 = 0, CLC2, CLC3, CLC4 };
     Clc(CLCX);
 

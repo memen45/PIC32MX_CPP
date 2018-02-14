@@ -3,60 +3,46 @@
 
 enum {
     DMACON = 0xBF808900,
-        ON = 1<<15,
-        SUSPEND = 1<<12,
-        DMABUSY = 1<<11,
+        ON = 15,
+        SUSPEND = 12,
+        DMABUSY = 11,
     DMASTAT = 0xBF808910,
-        RDWR = 1<<3,
+        RDWR = 3,
         DMACH_SHIFT = 0, DMACH_CLR = 7,
     DMAADDR = 0xBF808920,
     DCRCCON = 0xBF808930,
         BYTO_SHIFT = 28, BYTO_CLR = 3,
-        WBO = 1<<27,
-        BITO = 1<<24,
+        WBO = 27,
+        BITO = 24,
         PLEN_SHIFT = 8, PLEN_CLR = 31,
-        CRCEN = 1<<7,
-        CRCAPP = 1<<6,
-        CRCTYP = 1<<5,
+        CRCEN = 7,
+        CRCAPP = 6,
+        CRCTYP = 5,
         CRCCH_SHIFT = 0, CRCCH_CLR = 7,
     DCRCDATA = 0xBF808940,
     DCRCXOR = 0xBF808950,
-    DCH0CON = 0xBF808960, DCH_SPACING = 0x30, //spacing in words
-        CHBUSY = 1<<15,
-        CHCHNS = 1<<8,
-        CHEN = 1<<7,
-        CHAED = 1<<6,
-        CHCHN = 1<<5,
-        CHAEN = 1<<4,
-        CHEDET = 1<<2,
+
+    DCH_SPACING = 0x30, //spacing in words
+    DCH0CON = 0xBF808960,
+        CHBUSY = 15,
+        CHCHNS = 8,
+        CHEN = 7,
+        CHAED = 6,
+        CHCHN = 5,
+        CHAEN = 4,
+        CHEDET = 2,
         CHPRI_SHIFT = 0, CHPRI_CLR = 3,
     //register offsets from base in words
     //(m_dmax_con is pointer, so addition will be in words)
     DCHXECON = 4,
         CHAIRQ_SHIFT = 16, CHAIRG_CLR = 255, //can use byte access
         CHSIRQ_SHIFT = 8, CHSIRQ_CLR = 255, //can use byte access
-        CFORCE = 1<<7,
-        CABORT = 1<<6,
-        PATEN = 1<<5,
-        SIRQEN = 1<<4,
-        AIRQEN = 1<<3,
+        CFORCE = 7,
+        CABORT = 6,
+        PATEN = 5,
+        SIRQEN = 4,
+        AIRQEN = 3,
     DCHXINT = 8,
-        CHSDIE = 1<<23,
-        CHSHIE = 1<<22,
-        CHDDIE = 1<<21,
-        CHDHIE = 1<<20,
-        CHBCIE = 1<<19,
-        CHCCIE = 1<<18,
-        CHTAIE = 1<<17,
-        CHERIE = 1<<16,
-        CHSDIF = 1<<7,
-        CHSHIF = 1<<6,
-        CHDDIF = 1<<5,
-        CHDHIF = 1<<4,
-        CHBCIF = 1<<3,
-        CHCCIF = 1<<2,
-        CHTAIF = 1<<1,
-        CHERIF = 1<<0,
     DCHXSSA = 12,
     DCHXDSA = 16,
     DCHXSSIZ = 20,
@@ -83,28 +69,28 @@ using vu8ptr = volatile uint8_t*;            //access reg as bytes
     void            Dma::all_on         (bool tf)
 //=============================================================================
 {
-    Reg::setbit(DMACON, ON, tf);
+    Reg::setbit(DMACON, 1<<ON, tf);
 }
 
 //=============================================================================
     void            Dma::all_suspend    (bool tf)
 //=============================================================================
 {
-    Reg::setbit(DMACON, SUSPEND, tf);
+    Reg::setbit(DMACON, 1<<SUSPEND, tf);
 }
 
 //=============================================================================
     bool            Dma::all_suspend    ()
 //=============================================================================
 {
-    return Reg::anybit(DMACON, SUSPEND);
+    return Reg::anybit(DMACON, 1<<SUSPEND);
 }
 
 //=============================================================================
     bool            Dma::any_busy       ()
 //=============================================================================
 {
-    return Reg::anybit(DMACON, DMABUSY);
+    return Reg::anybit(DMACON, 1<<DMABUSY);
 }
 
 //DMASTAT
@@ -112,7 +98,7 @@ using vu8ptr = volatile uint8_t*;            //access reg as bytes
     bool            Dma::last_rd        ()
 //=============================================================================
 {
-    return Reg::anybit(DMASTAT, RDWR);
+    return Reg::anybit(DMASTAT, 1<<RDWR);
 }
 
 //=============================================================================
@@ -137,14 +123,14 @@ using vu8ptr = volatile uint8_t*;            //access reg as bytes
 {
     Reg::clrbit(DCRCCON, BYTO_CLR<<BYTO_SHIFT);
     Reg::setbit(DCRCCON, e<<BYTO_SHIFT);
-    Reg::setbit(DCRCCON, WBO, (bool)e);
+    Reg::setbit(DCRCCON, 1<<WBO, (bool)e);
 }
 
 //=============================================================================
     void            Dma::crc_bito       (CRCBITO e)
 //=============================================================================
 {
-    Reg::setbit(DCRCCON, BITO, e);
+    Reg::setbit(DCRCCON, 1<<BITO, e);
 }
 
 //=============================================================================
@@ -159,21 +145,21 @@ using vu8ptr = volatile uint8_t*;            //access reg as bytes
     void            Dma::crc_on         (bool tf)
 //=============================================================================
 {
-    Reg::setbit(DCRCCON, CRCEN, tf);
+    Reg::setbit(DCRCCON, 1<<CRCEN, tf);
 }
 
 //=============================================================================
     void            Dma::crc_append     (bool tf)
 //=============================================================================
 {
-    Reg::setbit(DCRCCON, CRCAPP, tf);
+    Reg::setbit(DCRCCON, 1<<CRCAPP, tf);
 }
 
 //=============================================================================
     void            Dma::crc_type       (CRCTYPE e)
 //=============================================================================
 {
-    Reg::setbit(DCRCCON, CRCTYP, e);
+    Reg::setbit(DCRCCON, 1<<CRCTYP, e);
 }
 
 //=============================================================================
@@ -213,22 +199,22 @@ uint32_t            Dma::crc_data       ()
     bool            Dma::busy           ()
 //=============================================================================
 {
-    return Reg::anybit(m_dmax_con, CHBUSY);
+    return Reg::anybit(m_dmax_con, 1<<CHBUSY);
 }
 
 //=============================================================================
     void            Dma::chain          (CHCHAIN e)
 //=============================================================================
 {
-    Reg::setbit(m_dmax_con, CHCHNS, e == TOLOWER);
-    Reg::setbit(m_dmax_con, CHCHN, e not_eq CHAINOFF);
+    Reg::setbit(m_dmax_con, 1<<CHCHNS, e == TOLOWER);
+    Reg::setbit(m_dmax_con, 1<<CHCHN, e not_eq CHAINOFF);
 }
 
 //=============================================================================
     void            Dma::on             (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_dmax_con, CHEN, tf);
+    Reg::setbit(m_dmax_con, 1<<CHEN, tf);
     while(busy() not_eq tf);
 }
 
@@ -236,21 +222,21 @@ uint32_t            Dma::crc_data       ()
     void            Dma::evt_always     (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_dmax_con, CHAED, tf);
+    Reg::setbit(m_dmax_con, 1<<CHAED, tf);
 }
 
 //=============================================================================
     void            Dma::auto_en        (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_dmax_con, CHAEN, tf);
+    Reg::setbit(m_dmax_con, 1<<CHAEN, tf);
 }
 
 //=============================================================================
     bool            Dma::evt            ()
 //=============================================================================
 {
-    return Reg::anybit(m_dmax_con, CHEDET);
+    return Reg::anybit(m_dmax_con, 1<<CHEDET);
 }
 
 //=============================================================================
@@ -267,7 +253,7 @@ uint32_t            Dma::crc_data       ()
 //=============================================================================
 {
     Reg::val((vu8ptr)m_dmax_con + (DCHXECON * 4) + 2, v);
-    Reg::setbit(m_dmax_con + DCHXECON, AIRQEN, v not_eq (uint8_t)IRQOFF);
+    Reg::setbit(m_dmax_con + DCHXECON, 1<<AIRQEN, v not_eq (uint8_t)IRQOFF);
 }
 
 //=============================================================================
@@ -275,28 +261,28 @@ uint32_t            Dma::crc_data       ()
 //=============================================================================
 {
     Reg::val((vu8ptr)m_dmax_con + (DCHXECON * 4) + 1, v);
-    Reg::setbit(m_dmax_con + DCHXECON, SIRQEN, v not_eq (uint8_t)IRQOFF);
+    Reg::setbit(m_dmax_con + DCHXECON, 1<<SIRQEN, v not_eq (uint8_t)IRQOFF);
 }
 
 //=============================================================================
     void            Dma::start          ()
 //=============================================================================
 {
-    Reg::setbit(m_dmax_con+DCHXECON, CFORCE);
+    Reg::setbit(m_dmax_con+DCHXECON, 1<<CFORCE);
 }
 
 //=============================================================================
     void            Dma::abort          ()
 //=============================================================================
 {
-    Reg::setbit(m_dmax_con+DCHXECON, CABORT);
+    Reg::setbit(m_dmax_con+DCHXECON, 1<<CABORT);
 }
 
 //=============================================================================
     void            Dma::abort_match    (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_dmax_con+DCHXECON, PATEN, tf);
+    Reg::setbit(m_dmax_con+DCHXECON, 1<<PATEN, tf);
 }
 
 //DCHXINT

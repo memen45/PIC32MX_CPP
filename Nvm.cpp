@@ -5,10 +5,10 @@
 
 enum : uint32_t {
     NVMCON = 0xBF802930, //WR locked
-        WR = 1<<15,
-        WREN = 1<<14,
-        WRERR = 1<<13,
-        LVDERR = 1<<12,
+        WR = 15,
+        WREN = 14,
+        WRERR = 13,
+        LVDERR = 12,
         NVMOP_SHIFT = 0, NVMOP_CLR = 15,
         NOP = 0,
         PGMDWORD = 2,
@@ -23,15 +23,13 @@ enum : uint32_t {
     NVMDATA1 = 0xBF802970,
     NVMSRCADDR = 0xBF802980, //physical address
     NVMPWP = 0xBF802990, //locked
-        PWPULOCK = 1u<<31,
-        PWPULOCK_SHIFT = 31,
+        PWPULOCK = 31,
         PWP_SHIFT = 0, PWP_CLR = 0xFFFFFF,
     NVMBWP = 0xBF8029A0, //locked
-        BWPULOCK_SHIFT = 15,
-        BWPULOCK = 1<<15,
-        BWP2 = 1<<10,
-        BWP1 = 1<<9,
-        BWP0 = 1<<8
+        BWPULOCK = 15,
+        BWP2 = 10,
+        BWP1 = 9,
+        BWP0 = 8
 };
 
 using vu32ptr = volatile uint32_t*;
@@ -64,19 +62,19 @@ using vu32ptr = volatile uint32_t*;
 //=============================================================================
 {
     uint8_t stat = unlock();
-    Reg::setbit(NVMCON, WR);
+    Reg::setbit(NVMCON, 1<<WR);
     lock(stat);
-    while(Reg::anybit(NVMCON, WR));
+    while(Reg::anybit(NVMCON, 1<<WR));
 }
 
 //=============================================================================
     void        Nvm::do_op          (uint8_t v)
 //=============================================================================
 {
-    Reg::clrbit(NVMCON, NVMOP_CLR | WREN);
-    Reg::setbit(NVMCON, v | WREN);
+    Reg::clrbit(NVMCON, NVMOP_CLR | 1<<WREN);
+    Reg::setbit(NVMCON, v | 1<<WREN);
     do_wr();
-    Reg::clrbit(NVMCON, NVMOP_CLR | WREN);
+    Reg::clrbit(NVMCON, NVMOP_CLR | 1<<WREN);
 }
 
 //=============================================================================
@@ -141,7 +139,7 @@ using vu32ptr = volatile uint32_t*;
 //=============================================================================
 {
     uint8_t stat = unlock();
-    Reg::val(NVMPWP, (v bitand PWP_CLR) | not tf<<PWPULOCK_SHIFT);
+    Reg::val(NVMPWP, (v bitand PWP_CLR) | not tf<<PWPULOCK);
     lock(stat);
 }
 
@@ -150,6 +148,6 @@ using vu32ptr = volatile uint32_t*;
 //=============================================================================
 {
     uint8_t stat = unlock();
-    Reg::val(NVMBWP, e | not tf<<BWPULOCK_SHIFT);
+    Reg::val(NVMBWP, e | not tf<<BWPULOCK);
     lock(stat);
 }

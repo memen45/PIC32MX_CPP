@@ -4,18 +4,19 @@
 #include "Sys.hpp"
 
 enum { //offsets from base address, in words
-    TRIS = 0x10>>2, PORT = 0x20>>2, LAT = 0x30>>2, ODC = 0x40>>2,
-    CNPU = 0x50>>2, CNPD = 0x60>>2, CNCON = 0x70>>2, CNEN0 = 0x80>>2,
-    CNSTAT = 0x90>>2, CNEN1 = 0xA0>>2, CNF = 0xB0>>2
+    TRIS = 4, PORT = 8, LAT = 12, ODC = 16,
+    CNPU = 20, CNPD = 24, CNCON = 28, CNEN0 = 32,
+    CNSTAT = 36, CNEN1 = 40, CNF = 44
 };
 
 enum {
-    ANSELA = 0xBF802BB0, ANSELX_SPACING = 64, //spacing in words
+    ANSELX_SPACING = 64, //spacing in words
+    ANSELA = 0xBF802BB0,
     //CNCONx
-        ON = 1<<15,
-        CNSTYLE = 1<<11,
+        ON = 15,
+        CNSTYLE = 11,
     RPCON = 0xBF802A00,
-        IOLOCK = 1<<11,
+        IOLOCK = 11,
     RPINR1 = 0xBF802A10,
     RPOR0 = 0xBF802B10
 };
@@ -200,14 +201,14 @@ using vu32_ptr = volatile uint32_t*;
     void        Pins::icn               (bool tf) const
 //=============================================================================
 {
-    Reg::setbit(m_pt + CNCON, ON, tf);
+    Reg::setbit(m_pt + CNCON, 1<<ON, tf);
 }
 
 //=============================================================================
     void        Pins::icn_rising        () const
 //=============================================================================
 {
-    Reg::setbit(m_pt + CNCON, CNSTYLE);
+    Reg::setbit(m_pt + CNCON, 1<<CNSTYLE);
     Reg::setbit(m_pt + CNEN0, m_pn);
     Reg::clrbit(m_pt + CNEN1, m_pn);
 }
@@ -216,7 +217,7 @@ using vu32_ptr = volatile uint32_t*;
     void        Pins::icn_risefall      () const
 //=============================================================================
 {
-    Reg::setbit(m_pt + CNCON, CNSTYLE);
+    Reg::setbit(m_pt + CNCON, 1<<CNSTYLE);
     Reg::setbit(m_pt + CNEN0, m_pn);
     Reg::clrbit(m_pt + CNEN1, m_pn);
 }
@@ -225,7 +226,7 @@ using vu32_ptr = volatile uint32_t*;
     void        Pins::icn_falling       () const
 //=============================================================================
 {
-    Reg::setbit(m_pt + CNCON, CNSTYLE);
+    Reg::setbit(m_pt + CNCON, 1<<CNSTYLE);
     Reg::setbit(m_pt + CNEN1, m_pn);
     Reg::clrbit(m_pt + CNEN0, m_pn);
 }
@@ -235,7 +236,7 @@ using vu32_ptr = volatile uint32_t*;
 //=============================================================================
 {
     Reg::setbit(m_pt + CNEN0, m_pn);
-    Reg::clrbit(m_pt + CNCON, CNSTYLE);
+    Reg::clrbit(m_pt + CNCON, 1<<CNSTYLE);
 }
 
 //=============================================================================
@@ -259,9 +260,9 @@ using vu32_ptr = volatile uint32_t*;
 //=============================================================================
 {
     Sys::unlock();
-    Reg::clrbit(RPCON, IOLOCK);
+    Reg::clrbit(RPCON, 1<<IOLOCK);
     Reg::val(addr, v);
-    Reg::setbit(RPCON, IOLOCK);
+    Reg::setbit(RPCON, 1<<IOLOCK);
     Sys::lock();
 }
 

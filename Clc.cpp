@@ -2,14 +2,15 @@
 #include "Reg.hpp"
 
 enum {
-    CLC1CON = 0xBF802480, CLCXCON_SPACING = 32, //spacing in words
-        ON = 1<<15,
-        SIDL = 1<<13,
-        INTP = 1<<11,
-        INTN = 1<<10,
-        LCOE = 1<<7,
-        LCOUT = 1<<6,
-        LCPOL = 1<<5,
+    CLCXCON_SPACING = 32, //spacing in words
+    CLC1CON = 0xBF802480,
+        ON = 15,
+        SIDL = 13,
+        INTP = 11,
+        INTN = 10,
+        LCOE = 7,
+        LCOUT = 6,
+        LCPOL = 5,
     CLCXSEL = 4, //offsets in words
     CLCXGLS = 8, //offsets in words
 };
@@ -32,49 +33,49 @@ enum {
     void            Clc::on             (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_clcx_con, ON, tf);
+    Reg::setbit(m_clcx_con, 1<<ON, tf);
 }
 
 //=============================================================================
     void            Clc::stop_idle      (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_clcx_con, SIDL, tf);
+    Reg::setbit(m_clcx_con, 1<<SIDL, tf);
 }
 
 //=============================================================================
     void            Clc::intp           (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_clcx_con, INTP, tf);
+    Reg::setbit(m_clcx_con, 1<<INTP, tf);
 }
 
 //=============================================================================
     void            Clc::intn           (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_clcx_con, INTN, tf);
+    Reg::setbit(m_clcx_con, 1<<INTN, tf);
 }
 
 //=============================================================================
     void            Clc::out            (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_clcx_con, LCOE, tf);
+    Reg::setbit(m_clcx_con, 1<<LCOE, tf);
 }
 
 //=============================================================================
     bool            Clc::out            ()
 //=============================================================================
 {
-    return Reg::anybit(m_clcx_con, LCOUT);
+    return Reg::anybit(m_clcx_con, 1<<LCOUT);
 }
 
 //=============================================================================
     void            Clc::out_inv        (bool tf)
 //=============================================================================
 {
-    Reg::setbit(m_clcx_con, LCPOL, tf);
+    Reg::setbit(m_clcx_con, 1<<LCPOL, tf);
 }
 
 //=============================================================================

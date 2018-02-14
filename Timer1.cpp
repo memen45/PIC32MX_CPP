@@ -4,14 +4,14 @@
 
 enum {
     //T1CON
-        ON = 1<<15,
-        SIDL = 1<<13,
-        TWDIS = 1<<12,
-        TWIP = 1<<11,
-        TGATE = 1<<7,
-        TCKPS_SHIFT = 4, TCKPS_CLR = 3,
-        TSYNC = 1<<2,
-        CLK_CLR = (3<<8) | (1<<1),
+        ON = 15,
+        SIDL = 13,
+        TWDIS = 12,
+        TWIP = 11,
+        TGATE = 7,
+        TCKPS_SHIFT = 4, TCKPS_MASK = 3,
+        TSYNC = 2,
+        CLK_MASK = (3<<8) | (1<<1),
     TMR1 = 0xBF808010,
     PR1 = 0xBF808020
 };
@@ -49,28 +49,28 @@ enum {
     void        Timer1::on              (bool tf)
 //=============================================================================
 {
-    Reg::setbit(T1CON, ON, tf);
+    Reg::setbit(T1CON, 1<<ON, tf);
 }
 
 //=============================================================================
     void        Timer1::stop_idle       (bool tf)
 //=============================================================================
 {
-    Reg::setbit(T1CON, SIDL, tf);
+    Reg::setbit(T1CON, 1<<SIDL, tf);
 }
 
 //=============================================================================
     void        Timer1::wr_async        (bool tf)
 //=============================================================================
 {
-    Reg::setbit(T1CON, TWDIS, not tf);
+    Reg::setbit(T1CON, 1<<TWDIS, not tf);
 }
 
 //=============================================================================
     bool        Timer1::wr_busy         ()
 //=============================================================================
 {
-    return Reg::anybit(T1CON, TWIP);
+    return Reg::anybit(T1CON, 1<<TWIP);
 }
 
 //=============================================================================
@@ -78,7 +78,7 @@ enum {
 //=============================================================================
 {
     if(e == SOSC) Osc::sosc(true);
-    Reg::clrbit(T1CON, CLK_CLR);
+    Reg::clrbit(T1CON, CLK_MASK);
     Reg::setbit(T1CON, e);
 }
 
@@ -86,14 +86,14 @@ enum {
     void        Timer1::tgate           (bool tf)
 //=============================================================================
 {
-    Reg::setbit(T1CON, TGATE, tf);
+    Reg::setbit(T1CON, 1<<TGATE, tf);
 }
 
 //=============================================================================
     void        Timer1::prescale        (TCKPS e)
 //=============================================================================
 {
-    Reg::clrbit(T1CON, TCKPS_CLR<<TCKPS_SHIFT);
+    Reg::clrbit(T1CON, TCKPS_MASK<<TCKPS_SHIFT);
     Reg::setbit(T1CON, e<<TCKPS_SHIFT);
 }
 
@@ -101,6 +101,6 @@ enum {
     void        Timer1::tsync           (bool tf)
 //=============================================================================
 {
-    Reg::setbit(T1CON, TSYNC, tf);
+    Reg::setbit(T1CON, 1<<TSYNC, tf);
 }
 
