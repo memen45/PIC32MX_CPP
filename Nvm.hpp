@@ -10,6 +10,10 @@
 
     return values
     0= no error, 1= low voltage error, 2= write error
+
+    no check is made for address alignment- if incorrect the address will be
+    masked by the register used and an nvm op will take place on the register
+   'forced' alignment
 */
 
 struct Nvm {
@@ -29,7 +33,8 @@ struct Nvm {
         MAXROW64 = ((MAXMEM64+1)/ROWSIZE-1), //0-255
     };
 
-    static uint8_t  write_dword     (uint32_t*, uint32_t, uint32_t);
+    static uint8_t  write_word      (uint32_t*, uint32_t);
+    static uint8_t  write_2word     (uint32_t*, uint32_t, uint32_t);
     static uint8_t  write_row       (uint32_t*, uint32_t); //src,dst
     static uint8_t  page_erase      (uint32_t);
     static void     write_protect   (uint32_t, bool); //true=lock until reset

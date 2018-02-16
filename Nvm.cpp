@@ -86,7 +86,17 @@ using vu32ptr = volatile uint32_t*;
 }
 
 //=============================================================================
-    uint8_t     Nvm::write_dword    (uint32_t* addr, uint32_t hw, uint32_t lw)
+    uint8_t     Nvm::write_word     (uint32_t* addr, uint32_t lw)
+//=============================================================================
+{
+    //figure out which word to program, the other will be set to 0xFFFFFFFF
+    uint32_t hw = -1;
+    if((uint32_t)addr bitand 2){ hw = lw; lw = -1; } //swap hw,lw
+    return write_2word(addr, hw, lw);
+}
+
+//=============================================================================
+    uint8_t     Nvm::write_2word    (uint32_t* addr, uint32_t hw, uint32_t lw)
 //=============================================================================
 {
     address((uint32_t)addr);
