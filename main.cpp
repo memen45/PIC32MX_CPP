@@ -181,55 +181,7 @@ const uint8_t svg[][3]{
 };
 
 
-struct UartInfo {
-
-    UartInfo(Uart::UARTX u, Pins::RPN tx, Pins::RPN rx, uint32_t baud = 0) :
-        m_tx(tx, Pins::OUT),
-        m_rx(rx, Pins::INPU),
-        m_u(u)
-    {
-        //UART1 is fixed pins, no pps
-        if(u == Uart::UART2){
-            m_rx.pps_in(Pins::U2RX);
-            m_tx.pps_out(Pins::U2TX);
-        }
-        else if(u == Uart::UART3){
-            m_rx.pps_in(Pins::U3RX);
-            m_tx.pps_out(Pins::U3TX);
-        }
-        if(baud) m_u.baud_set(baud);
-        m_u.rx_on(true);
-        m_u.tx_on(true);
-    }
-
-    //wait until after Osc is set to turn on
-    void on(bool tf){
-        m_u.on(tf);
-    }
-
-    void putc(char c){
-        while(m_u.tx_full());
-        m_u.write(c);
-    }
-
-    void puts(const char* str){
-        while(*str) putc(*str++);
-    }
-
-    int getc(){
-        if(m_u.rx_empty()) return -1;
-        return m_u.read();
-    }
-
-
-    private:
-
-    Pins m_tx; //(Pins::C6, Pins::OUT);
-    Pins m_rx; //(Pins::C7, Pins::INPU);
-    Uart m_u; //(Uart::UART2);
-};
-
-UartInfo info{Uart::UART2, Pins::C6, Pins::C7, 115200};
+Uart info{Uart::UART2, Pins::C6, Pins::C7, 115200};
 
 
 //rgb led's struct, use pwm for brightness

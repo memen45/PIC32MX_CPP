@@ -1,6 +1,7 @@
 #include "Uart.hpp"
 #include "Reg.hpp"
 #include "Osc.hpp"
+#include "Pins.hpp"
 
 enum {
     UARTX_SPACING = 0x40,  //spacing in words
@@ -54,6 +55,26 @@ using vu32ptr = volatile uint32_t*;
       m_uartx_rx(*((vu32ptr)U1MODE + (e * UARTX_SPACING) + UXRXREG)),
       m_uartx_baud(0)
 {}
+
+//=============================================================================
+Uart::Uart      (UARTX e, Pins::RPN tx, Pins::RPN rx, uint32_t baud)
+//=============================================================================
+    : Uart(e)
+{
+
+    //UART1 is fixed pins, no pps
+    if(e == Uart::UART2){
+        Pins r(rx); r.pps_in(Pins::U2RX);
+        Pins t(tx); t.pps_out(Pins::U2TX);
+    }
+    else if(e == Uart::UART3){
+        Pins r(rx); r.pps_in(Pins::U3RX);
+        Pins t(tx); t.pps_out(Pins::U3TX);
+    }
+    baud_set();
+    rx_on(true);
+    tx_on(true);
+}
 
 //uxtxreg
 //=============================================================================
@@ -320,4 +341,29 @@ using vu32ptr = volatile uint32_t*;
     if(e == REFO1) return Osc::refo_freq();
     else if(e == FRC) return Osc::frcclk();
     return Osc::sysclk(); //pb/sys are the same
+}
+
+
+//misc
+//=============================================================================
+    void        Uart::putc              (const char c)
+//=============================================================================
+{
+    while(tx_full());
+    write(c);
+}
+
+//=============================================================================
+    void        Uart::puts              (const char* str)
+//=============================================================================
+{
+    while(*str) putc(*str++);
+}
+
+//=============================================================================
+    int         Uart::getc              ()
+//=============================================================================
+{
+    if(rx_empty()) return -1;
+    return read();
 }

@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "Pins.hpp"
+
 //UART 1/2/3
 
 struct Uart  {
@@ -9,6 +11,7 @@ struct Uart  {
     //instantiate Uart with uart number
     enum UARTX { UART1 = 0, UART2, UART3 };
     Uart(UARTX);
+    Uart(UARTX, Pins::RPN, Pins::RPN, uint32_t = 0);
 
     //uxmode
     void            stop_sleep      (bool);             //stop in sleep
@@ -75,6 +78,11 @@ struct Uart  {
     void            baud_set        (uint32_t);         //set baud to value
     void            baud_set        ();                 //recalc, or default
     uint32_t        baud_clk        ();                 //get uart clock freq
+
+    //misc
+    void            putc            (const char);       //simple blocking
+    void            puts            (const char*);      //functions
+    int             getc            ();                 // -1 = none
 
     private:
 
