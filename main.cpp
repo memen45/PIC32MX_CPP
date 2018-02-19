@@ -23,8 +23,10 @@
 #include "Delay.hpp"
 #include "Resets.hpp"
 #include "Ccp.hpp"
+#include "Uart.hpp"
 
-
+#include <cstdlib>
+#include <stdio.h>
 
 //svg colors for rgb led
 const uint8_t svg[][3]{
@@ -178,6 +180,58 @@ const uint8_t svg[][3]{
 ///*black*/ {0,0,0} //end
 };
 
+
+struct UartInfo {
+
+    UartInfo(Uart::UARTX u, Pins::RPN tx, Pins::RPN rx, uint32_t baud = 0) :
+        m_tx(tx, Pins::OUT),
+        m_rx(rx, Pins::INPU),
+        m_u(u)
+    {
+        //UART1 is fixed pins, no pps
+        if(u == Uart::UART2){
+            m_rx.pps_in(Pins::U2RX);
+            m_tx.pps_out(Pins::U2TX);
+        }
+        else if(u == Uart::UART3){
+            m_rx.pps_in(Pins::U3RX);
+            m_tx.pps_out(Pins::U3TX);
+        }
+        if(baud) m_u.baud_set(baud);
+        m_u.rx_on(true);
+        m_u.tx_on(true);
+    }
+
+    //wait until after Osc is set to turn on
+    void on(bool tf){
+        m_u.on(tf);
+    }
+
+    void putc(char c){
+        while(m_u.tx_full());
+        m_u.write(c);
+    }
+
+    void puts(const char* str){
+        while(*str) putc(*str++);
+    }
+
+    int getc(){
+        if(m_u.rx_empty()) return -1;
+        return m_u.read();
+    }
+
+
+    private:
+
+    Pins m_tx; //(Pins::C6, Pins::OUT);
+    Pins m_rx; //(Pins::C7, Pins::INPU);
+    Uart m_u; //(Uart::UART2);
+};
+
+UartInfo info{Uart::UART2, Pins::C6, Pins::C7, 115200};
+
+
 //rgb led's struct, use pwm for brightness
 //loop through svg colors by regularly calling update()
 struct Rgb {
@@ -207,7 +261,19 @@ struct Rgb {
             m_ccp[i].compb(v);
         }
         m_delay.set_ms(t);
+
+        int c =  info.getc();
+        if(c != -1){
+            info.putc(c);
+            info.puts("\n");
+        }
+
         if(t == m_delay_short) return;
+
+        char buf[32];
+        snprintf(buf, 32, "color[%d]: %d.%d.%d\n", m_idx,svg[m_idx][0],svg[m_idx][1],svg[m_idx][2]);
+        info.puts(buf);
+
         if(++m_idx >= sizeof(svg)/sizeof(svg[0])) m_idx = 0;
     };
 
@@ -215,7 +281,7 @@ struct Rgb {
 
     static const uint16_t m_delay_short{10};
     static const uint16_t m_delay_long{1000};
-    uint8_t m_idx;
+    uint8_t m_idx{0};
     //pwm to rgb pins
     //mccp 1-3 pwm to rgb led's
     Ccp m_ccp[3]{ Ccp::CCP1, Ccp::CCP2, Ccp::CCP3 };
@@ -225,6 +291,7 @@ struct Rgb {
          m_ledB{Pins::C15, Pins::OUT};
 
     Delay m_delay;
+
 };
 
 
@@ -235,7 +302,7 @@ struct Led12 {
 
     void update(){
         if(not m_delay.expired()) return;
-        uint8_t t = m_pot.adcval()>>2; //(0-4096 -> 0-256)
+        uint16_t t = m_pot.adcval()>>2; //(0-4096 -> 0-256)
         if(t < 100){
             t = 100;
             m_led1.off();
@@ -273,6 +340,8 @@ int main()
 
     //set osc to 24MHz
     Osc_init();
+
+    info.on(true);
 
     Rgb rgb;
     Led12 led12;

@@ -17,7 +17,7 @@ enum {
         CNSTYLE = 11,
     RPCON = 0xBF802A00,
         IOLOCK = 11,
-    RPINR1 = 0xBF802A10,
+    RPINR1 = 0xBF802A20,
     RPOR0 = 0xBF802B10
 };
 
@@ -275,7 +275,7 @@ using vu32_ptr = volatile uint32_t*;
     if(e not_eq PPSINOFF) m_ppsin = (uint8_t)e; //save peripheral number
     if(m_ppsin == PPSINOFF) return; //not set previously, nothing to do
     //set peripheral m_ppsin register to 0 if off, or RPn number
-    pps_do(RPINR1 + ((m_ppsin / 4) * 16) + (m_ppsin % 4), e == PPSINOFF ? 0 : m_rpn);
+    pps_do(RPINR1 + m_ppsin, e == PPSINOFF ? 0 : m_rpn);
     digital_in();
 }
 

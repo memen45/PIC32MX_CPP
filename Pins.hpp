@@ -115,18 +115,20 @@ struct Pins {
     //pps
     enum PPSIN : uint8_t {
         //byte offset from RPINR1
-        INT4 = 0,                                   //R1
-        ICM1 = 6, ICM2 = 7,                         //R2
-        ICM3 = 8, ICM4 = 9,                         //R3
-
-        OCFA = 14, OCFB = 15,                       //R5
-        TCKIA = 16, TCKIB = 17,                     //R6
-        ICM5 = 20, ICM6 = 21, ICM7 = 22, ICM8 = 23, //R7
-        ICM9 = 24, U3RX = 27,                       //R8
-        U2RX = 30, U2CTS = 31,                      //R9
-        U3CTS = 35,                                 //R10
-        SDI2 = 36, SCK2IN = 37, SS2IN = 38,         //R11
-        CLCINA = 42, CLCINB = 43,                   //R12
+        INT4 = 0*16|0,                          //R1
+        ICM1 = 1*16|2, ICM2 = 1*16|3,           //R2
+        ICM3 = 2*16|0,                          //R3
+        //no RPINR4
+        OCFA = 4*16|2, OCFB = 1*16|3,           //R5
+        TCKIA = 5*16|0, TCKIB = 5*16|1,         //R6
+        ICM5 = 6*16|0, ICM6 = 6*16|1,           //R7
+        ICM7 = 6*16|2, ICM8 = 6*16|3,           //R7
+        ICM9 = 7*16|0, U3RX = 7*16|3,           //R8
+        U2RX = 8*16|2, U2CTS = 8*16|3,          //R9
+        U3CTS = 9*16|3,                         //R10
+        SDI2 = 10*16|0, SCK2IN = 10*16|1,       //R11
+        SS2IN = 10*16|2,                        //R11
+        CLCINA = 11*16|2, CLCINB = 11*16|3,     //R12
         PPSINOFF = 255
     };
     void        pps_in          (PPSIN);
