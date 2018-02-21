@@ -47,21 +47,22 @@ using vu32ptr = volatile uint32_t*;
 
 //Uart
 
+//setup pins manually
 //=============================================================================
-                    Uart::Uart      (UARTX e)
+    Uart::Uart      (UARTX e)
 //=============================================================================
-    : m_uartx_base((vu32ptr)U1MODE + (e * UARTX_SPACING)),
-      m_uartx_tx(*((vu32ptr)U1MODE + (e * UARTX_SPACING) + UXTXREG)),
-      m_uartx_rx(*((vu32ptr)U1MODE + (e * UARTX_SPACING) + UXRXREG)),
+    : m_uartx_base((vu32ptr)U1MODE + ((e bitand 3) * UARTX_SPACING)),
+      m_uartx_tx(*((vu32ptr)U1MODE + ((e bitand 3) * UARTX_SPACING) + UXTXREG)),
+      m_uartx_rx(*((vu32ptr)U1MODE + ((e bitand 3) * UARTX_SPACING) + UXRXREG)),
       m_uartx_baud(0)
 {}
 
+//specify pins
 //=============================================================================
-Uart::Uart      (UARTX e, Pins::RPN tx, Pins::RPN rx, uint32_t baud)
+    Uart::Uart      (UARTX e, Pins::RPN tx, Pins::RPN rx, uint32_t baud)
 //=============================================================================
     : Uart(e)
 {
-
     //UART1 is fixed pins, no pps
     if(e == Uart::UART2){
         Pins r(rx); r.pps_in(Pins::U2RX);
@@ -71,9 +72,39 @@ Uart::Uart      (UARTX e, Pins::RPN tx, Pins::RPN rx, uint32_t baud)
         Pins r(rx); r.pps_in(Pins::U3RX);
         Pins t(tx); t.pps_out(Pins::U3TX);
     }
+    m_uartx_baud = baud;
     baud_set();
     rx_on(true);
     tx_on(true);
+}
+
+//tx or rx only
+//=============================================================================
+    Uart::Uart      (UARTX e, Pins::RPN trx, uint32_t baud)
+//=============================================================================
+    : Uart(e)
+{
+    //UART1 is fixed pins, no pps
+    if(e == Uart::UART2){
+        if(e bitand (1<<2)){
+            Pins t(trx); t.pps_out(Pins::U2TX);
+            tx_on(true);
+        } else {
+            Pins r(trx); r.pps_in(Pins::U2RX);
+            rx_on(true);
+        }
+    }
+    else if(e == Uart::UART3){
+        if(e bitand (1<<2)){
+            Pins t(trx); t.pps_out(Pins::U3TX);
+            tx_on(true);
+        } else {
+            Pins r(trx); r.pps_in(Pins::U3RX);
+            rx_on(true);
+        }
+    }
+    m_uartx_baud = baud;
+    baud_set();
 }
 
 //uxtxreg

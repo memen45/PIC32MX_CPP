@@ -7,6 +7,36 @@
 
 struct Rtcc {
 
+    using time_t = union {
+        struct {
+        uint8_t :8;
+        uint8_t seconds1:4;
+        uint8_t seconds10:4;
+        uint8_t minutes1:4;
+        uint8_t minutes10:3;
+        uint8_t :1;
+        uint8_t hours1:4;
+        uint8_t hours10:3;
+        uint8_t :1;
+        };
+        uint32_t w:32;
+    };
+
+    using date_t = union {
+        struct {
+        uint8_t weekday:3;
+        uint8_t :5;
+        uint8_t day1:4;
+        uint8_t day10:2;
+        uint8_t :2;
+        uint8_t month1:4;
+        uint8_t month10:1;
+        uint8_t :3;
+        uint8_t :8;
+        };
+        uint32_t w:32;
+    };
+
     static void         alarm           (bool);
     static void         chime           (bool);
 
@@ -18,10 +48,9 @@ struct Rtcc {
 
     static void         alarm_repeat    (uint8_t);
     static void         on              (bool);
-    static void         out             (bool);
 
-    enum OUTSEL : uint8_t { ALMEVT, CLKSEC, CLKSRC };
-    static void         pin_src         (OUTSEL);
+    enum OUTSEL : uint8_t { ALMEVT, CLKSEC, CLKSRC, OFF };
+    static void         out_pin         (OUTSEL);
 
     static void         clk_div         (uint16_t);
     static void         clk_frdiv       (uint8_t);
@@ -36,14 +65,14 @@ struct Rtcc {
     static bool         time_busy       ();
     static bool         alarm_busy      ();
     static bool         half_sec        ();
-    static uint32_t     time            ();
-    static uint32_t     date            ();
-    static uint32_t     alarm_time      ();
-    static uint32_t     alarm_date      ();
-    static void         time            (uint32_t);
-    static void         date            (uint32_t);
-    static void         alarm_time      (uint32_t);
-    static void         alarm_date      (uint32_t);
+    static time_t       time            ();
+    static date_t       date            ();
+    static time_t       alarm_time      ();
+    static date_t       alarm_date      ();
+    static void         time            (time_t);
+    static void         date            (date_t);
+    static void         alarm_time      (time_t);
+    static void         alarm_date      (date_t);
 
     private:
 

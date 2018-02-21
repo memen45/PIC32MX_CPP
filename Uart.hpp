@@ -9,8 +9,14 @@
 struct Uart  {
 
     //instantiate Uart with uart number
-    enum UARTX { UART1 = 0, UART2, UART3 };
+    // | TRX<2> | UART<1:0> |
+    enum UARTX {
+        UART1 = 0, UART1TX = UART1|1<<2, UART1RX = UART1,
+        UART2 = 1, UART2TX = UART2|1<<2, UART2RX = UART2,
+        UART3 = 2, UART3TX = UART3|1<<2, UART3RX = UART3
+    };
     Uart(UARTX);
+    Uart(UARTX, Pins::RPN, uint32_t = 0); //tx/rx only, bit2=1=tx bit2=0=rx
     Uart(UARTX, Pins::RPN, Pins::RPN, uint32_t = 0);
 
     //uxmode

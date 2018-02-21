@@ -67,7 +67,7 @@ enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
     void        Rtcc::on                (bool tf)
 //=============================================================================
 {
-    if(tf and Reg::val16(RTCCON2 + 2)){        //div not set, so
+    if(tf and Reg::val16(RTCCON2 + 2)){     //div not set, so
         clk_div(CLK_DIV_32KHZ);             //init ourselves
         if(Osc::sosc()) clk_src(SOSC);      //use sosc if on
         else clk_src(LPRC);                 //else use lprc
@@ -77,18 +77,14 @@ enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
 }
 
 //=============================================================================
-    void        Rtcc::out               (bool tf)
+    void        Rtcc::out_pin           (OUTSEL v)
 //=============================================================================
 {
-    conset(RTCCON1, 1<<PINON, tf);
-}
-
-//=============================================================================
-    void        Rtcc::pin_src           (OUTSEL v)
-//=============================================================================
-{
-    conset(RTCCON1, OUTSEL_MASK<<OUTSEL_SHIFT, 0);
-    conset(RTCCON1, v<<OUTSEL_SHIFT, 1);
+    if(v != OFF){
+        conset(RTCCON1, OUTSEL_MASK<<OUTSEL_SHIFT, 0);
+        conset(RTCCON1, v<<OUTSEL_SHIFT, 1);
+    }
+    conset(RTCCON1, 1<<PINON, v != OFF);
 }
 
 //=============================================================================
@@ -153,59 +149,66 @@ enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
     return Reg::anybit(RTCSTAT, 1<<HALFSTAT);
 }
 
-//raw time, date
 //=============================================================================
-    uint32_t    Rtcc::time              ()
+    auto        Rtcc::time              () -> time_t
 //=============================================================================
 {
-    return Reg::val(RTCTIME);
+    time_t t;
+    t.w = Reg::val(RTCTIME);
+    return t;
 }
 
 //=============================================================================
-    uint32_t    Rtcc::date              ()
+    auto        Rtcc::date              () -> date_t
 //=============================================================================
 {
-    return Reg::val(RTCDATE);
+    date_t d;
+    d.w = Reg::val(RTCDATE);
+    return d;
 }
 
 //=============================================================================
-    uint32_t    Rtcc::alarm_time        ()
+    auto        Rtcc::alarm_time        () -> time_t
 //=============================================================================
 {
-    return Reg::val(ALMTIME);
+    time_t t;
+    t.w = Reg::val(ALMTIME);
+    return t;
 }
 
 //=============================================================================
-    uint32_t    Rtcc::alarm_date        ()
+    auto        Rtcc::alarm_date        () -> date_t
 //=============================================================================
 {
-    return Reg::val(ALMDATE);
+    date_t d;
+    d.w = Reg::val(ALMDATE);
+    return d;
 }
 
 //=============================================================================
-    void        Rtcc::time              (uint32_t v)
+    void        Rtcc::time              (time_t v)
 //=============================================================================
 {
-    conval(RTCTIME, v);
+    conval(RTCTIME, v.w);
 } //wrlock
 //=============================================================================
-    void        Rtcc::date              (uint32_t v)
+    void        Rtcc::date              (date_t v)
 //=============================================================================
 {
-    conval(RTCTIME, v);
+    conval(RTCTIME, v.w);
 } //wrlock
 //=============================================================================
-    void        Rtcc::alarm_time        (uint32_t v)
+    void        Rtcc::alarm_time        (time_t v)
 //=============================================================================
 {
-    Reg::val(ALMTIME, v);
+    Reg::val(ALMTIME, v.w);
 }
 
 //=============================================================================
-    void        Rtcc::alarm_date        (uint32_t v)
+    void        Rtcc::alarm_date        (date_t v)
 //=============================================================================
 {
-    Reg::val(ALMTIME, v);
+    Reg::val(ALMTIME, v.w);
 }
 
 //RTCCON1 lock off by default, these functions will lock RTCCON1 when done

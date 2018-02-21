@@ -24,6 +24,8 @@
 #include "Resets.hpp"
 #include "Ccp.hpp"
 #include "Uart.hpp"
+#include "Cp0.hpp"
+#include "Rtcc.hpp"
 
 #include <cstdlib>
 #include <stdio.h>
@@ -222,8 +224,15 @@ struct Rgb {
 
         if(t == m_delay_short) return;
 
-        char buf[32];
-        snprintf(buf, 32, "color[%d]: %d.%d.%d\n", m_idx,svg[m_idx][0],svg[m_idx][1],svg[m_idx][2]);
+        char buf[64];
+        snprintf(buf, 64, "color[%02d]: %03d.%03d.%03d ", m_idx,svg[m_idx][0],svg[m_idx][1],svg[m_idx][2]);
+        info.puts(buf);
+        snprintf(buf, 64, " CP0 Count: %010u ", Cp0::count());
+        info.puts(buf);
+        Rtcc::time_t tm = Rtcc::time();
+
+        snprintf(buf, 64, " time: %02d:%02d:%02d\n",
+                tm.hours10*10+tm.hours1, tm.minutes10*10+tm.minutes1, tm.seconds10*10+tm.seconds1);
         info.puts(buf);
 
         if(++m_idx >= sizeof(svg)/sizeof(svg[0])) m_idx = 0;
@@ -284,7 +293,6 @@ void Osc_init(){
     osc.tun_auto(true);                     //let sosc tune frc
 }
 
-
 int main()
 {
     //just get/store resets cause (not used here,though)
@@ -293,15 +301,15 @@ int main()
     //set osc to 24MHz
     Osc_init();
 
+    Rtcc::on(true);
+
     info.on(true);
 
     Rgb rgb;
     Led12 led12;
 
     for(;;){
-        Wdt::reset();
-        led12.update();
-        rgb.update();
+        Wdt::reset(), led12.update(), rgb.update();
     }
 }
 
