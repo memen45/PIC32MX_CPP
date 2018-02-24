@@ -219,7 +219,7 @@ struct Rgb {
         int c =  info.getc();
         if(c != -1){
             info.putc(c);
-            info.puts("\n");
+            info.puts("\r\n");
         }
 
         if(t == m_delay_short) return;
@@ -231,7 +231,7 @@ struct Rgb {
         info.puts(buf);
         Rtcc::time_t tm = Rtcc::time();
 
-        snprintf(buf, 64, " time: %02d:%02d:%02d\n",
+        snprintf(buf, 64, " time: %02d:%02d:%02d\r\n",
                 tm.hours10*10+tm.hours1, tm.minutes10*10+tm.minutes1, tm.seconds10*10+tm.seconds1);
         info.puts(buf);
 
@@ -300,6 +300,18 @@ int main()
 
     //set osc to 24MHz
     Osc_init();
+
+    const uint8_t now[] = {16,11,20};
+
+    Rtcc::time_t t;
+    t.hours10 = now[0]/10;
+    t.hours1 = now[0]%10;
+    t.minutes10 = now[1]/10;
+    t.minutes1 = now[1]%10;
+    t.seconds10 = now[2]/10;
+    t.seconds1 = now[2]%10;
+
+    Rtcc::time(t);
 
     Rtcc::on(true);
 
@@ -424,13 +436,12 @@ Pmd::PMD pmd_list[] = {                      //list of modules to disable
 int main(){
 
     //pic32mm curiosity board, Fluke 101 (not TrueRMS), test
-    //    Delay tmr;
-    //    Pins rc0(Pins::C0); Pins rc2(Pins::C2);
-    //    rc0.digital_out(); rc2.digital_out();
-    //    rc2.high(); rc0.low();
-    //    for(;;rc0.invert(),rc2.invert(),tmr.wait_us(8333) );
+//        Pins rc0(Pins::C0); Pins rc2(Pins::C2);
+//        rc0.digital_out(); rc2.digital_out();
+//        rc2.high(); rc0.low();
+//        for(;;rc0.invert(),rc2.invert(),Delay::wait_us(8333) );
     // 3.64vac 60hz
-    //for(;;rc0.invert(),rc2.invert(),tmr.wait_ms(5000) );
+//        for(;;rc0.invert(),rc2.invert(),Delay::wait_ms(5000) );
     // +3.29vdc , -3.29vdc
 
     //__________________________________________________________________________
@@ -560,8 +571,8 @@ int main(){
     rtcc.chime(true);                       //repeating alarm
     rtcc.alarm(true);                       //turn on alarm
 
-    const uint32_t test_time = (2<<28 | 3<<24 | 4<<20 | 5<<16 | 0<<12 | 1<<8);
-    rtcc.time(test_time);                   //23:45:01
+    Rtcc::time_t t = {2,3,4,5,0,1};
+    rtcc.time(t);                           //23:45:01
     rtcc.on(true);                          //turn on, alarm is 00:00:00
                                             //(alarm every 00 seconds match)
                                             //disable/enable core timer irq

@@ -14,7 +14,7 @@ struct Pins {
         ANSHIFT = 11, ANMASK = 31
     };
 
-    //A0 type name, or RP0 type name (equivilent)
+    //PIN11, A0, RP1, AN0 - use any
     enum RPN : uint16_t {
         // encode as- 0xaaaaarrrrrppnnnn - | ANn | RPn | PORT | PIN |
         // aaaaa = ANn = 0-19
@@ -71,8 +71,24 @@ struct Pins {
         AN0 = A0, AN1 = A1, AN2 = B0, AN3 = B1, AN4 = B2, AN5 = A2, AN6 = A3,
         AN7 = B4, AN8 = B13, AN9 = B14, AN10 = B15, AN11 = B3, AN12 = C0,
         AN13 = C1, AN14 = C8, AN15 = C5, AN16 = A13, AN17 = A12, AN18 = A11,
-        AN19 = A6
+        AN19 = A6,
+
+        //PINn 1-64
+        PIN1 = A7, PIN2 = B14, PIN3 = B15, /*PIN4 = AVss, PIN5 = AVdd,*/
+        PIN6 = A13, PIN7 = A12, PIN8 = A11, /*PIN9 = MCLR,*/ PIN10 = A6,
+        PIN11 = A0, PIN12 = A1, PIN13 = B0, PIN14 = B1, PIN15 = B2, PIN16 = B3,
+        /*PIN17 = Vdd, PIN18 = Vss,*/ PIN19 = C0, PIN20 = C1, PIN21 = C2,
+        PIN22 = C11, /*PIN23 = Vdd, PIN24 = Vss,*/ PIN25 = A2, PIN26 = A3,
+        PIN27 = A8, PIN28 = B4, PIN29 = A4, PIN30 = A9, PIN31 = D4, PIN32 = D2,
+        PIN33 = D3, PIN34 = D0, PIN35 = C3, PIN36 = C4, PIN37 = C5,
+        /*PIN38 = Vss, PIN39 = Vdd,*/ PIN40 = C12, PIN41 = C14, PIN42 = C15,
+        PIN43 = B5, PIN44 = B6, PIN45 = C10, PIN46 = B7, PIN47 = C13,
+        PIN48 = B8, PIN49 = B9, PIN50 = C6, PIN51 = C7, PIN52 = C8, PIN53 = D1,
+        PIN54 = A5, PIN55 = C9, /*PIN56 = Vcap, PIN57 = Vdd,*/ PIN58 = A15,
+        PIN59 = A14, PIN60 = B10, PIN61 = B11, /*PIN62 = Vusb,*/ PIN63 = B13,
+        PIN64 = A10
     };
+
     enum IOMODE : uint8_t {
         AIN = 0,
         IN = 1, INPU = 1<<3|1<<2|IN, INPD = 1<<4|IN, INL = 1<<2|IN,

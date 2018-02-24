@@ -140,10 +140,6 @@ struct Osc {
     static const uint32_t m_extosc_freq = 0;    //set if want exact ext freq
     static const uint8_t m_mul_lookup[7];
 
-    enum IDSTAT { IRQ = 1, DMA = 2 };           //irq,dma status
-    static IDSTAT       unlock_irq  ();         //unlock- irq's off, dma susp
-    static void         lock_irq    (IDSTAT);   //lock-, restore irq, dma
-
 };
 
 

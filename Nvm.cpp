@@ -2,6 +2,7 @@
 #include "Dma.hpp"
 #include "Reg.hpp"
 #include "Irq.hpp"
+#include "Sys.hpp"
 
 enum : uint32_t {
     NVMCON = 0xBF802930, //WR locked
@@ -38,10 +39,7 @@ using vu32ptr = volatile uint32_t*;
     uint8_t     Nvm::unlock         ()
 //=============================================================================
 {
-    uint8_t idstat = Irq::all_ison();
-    Irq::disable_all();
-    idstat or_eq Dma::all_suspend()<<1;
-    Dma::all_suspend(true);
+    uint8_t idstat = Sys::unlock_wait();
     Reg::val(NVMKEY, MAGIC1);
     Reg::val(NVMKEY, MAGIC2);
     return idstat;
@@ -52,9 +50,7 @@ using vu32ptr = volatile uint32_t*;
 //=============================================================================
 {
     *(vu32ptr)NVMKEY = 0;
-    if(v bitand 1) Irq::enable_all();
-    if(v bitand 2) return;
-    Dma::all_suspend(false);
+    Sys::lock(v);
 }
 
 //=============================================================================

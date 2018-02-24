@@ -21,7 +21,9 @@ class Sys {
 
     //syskey
     static void     lock        ();
+    static void     lock        (uint8_t);
     static void     unlock      ();
+    static uint8_t  unlock_wait ();
 
     //ancfg
     static void     bgap_adc    (bool);

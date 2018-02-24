@@ -21,12 +21,13 @@ class Delay {
 
     bool    expired     ();             //time expired?
     void    restart     ();             //using same time, restart
-    void    wait_us     (uint32_t);     //blocking us wait
-    void    wait_ms     (uint32_t);     //blocking ms wait
-    void    wait_s      (uint16_t);     //blocking s wait
     void    set_us      (uint32_t);     //set us wait time, no block (poll)
     void    set_ms      (uint32_t);     //set ms wait time, no block (poll)
     void    set_s       (uint16_t);     //set s wait time, no block (poll)
+
+    static void    wait_us     (uint32_t);     //blocking us wait
+    static void    wait_ms     (uint32_t);     //blocking ms wait
+    static void    wait_s      (uint16_t);     //blocking s wait
 
     private:
 

@@ -32,7 +32,8 @@ struct Rtcc {
         uint8_t month1:4;
         uint8_t month10:1;
         uint8_t :3;
-        uint8_t :8;
+        uint8_t year1:4;
+        uint8_t year10:4;
         };
         uint32_t w:32;
     };

@@ -66,6 +66,30 @@ static volatile uint8_t unlock_count;
     if(irqstate) Irq::enable_all();                 //restore IE state
 }
 
+//provide previous irq/dma status
+//=============================================================================
+    void        Sys::lock           (uint8_t v)
+//=============================================================================
+{
+    Reg::val(SYSKEY, 0);                            //lock
+    Dma::all_suspend(v & 2);                        //restore dma
+    if(v & 1) Irq::enable_all();                    //restore irq
+}
+
+//blocking, return irq/dma status for use in next call to lock()
+//=============================================================================
+    uint8_t     Sys::unlock_wait    ()
+//=============================================================================
+{
+    bool irqstate = Irq::all_ison();                //get STATUS.IE
+    Irq::disable_all();
+    bool dmasusp = Dma::all_suspend();              //get DMA suspend status
+    Dma::all_suspend(true);                         //suspend DMA
+    Reg::val(SYSKEY, MAGIC1);
+    Reg::val(SYSKEY, MAGIC2);
+    return (dmasusp<<1) bitor irqstate;
+}
+
 //cfgcon
 //=============================================================================
     void        Sys::bus_err            (bool tf)

@@ -41,31 +41,10 @@ uint32_t Osc::m_extclk = 0;
 uint32_t Osc::m_refo_freq = 0;
 const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 
-//some functions need irq disabled, others can use
-//Sys::unlock/lock directly
+//some functions need irq disabled, use-
+//  uint8_t v = Sys::unlock_wait(); ... ; Sys::lock(v);
+//else use Sys::unlock() and Sys::lock()
 
-//system unlock for register access, w/irq,dma disable
-//=============================================================================
-    auto            Osc::unlock_irq     () -> IDSTAT
-//=============================================================================
-{
-    uint8_t idstat = Irq::all_ison();
-    Irq::disable_all();
-    idstat or_eq Dma::all_suspend()<<1;
-    Dma::all_suspend(true);
-    Sys::unlock();
-    return (IDSTAT)idstat;
-}
-
-//system lock enable, restore previous irq and dma status
-//=============================================================================
-    void            Osc::lock_irq       (IDSTAT idstat)
-//=============================================================================
-{
-    Sys::lock();
-    if(not (uint8_t)idstat bitand DMA) Dma::all_suspend(false);
-    if((uint8_t)idstat bitand IRQ) Irq::enable_all();
-}
 
 //osccon
 //=============================================================================
@@ -95,11 +74,13 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     void            Osc::clk_src        (CNOSC e)
 //=============================================================================
 {
-    IDSTAT irstat = unlock_irq();
+    //IDSTAT irstat = unlock_irq();
+    uint8_t irstat = Sys::unlock_wait();
     Reg::val(OSCCON + 1, e);
     Reg::setbit(OSCCON, 1<<OSWEN);
     while(Reg::anybit(OSCCON, 1<<OSWEN));
-    lock_irq(irstat);
+    //lock_irq(irstat);
+    Sys::lock(irstat);
     m_sysclk = 0;
     sysclk();
 }
@@ -206,7 +187,8 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     void            Osc::pll_set        (PLLMUL m, DIVS d, PLLSRC frc)
 //=============================================================================
 {
-    IDSTAT irstat  = unlock_irq();
+    //IDSTAT irstat  = unlock_irq();
+    uint8_t irstat  = Sys::unlock_wait();
     //need to switch from SPLL to something else
     //switch to frc (hardware does nothing if already frc)
     clk_src(FRCDIV);
@@ -217,7 +199,8 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     pll_src(frc); //do after m, so refoclk() sees new m value
     //source to SPLL
     clk_src(SPLL);
-    lock_irq(irstat);
+    //lock_irq(irstat);
+    Sys::lock(irstat);
 }
 
 //refo1con, refo1trim
@@ -501,7 +484,8 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     if(m_extosc_freq) return m_extosc_freq;
     if(m_extclk) return m_extclk;
     Timer1 t1; Cp0 cp0;
-    IDSTAT irstat  = unlock_irq();
+    //IDSTAT irstat  = unlock_irq();
+    uint8_t irstat  = Sys::unlock_wait();
    //backup timer1 (we want it, but will give it back)
     uint16_t t1conbak = *(volatile uint16_t*)t1.T1CON;
     *(volatile uint16_t*)t1.T1CON = 0; //stop
@@ -531,7 +515,8 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     t1.timer(t1bak);
     t1.period(pr1bak);
     *(volatile uint32_t*)t1.T1CON = t1conbak;
-    lock_irq(irstat);
+    //lock_irq(irstat);
+    Sys::lock(irstat);
     return m_extclk;
 }
 
