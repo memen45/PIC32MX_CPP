@@ -301,17 +301,11 @@ int main()
     //set osc to 24MHz
     Osc_init();
 
-    const uint8_t now[] = {16,11,20};
+    const Rtcc::datetime_t now = { 18, 2, 25, 0, 10, 39, 7};
 
-    Rtcc::time_t t;
-    t.hours10 = now[0]/10;
-    t.hours1 = now[0]%10;
-    t.minutes10 = now[1]/10;
-    t.minutes1 = now[1]%10;
-    t.seconds10 = now[2]/10;
-    t.seconds1 = now[2]%10;
+    Rtcc::date_t d = Rtcc::date();
 
-    Rtcc::time(t);
+    if(d.year10 == 0) Rtcc::datetime(now);
 
     Rtcc::on(true);
 
