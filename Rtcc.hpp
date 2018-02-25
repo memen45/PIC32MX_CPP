@@ -77,21 +77,23 @@ struct Rtcc {
     static bool         alarm_busy      ();
     static bool         half_sec        ();
     static datetime_t   datetime        ();
-    static time_t       time            ();
-    static date_t       date            ();
     static datetime_t   alarm_datetime  ();
-    static time_t       alarm_time      ();
-    static date_t       alarm_date      ();
     static void         datetime        (datetime_t);
-    static void         time            (time_t);
-    static void         date            (date_t);
     static void         alarm_datetime  (datetime_t);
-    static void         alarm_time      (time_t);
-    static void         alarm_date      (date_t);
+
 
 
 
     private:
+
+    static time_t       time            ();
+    static date_t       date            ();
+    static time_t       alarm_time      ();
+    static date_t       alarm_date      ();
+    static void         time            (time_t);
+    static void         date            (date_t);
+    static void         alarm_time      (time_t);
+    static void         alarm_date      (date_t);
 
     static void         unlock          ();
     static void         lock            ();

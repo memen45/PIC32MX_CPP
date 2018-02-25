@@ -229,10 +229,10 @@ struct Rgb {
         info.puts(buf);
         snprintf(buf, 64, " CP0 Count: %010u ", Cp0::count());
         info.puts(buf);
-        Rtcc::time_t tm = Rtcc::time();
+        Rtcc::datetime_t dt = Rtcc::datetime();
 
         snprintf(buf, 64, " time: %02d:%02d:%02d\r\n",
-                tm.hours10*10+tm.hours1, tm.minutes10*10+tm.minutes1, tm.seconds10*10+tm.seconds1);
+                dt.hour, dt.minute, dt.second);
         info.puts(buf);
 
         if(++m_idx >= sizeof(svg)/sizeof(svg[0])) m_idx = 0;
@@ -303,9 +303,9 @@ int main()
 
     const Rtcc::datetime_t now = { 18, 2, 25, 0, 11, 15, 7};
 
-    Rtcc::date_t d = Rtcc::date();
+    Rtcc::datetime_t dt = Rtcc::datetime();
 
-    if(d.year10 == 0) Rtcc::datetime(now);
+    if(dt.year == 0) Rtcc::datetime(now);
 
     Rtcc::on(true);
 
