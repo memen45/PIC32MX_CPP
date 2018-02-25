@@ -298,17 +298,13 @@ enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
     uint8_t     Rtcc::calc_weekday          (date_t v)
 //=============================================================================
 {
-    static const uint8_t tbl[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
-    uint8_t wd;
-    uint8_t m = v.month10*10 + v.month1 - 1; //to 0 based for tbl[]
+    uint8_t m = v.month10*10 + v.month1;
     uint8_t d = v.day10*10 + v.day1;
-    uint8_t y = 2000 + v.year10*10 + v.year1;
+    uint16_t y = 2000 + v.year10*10 + v.year1;
 
-    if (m < 2) y--;
-
-    wd = (y + y/4 - y/100 + y/400 + tbl[m] + d) % 7;
-
-    return wd;
+    static uint8_t t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
+    y -= m < 3;
+    return (y + y/4 - y/100 + y/400 + t[m-1] + d) % 7;
 }
 
 //=============================================================================

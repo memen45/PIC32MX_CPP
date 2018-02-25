@@ -301,7 +301,7 @@ int main()
     //set osc to 24MHz
     Osc_init();
 
-    const Rtcc::datetime_t now = { 18, 2, 25, 0, 10, 39, 7};
+    const Rtcc::datetime_t now = { 18, 2, 25, 0, 11, 15, 7};
 
     Rtcc::date_t d = Rtcc::date();
 
