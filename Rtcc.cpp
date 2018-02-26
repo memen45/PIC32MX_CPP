@@ -32,6 +32,7 @@ enum : uint32_t {
 //need 2Hz
 enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
 
+Rtcc::datetime_t Rtcc::boot_time;
 
 //=============================================================================
     void        Rtcc::alarm             (bool tf)

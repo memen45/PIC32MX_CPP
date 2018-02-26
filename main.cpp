@@ -302,11 +302,10 @@ int main()
     Osc_init();
 
     const Rtcc::datetime_t now = { 18, 2, 25, 0, 11, 15, 7};
-
     Rtcc::datetime_t dt = Rtcc::datetime();
-
     if(dt.year == 0) Rtcc::datetime(now);
 
+    Rtcc::boot_time = Rtcc::datetime();
     Rtcc::on(true);
 
     info.on(true);

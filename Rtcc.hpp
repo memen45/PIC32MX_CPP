@@ -81,8 +81,7 @@ struct Rtcc {
     static void         datetime        (datetime_t);
     static void         alarm_datetime  (datetime_t);
 
-
-
+    static datetime_t boot_time;
 
     private:
 
