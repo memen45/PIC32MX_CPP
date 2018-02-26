@@ -32,35 +32,36 @@ enum : uint32_t {
 //need 2Hz
 enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
 
+Rtcc::datetime_t Rtcc::boot_time;
 
 //=============================================================================
     void        Rtcc::alarm             (bool tf)
 //=============================================================================
 {
-    conset(RTCCON1, 1<<ALARMEN, tf);
+    Reg::setbit(RTCCON1, 1<<ALARMEN, tf);
 }
 
 //=============================================================================
     void        Rtcc::chime             (bool tf)
 //=============================================================================
 {
-    conset(RTCCON1, 1<<CHIME, tf);
+    Reg::setbit(RTCCON1, 1<<CHIME, tf);
 }
 
 //=============================================================================
     void        Rtcc::alarm_interval    (AMASK e)
 //=============================================================================
 {
-    conset(RTCCON1, AMASK_MASK<<AMASK_SHIFT, 0);
-    conset(RTCCON1, e<<AMASK_SHIFT, 1);
+    Reg::clrbit(RTCCON1, AMASK_MASK<<AMASK_SHIFT);
+    Reg::setbit(RTCCON1, e<<AMASK_SHIFT);
 }
 
 //=============================================================================
     void        Rtcc::alarm_repeat      (uint8_t v)
 //=============================================================================
 {
-    conset(RTCCON1, ALMRPT_MASK<<ALMRPT_SHIFT, 0);
-    conset(RTCCON1, v<<ALMRPT_SHIFT, 1);
+    Reg::clrbit(RTCCON1, ALMRPT_MASK<<ALMRPT_SHIFT);
+    Reg::setbit(RTCCON1, v<<ALMRPT_SHIFT);
 }
 
 //=============================================================================
@@ -73,7 +74,9 @@ enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
         else clk_src(LPRC);                 //else use lprc
         clk_pre(PRE1);                      //should be already
     }
-    conset(RTCCON1, 1<<ON, tf);
+    unlock();
+    Reg::setbit(RTCCON1, 1<<ON, tf);
+    lock();
 }
 
 //=============================================================================
@@ -81,10 +84,14 @@ enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
 //=============================================================================
 {
     if(v != OFF){
-        conset(RTCCON1, OUTSEL_MASK<<OUTSEL_SHIFT, 0);
-        conset(RTCCON1, v<<OUTSEL_SHIFT, 1);
+        unlock();
+        Reg::clrbit(RTCCON1, OUTSEL_MASK<<OUTSEL_SHIFT);
+        Reg::setbit(RTCCON1, v<<OUTSEL_SHIFT);
+        lock();
     }
-    conset(RTCCON1, 1<<PINON, v != OFF);
+    unlock();
+    Reg::setbit(RTCCON1, 1<<PINON, v != OFF);
+    lock();
 }
 
 //=============================================================================
@@ -100,16 +107,20 @@ enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
     void        Rtcc::clk_frdiv         (uint8_t v)
 //=============================================================================
 {
-    conset(RTCCON2, FRDIV_MASK<<FRDIV_SHIFT, 0);
-    conset(RTCCON2, (v bitand FRDIV_MASK)<<FRDIV_SHIFT, 1);
+    unlock();
+    Reg::clrbit(RTCCON2, FRDIV_MASK<<FRDIV_SHIFT);
+    Reg::setbit(RTCCON2, (v bitand FRDIV_MASK)<<FRDIV_SHIFT);
+    lock();
 }
 
 //=============================================================================
     void        Rtcc::clk_pre           (PS e)
 //=============================================================================
 {
-    conset(RTCCON2, PS_MASK<<PS_SHIFT, 0);
-    conset(RTCCON2, e<<PS_SHIFT, 1);
+    unlock();
+    Reg::clrbit(RTCCON2, PS_MASK<<PS_SHIFT);
+    Reg::setbit(RTCCON2, e<<PS_SHIFT);
+    lock();
 }
 
 //=============================================================================
@@ -117,8 +128,10 @@ enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
 //=============================================================================
 {
     if(e == SOSC) Osc::sosc(true);
-    conset(RTCCON2, CLKSEL_MASK<<CLKSEL_SHIFT, 0);
-    conset(RTCCON2, e<<CLKSEL_SHIFT, 1);
+    unlock();
+    Reg::clrbit(RTCCON2, CLKSEL_MASK<<CLKSEL_SHIFT);
+    Reg::setbit(RTCCON2, e<<CLKSEL_SHIFT);
+    lock();
 }
 
 //=============================================================================
@@ -148,6 +161,45 @@ enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
 {
     return Reg::anybit(RTCSTAT, 1<<HALFSTAT);
 }
+
+//=============================================================================
+    auto        Rtcc::datetime          () -> datetime_t
+//=============================================================================
+{
+    time_t t = time();
+    date_t d = date();
+    datetime_t dt = dt_to_dt(d, t);
+    return dt;
+}
+
+//=============================================================================
+    auto        Rtcc::alarm_datetime    () -> datetime_t
+//=============================================================================
+{
+    time_t t = alarm_time();
+    date_t d = alarm_date();
+    datetime_t dt = dt_to_dt(d, t);
+    return dt;
+}
+
+//=============================================================================
+    void        Rtcc::datetime          (datetime_t v)
+//=============================================================================
+{
+    date(dt_to_date(v));
+    time(dt_to_time(v));
+}
+
+//=============================================================================
+    void        Rtcc::alarm_datetime    (datetime_t v)
+//=============================================================================
+{
+    alarm_date(dt_to_date(v));
+    alarm_time(dt_to_time(v));
+}
+
+
+//private
 
 //=============================================================================
     auto        Rtcc::time              () -> time_t
@@ -190,7 +242,9 @@ enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
     void        Rtcc::time              (time_t v)
 //=============================================================================
 {
-    conval(RTCTIME, v.w);
+    unlock();
+    Reg::val(RTCTIME, v.w);
+    lock();
 }
 
 //wrlock
@@ -198,9 +252,12 @@ enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
     void        Rtcc::date              (date_t v)
 //=============================================================================
 {
-    conval(RTCDATE, v.w);
+    v.weekday = calc_weekday(v); //get correct weekday
+    unlock();
+    Reg::val(RTCDATE, v.w);
+    lock();
 }
-    
+
 //=============================================================================
     void        Rtcc::alarm_time        (time_t v)
 //=============================================================================
@@ -212,10 +269,11 @@ enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
     void        Rtcc::alarm_date        (date_t v)
 //=============================================================================
 {
+    v.weekday = calc_weekday(v); //get correct weekday
     Reg::val(ALMTIME, v.w);
 }
 
-//RTCCON1 lock off by default, these functions will lock RTCCON1 when done
+//RTCCON1.ON, RTCCON2, DATE/TIME registers need WRLOCK=0
 //private functions
 //=============================================================================
     void        Rtcc::unlock            ()
@@ -233,20 +291,56 @@ enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
     Sys::lock();
 }
 
+
+//calc weekday from date
+//(date_t) month 1-12, day 1-31, year 0-99
+//return weekday, 0 (sunday) - 6(saturday)
 //=============================================================================
-    void        Rtcc::conset            (uint32_t addr, uint32_t v, bool tf)
+    uint8_t     Rtcc::calc_weekday          (date_t v)
 //=============================================================================
 {
-    unlock();
-    Reg::setbit(addr, v, tf);
-    lock();
+    uint8_t m = v.month10*10 + v.month1;
+    uint8_t d = v.day10*10 + v.day1;
+    uint16_t y = 2000 + v.year10*10 + v.year1;
+
+    static uint8_t t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
+    y -= m < 3;
+    return (y + y/4 - y/100 + y/400 + t[m-1] + d) % 7;
 }
 
 //=============================================================================
-    void        Rtcc::conval            (uint32_t addr, uint32_t v)
+    auto        Rtcc::dt_to_date        (datetime_t v) -> date_t
 //=============================================================================
 {
-    unlock();
-    Reg::val(addr, v);
-    lock();
+    date_t d;
+    d.year10 = v.year/10; d.year1 = v.year%10;
+    d.month10 = v.month/10; d.month1 = v.month%10;
+    d.day10 = v.day/10; d.day1 = v.day %10;
+    return d;
+}
+
+//=============================================================================
+    auto        Rtcc::dt_to_time        (datetime_t v) -> time_t
+//=============================================================================
+{
+    time_t t;
+    t.hours10 = v.hour/10; t.hours1 = v.hour%10;
+    t.minutes10 = v.minute/10; t.minutes1 = v.minute%10;
+    t.seconds10 = v.second/10; t.seconds1 = v.second%10;
+    return t;
+}
+
+//=============================================================================
+    auto        Rtcc::dt_to_dt          (date_t d, time_t t) -> datetime_t
+//=============================================================================
+{
+    datetime_t dt;
+    dt.year = d.year10*10 + d.year1;
+    dt.month = d.month10*10 + d.month1;
+    dt.day = d.day10*10 + d.day1;
+    dt.weekday = d.weekday;
+    dt.hour = t.hours10*10 + t.hours1;
+    dt.minute = t.minutes10*10 + t.minutes1;
+    dt.second = t.seconds10*10 + t.seconds1;
+    return dt;
 }

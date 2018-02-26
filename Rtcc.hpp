@@ -38,6 +38,16 @@ struct Rtcc {
         uint32_t w:32;
     };
 
+    using datetime_t = struct {
+        uint8_t year;
+        uint8_t month;
+        uint8_t day;
+        uint8_t weekday;
+        uint8_t hour;
+        uint8_t minute;
+        uint8_t second;
+    };
+
     static void         alarm           (bool);
     static void         chime           (bool);
 
@@ -66,6 +76,15 @@ struct Rtcc {
     static bool         time_busy       ();
     static bool         alarm_busy      ();
     static bool         half_sec        ();
+    static datetime_t   datetime        ();
+    static datetime_t   alarm_datetime  ();
+    static void         datetime        (datetime_t);
+    static void         alarm_datetime  (datetime_t);
+
+    static datetime_t boot_time;
+
+    private:
+
     static time_t       time            ();
     static date_t       date            ();
     static time_t       alarm_time      ();
@@ -75,11 +94,11 @@ struct Rtcc {
     static void         alarm_time      (time_t);
     static void         alarm_date      (date_t);
 
-    private:
-
     static void         unlock          ();
     static void         lock            ();
-    static void         conset          (uint32_t, uint32_t, bool = 1);
-    static void         conval          (uint32_t, uint32_t);
+    static uint8_t      calc_weekday    (date_t);
+    static time_t       dt_to_time      (datetime_t);
+    static date_t       dt_to_date      (datetime_t);
+    static datetime_t   dt_to_dt        (date_t, time_t);
 
 };
