@@ -311,8 +311,9 @@ using vu32ptr = volatile uint32_t*;
 //=============================================================================
 {
     uint32_t clk;
-    if(clk_sel() == REFO1) clk = Osc::refo_freq();
-    else clk = Osc::sysclk();
+//   if(clk_sel() == REFO1) clk = Osc::refo_freq();
+ //   else 
+    clk = Osc::sysclk();
     uint16_t brg = (2 * v / clk) - 1;
     brg and_eq 0x1ff;
     baud(brg);
@@ -326,8 +327,9 @@ using vu32ptr = volatile uint32_t*;
 //=============================================================================
 {
     uint32_t clk;
-    if(clk_sel() == REFO1) clk = Osc::refo_freq();
-    else clk = Osc::sysclk();
+//    if(clk_sel() == REFO1) clk = Osc::refo_freq();
+//    else 
+    clk = Osc::sysclk();
     m_spix_freq = clk / (2 * Reg::val16(m_spix_con + SPIXBRG) + 1);
     return m_spix_freq;
 }

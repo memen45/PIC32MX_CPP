@@ -9,37 +9,20 @@
 #include "Irq.hpp"
 
 enum {
-    OSCCON = 0xBF802680,
+    OSCCON = 0xBF80F000,
         CLKLOCK = 7,
         SLPEN = 4,
         CF = 3,
         SOSCEN = 1,
         OSWEN = 0,
-    SPLLCON = 0xBF8026A0,
-        PLLICLK = 7,
-    REFO1CON = 0xBF802720,
-        ON = 15,
-        SIDL = 13,
-        OE = 12,
-        RSLP = 11,
-        DIVSWEN = 9,
-        ACTIVE = 8,
-    REFO1TRIM = 0xBF802730,
-    CLKSTAT = 0xBF802770,
-    OSCTUN = 0xBF802880,
-        /* ON = 15, SIDL = 13, from refo1con*/
-        SRC = 12,
-        LOCK = 11,
-        POL = 10,
-        ORNG = 9,
-        ORPOL = 8
+    OSCTUN = 0xBF80F010,
+	DEVCFG2 = 0xBFC02FF4
 };
 
 uint32_t Osc::m_sysclk = 0;
-uint32_t Osc::m_refoclk = 0;
 uint32_t Osc::m_extclk = 0;
-uint32_t Osc::m_refo_freq = 0;
-const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
+const uint8_t Osc::m_mul_lookup[] = {15, 16, 17, 18, 19, 20, 21, 24};
+const uint8_t Osc::m_idiv_lookup[] = {1, 2, 3, 4, 5, 6, 10, 12};
 
 //some functions need irq disabled, use-
 //  uint8_t v = Sys::unlock_wait(); ... ; Sys::lock(v);
@@ -108,16 +91,6 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 }
 
 //=============================================================================
-    void            Osc::sleep_reten    ()
-//=============================================================================
-{
-    //reten bit only enabled here, then disabled when wakes
-    Resets::reten(true);
-    sleep();
-    Resets::reten(false);
-}
-
-//=============================================================================
     void            Osc::idle           ()
 //=============================================================================
 {
@@ -151,40 +124,30 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 
 //spllcon
 //=============================================================================
-    auto            Osc::pll_div        () -> DIVS
+    auto            Osc::pll_odiv        () -> DIVS
 //=============================================================================
 {
-    return (DIVS)Reg::val8(SPLLCON + 3);
+    return (DIVS)((Reg::val8(OSCCON + 3) >> 3) bitand 7);
+}
+
+//=============================================================================
+    auto            Osc::pll_idiv        () -> IDIVS
+//=============================================================================
+{
+    return (IDIVS)Reg::val8(DEVCFG2);
 }
 
 //=============================================================================
     auto            Osc::pll_mul        () -> PLLMUL
 //=============================================================================
 {
-    return (PLLMUL)Reg::val8(SPLLCON + 2);
-}
-
-//=============================================================================
-    auto            Osc::pll_src        () -> PLLSRC
-//=============================================================================
-{
-    return (PLLSRC)Reg::anybit(SPLLCON, 1<<PLLICLK);
-}
-
-//private, use pll_set to change src
-//=============================================================================
-    void            Osc::pll_src        (PLLSRC e)
-//=============================================================================
-{
-    Reg::setbit(SPLLCON, 1<<PLLICLK, e);
-    m_refoclk = 0;  //recalculate refo clock
-    refoclk();     //as input now may be different
+    return (PLLMUL)(Reg::val8(OSCCON + 2) bitand 7);
 }
 
 //set SPLL as clock source with specified mul/div
 //PLLSRC default is FRC
 //=============================================================================
-    void            Osc::pll_set        (PLLMUL m, DIVS d, PLLSRC frc)
+    void            Osc::pll_set        (PLLMUL m, DIVS d, CNOSC frc)
 //=============================================================================
 {
     //IDSTAT irstat  = unlock_irq();
@@ -193,150 +156,12 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     //switch to frc (hardware does nothing if already frc)
     clk_src(FRCDIV);
     //set new pll vals
-    Reg::val(SPLLCON + 3, d);
-    Reg::val(SPLLCON + 2, m);
+    Reg::val(OSCCON + 3, d<<3);
+    Reg::val(OSCCON + 2, m);
     //pll select
-    pll_src(frc); //do after m, so refoclk() sees new m value
-    //source to SPLL
-    clk_src(SPLL);
+    clk_src(frc);
     //lock_irq(irstat);
     Sys::lock(irstat);
-}
-
-//refo1con, refo1trim
-//=============================================================================
-    void            Osc::refo_div       (uint16_t v)
-//=============================================================================
-{
-    Reg::val(REFO1CON, v);
-}
-
-//=============================================================================
-    void            Osc::refo_trim      (uint16_t v)
-//=============================================================================
-{
-    Reg::val(REFO1TRIM + 2, v<<7);
-}
-
-//=============================================================================
-    void            Osc::refo_on        ()
-//=============================================================================
-{
-    refoclk(); //calculate if needed
-    Reg::setbit(REFO1CON, 1<<ON);
-    while(refo_active() == 0);
-}
-
-//=============================================================================
-    void            Osc::refo_on        (ROSEL e)
-//=============================================================================
-{
-    refo_src(e);
-    refo_on();
-}
-
-//=============================================================================
-    void            Osc::refo_off       ()
-//=============================================================================
-{
-    Reg::clrbit(REFO1CON, 1<<ON);
-    while(refo_active());
-}
-
-//=============================================================================
-    void            Osc::refo_idle      (bool tf)
-//=============================================================================
-{
-    Reg::setbit(REFO1CON, 1<<SIDL, tf);
-}
-
-//=============================================================================
-    void            Osc::refo_out       (bool tf)
-//=============================================================================
-{
-    Reg::setbit(REFO1CON, 1<<OE, tf);
-}
-
-//=============================================================================
-    void            Osc::refo_sleep     (bool tf)
-//=============================================================================
-{
-    Reg::setbit(REFO1CON, 1<<RSLP, tf);
-}
-
-//=============================================================================
-    void            Osc::refo_divsw     ()
-//=============================================================================
-{
-    Reg::setbit(REFO1CON, 1<<DIVSWEN);
-    while(Reg::anybit(REFO1CON, 1<<DIVSWEN));
-}
-
-//=============================================================================
-    bool            Osc::refo_active    ()
-//=============================================================================
-{
-    return Reg::anybit(REFO1CON, 1<<ACTIVE);
-}
-
-//anytime source set, get new m_refoclk
-//force recalculate by setting m_refoclk to 0
-//=============================================================================
-    void            Osc::refo_src       (ROSEL e)
-//=============================================================================
-{
-    bool ison = Reg::anybit(REFO1CON, 1<<ON);
-    refo_off();
-    if(e == RSOSC) sosc(true);
-    Reg::val(REFO1CON, e);
-    if(ison) refo_on();
-    m_refoclk = 0;
-    refoclk();
-}
-
-//called by refo_src(), refo_on(), refo_freq()
-//=============================================================================
-    uint32_t        Osc::refoclk        ()
-//=============================================================================
-{
-    if(m_refoclk) return m_refoclk; //previously calculated
-    switch(Reg::val8(REFO1CON)){
-        case RSYSCLK:   m_refoclk = sysclk();       break;
-        case RPOSC:     m_refoclk = extclk();       break;
-        case RFRC:      m_refoclk = m_frcosc_freq;  break;
-        case RLPRC:     m_refoclk = 32125;          break;
-        case RSOSC:     m_refoclk = 32768;          break;
-        case RPLLVCO:   m_refoclk = vcoclk();       break;
-        //should not get anything else, could set clk src
-        //to frc/pll if think could ever get here
-    }
-    //if previously set refo freq, do again with possibly new src
-    if(m_refo_freq) refo_freq(m_refo_freq);
-    return m_refoclk;
-}
-
-//also called when pll input or pll mul changed
-//=============================================================================
-    void            Osc::refo_freq      (uint32_t v)
-//=============================================================================
-{
-    uint32_t m, n;
-    m_refo_freq = 0; //prevent call back to here from refoclk()
-    refoclk(); //if not calculated already
-    m = (m_refoclk<<8) / v;
-    n =  m>>9;
-    m and_eq 0x1ff;
-    refo_div(n);
-    refo_trim(m);
-    refo_divsw();
-    m_refo_freq = v;
-}
-
-//=============================================================================
-    uint32_t        Osc::refo_freq      ()
-//=============================================================================
-{
-    return m_refo_freq;
 }
 
 //clkstat
@@ -344,70 +169,10 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     bool            Osc::ready          (CLKRDY e)
 //=============================================================================
 {
-    return Reg::anybit(CLKSTAT, e);
+    return Reg::anybit(OSCCON + 2, e);
 }
 
 //osctun
-//=============================================================================
-    void            Osc::tun_auto       (bool tf)
-//=============================================================================
-{
-    Sys::unlock();
-    Reg::setbit(OSCTUN, 1<<ON, tf);
-    Sys::lock();
-}
-
-//=============================================================================
-    void            Osc::tun_idle       (bool tf)
-//=============================================================================
-{
-    Sys::unlock();
-    Reg::setbit(OSCTUN, 1<<SIDL, tf);
-    Sys::lock();
-}
-
-//=============================================================================
-    void            Osc::tun_src        (TUNSRC e)
-//=============================================================================
-{
-    if(e == TSOSC) sosc(true);
-    Sys::unlock();
-    Reg::setbit(OSCTUN, 1<<SRC, e);
-    Sys::lock();
-}
-
-//=============================================================================
-    bool            Osc::tun_lock       ()
-//=============================================================================
-{
-    return Reg::anybit(OSCTUN, 1<<LOCK);
-}
-
-//=============================================================================
-    void            Osc::tun_lpol       (bool tf)
-//=============================================================================
-{
-    Sys::unlock();
-    Reg::setbit(OSCTUN, 1<<POL, not tf);
-    Sys::lock();
-}
-
-//=============================================================================
-    bool            Osc::tun_rng        ()
-//=============================================================================
-{
-    return Reg::anybit(OSCTUN, 1<<ORNG);
-}
-
-//=============================================================================
-    void            Osc::tun_rpol       (bool tf)
-//=============================================================================
-{
-    Sys::unlock();
-    Reg::setbit(OSCTUN, 1<<ORPOL, not tf);
-    Sys::lock();
-}
-
 //=============================================================================
     void            Osc::tun_val        (int8_t v )
 //=============================================================================
@@ -437,18 +202,20 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     if(m_sysclk) return m_sysclk;           //already have it
     CNOSC s = clk_src();
     switch(s){
-        case LPRC: m_sysclk = 32000; break; //+/-20% = 25600 - 38400
+        case LPRC: m_sysclk = 31250; break; //+/-15% = 26562,5 - 35937,5
         case SOSC: m_sysclk = 32768; break;
         case POSC: m_sysclk = extclk(); break;
-        case SPLL: {
-            uint32_t f = pll_src() == FRC ? m_frcosc_freq : extclk();
-            uint8_t m = (uint8_t)pll_mul();  //2 3 4 6 8 12 24
-            m = m_mul_lookup[m];
-            uint8_t d = (uint8_t)pll_div();
-            if(d == 7) d = 8;               //adjust DIV256
-            m_sysclk = (f * m)>>d;
-            break;
-        }
+		case FRCPLL:
+		case POSCPLL: {
+			uint32_t f = s ==FRCPLL ? m_frcosc_freq : extclk();			
+			uint8_t m = (uint8_t)pll_mul(); 		//15 16 17 18 19 20 21 24
+			m = m_mul_lookup[m];
+			uint8_t idiv = (uint8_t) pll_idiv();
+			idiv = m_idiv_lookup[idiv];
+			uint8_t odiv = (uint8_t)pll_odiv();
+			if (odiv == 7) odiv = 8;               //adjust DIV256
+			m_sysclk = ((f / idiv) * m) >> idiv;
+		}
         case FRCDIV: {
             uint8_t n = (uint8_t)frc_div();
             if(n == 7) n = 8;               //adjust DIV256
@@ -460,16 +227,6 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
             break;
     }
     return m_sysclk;
-}
-
-//input to refo if PLLVCO is source
-//=============================================================================
-    uint32_t        Osc::vcoclk         ()
-//=============================================================================
-{
-    uint32_t f = 0;
-    f = pll_src() == FRC ? m_frcosc_freq : extclk() ;
-    return m_mul_lookup[ pll_mul() ] * f;
 }
 
 //get ext clock freq, using sosc if available, or lprc

@@ -345,8 +345,9 @@ using vu32ptr = volatile uint32_t*;
 //=============================================================================
 {
     CLKSEL e = (CLKSEL)((Reg::val(m_uartx_base)>>17) bitand CLKSEL_MASK);
-    if(e == REFO1) return Osc::refo_freq();
-    else if(e == FRC) return Osc::frcclk();
+//    if(e == REFO1) return Osc::refo_freq();
+//    else 
+    if(e == FRC) return Osc::frcclk();
     return Osc::sysclk(); //pb/sys are the same
 }
 
