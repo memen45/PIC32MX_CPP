@@ -1,3 +1,7 @@
+/*==============================================================================
+    UNUSABLE CODE - JUST TRYING TO WORK OUT USB BY PUTTING DOWN SOME CODE
+==============================================================================*/
+
 #pragma once
 
 //USB peripheral - PIC32MM0256GPM064
