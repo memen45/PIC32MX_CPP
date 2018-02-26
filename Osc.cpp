@@ -10,6 +10,8 @@
 
 enum {
     OSCCON = 0xBF80F000,
+		PLLODIV_SHIFT = 27,
+		PLLODIV_MASK = 7,
         CLKLOCK = 7,
         SLPEN = 4,
         CF = 3,
@@ -127,7 +129,7 @@ const uint8_t Osc::m_idiv_lookup[] = {1, 2, 3, 4, 5, 6, 10, 12};
     auto            Osc::pll_odiv        () -> DIVS
 //=============================================================================
 {
-    return (DIVS)((Reg::val8(OSCCON + 3) >> 3) bitand 7);
+    return (DIVS)((Reg::val(OSCCON) >> PLLODIV_SHIFT) bitand PLLODIV_MASK);
 }
 
 //=============================================================================

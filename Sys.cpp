@@ -4,26 +4,22 @@
 #include "Dma.hpp"
 
 enum {
-    CFGCON = 0xBF803640,
+    BMXCON = 0xBF882000,
         BMXERRDIS = 27,
-        BMXARB_SHIFT = 24, BMXARB_MASK = 3,
-        EXECADDR_SHIFT = 16, EXECADDR_MASK = 255,
+        BMXARB_SHIFT = 0, BMXARB_MASK = 7,
+	BMXDKPBA = 0xBF882010,										//Kernel Program (RAM)
+	BMXDUDBA = 0xBF882020,										//User Data Base Address (RAM)
+	BMXDUPBA = 0xBF882030,										//User Program (RAM)
+	BMXPUPBA = 0xBF882050,										//User Program (Program Flash)
+        //EXECADDR_SHIFT = 16, EXECADDR_MASK = 255,
+	DDPCON = 0xBF80F200,
         JTAGEN = 3,
-    DEVID = 0xBF803660,
+    DEVID = 0xBF80F220,
         VER_SHIFT = 28, VER_MASK = 15,
         ID_SHIFT = 0, ID_MASK = 0xFFFFFFF,
     SYSKEY = 0xBF803670,
         MAGIC1 = 0xAA996655,
         MAGIC2 = 0x556699AA,
-    ANCFG = 0xBF802300,
-        VBGADC = 2,
-        VBGCMP = 1,
-    UDID1 = 0xBF801840,
-    UDID2 = 0xBF801850,
-    UDID3 = 0xBF801860,
-    UDID4 = 0xBF801870,
-    UDID5 = 0xBF801880,
-
 };
 
 
@@ -95,29 +91,22 @@ static volatile uint8_t unlock_count;
     void        Sys::bus_err            (bool tf)
 //=============================================================================
 {
-    Reg::setbit(CFGCON, 1<<BMXERRDIS, !tf);
+    Reg::setbit(BMXCON, 1<<BMXERRDIS, !tf);
 }
 
 //=============================================================================
     void        Sys::bus_mode           (BMXARB e)
 //=============================================================================
 {
-    Reg::clrbit(CFGCON, BMXARB_MASK<<BMXARB_SHIFT);
-    Reg::setbit(CFGCON, e<<BMXARB_SHIFT);
-}
-
-//=============================================================================
-    void        Sys::ram_exec           (uint8_t v)
-//=============================================================================
-{
-    Reg::val(CFGCON+2, v);
+    Reg::clrbit(BMXCON, BMXARB_MASK<<BMXARB_SHIFT);
+    Reg::setbit(BMXCON, e<<BMXARB_SHIFT);
 }
 
 //=============================================================================
     void        Sys::jtag               (bool tf)
 //=============================================================================
 {
-    Reg::setbit(CFGCON, 1<<JTAGEN, tf);
+    Reg::setbit(DDPCON, 1<<JTAGEN, tf);
 }
 
 //devid
@@ -133,28 +122,4 @@ static volatile uint8_t unlock_count;
 //=============================================================================
 {
     return Reg::val(DEVID)>>VER_SHIFT;
-}
-
-//ancfg
-//=============================================================================
-    void        Sys::bgap_adc           (bool tf)
-//=============================================================================
-{
-    Reg::setbit(ANCFG, 1<<VBGADC, tf);
-}
-
-//=============================================================================
-    void        Sys::bgap_comp          (bool tf)
-//=============================================================================
-{
-    Reg::setbit(ANCFG, 1<<VBGCMP, tf);
-}
-
-//udid
-//=============================================================================
-    uint32_t    Sys::udid               (uint8_t v)
-//=============================================================================
-{
-    if(v > 4) v = 4;
-    return Reg::val(UDID1 + v);
 }

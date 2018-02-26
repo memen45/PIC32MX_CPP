@@ -12,7 +12,6 @@ class Sys {
     enum BMXARB : uint8_t { CPUHIGH = 0, CPULOW, RROBIN };
     static void     bus_mode    (BMXARB);
 
-    static void     ram_exec    (uint8_t);
     static void     jtag        (bool);
 
     //devid
@@ -24,10 +23,6 @@ class Sys {
     static void     lock        (uint8_t);
     static void     unlock      ();
     static uint8_t  unlock_wait ();
-
-    //ancfg
-    static void     bgap_adc    (bool);
-    static void     bgap_comp   (bool);
 
     //udid
     static uint32_t udid        (uint8_t); //0-4 ->UDID1-5
