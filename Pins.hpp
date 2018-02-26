@@ -8,19 +8,20 @@ struct Pins {
 
     //helper enum
     enum : uint8_t {
-        PTSHIFT = 4, PTMASK = 3,
+        PTSHIFT = 4, PTMASK = 7,
         PNSHIFT = 0, PNMASK = 15,
-        RPSHIFT = 6, RPMASK = 31,
-        ANSHIFT = 11, ANMASK = 31
+        //RPSHIFT = 6, RPMASK = 31,
+        ANSHIFT = 12, ANMASK = 15,
+		CNSHIFT = 7, CNMASK = 31
     };
 
     //PIN11, A0, RP1, AN0 - use any
     enum RPN : uint16_t {
-        // encode as- 0xaaaaarrrrrppnnnn - | ANn | RPn | PORT | PIN |
-        // aaaaa = ANn = 0-19
-        // pp = port A=0,B=1,C=2,D=3
+        // encode as- 0xaaaacccccpppnnnn - | ANn | CNn | PORT | PIN |
+        // aaaa = ANn = 0-15
+        // ppp = port A=0,B=1,C=2,D=3, E=4, F=5, G=6
         // nnnn = pin = 0-15
-        // rrrrr = RPn = 1-24
+        // ccccc = CNn = 1-21 
 
         //pins without AN will be set to use AVss (29) as AN input
         //(since AN0 is 0, we need something other than 0 to signify no AN for pin, so
@@ -28,65 +29,103 @@ struct Pins {
         // by mistake)
 
         //A0 - A-15
-        A0 = 0|1<<RPSHIFT|0<<ANSHIFT, A1 = 1|2<<RPSHIFT|1<<ANSHIFT,
-        A2 = 2|3<<RPSHIFT|5<<ANSHIFT, A3 = 3|4<<RPSHIFT|6<<ANSHIFT,
-        A4 = 4|5<<RPSHIFT|29<<ANSHIFT, A5 = 5|29<<ANSHIFT,
-        A6 = 6|19<<ANSHIFT, A7 = 7|21<<RPSHIFT|29<<ANSHIFT,
-        A8 = 8|29<<ANSHIFT, A9 = 9|24<<RPSHIFT|29<<ANSHIFT,
-        A10 = 10|22<<RPSHIFT|29<<ANSHIFT, A11 = 11|18<<ANSHIFT,
-        A12 = 12|17<<ANSHIFT, A13 = 13|16<<ANSHIFT,
-        A14 = 14|29<<ANSHIFT, A15 = 15|29<<ANSHIFT,
+        A0 = 0, A1 = 1,
+        A2 = 2, A3 = 3,
+        A4 = 4, A5 = 5,
+        A6 = 6, A7 = 7,
+        /* no A8 = 8,*/ A9 = 9,
+        A10 = 10, /* no A11 = 11,
+        A12 = 12, A13 = 13,*/
+        A14 = 14, A15 = 15,
         //B0-B15
-        B0 = 16|6<<RPSHIFT|2<<ANSHIFT, B1 = 17|7<<RPSHIFT|3<<ANSHIFT,
-        B2 = 18|8<<RPSHIFT|4<<ANSHIFT, B3 = 19|9<<RPSHIFT|11<<ANSHIFT,
-        B4 = 20|10<<RPSHIFT|7<<ANSHIFT, B5 = 21|11<<RPSHIFT|29<<ANSHIFT,
-        B6 = 22|29<<ANSHIFT, B7 = 23|12<<RPSHIFT|29<<ANSHIFT,
-        B8 = 24|13<<RPSHIFT|29<<ANSHIFT, B9 = 25|14<<RPSHIFT|29<<ANSHIFT,
-        B10 = 26|29<<ANSHIFT, B11 = 27|29<<ANSHIFT,
-        /*no B12*/ B13 = 29|15<<RPSHIFT|8<<ANSHIFT,
-        B14 = 30|16<<RPSHIFT|9<<ANSHIFT, B15 = 31|17<<RPSHIFT|10<<ANSHIFT,
+        B0 = 16|2<<CNSHIFT|0<<ANSHIFT, B1 = 17|3<<CNSHIFT|1<<ANSHIFT,
+        B2 = 18|4<<CNSHIFT|2<<ANSHIFT, B3 = 19|5<<CNSHIFT|3<<ANSHIFT,
+        B4 = 20|6<<CNSHIFT|4<<ANSHIFT, B5 = 21|7<<CNSHIFT|5<<ANSHIFT,
+        B6 = 22|6<<ANSHIFT, B7 = 23|7<<ANSHIFT,
+        B8 = 24|8<<ANSHIFT, B9 = 25|9<<ANSHIFT,
+        B10 = 26|10<<ANSHIFT, B11 = 27|11<<ANSHIFT,
+        B12 = 28|12<<ANSHIFT, B13 = 29|13<<ANSHIFT,
+        B14 = 30|14<<ANSHIFT, B15 = 31|12<<CNSHIFT|15<<ANSHIFT,
         //C0-C15
-        C0 = 32|12<<ANSHIFT, C1 = 33|13<<ANSHIFT,
-        C2 = 34|19<<RPSHIFT|29<<ANSHIFT, C3 = 35|29<<ANSHIFT,
-        C4 = 36|29<<ANSHIFT, C5 = 37|15<<ANSHIFT,
-        C6 = 38|23<<RPSHIFT|29<<ANSHIFT, C7 = 39|20<<RPSHIFT|29<<ANSHIFT,
-        C8 = 40|18<<RPSHIFT|14<<ANSHIFT, C9 = 41|29<<ANSHIFT,
-        C10 = 42|29<<ANSHIFT, C11 = 43|29<<ANSHIFT,
-        C12 = 44|29<<ANSHIFT, C13 = 45|29<<ANSHIFT,
-        C14 = 46|29<<ANSHIFT, C15 = 47|29<<ANSHIFT,
-        //D0-D4
-        D0 = 48|29<<ANSHIFT, D1 = 49|29<<ANSHIFT,
-        D2 = 50|29<<ANSHIFT, D3 = 51|29<<ANSHIFT,
-        D4 = 52|29<<ANSHIFT,
-
-        //RPn 1-24
-        RP1 = A0, RP2 = A1, RP3 = A2, RP4 = A3,
-        RP5 = A4, RP6 = B0, RP7 = B1, RP8 = B2,
-        RP9 = B3, RP10 = B4, RP11 = B5, RP12 = B7,
-        RP13 = B8, RP14 = B9, RP15 = B13, RP16 = B14,
-        RP17 = B15, RP18 = C8, RP19 = C2, RP20 = C7,
-        RP21 = A7, RP22 = A10, RP23 = C6, RP24 = A9,
+        /* no C0 = 32,*/ C1 = 33,
+        C2 = 34, C3 = 35,
+        C4 = 36, /* no C5 = 37,
+        C6 = 38, C7 = 39,
+        C8 = 40, C9 = 41,
+        C10 = 42, C11 = 43,*/
+        C12 = 44, C13 = 45|1<<CNSHIFT,
+        C14 = 46|0<<CNSHIFT, C15 = 47,
+        //D0-D15
+        D0 = 48, D1 = 49,
+        D2 = 50, D3 = 51,
+        D4 = 52|13<<CNSHIFT, D5 = 53|14<<CNSHIFT,
+        D6 = 54|15<<CNSHIFT, D7 = 55|16<<CNSHIFT,
+        D8 = 56, D9 = 57,
+        D10 = 58, D11 = 59,
+        D12 = 60, D13 = 61|19<<CNSHIFT,
+        D14 = 62|20<<CNSHIFT, D15 = 63|21<<CNSHIFT,
+		//E0-E9
+        E0 = 64, E1 = 65,
+        E2 = 66, E3 = 67,
+        E4 = 68, E5 = 69,
+        E6 = 70, E7 = 71,
+        E8 = 72, E9 = 73,
+        /*no E10 = 74, E11 = 75,
+        E12 = 76, E13 = 77,
+        E14 = 78, E15 = 79,*/
+		//F0-F13
+        F0 = 80, F1 = 81,
+        F2 = 82, F3 = 83,
+        F4 = 84|17<<CNSHIFT, F5 = 85|18<<CNSHIFT,
+        /*no F6 = 86, F7 = 87,*/
+        F8 = 88, /*F9 = 89,
+        F10 = 90, F11 = 91,*/
+        F12 = 92, F13 = 93,
+        /*no F14 = 94, F15 = 95,*/
+		//G0-G13
+        G0 = 96, G1 = 97,
+        G2 = 98, G3 = 99,
+        /*G4 = 100, G5 = 101,*/
+        G6 = 102|8<<CNSHIFT, G7 = 103|9<<CNSHIFT,
+        G8 = 104|10<<CNSHIFT, G9 = 105|11<<CNSHIFT,
+        /* no G10 = 106, G11 = 107,*/
+        G12 = 108, G13 = 109,
+        G14 = 110, G15 = 111,
 
         //ANn 0-19
-        AN0 = A0, AN1 = A1, AN2 = B0, AN3 = B1, AN4 = B2, AN5 = A2, AN6 = A3,
-        AN7 = B4, AN8 = B13, AN9 = B14, AN10 = B15, AN11 = B3, AN12 = C0,
-        AN13 = C1, AN14 = C8, AN15 = C5, AN16 = A13, AN17 = A12, AN18 = A11,
-        AN19 = A6,
+        AN0 = B0, AN1 = B1, AN2 = B2, AN3 = B3, AN4 = B4, 
+		AN5 = B5, AN6 = B6, AN7 = B7, AN8 = B8, AN9 = B9, 
+		AN10 = B10, AN11 = B11, AN12 = B12, AN13 = B13, 
+		AN14 = B14, AN15 = B15,
+		
+		//CNn 0-21
+		CN0 = C14, CN1 = C13, CN2 = B0, CN3 = B1, CN4 = B2, 
+		CN5 = B3, CN6 = B4, CN7 = B5, CN8 = G6, CN9 = G7, 
+		CN10 = G8, CN11 = G9, CN12 = B15, CN13 = D4, CN14 = D5, 
+		CN15 = D6, CN16 = D7, CN17 = F4, CN18 = F5, CN19 = D13, 
+		CN20 = D14, CN21 = D15,
 
         //PINn 1-64
-        PIN1 = A7, PIN2 = B14, PIN3 = B15, /*PIN4 = AVss, PIN5 = AVdd,*/
-        PIN6 = A13, PIN7 = A12, PIN8 = A11, /*PIN9 = MCLR,*/ PIN10 = A6,
-        PIN11 = A0, PIN12 = A1, PIN13 = B0, PIN14 = B1, PIN15 = B2, PIN16 = B3,
-        /*PIN17 = Vdd, PIN18 = Vss,*/ PIN19 = C0, PIN20 = C1, PIN21 = C2,
-        PIN22 = C11, /*PIN23 = Vdd, PIN24 = Vss,*/ PIN25 = A2, PIN26 = A3,
-        PIN27 = A8, PIN28 = B4, PIN29 = A4, PIN30 = A9, PIN31 = D4, PIN32 = D2,
-        PIN33 = D3, PIN34 = D0, PIN35 = C3, PIN36 = C4, PIN37 = C5,
-        /*PIN38 = Vss, PIN39 = Vdd,*/ PIN40 = C12, PIN41 = C14, PIN42 = C15,
-        PIN43 = B5, PIN44 = B6, PIN45 = C10, PIN46 = B7, PIN47 = C13,
-        PIN48 = B8, PIN49 = B9, PIN50 = C6, PIN51 = C7, PIN52 = C8, PIN53 = D1,
-        PIN54 = A5, PIN55 = C9, /*PIN56 = Vcap, PIN57 = Vdd,*/ PIN58 = A15,
-        PIN59 = A14, PIN60 = B10, PIN61 = B11, /*PIN62 = Vusb,*/ PIN63 = B13,
-        PIN64 = A10
+        PIN1 = G15, /*PIN2 = Vdd,*/ PIN3 = E5, PIN4 = E6, PIN5 = E7,
+        PIN6 = C1, PIN7 = C2, PIN8 = C3, PIN9 = C4, PIN10 = G6,
+        PIN11 = G7, PIN12 = G8, /*PIN13 = MCLR,*/ PIN14 = G9, /*PIN15 = Vss, 
+		PIN16 = Vdd,*/ PIN17 = A0, PIN18 = E8, PIN19 = E9, PIN20 = B5,
+		PIN21 = B4, PIN22 = B3, PIN23 = B2, PIN24 = B1, PIN25 = B0, 
+		PIN26 = B6, PIN27 = B7, PIN28 = A9, PIN29 = A10, /*PIN30 = AVdd, 
+		PIN31 = AVss,*/ PIN32 = B8, PIN33 = B9, PIN34 = B10, PIN35 = B11,
+		/*PIN36 = Vss, PIN37 = Vdd,*/ PIN38 = A1, PIN39 = F13, PIN40 = F12, 
+		PIN41 = B12, PIN42 = B13, PIN43 = B14, PIN44 = B15, /*PIN45 = Vss, 
+		PIN46 = Vdd,*/ PIN47 = D14, PIN48 = D15, PIN49 = F4, PIN50 = F5, 
+		PIN51 = F3, PIN52 = F2, PIN53 = F8, /*PIN54 = VBUS, PIN55 = Vusb3v3,*/ 
+		PIN56 = G3, PIN57 = G2, PIN58 = A2, PIN59 = A3, PIN60 = A4, 
+		PIN61 = A5, /*PIN62 = Vdd,*/ PIN63 = C12, PIN64 = C15, /*PIN65 = Vss*/
+		PIN66 = A14, PIN67 = A15, PIN68 = D8, PIN69 = D9, PIN70 = D10,
+		PIN71 = D11, PIN72 = D0, PIN73 = C13, PIN74 = C14, /*PIN75 = Vss,*/
+		PIN76 = D1, PIN77 = D2, PIN78 = D3, PIN79 = D12, PIN80 = D13,
+		PIN81 = D4, PIN82 = D5, PIN83 = D6, PIN84 = D7, /*PIN85 = Vcap,
+		PIN86 = Vdd,*/ PIN87 = F0, PIN88 = F1, PIN89 = G1, PIN90 = G0,
+		PIN91 = A6, PIN92 = A7, PIN93 = E0, PIN94 = E1, PIN95 = G14, 
+		PIN96 = G12, PIN97 = G13, PIN98 = E2, PIN99 = E3, PIN100 = E4
     };
 
     enum IOMODE : uint8_t {
@@ -128,49 +167,18 @@ struct Pins {
     bool        icn_stat        () const;
     void        icn_flagclr     () const;
 
-    //pps
-    enum PPSIN : uint8_t {
-        //byte offset from RPINR1
-        INT4 = 0*16|0,                          //R1
-        ICM1 = 1*16|2, ICM2 = 1*16|3,           //R2
-        ICM3 = 2*16|0,                          //R3
-        //no RPINR4
-        OCFA = 4*16|2, OCFB = 1*16|3,           //R5
-        TCKIA = 5*16|0, TCKIB = 5*16|1,         //R6
-        ICM5 = 6*16|0, ICM6 = 6*16|1,           //R7
-        ICM7 = 6*16|2, ICM8 = 6*16|3,           //R7
-        ICM9 = 7*16|0, U3RX = 7*16|3,           //R8
-        U2RX = 8*16|2, U2CTS = 8*16|3,          //R9
-        U3CTS = 9*16|3,                         //R10
-        SDI2 = 10*16|0, SCK2IN = 10*16|1,       //R11
-        SS2IN = 10*16|2,                        //R11
-        CLCINA = 11*16|2, CLCINB = 11*16|3,     //R12
-        PPSINOFF = 255
-    };
-    void        pps_in          (PPSIN);
-
-    enum PPSOUT : uint8_t {
-        PPSLAT = 0,
-        C1OUT, C2OUT, C3OUT,
-        U2TX, U2RTS, U3TX, U3RTS,
-        SDO2, SCK2OUT, SS2OUT,
-        OCM4, OCM5, OCM6, OCM7, OCM8, OCM9,
-        CLC1OUT, CLC2OUT, CLC3OUT, CLC4OUT,
-    };
-    void        pps_out         (PPSOUT);
 
     //get adc #
     uint8_t     an_num          ();
+	//get icn #
+	uint8_t		cn_num			();
 
     private:
-
-    static void     pps_do      (uint32_t, uint8_t);
 
     volatile uint32_t*  m_pt;       //base address
     const uint16_t      m_pn;       //pin mask
     bool                m_lowison;  //pin on val is low
-    const uint8_t       m_rpn;      //RPn value
-    uint8_t             m_ppsin;    //store ppsin peripheral
     const uint8_t       m_an;       //ANn value
+	const uint8_t		m_cn;		//CNn value
 
 };

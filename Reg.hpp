@@ -7,9 +7,9 @@
 #include <cstdint>
 
 /*                                             |-kseg = 1, phys = 0
-SFR - kseg0 0x9F800000-0x9F80FFFF bit<31:29> 0b100<-kseg0 = 0
-      kseg1 0xBF800000-0xBF80FFFF bit<31:29> 0b101<-kseg1 = 1
-      phys  0x1F800000-0x1F80FFFF bit<31:29> 0b000
+SFR - kseg0 no SFR available in kseg0 		      <-kseg0 = 0
+      kseg1 0xBF800000-0xBF8FFFFF bit<31:29> 0b101<-kseg1 = 1
+      phys  0x1F800000-0x1F8FFFFF bit<31:29> 0b000
       access sfr's via kseg1 addresses
 
 

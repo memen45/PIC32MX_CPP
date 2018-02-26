@@ -4,21 +4,21 @@
 #include "Sys.hpp"
 
 enum { //offsets from base address, in words
-    TRIS = 4, PORT = 8, LAT = 12, ODC = 16,
-    CNPU = 20, CNPD = 24, CNCON = 28, CNEN0 = 32,
-    CNSTAT = 36, CNEN1 = 40, CNF = 44
+    TRIS = 0, PORT = 4, LAT = 8, ODC = 12
 };
 
 enum {
-    ANSELX_SPACING = 64, //spacing in words
-    ANSELA = 0xBF802BB0,
+	TRISX_SPACING = 16, //spacing in words
+	TRISA = 0xBF886000,
+	
+	AD1PCFG = 0xBF809060,
+	
+	CNCON = 0xBF8861C0,
+	CNEN = 0xBF8861D0,
+	CNPUE = 0xBF8861E0,
+	
     //CNCONx
-        ON = 15,
-        CNSTYLE = 11,
-    RPCON = 0xBF802A00,
-        IOLOCK = 11,
-    RPINR1 = 0xBF802A20,
-    RPOR0 = 0xBF802B10
+        ON = 15
 };
 
 //IOMODE
@@ -28,7 +28,7 @@ enum {
 //AIN   |    |    |      |      |     | 0
 //IN    |    |    |      |      |  1  | 1
 //INPU  |    |  1 |  1   |      |  1  | 13
-//INPD  |  1 |    |      |      |  1  | 17
+//INPD  |  1 |    |      |      |  1  | 17  //not supported
 //INL   |    |    |  1   |      |  1  | 5
 //OUT   |    |    |      |   1  |     | 2
 //OUTL  |    |    |  1   |   1  |     | 6
@@ -45,18 +45,16 @@ using vu32_ptr = volatile uint32_t*;
 //=============================================================================
                     Pins::Pins          (RPN e, IOMODE m)
 //=============================================================================
-    : m_pt((vu32_ptr)ANSELA + ((e>>PTSHIFT) bitand PTMASK) * ANSELX_SPACING),
+    : m_pt((vu32_ptr)TRISA + ((e>>PTSHIFT) bitand PTMASK) * TRISX_SPACING),
       m_pn(1<<(e bitand PNMASK)),
       m_lowison(m bitand ACTL),
-      m_rpn((uint8_t)((e>>RPSHIFT) bitand RPMASK)),
-      m_ppsin(PPSINOFF),
-      m_an((e>>ANSHIFT) bitand ANMASK)
+      m_an((e>>ANSHIFT) bitand ANMASK),
+	  m_cn((e>>CNSHIFT) bitand CNMASK)
 {
     if(m == AIN) analog_in();
     else if(m bitand IN) digital_in();
     else digital_out();
     pullup(m == INPU);
-    pulldn(m == INPD);
 }
 
 //=============================================================================
@@ -139,13 +137,6 @@ using vu32_ptr = volatile uint32_t*;
 }
 
 //=============================================================================
-    void        Pins::icn_flagclr () const
-//=============================================================================
-{
-    Reg::clrbit(m_pt + CNF, m_pn);
-}
-
-//=============================================================================
     void        Pins::lowison           (bool tf)
 //=============================================================================
 {
@@ -157,7 +148,7 @@ using vu32_ptr = volatile uint32_t*;
 //=============================================================================
 {
     Reg::setbit(m_pt + TRIS, m_pn);
-    Reg::clrbit(m_pt, m_pn);
+    Reg::setbit(AD1PCFG, m_an);
 }
 
 //=============================================================================
@@ -165,7 +156,7 @@ using vu32_ptr = volatile uint32_t*;
 //=============================================================================
 {
     Reg::setbit(m_pt + TRIS, m_pn);
-    Reg::setbit(m_pt, m_pn);
+    Reg::clrbit(AD1PCFG, m_an);
 }
 
 //=============================================================================
@@ -173,7 +164,7 @@ using vu32_ptr = volatile uint32_t*;
 //=============================================================================
 {
     Reg::clrbit(m_pt + TRIS, m_pn);
-    Reg::clrbit(m_pt, m_pn);
+    Reg::setbit(AD1PCFG, m_an);
 }
 
 //=============================================================================
@@ -187,106 +178,14 @@ using vu32_ptr = volatile uint32_t*;
     void        Pins::pullup            (bool tf) const
 //=============================================================================
 {
-    Reg::setbit(m_pt + CNPU, m_pn, tf);
-}
-
-//=============================================================================
-    void        Pins::pulldn            (bool tf) const
-//=============================================================================
-{
-    Reg::setbit(m_pt + CNPD, m_pn, tf);
+    Reg::setbit(CNPUE, m_pn, tf);
 }
 
 //=============================================================================
     void        Pins::icn               (bool tf) const
 //=============================================================================
 {
-    Reg::setbit(m_pt + CNCON, 1<<ON, tf);
-}
-
-//=============================================================================
-    void        Pins::icn_rising        () const
-//=============================================================================
-{
-    Reg::setbit(m_pt + CNCON, 1<<CNSTYLE);
-    Reg::setbit(m_pt + CNEN0, m_pn);
-    Reg::clrbit(m_pt + CNEN1, m_pn);
-}
-
-//=============================================================================
-    void        Pins::icn_risefall      () const
-//=============================================================================
-{
-    Reg::setbit(m_pt + CNCON, 1<<CNSTYLE);
-    Reg::setbit(m_pt + CNEN0, m_pn);
-    Reg::clrbit(m_pt + CNEN1, m_pn);
-}
-
-//=============================================================================
-    void        Pins::icn_falling       () const
-//=============================================================================
-{
-    Reg::setbit(m_pt + CNCON, 1<<CNSTYLE);
-    Reg::setbit(m_pt + CNEN1, m_pn);
-    Reg::clrbit(m_pt + CNEN0, m_pn);
-}
-
-//=============================================================================
-    void        Pins::icn_mismatch      () const
-//=============================================================================
-{
-    Reg::setbit(m_pt + CNEN0, m_pn);
-    Reg::clrbit(m_pt + CNCON, 1<<CNSTYLE);
-}
-
-//=============================================================================
-    bool        Pins::icn_flag          () const
-//=============================================================================
-{
-    return Reg::anybit(m_pt + CNF, m_pn);
-}
-
-//=============================================================================
-    bool        Pins::icn_stat          () const
-//=============================================================================
-{
-    return Reg::anybit(m_pt + CNSTAT, m_pn);
-}
-
-//static
-//unlock, write byte, lock
-//=============================================================================
-    void        Pins::pps_do            (uint32_t addr, uint8_t v)
-//=============================================================================
-{
-    Sys::unlock();
-    Reg::clrbit(RPCON, 1<<IOLOCK);
-    Reg::val(addr, v);
-    Reg::setbit(RPCON, 1<<IOLOCK);
-    Sys::lock();
-}
-
-//pin -> pps peripheral in, or turn off
-//=============================================================================
-    void        Pins::pps_in            (PPSIN e)
-//=============================================================================
-{
-    if(m_rpn == 0) return;      //no pps for this pin
-    if(e not_eq PPSINOFF) m_ppsin = (uint8_t)e; //save peripheral number
-    if(m_ppsin == PPSINOFF) return; //not set previously, nothing to do
-    //set peripheral m_ppsin register to 0 if off, or RPn number
-    pps_do(RPINR1 + m_ppsin, e == PPSINOFF ? 0 : m_rpn);
-    digital_in();
-}
-
-//pps peripheral out -> pin
-//=============================================================================
-    void        Pins::pps_out           (PPSOUT e)
-//=============================================================================
-{
-    if(m_rpn == 0) return; //no pps for this pin
-    uint8_t n = m_rpn - 1; //1 based to 0 based to calc reg addresses
-    pps_do(RPOR0 + ((n / 4) * 16) + (n % 4), e);
+    Reg::setbit(CNCON, 1<<ON, tf);
 }
 
 //return ANn number for ADC channel select
@@ -296,3 +195,12 @@ using vu32_ptr = volatile uint32_t*;
 {
     return m_an;
 }
+
+//return CNn number for CN select
+//=============================================================================
+    uint8_t     Pins::cn_num            ()
+//=============================================================================
+{
+    return m_cn;
+}
+

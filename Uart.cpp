@@ -63,15 +63,8 @@ using vu32ptr = volatile uint32_t*;
 //=============================================================================
     : Uart(e)
 {
-    //UART1 is fixed pins, no pps
-    if(e == Uart::UART2){
-        Pins r(rx); r.pps_in(Pins::U2RX);
-        Pins t(tx); t.pps_out(Pins::U2TX);
-    }
-    else if(e == Uart::UART3){
-        Pins r(rx); r.pps_in(Pins::U3RX);
-        Pins t(tx); t.pps_out(Pins::U3TX);
-    }
+    //UART is fixed pins, no pps
+    
     m_uartx_baud = baud;
     baud_set();
     rx_on(true);
@@ -84,25 +77,8 @@ using vu32ptr = volatile uint32_t*;
 //=============================================================================
     : Uart(e)
 {
-    //UART1 is fixed pins, no pps
-    if(e == Uart::UART2){
-        if(e bitand (1<<2)){
-            Pins t(trx); t.pps_out(Pins::U2TX);
-            tx_on(true);
-        } else {
-            Pins r(trx); r.pps_in(Pins::U2RX);
-            rx_on(true);
-        }
-    }
-    else if(e == Uart::UART3){
-        if(e bitand (1<<2)){
-            Pins t(trx); t.pps_out(Pins::U3TX);
-            tx_on(true);
-        } else {
-            Pins r(trx); r.pps_in(Pins::U3RX);
-            rx_on(true);
-        }
-    }
+    //UART is fixed pins, no pps
+    
     m_uartx_baud = baud;
     baud_set();
 }
