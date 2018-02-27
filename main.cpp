@@ -26,6 +26,7 @@
 #include "Uart.hpp"
 #include "Cp0.hpp"
 #include "Rtcc.hpp"
+#include "Irq.hpp"
 
 #include <cstdlib>
 #include <stdio.h>
@@ -183,7 +184,8 @@ const uint8_t svg[][3]{
 };
 
 
-Uart info{Uart::UART2, Pins::C6, Pins::C7, 115200};
+Uart info{Uart::UART2, Pins::C6, Pins::C7, 230400};
+//Uart info{Uart::UART2, Pins::C6, Pins::C7, 115200};
 
 
 //rgb led's struct, use pwm for brightness
@@ -216,24 +218,29 @@ struct Rgb {
         }
         m_delay.set_ms(t);
 
-        int c =  info.getc();
-        if(c != -1){
-            info.putc(c);
-            info.puts("\r\n");
-        }
+        //check if rx works
+//        int c =  info.getc();
+//        if(c != -1){
+//            info.putc(c);
+//            info.puts("\r\n");
+//        }
 
-        if(t == m_delay_short) return;
+        //if(t == m_delay_short) return;
 
         char buf[64];
-        snprintf(buf, 64, "color[%02d]: %03d.%03d.%03d ", m_idx,svg[m_idx][0],svg[m_idx][1],svg[m_idx][2]);
+        snprintf(buf, 64, "color[%02d]: %03d.%03d.%03d ",
+                m_idx,m_ccp[0].compb()>>8,m_ccp[1].compb()>>8,m_ccp[2].compb()>>8);
+                //svg[m_idx][0],svg[m_idx][1],svg[m_idx][2]);
         info.puts(buf);
         snprintf(buf, 64, " CP0 Count: %010u ", Cp0::count());
         info.puts(buf);
         Rtcc::datetime_t dt = Rtcc::datetime();
 
-        snprintf(buf, 64, " time: %02d:%02d:%02d\r\n",
-                dt.hour, dt.minute, dt.second);
+        snprintf(buf, 64, " now: %02d-%02d-%04d %02d:%02d:%02d\r",
+                dt.month, dt.day, dt.year+2000, dt.hour, dt.minute, dt.second);
         info.puts(buf);
+
+        if(t == m_delay_short) return;
 
         if(++m_idx >= sizeof(svg)/sizeof(svg[0])) m_idx = 0;
     };
@@ -301,21 +308,21 @@ int main()
     //set osc to 24MHz
     Osc_init();
 
-    const Rtcc::datetime_t now = { 18, 2, 25, 0, 22, 33, 10};
+    const Rtcc::datetime_t now = { 18, 2, 26, 0, 21, 39, 15};
     Rtcc::datetime_t dt = Rtcc::datetime();
     if(dt.year == 0) Rtcc::datetime(now);
 
     Rtcc::boot_time = Rtcc::datetime();
     Rtcc::on(true);
 
+    info.hispeed(true);
     info.on(true);
+    info.putc(12);
 
     Rgb rgb;
     Led12 led12;
 
-    for(;;){
-        Wdt::reset(), led12.update(), rgb.update();
-    }
+    for( ; ; Wdt::reset(), led12.update(), rgb.update());
 }
 
 
@@ -564,8 +571,8 @@ int main(){
     rtcc.chime(true);                       //repeating alarm
     rtcc.alarm(true);                       //turn on alarm
 
-    Rtcc::time_t t = {2,3,4,5,0,1};
-    rtcc.time(t);                           //23:45:01
+    Rtcc::datetime_t dt = {18,2,26,23,45,1};
+    rtcc.datetime(dt);                      //23:45:01
     rtcc.on(true);                          //turn on, alarm is 00:00:00
                                             //(alarm every 00 seconds match)
                                             //disable/enable core timer irq
@@ -710,29 +717,24 @@ int main(){
  irq's need to be init in other code for the priority (Irq::init)
  and if using shadow set (Irq::shadow_set)
 =============================================================================*/
-ISR(CORE_TIMER){
-    Irq ir; Cp0 cp; //can use IrQ::func() syntax also
-    cp.compare_reload();
+ISRautoflag(CORE_TIMER){
+    Cp0::compare_reload();
     led2.invert();
-    ir.flag_clr(ir.CORE_TIMER);
-}
+}}
 
-ISR(TIMER_1){
-    Irq ir;
+ISRautoflag(TIMER_1){
     led1.invert();
-    ir.flag_clr(ir.TIMER_1);
-}
-ISR(TIMER_2){
-    Irq ir;
+}}
+
+ISRautoflag(TIMER_2){
     led1.invert();
-    ir.flag_clr(ir.TIMER_2);
-}
-ISR(TIMER_3){
-    Irq ir;
+}}
+
+ISRautoflag(TIMER_3){
     led1.invert();
-    ir.flag_clr(ir.TIMER_3);
-}
-ISR(RTCC){
+}}
+
+ISRautoflag(RTCC){
     Irq ir; Cp0 cp;
     static bool b;
     b xor_eq 1;
@@ -743,7 +745,6 @@ ISR(RTCC){
         cp.compare_reload();
         cp.compare_irq(true);
     }
-    ir.flag_clr(ir.RTCC);
-}
+}}
 //=============================================================================
 #endif
