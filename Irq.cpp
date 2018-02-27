@@ -3,6 +3,7 @@
 
 enum {
     INTCON = 0xBF881000,
+        M_VEC = 12,
         TPC_SHIFT = 8, TPC_CLR = 7,
         INT4EP = 4,
         INT3EP = 3,
@@ -186,4 +187,10 @@ const uint8_t Irq::m_lookup_vn[] = {
     }
 }
 
-
+//enables multi vectored interrupts
+//=============================================================================
+    void        Irq::enable_mvec               (MVEC_MODE m)
+//=============================================================================
+{
+        Reg::setbit(INTCON, M_VEC, m);
+}

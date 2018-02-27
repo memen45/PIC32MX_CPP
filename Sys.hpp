@@ -23,9 +23,10 @@ class Sys {
     static void     lock        (uint8_t);
     static void     unlock      ();
     static uint8_t  unlock_wait ();
-
-    //udid
-    static uint32_t udid        (uint8_t); //0-4 ->UDID1-5
+    
+    enum PREFEN : uint8_t { DISABLE = 0, CACHE_ONLY, NON_CACHE_ONLY, ENABLE };
+    static void     pcache      (PREFEN);
+    static void     waitstates  ();
 
     //misc
     //static uint32_t flash_size  ();

@@ -2,16 +2,19 @@
 #include "Irq.hpp"
 #include "Reg.hpp"
 #include "Dma.hpp"
+#include "Osc.hpp"
 
 enum {
     BMXCON = 0xBF882000,
         BMXERRDIS = 27,
         BMXARB_SHIFT = 0, BMXARB_MASK = 7,
+        
 	BMXDKPBA = 0xBF882010,										//Kernel Program (RAM)
 	BMXDUDBA = 0xBF882020,										//User Data Base Address (RAM)
 	BMXDUPBA = 0xBF882030,										//User Program (RAM)
 	BMXPUPBA = 0xBF882050,										//User Program (Program Flash)
         //EXECADDR_SHIFT = 16, EXECADDR_MASK = 255,
+    
 	DDPCON = 0xBF80F200,
         JTAGEN = 3,
     DEVID = 0xBF80F220,
@@ -20,6 +23,11 @@ enum {
     SYSKEY = 0xBF803670,
         MAGIC1 = 0xAA996655,
         MAGIC2 = 0x556699AA,
+    CHECON = 0xBF884000,
+        PFMWS_SHIFT = 0, PFMWS_MASK = 7,
+        PREFEN_SHIFT = 4, PREFEN_MASK = 3,
+        
+    FLASHSPEED = 30000000
 };
 
 
@@ -122,4 +130,27 @@ static volatile uint8_t unlock_count;
 //=============================================================================
 {
     return Reg::val(DEVID)>>VER_SHIFT;
+}
+
+//=============================================================================
+    void     Sys::waitstates            ()
+//=============================================================================
+{
+    uint8_t waitstates = Osc::sysclk() / FLASHSPEED;
+    bool irqstate = Irq::all_ison();                //get STATUS.IE
+    Irq::disable_all();
+    Reg::clrbit(CHECON, PFMWS_MASK << PFMWS_SHIFT);
+    Reg::setbit(CHECON, waitstates << PFMWS_SHIFT);
+    if(irqstate) Irq::enable_all();                 //restore IE state
+}
+    
+//=============================================================================
+    void     Sys::pcache                (PREFEN p)
+//=============================================================================
+{
+    bool irqstate = Irq::all_ison();                //get STATUS.IE
+    Irq::disable_all();
+    Reg::clrbit(CHECON, PREFEN_MASK << PREFEN_SHIFT);
+    Reg::setbit(CHECON, p << PREFEN_SHIFT);
+    if(irqstate) Irq::enable_all();                 //restore IE state
 }

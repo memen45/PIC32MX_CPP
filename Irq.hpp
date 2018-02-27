@@ -8,6 +8,8 @@ struct Irq {
 
     static void     disable_all     ();
     static void     enable_all      ();
+    enum MVEC_MODE : bool { SVEC = false, MVEC };
+    static void     enable_mvec     (MVEC_MODE);
     static bool     all_ison        ();
     static void     proxtimer       (uint8_t);
 
