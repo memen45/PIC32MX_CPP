@@ -236,8 +236,8 @@ struct Rgb {
         info.puts(buf);
         Rtcc::datetime_t dt = Rtcc::datetime();
 
-        snprintf(buf, 64, " time: %02d:%02d:%02d\r",
-                dt.hour, dt.minute, dt.second);
+        snprintf(buf, 64, " now: %02d-%02d-%04d %02d:%02d:%02d\r",
+                dt.month, dt.day, dt.year+2000, dt.hour, dt.minute, dt.second);
         info.puts(buf);
 
         if(t == m_delay_short) return;
@@ -308,7 +308,7 @@ int main()
     //set osc to 24MHz
     Osc_init();
 
-    const Rtcc::datetime_t now = { 18, 2, 26, 0, 20, 33, 15};
+    const Rtcc::datetime_t now = { 18, 2, 26, 0, 21, 39, 15};
     Rtcc::datetime_t dt = Rtcc::datetime();
     if(dt.year == 0) Rtcc::datetime(now);
 
