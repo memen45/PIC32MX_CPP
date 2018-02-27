@@ -85,3 +85,12 @@ struct Irq {
 // usage- ISR(ADC){ /* isr code here */ }
 #define ISR(nam) extern "C" __attribute((vector((int)Irq::nam),interrupt))\
     void nam##_ISR()
+
+////////////////////////////////////////////////////////////////////////////////
+// ISR MACRO - auto clear irq flag - NOTE- need }} to close isr
+// usage- ISR(ADC){ /* isr code here */ }}
+#define ISRautoflag(nam) extern "C" \
+    __attribute((vector((int)Irq::nam),interrupt)) \
+    void nam##_ISR(){ Irq::flag_clr(Irq::nam); \
+
+
