@@ -10,9 +10,11 @@
 
 enum {
     OSCCON = 0xBF80F000,
-		PLLODIV_SHIFT = 27,
-		PLLODIV_MASK = 7,
+		PLLODIV_SHIFT = 27, PLLODIV_MASK = 7,
+        FRCDIV_SHIFT = 24, FRCDIV_MASK = 7,
 		PLLMUL_MASK = 7,
+        COSC_SHIFT = 12, COSC_MASK = 7,
+        NOSC_SHIFT = 8, NOSC_MASK = 7,
         CLKLOCK = 7,
         SLPEN = 4,
         CF = 3,
@@ -20,8 +22,7 @@ enum {
         OSWEN = 0,
     OSCTUN = 0xBF80F010,
 	DEVCFG2 = 0xBFC02FF4,
-		PLLIDIV_SHIFT = 0,
-		PLLIDIV_MASK = 7,
+		PLLIDIV_SHIFT = 0, PLLIDIV_MASK = 7
 };
 
 uint32_t Osc::m_sysclk = 0;
@@ -48,15 +49,14 @@ const uint8_t Osc::m_idiv_lookup[] = {1, 2, 3, 4, 5, 6, 10, 12};
     auto            Osc::frc_div        () -> DIVS
 //=============================================================================
 {
-    return (DIVS)Reg::val8(OSCCON + 3);
+    return (DIVS) (Reg::val8(OSCCON + 3) bitand FRCDIV_MASK);
 }
 
 //=============================================================================
     auto            Osc::clk_src        () -> CNOSC
 //=============================================================================
 {
-    //return (CNOSC)(Reg::val8(OSCCON + 1)>>4);
-    return (CNOSC) FRCPLL;
+    return (CNOSC)((Reg::val(OSCCON) >> COSC_SHIFT) bitand COSC_MASK);
 }
 
 //=============================================================================
@@ -65,7 +65,8 @@ const uint8_t Osc::m_idiv_lookup[] = {1, 2, 3, 4, 5, 6, 10, 12};
 {
     //IDSTAT irstat = unlock_irq();
     uint8_t irstat = Sys::unlock_wait();
-    Reg::val(OSCCON + 1, e);
+    Reg::clrbit(OSCCON, NOSC_MASK << NOSC_SHIFT);
+    Reg::setbit(OSCCON, e << NOSC_SHIFT);
     Reg::setbit(OSCCON, 1<<OSWEN);
     while(Reg::anybit(OSCCON, 1<<OSWEN));
     //lock_irq(irstat);

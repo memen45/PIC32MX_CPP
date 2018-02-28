@@ -21,7 +21,7 @@ enum {
     DEVID = 0xBF80F220,
         VER_SHIFT = 28, VER_MASK = 15,
         ID_SHIFT = 0, ID_MASK = 0xFFFFFFF,
-    SYSKEY = 0xBF803670,
+    SYSKEY = 0xBF80F230,
         MAGIC1 = 0xAA996655,
         MAGIC2 = 0x556699AA,
     CHECON = 0xBF884000,
