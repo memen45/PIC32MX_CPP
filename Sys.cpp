@@ -6,8 +6,9 @@
 
 enum {
     BMXCON = 0xBF882000,
-        BMXERRDIS = 27,
+        //BMXERRDIS = 27,
         BMXARB_SHIFT = 0, BMXARB_MASK = 7,
+		BMXWSDRM = 6,
         
 	BMXDKPBA = 0xBF882010,										//Kernel Program (RAM)
 	BMXDUDBA = 0xBF882020,										//User Data Base Address (RAM)
@@ -26,7 +27,7 @@ enum {
     CHECON = 0xBF884000,
         PFMWS_SHIFT = 0, PFMWS_MASK = 7,
         PREFEN_SHIFT = 4, PREFEN_MASK = 3,
-        
+		
     FLASHSPEED = 30000000
 };
 
@@ -94,13 +95,13 @@ static volatile uint8_t unlock_count;
     return (dmasusp<<1) bitor irqstate;
 }
 
-//cfgcon
-//=============================================================================
-    void        Sys::bus_err            (bool tf)
-//=============================================================================
-{
-    Reg::setbit(BMXCON, 1<<BMXERRDIS, !tf);
-}
+////cfgcon
+////=============================================================================
+//    void        Sys::bus_err            (bool tf)
+////=============================================================================
+//{
+//    Reg::setbit(BMXCON, 1<<BMXERRDIS, !tf);
+//}
 
 //=============================================================================
     void        Sys::bus_mode           (BMXARB e)
@@ -139,8 +140,8 @@ static volatile uint8_t unlock_count;
     uint8_t waitstates = Osc::sysclk() / FLASHSPEED;
     bool irqstate = Irq::all_ison();                //get STATUS.IE
     Irq::disable_all();
-    Reg::clrbit(CHECON, PFMWS_MASK << PFMWS_SHIFT);
-    Reg::setbit(CHECON, waitstates << PFMWS_SHIFT);
+	Reg::clrbit(BMXCON, 1 << BMXWSDRM);				//Disable RAM wait states
+    Reg::val(CHECON, waitstates << PFMWS_SHIFT);
     if(irqstate) Irq::enable_all();                 //restore IE state
 }
     
@@ -150,7 +151,17 @@ static volatile uint8_t unlock_count;
 {
     bool irqstate = Irq::all_ison();                //get STATUS.IE
     Irq::disable_all();
-    Reg::clrbit(CHECON, PREFEN_MASK << PREFEN_SHIFT);
-    Reg::setbit(CHECON, p << PREFEN_SHIFT);
+	Reg::clrbit(CHECON, PREFEN_MASK << PREFEN_SHIFT);
+	Reg::setbit(CHECON, p << PREFEN_SHIFT);
+	kseg0_cache_enable(ON);
     if(irqstate) Irq::enable_all();                 //restore IE state
+}
+
+//=============================================================================
+	void 	Sys::kseg0_cache_enable		(KSEG0_CACHE m)
+//=============================================================================
+{
+	uint32_t tmp = __builtin_mfc0(16, 0) ;
+	tmp = (tmp & (~7)) | m;
+	__builtin_mtc0(16, 0, tmp);
 }

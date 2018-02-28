@@ -12,13 +12,16 @@ enum {
     OSCCON = 0xBF80F000,
 		PLLODIV_SHIFT = 27,
 		PLLODIV_MASK = 7,
+		PLLMUL_MASK = 7,
         CLKLOCK = 7,
         SLPEN = 4,
         CF = 3,
         SOSCEN = 1,
         OSWEN = 0,
     OSCTUN = 0xBF80F010,
-	DEVCFG2 = 0xBFC02FF4
+	DEVCFG2 = 0xBFC02FF4,
+		PLLIDIV_SHIFT = 0,
+		PLLIDIV_MASK = 7,
 };
 
 uint32_t Osc::m_sysclk = 0;
@@ -52,7 +55,8 @@ const uint8_t Osc::m_idiv_lookup[] = {1, 2, 3, 4, 5, 6, 10, 12};
     auto            Osc::clk_src        () -> CNOSC
 //=============================================================================
 {
-    return (CNOSC)(Reg::val8(OSCCON + 1)>>4);
+    //return (CNOSC)(Reg::val8(OSCCON + 1)>>4);
+    return (CNOSC) FRCPLL;
 }
 
 //=============================================================================
@@ -136,14 +140,14 @@ const uint8_t Osc::m_idiv_lookup[] = {1, 2, 3, 4, 5, 6, 10, 12};
     auto            Osc::pll_idiv        () -> IDIVS
 //=============================================================================
 {
-    return (IDIVS)Reg::val8(DEVCFG2);
+    return (IDIVS) (Reg::val8(DEVCFG2) bitand PLLIDIV_MASK);
 }
 
 //=============================================================================
     auto            Osc::pll_mul        () -> PLLMUL
 //=============================================================================
 {
-    return (PLLMUL)(Reg::val8(OSCCON + 2) bitand 7);
+    return (PLLMUL)(Reg::val8(OSCCON + 2) bitand PLLMUL_MASK);
 }
 
 //set SPLL as clock source with specified mul/div
@@ -201,22 +205,23 @@ const uint8_t Osc::m_idiv_lookup[] = {1, 2, 3, 4, 5, 6, 10, 12};
     uint32_t        Osc::sysclk         ()
 //=============================================================================
 {
-    if(m_sysclk) return m_sysclk;           //already have it
-    CNOSC s = clk_src();
+    if(m_sysclk) return m_sysclk;           //already have it 
+    CNOSC s = clk_src();       
     switch(s){
         case LPRC: m_sysclk = 31250; break; //+/-15% = 26562,5 - 35937,5
         case SOSC: m_sysclk = 32768; break;
         case POSC: m_sysclk = extclk(); break;
 		case FRCPLL:
 		case POSCPLL: {
-			uint32_t f = s ==FRCPLL ? m_frcosc_freq : extclk();			
+			uint32_t f = (s == FRCPLL) ? m_frcosc_freq : extclk();
 			uint8_t m = (uint8_t)pll_mul(); 		//15 16 17 18 19 20 21 24
 			m = m_mul_lookup[m];
 			uint8_t idiv = (uint8_t) pll_idiv();
 			idiv = m_idiv_lookup[idiv];
 			uint8_t odiv = (uint8_t)pll_odiv();
 			if (odiv == 7) odiv = 8;               //adjust DIV256
-			m_sysclk = ((f / idiv) * m) >> idiv;
+			m_sysclk = ((f / idiv) * m) >> odiv;
+            break;
 		}
         case FRCDIV: {
             uint8_t n = (uint8_t)frc_div();

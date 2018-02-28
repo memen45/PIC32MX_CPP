@@ -7,7 +7,7 @@ class Sys {
     public:
 
     //cfgcon
-    static void     bus_err     (bool);
+    //static void     bus_err     (bool);
 
     enum BMXARB : uint8_t { CPUHIGH = 0, CPULOW, RROBIN };
     static void     bus_mode    (BMXARB);
@@ -24,9 +24,13 @@ class Sys {
     static void     unlock      ();
     static uint8_t  unlock_wait ();
     
-    enum PREFEN : uint8_t { DISABLE = 0, CACHE_ONLY, NON_CACHE_ONLY, ENABLE };
+    enum PREFEN : uint8_t { PF_EN = 0, PF_CACHE_ONLY, PF_NON_CACHE_ONLY, PF_ALL };
     static void     pcache      (PREFEN);
     static void     waitstates  ();
+    
+private:
+    enum KSEG0_CACHE : uint8_t { OFF = 2, ON = 3 };
+    static void     kseg0_cache_enable  (KSEG0_CACHE);
 
     //misc
     //static uint32_t flash_size  ();
