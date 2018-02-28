@@ -58,7 +58,10 @@ struct Osc {
     static void         sosc        (bool);     //sosc enable
     static bool         sosc        ();         //sosc enabled?
                                                 //if enabled, assume its there
-
+    
+    static DIVS         pb_div      ();         //get current Peripheral Bus clock divider
+    static void         pb_div      (DIVS);     //set current peripheral bus clock divider
+    
     //spllcon
     enum IDIVS : uint8_t { //lower byte of devcfg2
         IDIV1, IDIV2, IDIV3, IDIV4, IDIV5, IDIV6, IDIV10, IDIV12

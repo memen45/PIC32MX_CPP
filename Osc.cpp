@@ -12,6 +12,7 @@ enum {
     OSCCON = 0xBF80F000,
 		PLLODIV_SHIFT = 27, PLLODIV_MASK = 7,
         FRCDIV_SHIFT = 24, FRCDIV_MASK = 7,
+        PBDIV_SHIFT = 19, PBDIV_MASK = 3,
 		PLLMUL_MASK = 7,
         COSC_SHIFT = 12, COSC_MASK = 7,
         NOSC_SHIFT = 8, NOSC_MASK = 7,
@@ -129,6 +130,26 @@ const uint8_t Osc::m_idiv_lookup[] = {1, 2, 3, 4, 5, 6, 10, 12};
     return Reg::anybit(OSCCON, 1<<SOSCEN);
 }
 
+//=============================================================================
+    void            Osc::pb_div        (DIVS e)
+//=============================================================================
+{
+    Sys::unlock();
+    Reg::setbit(OSCCON, PBDIV_MASK << PBDIV_SHIFT);
+    Reg::clrbit(OSCCON, (~(e bitand PBDIV_MASK)) << PBDIV_SHIFT);
+    Sys::lock();
+}
+
+//=============================================================================
+    auto            Osc::pb_div        () -> DIVS
+//=============================================================================
+{
+    return (DIVS) ((Reg::val(OSCCON) >> PBDIV_SHIFT) bitand PBDIV_MASK);
+}
+
+    
+    
+    
 //spllcon
 //=============================================================================
     auto            Osc::pll_odiv        () -> DIVS
