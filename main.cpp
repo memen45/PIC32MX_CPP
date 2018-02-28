@@ -225,17 +225,13 @@ struct Rgb {
 //            info.puts("\r\n");
 //        }
 
-        //if(t == m_delay_short) return;
-
         char buf[64];
         snprintf(buf, 64, "color[%02d]: %03d.%03d.%03d ",
                 m_idx,m_ccp[0].compb()>>8,m_ccp[1].compb()>>8,m_ccp[2].compb()>>8);
-                //svg[m_idx][0],svg[m_idx][1],svg[m_idx][2]);
         info.puts(buf);
         snprintf(buf, 64, " CP0 Count: %010u ", Cp0::count());
         info.puts(buf);
         Rtcc::datetime_t dt = Rtcc::datetime();
-
         snprintf(buf, 64, " now: %02d-%02d-%04d %02d:%02d:%02d\r",
                 dt.month, dt.day, dt.year+2000, dt.hour, dt.minute, dt.second);
         info.puts(buf);
@@ -308,7 +304,7 @@ int main()
     //set osc to 24MHz
     Osc_init();
 
-    const Rtcc::datetime_t now = { 18, 2, 26, 0, 21, 39, 15};
+    const Rtcc::datetime_t now = { 18, 2, 28, 0, 9, 11, 00};
     Rtcc::datetime_t dt = Rtcc::datetime();
     if(dt.year == 0) Rtcc::datetime(now);
 
@@ -322,7 +318,9 @@ int main()
     Rgb rgb;
     Led12 led12;
 
-    for( ; ; Wdt::reset(), led12.update(), rgb.update());
+    for(;;){
+        Wdt::reset(), led12.update(), rgb.update();
+    }
 }
 
 
