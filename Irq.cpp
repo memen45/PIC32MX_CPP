@@ -192,5 +192,5 @@ const uint8_t Irq::m_lookup_vn[] = {
     void        Irq::enable_mvec               (MVEC_MODE m)
 //=============================================================================
 {
-        Reg::setbit(INTCON, M_VEC, m);
+        Reg::setbit(INTCON, 1 << M_VEC, m);
 }

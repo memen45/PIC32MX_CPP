@@ -22,6 +22,7 @@ class Timer {
 
     enum PRESCALE { PS1 = 0, PS2, PS4, PS8, PS16, PS32, PS64, PS256 };
     void        prescale    (PRESCALE) const;
+    PRESCALE    prescale    ();
 
     void        mode32      (bool) const; //T2 and T4 only (harmless for T3 and T5)
 

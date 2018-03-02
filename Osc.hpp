@@ -95,11 +95,13 @@ struct Osc {
     static uint32_t     sysclk       ();        //get cpu sysclk
     static uint32_t     extclk       ();        //get ext clock
     static uint32_t     frcclk       ();        //get frc clock
+    static uint32_t     pbclk        ();
 
     private:
 
     static uint32_t m_sysclk;                    //store calculated cpu freq
     static uint32_t m_extclk;
+    static uint32_t m_pbclk;
 
     static const uint32_t m_frcosc_freq = 8000000;
     static const uint32_t m_extosc_freq = 0;    //set if want exact ext freq

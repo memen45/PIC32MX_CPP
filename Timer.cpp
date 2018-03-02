@@ -5,12 +5,12 @@ enum {
     ON = 15,
     SIDL = 13,
     TGATE = 7,
-    TCKPS_SHIFT = 4, TCKPS_CLR = 7,
+    TCKPS_SHIFT = 4, TCKPS_MASK = 7,
     T32 = 3,
     TCS = 1
 };
 
-enum { T2CON = 0xBF808000, TMRX_SPACING = 0x80 }; //spacing in words
+enum { T2CON = 0xBF800800, TMRX_SPACING = 0x80 }; //spacing in words
 
 using vu32ptr = volatile uint32_t*;
 
@@ -31,7 +31,7 @@ using vu32ptr = volatile uint32_t*;
 {
     m_tmrx = n;
     if(Reg::anybit(m_txcon, 1<<T32)){
-        *((vu32ptr)m_tmrx + TMR23_SPACING) = n>>16;
+        *((vu32ptr)m_tmrx + TMRX_SPACING) = n>>16;
     }
 }
 
@@ -41,7 +41,7 @@ using vu32ptr = volatile uint32_t*;
 {
     uint32_t ret = 0;
     if(Reg::anybit(m_txcon, 1<<T32)){
-        ret = *((vu32ptr)m_tmrx + TMR23_SPACING)<<16;
+        ret = *((vu32ptr)m_tmrx + TMRX_SPACING)<<16;
     }
     return ret | m_tmrx;
 }
@@ -52,7 +52,7 @@ using vu32ptr = volatile uint32_t*;
 {
     m_prx = n;
     if(Reg::anybit(m_txcon, 1<<T32)){
-        *((vu32ptr)m_prx + TMR23_SPACING) = n>>16;
+        *((vu32ptr)m_prx + TMRX_SPACING) = n>>16;
     }
 }
 
@@ -62,7 +62,7 @@ using vu32ptr = volatile uint32_t*;
 {
     uint32_t ret = 0;
     if(Reg::anybit(m_txcon, 1<<T32)){
-        ret = *((vu32ptr)m_prx + TMR23_SPACING)<<16;
+        ret = *((vu32ptr)m_prx + TMRX_SPACING)<<16;
     }
     return ret | m_prx;
 }
@@ -92,9 +92,16 @@ using vu32ptr = volatile uint32_t*;
     void        Timer::prescale       (PRESCALE e) const
 //=============================================================================
 {
-    Reg::clrbit(m_txcon, TCKPS_CLR<<TCKPS_SHIFT);
+    Reg::clrbit(m_txcon, TCKPS_MASK<<TCKPS_SHIFT);
     Reg::setbit(m_txcon, e<<TCKPS_SHIFT);
 }
+    
+//=============================================================================
+    auto        Timer::prescale       () -> PRESCALE
+//=============================================================================
+{
+        return (PRESCALE) ((Reg::val(m_txcon) >> TCKPS_SHIFT) bitand TCKPS_MASK);
+}    
 
 //=============================================================================
     void        Timer::mode32         (bool tf) const
@@ -104,7 +111,7 @@ using vu32ptr = volatile uint32_t*;
     //if turned on, bit will 'stick'
     //so must be T2, make sure T3 SIDL is off
     if(tf and Reg::anybit(m_txcon, 1<<T32)){
-       Reg::clrbit(m_txcon + TMR23_SPACING, SIDL);
+       Reg::clrbit(m_txcon + TMRX_SPACING, SIDL);
     }
 }
 

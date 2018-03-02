@@ -28,6 +28,7 @@ enum {
 
 uint32_t Osc::m_sysclk = 0;
 uint32_t Osc::m_extclk = 0;
+uint32_t Osc::m_pbclk = 0;
 const uint8_t Osc::m_mul_lookup[] = {15, 16, 17, 18, 19, 20, 21, 24};
 const uint8_t Osc::m_idiv_lookup[] = {1, 2, 3, 4, 5, 6, 10, 12};
 
@@ -73,6 +74,7 @@ const uint8_t Osc::m_idiv_lookup[] = {1, 2, 3, 4, 5, 6, 10, 12};
     //lock_irq(irstat);
     Sys::lock(irstat);
     m_sysclk = 0;
+    m_pbclk = 0;
     sysclk();
 }
 
@@ -313,4 +315,13 @@ const uint8_t Osc::m_idiv_lookup[] = {1, 2, 3, 4, 5, 6, 10, 12};
 //=============================================================================
 {
     return m_frcosc_freq;
+}
+
+//=============================================================================
+    uint32_t        Osc::pbclk          ()
+//=============================================================================
+{
+        if (m_pbclk) return m_pbclk;
+        m_pbclk = sysclk() >> pb_div();
+        return m_pbclk;
 }

@@ -30,6 +30,6 @@ struct Timer1 {
 
     //public so Osc:: can have it to backup when
     //it calculates ext clock freq
-    enum { T1CON = 0xBF806000 };
+    enum { T1CON = 0xBF800600 };
 
 };
