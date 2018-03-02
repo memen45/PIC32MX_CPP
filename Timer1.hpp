@@ -17,7 +17,7 @@ struct Timer1 {
 
     //clock source - also sets TCS unless pbclk
     enum CLK : uint16_t {
-        SOSC = 0x0002, T1CK = 0x0102, LPRC = 0x0202, PBCLK = 0x0000
+        PBCLK = 0, T1CK
     };
     static void         clk_src         (CLK);
 
@@ -30,6 +30,6 @@ struct Timer1 {
 
     //public so Osc:: can have it to backup when
     //it calculates ext clock freq
-    enum { T1CON = 0xBF808000 };
+    enum { T1CON = 0xBF806000 };
 
 };

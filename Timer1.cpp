@@ -11,9 +11,9 @@ enum {
         TGATE = 7,
         TCKPS_SHIFT = 4, TCKPS_MASK = 3,
         TSYNC = 2,
-        CLK_MASK = (3<<8) | (1<<1),
-    TMR1 = 0xBF808010,
-    PR1 = 0xBF808020
+        TCS = 1,
+    TMR1 = 0xBF800610,
+    PR1 = 0xBF800620
 };
 
 
@@ -77,9 +77,7 @@ enum {
     void        Timer1::clk_src         (CLK e)
 //=============================================================================
 {
-    if(e == SOSC) Osc::sosc(true);
-    Reg::clrbit(T1CON, CLK_MASK);
-    Reg::setbit(T1CON, e);
+    Reg::setbit(T1CON, 1 << TCS, e);
 }
 
 //=============================================================================

@@ -281,9 +281,11 @@ const uint8_t Osc::m_idiv_lookup[] = {1, 2, 3, 4, 5, 6, 10, 12};
     t1.period(0xFFFF);
     t1.prescale(t1.PS1);
     t1.timer(0);
+    //SOSC CLOCK SOURCE IS NOT AVAILABLE ON PIC32MX795F512L TIMER1
     //if sosc enabled, assume it is there
-    if(sosc()) t1.clk_src(t1.SOSC);
-    else t1.clk_src(t1.LPRC);
+//    if(sosc()) t1.clk_src(t1.SOSC);
+//    else t1.clk_src(t1.LPRC);
+    //END
    //start timer1, get cp0 count
     t1.on(true);
     uint32_t c = cp0.count();

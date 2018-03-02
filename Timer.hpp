@@ -4,13 +4,13 @@
 
 #include <cstdint>
 
-class Timer23 {
+class Timer {
 
     public:
 
     //instantiate with timer number
-    enum TMR23 { TMR2 = 0, TMR3 };
-    Timer23(TMR23);
+    enum TMRX { TMR2 = 0, TMR3, TMR4, TMR5 };
+    Timer(TMRX);
 
     void        count       (uint32_t) const;
     uint32_t    count       () const;
@@ -23,9 +23,9 @@ class Timer23 {
     enum PRESCALE { PS1 = 0, PS2, PS4, PS8, PS16, PS32, PS64, PS256 };
     void        prescale    (PRESCALE) const;
 
-    void        mode32      (bool) const; //T2 only (harmless for T3)
+    void        mode32      (bool) const; //T2 and T4 only (harmless for T3 and T5)
 
-    enum CLK { PBCLK = 0, T2CK };
+    enum CLK { PBCLK = 0, TxCK };
     void        clk_src     (CLK) const;
 
     private:

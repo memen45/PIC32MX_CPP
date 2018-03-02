@@ -1,4 +1,4 @@
-#include "Timer23.hpp"
+#include "Timer.hpp"
 #include "Reg.hpp"
 
 enum {
@@ -10,23 +10,23 @@ enum {
     TCS = 1
 };
 
-enum { T1CON = 0xBF808040, TMR23_SPACING = 0x10 }; //spacing in words
+enum { T2CON = 0xBF808000, TMRX_SPACING = 0x80 }; //spacing in words
 
 using vu32ptr = volatile uint32_t*;
 
 
 //Timer23
 //=============================================================================
-                Timer23::Timer23        (TMR23 e)
+                Timer::Timer        (TMRX e)
 //=============================================================================
-    : m_txcon( (vu32ptr)T1CON + (e * TMR23_SPACING) ),
-      m_tmrx( *((vu32ptr)T1CON + (e * TMR23_SPACING) + 4) ),
-      m_prx( *((vu32ptr)T1CON + (e * TMR23_SPACING) + 8) )
+    : m_txcon( (vu32ptr)T2CON + (e * TMRX_SPACING) ),
+      m_tmrx( *((vu32ptr)T2CON + (e * TMRX_SPACING) + 4) ),
+      m_prx( *((vu32ptr)T2CON + (e * TMRX_SPACING) + 8) )
 {
 }
 
 //=============================================================================
-    void        Timer23::count          (uint32_t n) const
+    void        Timer::count          (uint32_t n) const
 //=============================================================================
 {
     m_tmrx = n;
@@ -36,7 +36,7 @@ using vu32ptr = volatile uint32_t*;
 }
 
 //=============================================================================
-    uint32_t    Timer23::count          () const
+    uint32_t    Timer::count          () const
 //=============================================================================
 {
     uint32_t ret = 0;
@@ -47,7 +47,7 @@ using vu32ptr = volatile uint32_t*;
 }
 
 //=============================================================================
-    void        Timer23::period         (uint32_t n) const
+    void        Timer::period         (uint32_t n) const
 //=============================================================================
 {
     m_prx = n;
@@ -57,7 +57,7 @@ using vu32ptr = volatile uint32_t*;
 }
 
 //=============================================================================
-    uint32_t    Timer23::period         () const
+    uint32_t    Timer::period         () const
 //=============================================================================
 {
     uint32_t ret = 0;
@@ -68,28 +68,28 @@ using vu32ptr = volatile uint32_t*;
 }
 
 //=============================================================================
-    void        Timer23::on             (bool tf) const
+    void        Timer::on             (bool tf) const
 //=============================================================================
 {
     Reg::setbit(m_txcon, 1<<ON, tf);
 }
 
 //=============================================================================
-    void        Timer23::stop_idle      (bool tf) const
+    void        Timer::stop_idle      (bool tf) const
 //=============================================================================
 {
     Reg::setbit(m_txcon, 1<<SIDL, tf);
 }
 
 //=============================================================================
-    void        Timer23::gate           (bool tf) const
+    void        Timer::gate           (bool tf) const
 //=============================================================================
 {
     Reg::setbit(m_txcon, 1<<TGATE, tf);
 }
 
 //=============================================================================
-    void        Timer23::prescale       (PRESCALE e) const
+    void        Timer::prescale       (PRESCALE e) const
 //=============================================================================
 {
     Reg::clrbit(m_txcon, TCKPS_CLR<<TCKPS_SHIFT);
@@ -97,7 +97,7 @@ using vu32ptr = volatile uint32_t*;
 }
 
 //=============================================================================
-    void        Timer23::mode32         (bool tf) const
+    void        Timer::mode32         (bool tf) const
 //=============================================================================
 {
     Reg::setbit(m_txcon, 1<<T32, tf);
@@ -109,8 +109,8 @@ using vu32ptr = volatile uint32_t*;
 }
 
 //=============================================================================
-    void        Timer23::clk_src        (CLK e) const
+    void        Timer::clk_src        (CLK e) const
 //=============================================================================
 {
-    Reg::setbit(m_txcon, 1<<TCS, e);
+    Reg::setbit(m_txcon, 1 << TCS, e);
 }
