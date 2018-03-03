@@ -17,6 +17,8 @@
 #ifdef MAIN1
 
 #include <cstdint>
+#include <stdio.h>
+
 #include "Pins.hpp"
 #include "Wdt.hpp"
 #include "Osc.hpp"
@@ -28,8 +30,6 @@
 #include "Rtcc.hpp"
 #include "Irq.hpp"
 
-#include <cstdlib>
-#include <stdio.h>
 
 //svg colors for rgb led
 const uint8_t svg[][3]{
@@ -304,14 +304,13 @@ int main()
     //set osc to 24MHz
     Osc_init();
 
-    const Rtcc::datetime_t now = { 18, 2, 28, 0, 9, 11, 00};
+    const Rtcc::datetime_t now = { 18, 3, 3, 0, 11, 36, 20};
     Rtcc::datetime_t dt = Rtcc::datetime();
     if(dt.year == 0) Rtcc::datetime(now);
 
     Rtcc::boot_time = Rtcc::datetime();
     Rtcc::on(true);
 
-    info.hispeed(true);
     info.on(true);
     info.putc(12);
 

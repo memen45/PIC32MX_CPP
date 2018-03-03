@@ -18,7 +18,7 @@
 #include "Resets.hpp"
 #include "Uart.hpp"
 #include "Cp0.hpp"
-#include "Wdt.hpp"
+
 
 //hook up serial for info output
 Uart info{Uart::UART2, Pins::C6, Pins::C7, 230400};
@@ -92,13 +92,14 @@ bool check_all(){
     bool ret = true;
     uint8_t i = 0;
     for(auto& pc : pins){
-        pc.p.digital_out();
-        pc.p.low();
-        Delay::wait_ms(10);
-        uint16_t r = read_all();
-        if(r != pc.v) ret = false;
-        pc.p.digital_in();
-        Delay::wait_ms(10);
+        pc.p.digital_out(); //set pin to output
+        pc.p.low(); //pull low
+        Delay::wait_ms(10); //give a little time
+        uint16_t r = read_all(); //read all pins
+        if(r != pc.v) ret = false; //something wrong on this pin
+        pc.p.digital_in(); //back to input
+        Delay::wait_ms(10); //wait a little
+        //print this pin info
         char buf[80];
         uint8_t k = snprintf(buf, 80, "[%02u] %-16s", i, pc.name);
         for(auto j = 15; ; j--){
@@ -120,6 +121,7 @@ bool check_all(){
         info.puts(buf);
         i++;
     }
+    //all ok, or one or more failed
     if(ret) info.puts("=> PASS!");
     else info.puts("=> FAIL!");
     info.puts("\r\n\r\n");
@@ -132,17 +134,17 @@ int main()
     //set osc to 24MHz
     Osc::pll_set(Osc::MUL12, Osc::DIV4);  //8*12/4 = 24MHz
 
-    info.hispeed(true); //baud is 230400
-    info.on(true); //after Osc, so is using current sysclock
+    //turn on after Osc set, so is using current
+    //sysclock for baud_set (turn on will always set baud)
+    info.on(true);
     info.putc(12); //cls
 
     for(;;){
-        Wdt::reset();
-        if(sw3.ison()){ //button pressed
-            info.putc(12); //cls
-            check_all();
-            Delay::wait_ms(2000);
-        }
+        if(not sw3.ison()) continue;
+        //button pressed
+        info.putc(12); //cls
+        check_all();
+        Delay::wait_s(2);
     }
 }
 
