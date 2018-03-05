@@ -41,8 +41,6 @@ struct Uart  {
     enum RXPOL { IDLEHIGH = 0, IDLELOW };
     void            rx_pol          (RXPOL);            //rx polarity
 
-    void            hispeed         (bool);             //(high)4x or 16x
-
     enum MODESEL {
          MODE8N1 = 0, MODE8E1 = 2, MODE8O1 = 4, MODE9N1 = 6,
          MODE8N2 = 1, MODE8E2 = 3, MODE8O2 = 5, MODE9N2 = 7
@@ -91,6 +89,9 @@ struct Uart  {
     int             getc            ();                 // -1 = none
 
     private:
+
+    //baud_set will take care of- if normal speed error >2%, then hispeed
+    void            hispeed         (bool);             //(true)4x or 16x
 
     volatile uint32_t* m_uartx_base;
     volatile uint32_t& m_uartx_tx;                  //use reference
