@@ -76,12 +76,12 @@ uint16_t read_all(){
     return ret;
 }
 
-//check all pins, print into
+//check all pins, print info
 //kinda ugly buffer string formatting, but it works :)
 bool check_all(){
-    info.puts(" RJ45 1-8 shorted, 2-6-7  shorted, 3,4,5 -> rs232 7,3,2\r\n"
-              "RS232 4-5 shorted, 6-8-20 shorted, 7,3,2 -> rj45  3,4,5\r\n\r\n");
     info.puts(
+            "   RJ45 1-8 shorted, 2-6-7  shorted, 3,4,5 -> rs232 7,3,2  \r\n"
+            "  RS232 4-5 shorted, 6-8-20 shorted, 7,3,2 -> rj45  3,4,5  \r\n\r\n"
             "-----------------------------------------------------------\r\n"
             "| each pin tested  |    RS232 Pins   |    RJ45 Pins       |\r\n"
             "| and all checked  ----------------------------------------\r\n"
@@ -149,6 +149,8 @@ int main()
 }
 
 /*
+  RS232 4-5 shorted, 6-8-20 shorted, 7,3,2 -> rj45  3,4,5
+   RJ45 1-8 shorted, 2-6-7  shorted, 3,4,5 -> rs232 7,3,2
 
 -----------------------------------------------------------
 | each pin tested  |    RS232 Pins   |    RJ45 Pins       |

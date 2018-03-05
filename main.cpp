@@ -226,10 +226,10 @@ struct Rgb {
 //        }
 
         char buf[64];
-        snprintf(buf, 64, "color[%02d]: %03d.%03d.%03d ",
+        snprintf(buf, 64, "color[\033[32m%02d\033[0m]: %03d.%03d.%03d ",
                 m_idx,m_ccp[0].compb()>>8,m_ccp[1].compb()>>8,m_ccp[2].compb()>>8);
         info.puts(buf);
-        snprintf(buf, 64, " CP0 Count: %010u ", Cp0::count());
+        snprintf(buf, 64, " CP0 Count: \033[31m%010u \033[0m", Cp0::count());
         info.puts(buf);
         Rtcc::datetime_t dt = Rtcc::datetime();
         snprintf(buf, 64, " now: %02d-%02d-%04d %02d:%02d:%02d\r",
@@ -304,7 +304,7 @@ int main()
     //set osc to 24MHz
     Osc_init();
 
-    const Rtcc::datetime_t now = { 18, 3, 3, 0, 11, 36, 20};
+    const Rtcc::datetime_t now = { 18, 3, 5, 0, 13, 17, 15};
     Rtcc::datetime_t dt = Rtcc::datetime();
     if(dt.year == 0) Rtcc::datetime(now);
 
@@ -312,7 +312,8 @@ int main()
     Rtcc::on(true);
 
     info.on(true);
-    info.putc(12);
+    info.putc(12); //cls
+    info.puts("\033[?25l"); //hide cursor
 
     Rgb rgb;
     Led12 led12;
