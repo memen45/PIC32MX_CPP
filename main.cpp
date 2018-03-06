@@ -218,12 +218,8 @@ struct Rgb {
         }
         m_delay.set_ms(t);
 
-        //check if rx works
-//        int c =  info.getc();
-//        if(c != -1){
-//            info.putc(c);
-//            info.puts("\r\n");
-//        }
+
+        if(t == m_delay_short) return;
 
         char buf[64];
         snprintf(buf, 64, "color[\033[32m%02d\033[0m]: %03d.%03d.%03d ",
@@ -236,7 +232,7 @@ struct Rgb {
                 dt.month, dt.day, dt.year+2000, dt.hour, dt.minute, dt.second);
         info.puts(buf);
 
-        if(t == m_delay_short) return;
+        //if(t == m_delay_short) return;
 
         if(++m_idx >= sizeof(svg)/sizeof(svg[0])) m_idx = 0;
     };
@@ -304,7 +300,7 @@ int main()
     //set osc to 24MHz
     Osc_init();
 
-    const Rtcc::datetime_t now = { 18, 3, 5, 0, 13, 17, 15};
+    const Rtcc::datetime_t now = { 18, 3, 6, 0, 9, 25, 0};
     Rtcc::datetime_t dt = Rtcc::datetime();
     if(dt.year == 0) Rtcc::datetime(now);
 

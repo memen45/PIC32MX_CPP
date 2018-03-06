@@ -60,7 +60,7 @@ struct Irq {
         //96
         ECCSB_ERR = 97,
         DMA0 = 98, DMA1, DMA2, DMA3 = 101,
-        END = 255
+        END
     };
     static void     flag_clr        (IRQ_VN);
     static bool     flag            (IRQ_VN);
@@ -92,5 +92,4 @@ struct Irq {
 #define ISRautoflag(nam) extern "C" \
     __attribute((vector((int)Irq::nam),interrupt)) \
     void nam##_ISR(){ Irq::flag_clr(Irq::nam); \
-
 

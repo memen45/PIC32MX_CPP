@@ -134,7 +134,7 @@ enum {
     void        Irq::init               (irq_list_t* arr)
 //=============================================================================
 {
-    for(; arr->irqvn not_eq END; arr++){
+    for(; arr->irqvn < END; arr++){
         init(arr->irqvn, arr->p, arr->s, arr->en);
     }
 }
@@ -150,5 +150,3 @@ enum {
     pri and_eq 7; pri <<= 2; //0*4=0 1*4=4, 7*4=28
     Reg::setbit(PRISS, 1<<pri, tf);
 }
-
-
