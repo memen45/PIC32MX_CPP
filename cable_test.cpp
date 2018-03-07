@@ -44,26 +44,26 @@ pin_combo pins[] = {
     //rj45
     //0-7 -> 1-8
     //1-8 shorted, 2-6-7 shorted, 3 4 5 to rs232 7,3,2
-    { "A14 RJ45  1", 1, {Pins::A14, Pins::INPU}, 0b1111111101111110}, //1-8 shorted
-    { "B13 RJ45  2", 2, {Pins::B13, Pins::INPU}, 0b1111111110011101}, //2-6-7 shorted
-    { "A7  RJ45  3", 3, {Pins::A7,  Pins::INPU}, 0b1101111111111011}, //3- rs232 7
-    { "B15 RJ45  4", 4, {Pins::B15, Pins::INPU}, 0b1111110111110111}, //4- rs232 3
-    { "A12 RJ45  5", 5, {Pins::A12, Pins::INPU}, 0b1111111011101111}, //5- rs232 2
-    { "B0  RJ45  6", 6, {Pins::B0,  Pins::INPU}, 0b1111111110011101}, //6-7-2 shorted
-    { "B2  RJ45  7", 7, {Pins::B2,  Pins::INPU}, 0b1111111110011101}, //7-6-2 shorted
-    { "C0  RJ45  8", 8, {Pins::C0,  Pins::INPU}, 0b1111111101111110}, //8-1 shorted
+    { "A14 RJ45", 1, {Pins::A14, Pins::INPU}, 0b1111111101111110}, //1-8 shorted
+    { "B13 RJ45", 2, {Pins::B13, Pins::INPU}, 0b1111111110011101}, //2-6-7 shorted
+    { "A7  RJ45", 3, {Pins::A7,  Pins::INPU}, 0b1101111111111011}, //3- rs232 7
+    { "B15 RJ45", 4, {Pins::B15, Pins::INPU}, 0b1111110111110111}, //4- rs232 3
+    { "A12 RJ45", 5, {Pins::A12, Pins::INPU}, 0b1111111011101111}, //5- rs232 2
+    { "B0  RJ45", 6, {Pins::B0,  Pins::INPU}, 0b1111111110011101}, //6-7-2 shorted
+    { "B2  RJ45", 7, {Pins::B2,  Pins::INPU}, 0b1111111110011101}, //7-6-2 shorted
+    { "C0  RJ45", 8, {Pins::C0,  Pins::INPU}, 0b1111111101111110}, //8-1 shorted
 
     //rs232
     //8-15 -> 2-8,20
     //2,3,7 from rj45 5,4,3, 4-5 shorted, 6-8-20 shorted
-    { "A15 RS232 2", 2, {Pins::A15, Pins::INPU}, 0b1111111011101111}, //2- rj45 5
-    { "A10 RS232 3", 3, {Pins::A10, Pins::INPU}, 0b1111110111110111}, //3- rj45 4
-    { "B14 RS232 4", 4, {Pins::B14, Pins::INPU}, 0b1111001111111111}, //4-5 shorted
-    { "A13 RS232 5", 5, {Pins::A13, Pins::INPU}, 0b1111001111111111}, //5-4 shorted
-    { "A11 RS232 6", 6, {Pins::A11, Pins::INPU}, 0b0010111111111111}, //6-8-20 shorted
-    { "A6  RS232 7", 7, {Pins::A6,  Pins::INPU}, 0b1101111111111011}, //7- rj45 3
-    { "B1  RS232 8", 8, {Pins::B1,  Pins::INPU}, 0b0010111111111111}, //6-8-20 shorted
-    { "B3  RS232 20",20,{Pins::B3,  Pins::INPU}, 0b0010111111111111}  //6-8-20 shorted
+    { "A15 RS232", 2, {Pins::A15, Pins::INPU}, 0b1111111011101111}, //2- rj45 5
+    { "A10 RS232", 3, {Pins::A10, Pins::INPU}, 0b1111110111110111}, //3- rj45 4
+    { "B14 RS232", 4, {Pins::B14, Pins::INPU}, 0b1111001111111111}, //4-5 shorted
+    { "A13 RS232", 5, {Pins::A13, Pins::INPU}, 0b1111001111111111}, //5-4 shorted
+    { "A11 RS232", 6, {Pins::A11, Pins::INPU}, 0b0010111111111111}, //6-8-20 shorted
+    { "A6  RS232", 7, {Pins::A6,  Pins::INPU}, 0b1101111111111011}, //7- rj45 3
+    { "B1  RS232", 8, {Pins::B1,  Pins::INPU}, 0b0010111111111111}, //6-8-20 shorted
+    { "B3  RS232",20, {Pins::B3,  Pins::INPU}, 0b0010111111111111}  //6-8-20 shorted
 };
 
 //read all pins, shift into 16bit number
@@ -84,10 +84,10 @@ bool check_all(){
     "| # = connected    |20 8 7 6 5 4 3 2 | 8 7 6 5 4 3 2 1    |\r\n"
     "-----------------------------------------------------------\r\n" );
 
-    auto ret = true;
+    auto ret = true;            //assume all ok
     auto i = 0;
     for(auto& pc : pins){
-        auto pinok = true;
+        auto pinok = true;      //assume ok
         pc.p.digital_out();     //set pin to output
         pc.p.low();             //pull low
         Delay::wait_ms(10);     //give a little time
@@ -100,11 +100,12 @@ bool check_all(){
         Delay::wait_ms(10);     //wait a little
 
         //print this pin header info
-        printf("[%02u] %-15s", i++, pc.name);
+        printf("[%02u] %-10s%-5d", i++, pc.name, pc.pn);
         //each pin info
         for(auto j = 15; j >= 0; j--){
             if(r & (1<<j)) printf(" -"); else printf("%2d", pins[j].pn);
             if(j != 8) continue;
+            //now switching to pins on other side
             //if pins connected to 'other side'- print space, else |
             printf(" %s", ((r&0xFF00)==0xFF00 || (r&0xFF)==0xFF) ? "|" : " ");
         }
