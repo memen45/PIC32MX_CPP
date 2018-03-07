@@ -25,7 +25,7 @@ Uart info{Uart::UART2, Pins::C6, Pins::C7, 230400};
 
 //override printf putc- mchp only uses uart2
 //although we are using uart2, this allows other uarts
-void _mon_putc(char c){ info.putc(c); }
+extern "C" void _mon_putc(char c){ info.putc(c); }
 void cls(){ info.putc(12); }
 
 //press sw3 to test
