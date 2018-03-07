@@ -9,7 +9,7 @@ struct Irq {
     static void     disable_all     ();
     static void     enable_all      ();
     static bool     all_ison        ();
-    static void     proxtimer       (uint8_t);
+    static void     proxtimer       (uint8_t, uint32_t);
 
     enum EINTXPOL : bool { FALLING = 0, RISING };
     static void     eint4_pol       (EINTXPOL);

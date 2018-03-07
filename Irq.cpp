@@ -11,6 +11,7 @@ enum {
         INT0EP = 0,
     PRISS = 0xBF80F010,
     INTSTAT = 0xBF80F020,
+    IPTMR = 0xBF80F030,
     IFS_BASE = 0xBF80F040,
     IEC_BASE = 0xBF80F0C0,
     IPC_BASE = 0xBF80F140
@@ -38,12 +39,14 @@ enum {
 }
 
 //=============================================================================
-    void        Irq::proxtimer          (uint8_t n)
+    void        Irq::proxtimer          (uint8_t n, uint32_t v)
 //=============================================================================
-{ //n = priority 0-7
+{ //n = priority 1-7 (and lower) starts prox timer, 0 = prox timer off
     Reg::clrbit(INTCON, TPC_CLR<<TPC_SHIFT);
     Reg::setbit(INTCON, (n bitand TPC_CLR)<<TPC_SHIFT);
+    Reg::val(IPTMR, n ? v : 0); //timer value
 }
+
 
 //=============================================================================
     void        Irq::eint4_pol          (EINTXPOL e)
