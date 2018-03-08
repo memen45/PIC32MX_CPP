@@ -309,7 +309,7 @@ int main()
     osc.sosc(true);                         //enable sosc if not already
     osc.tun_auto(true);                     //let sosc tune frc
 
-    const Rtcc::datetime_t now = { 18, 3, 7, 0, 15, 38, 0};
+    const Rtcc::datetime_t now = { 18, 3, 7, 0, 20, 17, 0};
     Rtcc::datetime_t dt = Rtcc::datetime();
     if(dt.year == 0) Rtcc::datetime(now);
 
@@ -640,7 +640,7 @@ int main(){
     //irq's init/enable
     Irq::init(irqlist);                     //init all irq's
     Irq::shadow_set(5, 1);                  //priority5 (usb) using shadow set
-    Irq::enable_all();                      //global irq enable
+    Irq::global(true);                      //global irq enable
 
     //__________________________________________________________________________
     //start first adc sample on AN14

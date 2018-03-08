@@ -6,9 +6,8 @@
 
 struct Irq {
 
-    static void     disable_all     ();
-    static void     enable_all      ();
-    static bool     all_ison        ();
+    static void     global          (bool);
+    static bool     global          ();
     static void     proxtimer       (uint8_t, uint32_t);
 
     enum EINTXPOL : bool { FALLING = 0, RISING };
