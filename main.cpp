@@ -188,21 +188,25 @@ Uart info{Uart::UART2, Pins::C6, Pins::C7, 230400};
 //Uart info{Uart::UART2, Pins::C6, Pins::C7, 115200};
 
 //printf - use replacement putc
-//will use backtick for trigger to print ansi colors
-//printf("this is `1red `7white");
+//will use $ for trigger to print ansi colors (use $$ if want $ character)
+//printf("this is $1red $7white");
 extern "C" void _mon_putc(char c){
     static bool trigger = false;
-    if(c == '`'){ trigger = true; return; }
     if(trigger){
-        if(c < '0' || c > '7') return; //invalid
-        info.puts("\033[3");
-        info.putc(c);
-        info.putc('m');
         trigger = false;
+        if(c >= '0' && c <= '7'){
+            info.puts("\033[3");    //ansi color start
+            info.putc(c);           //plus color
+            c = 'm';                //below will output this
+        }
+        info.putc(c);               //'m' from above, or regular char after '$'
         return;
     }
-    info.putc(c);
+    //not triggered
+    if(c == '$') trigger = true;//trigger char
+    else info.putc(c);          //regular char
 }
+
 void cls(){ info.putc(12); }
 void cursor(bool tf){ printf("\033[?25%c", tf ? 'h' : 'l'); }
 void ansi_reset(){ printf("\033[0m"); }
@@ -241,11 +245,12 @@ struct Rgb {
 
         Rtcc::datetime_t dt = Rtcc::datetime();
 
-        printf("`7color[`2%02d`7]: `2%03d.%03d.%03d`7",
+        printf("$7color[$3%02d$7]: $2%03d.%03d.%03d$7",
             m_idx,m_ccp[0].compb()>>8,m_ccp[1].compb()>>8,m_ccp[2].compb()>>8);
-        printf(" CP0 Count: `1%010u`7", Cp0::count());
-        printf(" now: `5%02d-%02d-%04d %02d:%02d:%02d`7\r\n",
-                dt.month, dt.day, dt.year+2000, dt.hour, dt.minute, dt.second);
+        printf(" CP0 Count: $1%010u$7", Cp0::count());
+        printf(" now: $5%02d-%02d-%04d %02d:%02d:%02d %s$7\r\n",
+                dt.month, dt.day, dt.year+2000, dt.hour12, dt.minute, dt.second,
+                dt.pm ? "PM" : "AM");
 
         if(++m_idx >= sizeof(svg)/sizeof(svg[0])) m_idx = 0;
     };
@@ -309,7 +314,7 @@ int main()
     osc.sosc(true);                         //enable sosc if not already
     osc.tun_auto(true);                     //let sosc tune frc
 
-    const Rtcc::datetime_t now = { 18, 3, 7, 0, 20, 17, 0};
+    const Rtcc::datetime_t now = { 18, 3, 8, 0, 20, 58, 00};
     Rtcc::datetime_t dt = Rtcc::datetime();
     if(dt.year == 0) Rtcc::datetime(now);
 

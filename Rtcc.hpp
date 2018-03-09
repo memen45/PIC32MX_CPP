@@ -43,9 +43,11 @@ struct Rtcc {
         uint8_t month;
         uint8_t day;
         uint8_t weekday;
-        uint8_t hour;
+        uint8_t hour; //0-23
         uint8_t minute;
         uint8_t second;
+        uint8_t hour12; //1-12
+        bool pm; //use with hour12
     };
 
     static void         alarm           (bool);

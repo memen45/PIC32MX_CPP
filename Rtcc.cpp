@@ -32,6 +32,7 @@ enum : uint32_t {
 //need 2Hz
 enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
 
+//store boot time
 Rtcc::datetime_t Rtcc::boot_time;
 
 //=============================================================================
@@ -342,5 +343,8 @@ Rtcc::datetime_t Rtcc::boot_time;
     dt.hour = t.hours10*10 + t.hours1;
     dt.minute = t.minutes10*10 + t.minutes1;
     dt.second = t.seconds10*10 + t.seconds1;
+    dt.hour12 = dt.hour % 12;
+    if(not dt.hour12) dt.hour12 = 12;
+    dt.pm = dt.hour >= 12;
     return dt;
 }
