@@ -8,7 +8,7 @@ struct Irq {
 
     static void     global          (bool);
     static bool     global          ();
-    static void     proxtimer       (uint8_t, uint32_t);
+    static void     proxtimer       (uint8_t, uint32_t = 0);
 
     enum EINTXPOL : bool { FALLING = 0, RISING };
     static void     eint4_pol       (EINTXPOL);

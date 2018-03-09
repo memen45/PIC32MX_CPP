@@ -32,13 +32,14 @@ enum {
     return (__builtin_mfc0(12, 0) bitand 1);
 }
 
+//proxtimer(0) to turn off
 //=============================================================================
     void        Irq::proxtimer          (uint8_t n, uint32_t v)
 //=============================================================================
 { //n = priority 1-7 (and lower) starts prox timer, 0 = prox timer off
     Reg::clrbit(INTCON, TPC_CLR<<TPC_SHIFT);
     Reg::setbit(INTCON, (n bitand TPC_CLR)<<TPC_SHIFT);
-    Reg::val(IPTMR, n ? v : 0); //timer value
+    Reg::val(IPTMR, v); //timer value
 }
 
 
