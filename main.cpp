@@ -30,6 +30,7 @@
 #include "Rtcc.hpp"
 #include "Irq.hpp"
 
+#include "Usb.hpp"
 
 //svg colors for rgb led
 const uint8_t svg[][3]{
