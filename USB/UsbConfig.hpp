@@ -20,7 +20,7 @@ struct UsbConfig {
     static const bool remote_wakeup = 1;        //remote wakeup enabled=1
 
     //---vbus pin-------------------------------------------------------------------
-    static Pins vbus_pin;                       //Vbus pin
+    static Pins vbus_pin;                       //Vbus pin (init in UsbConfig.cpp)
     static const Pins::RPN vbus_pin_n = Pins::B6;
 
     //---interrupt------------------------------------------------------------------
@@ -29,9 +29,7 @@ struct UsbConfig {
 
     //---endpoints------------------------------------------------------------------
     static const uint8_t last_endp = 4;         //last endpoint number used
-
-    //---endpoints------------------------------------------------------------------
-    static UsbEndpt endpoints[last_endp+1];
+    static UsbEndpt endpoints[last_endp+1];     //endpoints (init in UsbConfig.cpp)
 
     ///////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////
