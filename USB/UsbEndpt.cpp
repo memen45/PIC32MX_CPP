@@ -1,5 +1,6 @@
 #include "UsbEndpt.hpp"
 #include "Reg.hpp"
+#include "UsbConfig.hpp"
 
 enum { U1STAT = 0xBF808640, PPBI = 1<<2 };
 

@@ -8,7 +8,7 @@
 #include "Pins.hpp"
 #include "Irq.hpp"
 
-#include "UsbConfig.hpp"
+
 #include "UsbBuf.hpp"
 
 
@@ -158,9 +158,6 @@ struct Usb {
     static STATE state;
 
 };
-
-
-
 
 
 

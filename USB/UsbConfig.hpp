@@ -6,8 +6,6 @@
 #include "Pins.hpp"
 #include "UsbEndpt.hpp"
 
-struct UsbEndpt; //not sure why i have to declare this as above include
-//has the info- this is temporary
 
 struct UsbConfig {
 
@@ -32,7 +30,7 @@ struct UsbConfig {
     //---endpoints------------------------------------------------------------------
     static const uint8_t last_endp = 4;         //last endpoint number used
 
-    //---interrupt------------------------------------------------------------------
+    //---endpoints------------------------------------------------------------------
     static UsbEndpt endpoints[last_endp+1];
 
     ///////////////////////////////////////////////////////////////////////////////

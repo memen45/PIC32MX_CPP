@@ -1,8 +1,6 @@
 #pragma once
 
-#include "UsbConfig.hpp"
 #include "Usb.hpp"
-#include "Reg.hpp"
 #include "UsbBuf.hpp"
 
 
