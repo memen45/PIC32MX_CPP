@@ -38,16 +38,17 @@ struct Rtcc {
         uint32_t w:32;
     };
 
+    //hour12 and pm not used when setting datetime
     using datetime_t = struct {
         uint8_t year;
         uint8_t month;
         uint8_t day;
         uint8_t weekday;
-        uint8_t hour; //0-23
+        uint8_t hour;       //0-23
         uint8_t minute;
         uint8_t second;
-        uint8_t hour12; //1-12
-        bool pm; //use with hour12
+        uint8_t hour12;     //1-12
+        bool pm;            //false=am, true=pm
     };
 
     static void         alarm           (bool);
