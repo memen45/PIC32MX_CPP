@@ -314,9 +314,8 @@ int main()
     osc.sosc(true);                         //enable sosc if not already
     osc.tun_auto(true);                     //let sosc tune frc
 
-    const Rtcc::datetime_t now = { 18, 3, 8, 0, 20, 58, 00};
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime(now);
+    if(dt.year == 0) Rtcc::datetime( { 18, 3, 8, 0, 21, 07, 0} );
 
     Rtcc::boot_time = Rtcc::datetime();
     Rtcc::on(true);
