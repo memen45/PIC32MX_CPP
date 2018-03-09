@@ -3,9 +3,9 @@
 #include <cstdint>
 #include "UsbConfig.hpp"
 
-Pins UsbConfig::vbus_pin(UsbConfig::vbus_pin_n, Pins::IN);   //Vbus pin
+Pins UsbConfig::vbus_pin(UsbConfig::vbus_pin_n);   //Vbus pin
 
-UsbEndpt UsbConfig::endpoints[5] = {
+UsbEndpt UsbConfig::endpoints[UsbConfig::last_endp+1] = {
     {0, UsbEndpt::TRX,  64}, //endpoint 0
     {1, UsbEndpt::TX,   64},
     {2, UsbEndpt::RX,   64},

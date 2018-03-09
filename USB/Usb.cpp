@@ -1,5 +1,3 @@
-#pragma once
-
 //USB peripheral - PIC32MM0256GPM064
 
 #include <cstdint>
@@ -274,8 +272,8 @@ Usb::STATE Usb::state = Usb::DETACHED;
     u.bdt_addr(UsbEndpt::bdt_addr());//set bdt address
     ubuf.reinit();                  //clear all buffers, clear in-use flag
 
-    for(auto& i : ep) i.reinit();   //init (reinit) each UsbEndpt
-    ep[0].on(true);                 //and enable endpoint 0
+    for(auto& i : UsbConfig::endpoints) i.reinit();//init (reinit) each UsbEndpt
+    UsbConfig::endpoints[0].on(true);   //and enable endpoint 0
 
     //enable irqs
     u.irqs(u.RESET); // only looking for reset first
@@ -296,9 +294,9 @@ Usb::STATE Usb::state = Usb::DETACHED;
     void            UsbHandlers::init           ()
  //=============================================================================
  {
-    vbus_pin.digital_in();  //vbus/rb6 to input
-    vbus_pin.pulldn(true);  //pulldown when no vbus keeps pin low
-    attach();               //init all things
+    UsbConfig::vbus_pin.digital_in();   //vbus/rb6 to input
+    UsbConfig::vbus_pin.pulldn(true);   //pulldown when no vbus keeps pin low
+    attach();                           //init all things
  }
 
 
@@ -327,7 +325,7 @@ Usb::STATE Usb::state = Usb::DETACHED;
 
     //shouldn't happen, but check anyway to make sure we stay inside
     //our ep array
-    if(stat.endpt > my_last_endp) return;
+    if(stat.endpt > UsbConfig::last_endp) return;
 
     //nested function, check if need to suspend (idle detected >3ms)
     //if go SUSPENDED, all flags will be cleared and only a resume
@@ -370,7 +368,7 @@ Usb::STATE Usb::state = Usb::DETACHED;
         case u.DETACHED:                    //can't get here- usb irq is off
             return;
         case u.ATTACHED:                    //only reset irq is active
-            if(not vbus_pin.ison()) return; //no vbus, we should not be here
+            if(not UsbConfig::vbus_pin.ison()) return; //no vbus, we should not be here
             u.state = u.POWERED;            //vbus ok, now go to POWERED state
             u.flags_clr(u.IDLE);            //clear idle flag before enabling
             u.irqs(u.IDLE|u.RESET);         //now add idle irq
@@ -408,7 +406,7 @@ Usb::STATE Usb::state = Usb::DETACHED;
 
     //and here we go to work moving bytes
     if(flags.token){
-        ep[stat.endpt].token((uint8_t)stat.bdidx); //call endpoint
+        UsbConfig::endpoints[stat.endpt].token((uint8_t)stat.bdidx); //call endpoint
     }
 
 }

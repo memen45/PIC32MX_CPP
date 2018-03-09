@@ -29,11 +29,11 @@ struct UsbConfig {
     static const uint8_t usb_irq_pri = 5;       //usb interrupt priority
     static const uint8_t usb_irq_subpri = 0;    //usb interrupt sub-priority
 
-    //---interrupt------------------------------------------------------------------
-    static UsbEndpt endpoints[];
-
     //---endpoints------------------------------------------------------------------
-    static const uint8_t last_endp = 4; //last endpoint number used
+    static const uint8_t last_endp = 4;         //last endpoint number used
+
+    //---interrupt------------------------------------------------------------------
+    static UsbEndpt endpoints[last_endp+1];
 
     ///////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////

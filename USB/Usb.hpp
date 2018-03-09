@@ -168,7 +168,6 @@ struct Usb {
 
 struct UsbHandlers {
 
-    static void     UsbISR              (void);
     static void     init                ();
     static void     detach              (void);
     static void     attach              (void);
