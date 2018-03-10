@@ -7,12 +7,12 @@
 
 struct Irq {
 
-    static void     disable_all     ();
-    static void     enable_all      ();
+    static void     global          (bool);
+    static bool     global          ();
+    static void     proxtimer       (uint8_t, uint32_t = 0);
+
     enum MVEC_MODE : bool { SVEC = false, MVEC };
     static void     enable_mvec     (MVEC_MODE);
-    static bool     all_ison        ();
-    static void     proxtimer       (uint8_t);
 
     enum EINTXPOL : bool { FALLING = 0, RISING };
     static void     eint4_pol       (EINTXPOL);
@@ -67,7 +67,7 @@ struct Irq {
 		UART4_ERR = 67, UART4_RX, UART4_TX,
 		UART6_ERR = 70, UART6_RX, UART6_TX,	
 		UART5_ERR = 73, UART5_RX, UART5_TX,
-		END = 255
+		END
     };
 
     static void     flag_clr        (IRQ_NR);
@@ -91,10 +91,15 @@ struct Irq {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+// ISR MACRO
+// usage- ISR(ADC){ /* isr code here */ }
+#define ISR(nam) extern "C" __attribute((vector((int)Irq::nam),interrupt))\
+    void nam##_ISR()
+
+////////////////////////////////////////////////////////////////////////////////
 // ISR MACRO - auto clear irq flag - NOTE- need }} to close isr
 // usage- ISR(ADC){ /* isr code here */ }}
 #define ISRautoflag(nam) extern "C" \
     __attribute((vector((int)Irq::nam),interrupt)) \
     void nam##_ISR(){ Irq::flag_clr(Irq::nam); \
-
 

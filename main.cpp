@@ -30,6 +30,7 @@
 #include "Rtcc.hpp"
 #include "Irq.hpp"
 
+#include "Usb.hpp"
 
 //svg colors for rgb led
 const uint8_t svg[][3]{
@@ -187,6 +188,30 @@ const uint8_t svg[][3]{
 Uart info{Uart::UART2, Pins::C6, Pins::C7, 230400};
 //Uart info{Uart::UART2, Pins::C6, Pins::C7, 115200};
 
+//printf - use replacement putc
+//will use $ for trigger to print ansi colors (use $$ if want $ character)
+//printf("this is $1red $7white");
+extern "C" void _mon_putc(char c){
+    static bool trigger = false;
+    if(trigger){
+        trigger = false;
+        if(c >= '0' && c <= '7'){
+            info.puts("\033[3");    //ansi color start
+            info.putc(c);           //plus color
+            c = 'm';                //below will output this
+        }
+        info.putc(c);               //'m' from above, or regular char after '$'
+        return;
+    }
+    //not triggered
+    if(c == '$') trigger = true;//trigger char
+    else info.putc(c);          //regular char
+}
+
+void cls(){ info.putc(12); }
+void cursor(bool tf){ printf("\033[?25%c", tf ? 'h' : 'l'); }
+void ansi_reset(){ printf("\033[0m"); }
+
 
 //rgb led's struct, use pwm for brightness
 //loop through svg colors by regularly calling update()
@@ -217,26 +242,16 @@ struct Rgb {
             m_ccp[i].compb(v);
         }
         m_delay.set_ms(t);
-
-        //check if rx works
-//        int c =  info.getc();
-//        if(c != -1){
-//            info.putc(c);
-//            info.puts("\r\n");
-//        }
-
-        char buf[64];
-        snprintf(buf, 64, "color[%02d]: %03d.%03d.%03d ",
-                m_idx,m_ccp[0].compb()>>8,m_ccp[1].compb()>>8,m_ccp[2].compb()>>8);
-        info.puts(buf);
-        snprintf(buf, 64, " CP0 Count: %010u ", Cp0::count());
-        info.puts(buf);
-        Rtcc::datetime_t dt = Rtcc::datetime();
-        snprintf(buf, 64, " now: %02d-%02d-%04d %02d:%02d:%02d\r",
-                dt.month, dt.day, dt.year+2000, dt.hour, dt.minute, dt.second);
-        info.puts(buf);
-
         if(t == m_delay_short) return;
+
+        Rtcc::datetime_t dt = Rtcc::datetime();
+
+        printf("$7color[$3%02d$7]: $2%03d.%03d.%03d$7",
+            m_idx,m_ccp[0].compb()>>8,m_ccp[1].compb()>>8,m_ccp[2].compb()>>8);
+        printf(" CP0 Count: $1%010u$7", Cp0::count());
+        printf(" now: $5%02d-%02d-%04d %02d:%02d:%02d %s$7\r\n",
+                dt.month, dt.day, dt.year+2000, dt.hour12, dt.minute, dt.second,
+                dt.pm ? "PM" : "AM");
 
         if(++m_idx >= sizeof(svg)/sizeof(svg[0])) m_idx = 0;
     };
@@ -289,30 +304,26 @@ struct Led12 {
 
 };
 
-void Osc_init(){
-    Osc osc;
-    osc.pll_set(osc.MUL12, osc.DIV4);       //8*12/4 = 24MHz
-    osc.sosc(true);                         //enable sosc if not already
-    osc.tun_auto(true);                     //let sosc tune frc
-}
-
 int main()
 {
     //just get/store resets cause (not used here,though)
     Resets::cause();
 
     //set osc to 24MHz
-    Osc_init();
+    Osc osc;
+    osc.pll_set(osc.MUL12, osc.DIV4);       //8*12/4 = 24MHz
+    osc.sosc(true);                         //enable sosc if not already
+    osc.tun_auto(true);                     //let sosc tune frc
 
-    const Rtcc::datetime_t now = { 18, 3, 3, 0, 11, 36, 20};
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime(now);
+    if(dt.year == 0) Rtcc::datetime( { 18, 3, 8, 0, 21, 07, 0} );
 
     Rtcc::boot_time = Rtcc::datetime();
     Rtcc::on(true);
 
     info.on(true);
-    info.putc(12);
+    cls(); //cls
+    cursor(false); //hide cursor
 
     Rgb rgb;
     Led12 led12;
@@ -634,7 +645,7 @@ int main(){
     //irq's init/enable
     Irq::init(irqlist);                     //init all irq's
     Irq::shadow_set(5, 1);                  //priority5 (usb) using shadow set
-    Irq::enable_all();                      //global irq enable
+    Irq::global(true);                      //global irq enable
 
     //__________________________________________________________________________
     //start first adc sample on AN14

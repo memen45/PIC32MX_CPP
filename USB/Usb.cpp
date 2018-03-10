@@ -1,9 +1,3 @@
-/*==============================================================================
-    UNUSABLE CODE - JUST TRYING TO WORK OUT USB BY PUTTING DOWN SOME CODE
-==============================================================================*/
-
-#pragma once
-
 //USB peripheral - PIC32MM0256GPM064
 
 #include <cstdint>
@@ -12,218 +6,31 @@
 #include "Pins.hpp"
 #include "Irq.hpp"
 
-
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-/////// user provided data ////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
-//---power/wakeup options-------------------------------------------------------
-static const bool my_self_powered = 1;      //self-powered=1, bus-powered=0
-static bool my_remote_wakeup = 1;           //remote wakeup enabled=1
-
-//---endpoints------------------------------------------------------------------
-static const uint8_t my_last_endp = 4;      //last endpoint number used
-static const uint8_t my_n_endp = 3;         //number of endpoints used
-static const uint8_t my_buffer_size = 64;   //size of buffers (all same)
-static const uint8_t my_buffer_count = 8;   //number of buffers in buffer pool
-
-//---vbus pin-------------------------------------------------------------------
-static Pins vbus_pin(Pins::B6);             //Vbus pin
-
-//---interrupt------------------------------------------------------------------
-static const uint8_t usb_irq_pri = 5;       //usb interrupt priority
-static const uint8_t usb_irq_subpri = 0;    //usb interrupt sub-priority
-ISR(USB); //declared only, defined later in this file
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-/////// usb uses irq only, no polling /////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
-
-
-//simple way to separate classes/structs for now
-//__inline include______________________________________________________________
-
+#include "Usb.hpp"
+#include "UsbConfig.hpp"
 #include "UsbBuf.hpp"
 
-//______________________________________________________________________________
-
-
-
-struct Usb {
-
-    /*
-     flags, interrupts
-        FLAGS enum contains all flag/irq names
-
-        flags();                -return val of all flags (uint8_t)
-        flag(FLAGS);            -get specified flag
-        flags_clr(uint8_t);     -clear flag(s) as bitmask (1=clear)
-
-        irqs();                 -return val of all irqs (uin8_t)
-        irq(FLAGS);             -get specified irq
-        irqs(uint8t);           -set value (all)
-        irq(FLAGS, bool);       -one irq on/off (true=on)
-
-        eflag, eirq functions mirror above but are for error flags
-    */
-
-    enum FLAGS : uint8_t {
-        //U1IR, U1IE
-        STALL = 1<<7, ATTACH = 1<<6 /*host only*/, RESUME = 1<<5, IDLE = 1<<4,
-        TOKEN = 1<<3, SOF = 1<<2, ERROR = 1<<1, RESET = 1<<0,
-        DETACH = 1<<0 /*host only*/,  ALLFLAGS = 255
+//registers - all registers use only first 8bits
+enum {
+    U1PWRC = 0xBF808480,
+    U1IR = 0xBF808600,//no SET, INV
+    U1IE = 0xBF808610,
+    U1EIR = 0xBF808620,//no SET, INV
+    U1EIE = 0xBF808630,
+    U1STAT = 0xBF808640,//no SET, INV, CLR
+    U1CON = 0xBF808650,
+    U1ADDR = 0xBF808660,
+    U1BDTP1 = 0xBF808670,
+    U1FRML = 0xBF808680, //no SET, INV, CLR
+    U1FRMH = 0xBF808690, //no SET, INV, CLR
+    U1BDTP2 = 0xBF8086C0,
+    U1BDTP3 = 0xBF8086D0,
+    U1CNFG1 = 0xBF8086E0,
+    U1EP0 = 0xBF808700, U1EP_SPACING = 0x10
     };
 
-    typedef union {
-        struct {
-        unsigned reset:1;
-        unsigned error:1;
-        unsigned sof:1;
-        unsigned token:1;
-        unsigned idle:1;
-        unsigned resume:1;
-        unsigned attach:1;
-        unsigned stall:1;
-        };
-        uint8_t all;
-    } flags_t;
 
-    enum EFLAGS : uint8_t {
-        //U1EIR, U1EIE
-        BSTUFF = 1<<7, BMATRIX = 1<<6, DMA = 1<<5, BTMOUT = 1<<4,
-        DATSIZ = 1<<3, CRC16 = 1<<2, CRC5 = 1<<1, EOF = 1<<1, PID = 1<<0,
-        ALLEFLAGS = 255
-    };
-
-    typedef union {
-        struct {
-        unsigned pid:1;
-        unsigned crc5:1;
-        unsigned crc16:1;
-        unsigned datsiz:1;
-        unsigned btmout:1;
-        unsigned dma:1;
-        unsigned bmatrix:1;
-        unsigned bstuff:1;
-        };
-        uint8_t all;
-    } eflags_t;
-
-    static uint8_t          flags       ();             //get all
-    static bool             flag        (FLAGS);        //get one
-    static void             flags_clr   (uint8_t);      //clear one or more
-
-    static uint8_t          irqs        ();             //get all
-    static bool             irq         (FLAGS);        //get one
-    static void             irqs        (uint8_t);      //set value (all)
-    static void             irq         (FLAGS, bool);  //irq on/off
-
-    static uint8_t          eflags      ();             //get all
-    static bool             eflag       (EFLAGS);       //get one
-    static void             eflags_clr  (uint8_t);      //clear one or more
-
-    static uint8_t          eirqs       ();             //get all
-    static bool             eirq        (EFLAGS);       //get one
-    static void             eirqs       (uint8_t);      //set value (all)
-    static void             eirq        (EFLAGS, bool); //eirq on/off
-
-    //power(POWER);           -return POWER bit is set
-    //power(POWER, bool);     -set/clr specified POWER bit (true=on)
-    enum POWER : uint8_t {
-        //U1PWRC
-        PENDING = 1<<7, SLEEPGUARD = 1<<4, BUSY = 1<<3, SUSPEND = 1<<1,
-        USBPWR = 1<<0
-    };
-
-    static bool             power               (POWER);
-    static void             power               (POWER, bool);
-
-    //only valid when TOKEN flag set
-    typedef union {
-        struct {
-        unsigned :2; unsigned eveodd:1; unsigned trx:1; unsigned endpt:4;
-        };
-        struct { unsigned :2; unsigned bdidx:2; unsigned :4; };
-        struct { unsigned :2; unsigned bdn:6; };
-        uint8_t all;
-    } stat_t;
-
-    static uint8_t stat                ();
-
-    enum CONTROL : uint8_t {
-        JSTATE = 1<<7, SE0 = 1<<6, PKTDIS = 1<<5, TOKBUSY = 1<<5,
-        USBRESET = 1<<4, HOSTEN = 1<<3, RESUMEEN = 1<<2, PPRESET = 1<<1,
-        USBEN = 1<<0, SOFEN = 1<<0
-    };
-
-    static bool             control             (CONTROL);
-    static void             control             (CONTROL, bool);
-    static void             control             (uint8_t);
-
-    //usb device address get/set
-    static uint8_t          dev_addr            ();
-    static void             dev_addr            (uint8_t);
-
-    //get frame number
-    static uint16_t         frame               ();
-
-    //get/set bdt table address
-    static void             bdt_addr            (uint32_t);
-    static uint32_t         bdt_addr            ();
-
-    //get/set config register
-    enum CONFIG : uint8_t {
-        EYETEST = 1<<7, OEMON = 1<<6, SIDLE = 1<<4,
-        LSDEV = 1<<3, AUTOSUSP = 1<<0
-    };
-
-    static void             config              (CONFIG, bool); //set 1bit
-    static bool             config              (CONFIG);       //get 1bit
-    static void             config              (uint8_t);      //set reg val
-
-    //usb bus state
-    typedef enum {
-        DETACHED,   //usb peripheral shut down (I made this state up)
-        ATTACHED,   //usb is init, but not powered
-        POWERED,    //vbus now has power, but no reset seen yet
-        DEFAULT,    //reset received, device address is 0 (default)
-        ADDRESS,    //now have unique device address
-        CONFIGURED, //now configured (and not in suspended state)
-        SUSPENDED   //no activity for >3ms
-    } state_t;
-
-    static state_t state;
-
-    private:
-
-    //registers - all registers use only first 8bits
-    enum {
-        U1PWRC = 0xBF808480,
-        U1IR = 0xBF808600,//no SET, INV
-        U1IE = 0xBF808610,
-        U1EIR = 0xBF808620,//no SET, INV
-        U1EIE = 0xBF808630,
-        U1STAT = 0xBF808640,//no SET, INV, CLR
-        U1CON = 0xBF808650,
-        U1ADDR = 0xBF808660,
-        U1BDTP1 = 0xBF808670,
-        U1FRML = 0xBF808680, //no SET, INV, CLR
-        U1FRMH = 0xBF808690, //no SET, INV, CLR
-        U1BDTP2 = 0xBF8086C0,
-        U1BDTP3 = 0xBF8086D0,
-        U1CNFG1 = 0xBF8086E0,
-        U1EP0 = 0xBF808700, U1EP_SPACING = 0x10
-     };
-
-};
-
-Usb::state_t Usb::state = Usb::DETACHED;
+Usb::STATE Usb::state = Usb::DETACHED;
 
 //=============================================================================
     bool        Usb::power              (POWER e)
@@ -429,32 +236,6 @@ Usb::state_t Usb::state = Usb::DETACHED;
 
 
 
-//__inline include______________________________________________________________
-
-#include "UsbEndpt.hpp"
-
-//______________________________________________________________________________
-//put here for now
-UsbEndpt ep[my_last_endp+1] = {
-    {0,UsbEndpt::TRX, 64}, //endpoint 0
-    {1,UsbEndpt::TX, 64},
-    {2,UsbEndpt::RX, 64},
-    {3,UsbEndpt::NONE, 0},
-    {4,UsbEndpt::RX, 64}
-};
-//can create names, like-
-// UsbEndpt& ep0 = ep[0];
-
-
-
-
-struct UsbHandlers {
-
-    static void     UsbISR              (void);
-    static void     init                ();
-    static void     detach              (void);
-    static void     attach              (void);
-};
 
 //power down usb module, usb irq's off
 //=============================================================================
@@ -491,14 +272,14 @@ struct UsbHandlers {
     u.bdt_addr(UsbEndpt::bdt_addr());//set bdt address
     ubuf.reinit();                  //clear all buffers, clear in-use flag
 
-    for(auto& i : ep) i.reinit();   //init (reinit) each UsbEndpt
-    ep[0].on(true);                 //and enable endpoint 0
+    for(auto& i : UsbConfig::endpoints) i.reinit();//init (reinit) each UsbEndpt
+    UsbConfig::endpoints[0].on(true);   //and enable endpoint 0
 
     //enable irqs
     u.irqs(u.RESET); // only looking for reset first
     //u.irqs(u.STALL|u.IDLE|u.TOKEN|u.SOF|u.ERROR|u.RESET);
     //u.eirqs(u.BSTUFF|u.BTMOUT|u.DATSIZ|u.CRC16|u.CRC5|u.PID);
-    ir.init(ir.USB, usb_irq_pri, usb_irq_subpri, true);
+    ir.init(ir.USB, UsbConfig::usb_irq_pri, UsbConfig::usb_irq_subpri, true);
 
     u.state = u.ATTACHED;
 
@@ -513,19 +294,19 @@ struct UsbHandlers {
     void            UsbHandlers::init           ()
  //=============================================================================
  {
-    vbus_pin.digital_in();  //vbus/rb6 to input
-    vbus_pin.pulldn(true);  //pulldown when no vbus keeps pin low
-    attach();               //init all things
+    UsbConfig::vbus_pin.digital_in();   //vbus/rb6 to input
+//    UsbConfig::vbus_pin.pulldn(true);   //pulldown when no vbus keeps pin low
+    attach();                           //init all things
  }
 
 
 
 //=============================================================================
-    void            USB_ISR                     ()
+    ISR(USB)
 //=============================================================================
 {
     Usb u; Irq ir;                  // u. for Usb:: , ir. for Irq::
-    static Usb::state_t last_state; //keep track of usb state for resumes
+    static Usb::STATE last_state; //keep track of usb state for resumes
 
     Usb::flags_t flags;
     Usb::eflags_t eflags;
@@ -544,7 +325,7 @@ struct UsbHandlers {
 
     //shouldn't happen, but check anyway to make sure we stay inside
     //our ep array
-    if(stat.endpt > my_last_endp) return;
+    if(stat.endpt > UsbConfig::last_endp) return;
 
     //nested function, check if need to suspend (idle detected >3ms)
     //if go SUSPENDED, all flags will be cleared and only a resume
@@ -587,7 +368,7 @@ struct UsbHandlers {
         case u.DETACHED:                    //can't get here- usb irq is off
             return;
         case u.ATTACHED:                    //only reset irq is active
-            if(not vbus_pin.ison()) return; //no vbus, we should not be here
+            if(not UsbConfig::vbus_pin.ison()) return; //no vbus, we should not be here
             u.state = u.POWERED;            //vbus ok, now go to POWERED state
             u.flags_clr(u.IDLE);            //clear idle flag before enabling
             u.irqs(u.IDLE|u.RESET);         //now add idle irq
@@ -625,7 +406,7 @@ struct UsbHandlers {
 
     //and here we go to work moving bytes
     if(flags.token){
-        ep[stat.endpt].token((uint8_t)stat.bdidx); //call endpoint
+        UsbConfig::endpoints[stat.endpt].token((uint8_t)stat.bdidx); //call endpoint
     }
 
 }

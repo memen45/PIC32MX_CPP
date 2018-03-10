@@ -66,7 +66,7 @@ static uint32_t boot_flags;
     void        Resets::swreset             ()
 //=============================================================================
 {
-    Irq::disable_all();
+    Irq::global(false);
     Sys::unlock();
     Reg::setbit(RSWRST, 1<<SWRST);
     Reg::val(RSWRST);

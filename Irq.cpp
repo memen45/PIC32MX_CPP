@@ -67,33 +67,30 @@ const uint8_t Irq::m_lookup_vn[] = {
     };
 
 //=============================================================================
-    void        Irq::disable_all        ()
+    void        Irq::global             (bool tf)
 //=============================================================================
 {
-    __builtin_disable_interrupts();
+    if(tf) __builtin_enable_interrupts();
+    else __builtin_disable_interrupts();
 }
 
 //=============================================================================
-    void        Irq::enable_all         ()
-//=============================================================================
-{
-    __builtin_enable_interrupts();
-}
-
-//=============================================================================
-    bool        Irq::all_ison           ()
+    bool        Irq::global             ()
 //=============================================================================
 {
     return (__builtin_mfc0(12, 0) bitand 1);
 }
 
+//proxtimer(0) to turn off
 //=============================================================================
-    void        Irq::proxtimer          (uint8_t n)
+    void        Irq::proxtimer          (uint8_t n, uint32_t v)
 //=============================================================================
-{ //n = priority 0-7
+{ //n = priority 1-7 (and lower) starts prox timer, 0 = prox timer off
     Reg::clrbit(INTCON, TPC_CLR<<TPC_SHIFT);
     Reg::setbit(INTCON, (n bitand TPC_CLR)<<TPC_SHIFT);
+//    Reg::val(IPTMR, v); //timer value
 }
+
 
 //=============================================================================
     void        Irq::eint4_pol          (EINTXPOL e)
@@ -180,12 +177,20 @@ const uint8_t Irq::m_lookup_vn[] = {
     on(e, tf);
 }
 
+//=============================================================================
+    void        Irq::init       (IRQ_NR e, uint8_t pri, uint8_t sub, bool tf, std::function<void()> callback)
+//=============================================================================
+{
+    isr_callback[m_lookup_vn[e]] = callback;
+    init(e, pri, sub, tf);
+}
+    
 //init list (array) of irq's
 //=============================================================================
     void        Irq::init               (irq_list_t* arr)
 //=============================================================================
 {
-    for(; arr->irqvn not_eq END; arr++){
+    for(; arr->irqvn < END; arr++){
         init(arr->irqvn, arr->p, arr->s, arr->en);
     }
 }

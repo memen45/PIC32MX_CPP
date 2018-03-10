@@ -1,204 +1,143 @@
-/*==============================================================================
-    UNUSABLE CODE - JUST TRYING TO WORK OUT USB BY PUTTING DOWN SOME CODE
-==============================================================================*/
+//USB OTG (Host)
 
-#pragma once
-
-//USB Host
-
-#include <cdtdint>
+#include <cstdint>
+#include "UsbOTG.hpp"
 #include "Reg.hpp"
 
-class UsbOTG {
-
-    public:
-
-    enum FLAGSOTG : uint8_t {
-        //U1OTGIR, U1OTGIE, U1OTGSTAT
-        ID = 1<<7,
-        MSTIMER = 1<<6, /*no STAT*/
-        LINE_STABLE = 1<<5,
-        ACTIVITY = 1<<4, /*no STAT*/
-        SESSION = 1<<3, BVBUS = 1<<2, AVBUS = 1<<0
-    };
-
-    static uint8_t  flags               ();                 //get all
-    static bool     flag                (FLAGSOTG);         //get one
-    static void     flags_clr           ();                 //clear all
-    static void     flags_clr           (uint8_t);          //clear one or more
-    static void     flag_clr            (FLAGSOTG);         //clear one
-
-    static uint16_t irqs                ();                 //get all
-    static bool     irq                 (FLAGSOTG);         //get one
-    static void     irqs_clr            ();                 //clear all
-    static void     irqs_clr            (uint8_t);          //clr one or more
-    static void     irq_clr             (FLAGS);            //clr one
-
-    static uint8_t  stat                ();                 //get all
-    static bool     stat                (FLAGSOTG);         //get one
-
-    enum OTG : uint8_t {
-        //U1OTGCON
-        DPUP = 1<<7, DMUP = 1<<6, DPDN = 1<<5, DMDN = 1<<4,
-        VBUSON = 1<<3, OTGON = 1<<2, VCHARGE = 1<<1, VDISCHARGE = 1<<0
-    };
-
-    static void     otg                 (OTG, bool);
-
-    //U1ADDR
-    static void     low_speed           (bool);
-
-    //U1TOK
-    enum TOKPID : uint8_t { SETUP = 13, IN = 9, OUT = 1 };
-
-    static uint8_t  tok_pid             ();
-    static uint8_t  tok_ep              ();
-    static void     tok_ep              (uint8_t);
-
-    //U1SOF
-    enum SOFVALS : uint8_t {
-        SOF64 = 74, SOF32 = 42, SOF16 = 26, SOF8 = 18
-    };
-
-    static void     sof_cnt             (SOFVALS);
-
-    private:
-
-    //registers - all use only first 8bits
-    enum {
-        U1OTGIR = 0xBF808440,   //no SET, INV - all bits write-1-to-clear
-        U1OTGIE = 0xBF808450,
-        U1OTGSTAT = 0xBF808460, //no SET, INV, CLR
-        U1OTGCON = 0xBF808470,
-        U1ADDR = 0xBF808660,
-            LSEN = 1<<7,
-        U1TOK = 0xBF8086A0,
-        U1SOF = 0xBF8086B0,
-     };
-};
+//registers - all use only first 8bits
+enum {
+    U1OTGIR = 0xBF808440,   //no SET, INV - all bits write-1-to-clear
+    U1OTGIE = 0xBF808450,
+    U1OTGSTAT = 0xBF808460, //no SET, INV, CLR
+    U1OTGCON = 0xBF808470,
+    U1ADDR = 0xBF808660,
+        LSEN = 1<<7,
+    U1TOK = 0xBF8086A0,
+    U1SOF = 0xBF8086B0,
+ };
 
 //=============================================================================
-uint8_t Usb::flags()
+uint8_t UsbOTG::flags()
 //=============================================================================
 {
-    return (Usb::FLAGSOTG)Reg::val(U1OTGIR);
+    return (UsbOTG::FLAGSOTG)Reg::val(U1OTGIR);
 }
 
 //=============================================================================
-bool Usb::flag(FLAGSOTG e)
+bool UsbOTG::flag(FLAGSOTG e)
 //=============================================================================
 {
     return Reg::anybit(U1OTGIR, e);
 }
 
 //=============================================================================
-void Usb::flags_clr()
+void UsbOTG::flags_clr()
 //=============================================================================
 {
     Reg::val(U1OTGIR, 255);
 }
 
 //=============================================================================
-void Usb::flags_clr(uint8_t v)
+void UsbOTG::flags_clr(uint8_t v)
 //=============================================================================
 {
     Reg::val(U1OTGIR, v);
 }
 
 //=============================================================================
-void Usb::flag_clr(FLAGSOTG e)
+void UsbOTG::flag_clr(FLAGSOTG e)
 //=============================================================================
 {
     Reg::val(U1OTGIR, e);
 }
 
 //=============================================================================
-uint8_t Usb::irqs()
+uint8_t UsbOTG::irqs()
 //=============================================================================
 {
     return Reg::val(U1OTGIR);
 }
 
 //=============================================================================
-bool Usb::irq(FLAGSOTG e)
+bool UsbOTG::irq(FLAGSOTG e)
 //=============================================================================
 {
     return Reg::anybit(U1OTGIR, e);
 }
 
 //=============================================================================
-void Usb::irqs_clr()
+void UsbOTG::irqs_clr()
 //=============================================================================
 {
     Reg::val(U1OTGIR, 255);
 }
 
 //=============================================================================
-void Usb::irqs_clr(uint8_t v)
+void UsbOTG::irqs_clr(uint8_t v)
 //=============================================================================
 {
     Reg::val(U1OTGIR, v);
 }
 
 //=============================================================================
-void Usb::irq_clr(FLAGSOTG e)
+void UsbOTG::irq_clr(FLAGSOTG e)
 //=============================================================================
 {
     Reg::val(U1OTGIR, e);
 }
 
 //=============================================================================
-uint8_t Usb::stat()
+uint8_t UsbOTG::stat()
 //=============================================================================
 {
     return Reg::val(U1OTGSTAT);
 }
 
 //=============================================================================
-bool Usb::stat(FLAGSOTG e)
+bool UsbOTG::stat(FLAGSOTG e)
 //=============================================================================
 {
     return Reg::anybit(U1OTGSTAT, e);
 }
 
 //=============================================================================
-void Usb::otg(OTG e, bool tf)
+void UsbOTG::otg(OTG e, bool tf)
 //=============================================================================
 {
-    Reg::set(U1OTGCON, e, tf);
+    Reg::setbit(U1OTGCON, e, tf);
 }
 
 //=============================================================================
-void Usb::low_speed(bool tf)
+void UsbOTG::low_speed(bool tf)
 //=============================================================================
 {
-    Reg::set(U1ADDR, LSEN, tf);
+    Reg::setbit(U1ADDR, LSEN, tf);
 }
 
 //=============================================================================
-uint8_t Usb::tok_pid()
+uint8_t UsbOTG::tok_pid()
 //=============================================================================
 {
-    return (Usb::TOKPID)(Reg::val(U1TOK)>>4);
+    return (UsbOTG::TOKPID)(Reg::val(U1TOK)>>4);
 }
 
 //=============================================================================
-uint8_t Usb::tok_ep()
+uint8_t UsbOTG::tok_ep()
 //=============================================================================
 {
     return Reg::val(U1TOK) bitand 15;
 }
 
 //=============================================================================
-void Usb::tok_ep(uint8_t v)
+void UsbOTG::tok_ep(uint8_t v)
 //=============================================================================
 {
-    Reg::clr(U1TOK, 15);
-    Reg::set(U1TOK, v bitand 15);
+    Reg::clrbit(U1TOK, 15);
+    Reg::setbit(U1TOK, v bitand 15);
 }
 
 //=============================================================================
-void Usb::sof_cnt(SOFVALS e)
+void UsbOTG::sof_cnt(SOFVALS e)
 //=============================================================================
 {
     Reg::val(U1SOF, e);

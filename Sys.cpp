@@ -43,21 +43,21 @@ static volatile uint8_t unlock_count;
     void        Sys::lock           ()
 //=============================================================================
 {
-    bool irqstate = Irq::all_ison();                //get STATUS.IE
-    Irq::disable_all();
+    bool irqstate = Irq::global();                  //get STATUS.IE
+    Irq::global(false);
     //unlock_count only accessed with irq off
     if(unlock_count) unlock_count--;                //dec counter
     if(unlock_count == 0) Reg::val(SYSKEY, 0);      //if 0, lock
     //
-    if(irqstate) Irq::enable_all();                 //restore IE state
+    if(irqstate) Irq::global(true);                 //restore IE state
 }
 
 //=============================================================================
     void        Sys::unlock         ()
 //=============================================================================
 {
-    bool irqstate = Irq::all_ison();                //get STATUS.IE
-    Irq::disable_all();
+    bool irqstate = Irq::global();                  //get STATUS.IE
+    Irq::global(false);
     bool dmasusp = Dma::all_suspend();              //get DMA suspend status
     Dma::all_suspend(true);                         //suspend DMA
     //
@@ -68,7 +68,7 @@ static volatile uint8_t unlock_count;
     unlock_count++;                                 //inc unlock_count
     //
     if(not dmasusp) Dma::all_suspend(false);        //DMA resume
-    if(irqstate) Irq::enable_all();                 //restore IE state
+    if(irqstate) Irq::global(true);                 //restore IE state
 }
 
 //provide previous irq/dma status
@@ -78,7 +78,7 @@ static volatile uint8_t unlock_count;
 {
     Reg::val(SYSKEY, 0);                            //lock
     Dma::all_suspend(v & 2);                        //restore dma
-    if(v & 1) Irq::enable_all();                    //restore irq
+    if(v & 1) Irq::global(true);                    //restore irq
 }
 
 //blocking, return irq/dma status for use in next call to lock()
@@ -86,8 +86,8 @@ static volatile uint8_t unlock_count;
     uint8_t     Sys::unlock_wait    ()
 //=============================================================================
 {
-    bool irqstate = Irq::all_ison();                //get STATUS.IE
-    Irq::disable_all();
+    bool irqstate = Irq::global();                  //get STATUS.IE
+    Irq::global(false);
     bool dmasusp = Dma::all_suspend();              //get DMA suspend status
     Dma::all_suspend(true);                         //suspend DMA
     Reg::val(SYSKEY, MAGIC1);
@@ -138,23 +138,23 @@ static volatile uint8_t unlock_count;
 //=============================================================================
 {
     uint8_t waitstates = Osc::sysclk() / FLASHSPEED;
-    bool irqstate = Irq::all_ison();                //get STATUS.IE
-    Irq::disable_all();
+    bool irqstate = Irq::global();                //get STATUS.IE
+    Irq::global(false);
 	Reg::clrbit(BMXCON, 1 << BMXWSDRM);				//Disable RAM wait states
     Reg::val(CHECON, waitstates << PFMWS_SHIFT);
-    if(irqstate) Irq::enable_all();                 //restore IE state
+    if(irqstate) Irq::global(true);                 //restore IE state
 }
     
 //=============================================================================
     void     Sys::pcache                (PREFEN p)
 //=============================================================================
 {
-    bool irqstate = Irq::all_ison();                //get STATUS.IE
-    Irq::disable_all();
+    bool irqstate = Irq::global();                //get STATUS.IE
+    Irq::global(false);
 	Reg::clrbit(CHECON, PREFEN_MASK << PREFEN_SHIFT);
 	Reg::setbit(CHECON, p << PREFEN_SHIFT);
 	kseg0_cache_enable(ON);
-    if(irqstate) Irq::enable_all();                 //restore IE state
+    if(irqstate) Irq::global(true);                 //restore IE state
 }
 
 //=============================================================================

@@ -41,7 +41,7 @@ enum {
     UXRXREG = 12,
     UXBRG = 16
 };
-//
+
 using vu8ptr = volatile uint8_t*;               //access stat as bytes
 using vu32ptr = volatile uint32_t*;
 
@@ -381,7 +381,7 @@ using vu32ptr = volatile uint32_t*;
     void        Uart::puts              (const char* str)
 //=============================================================================
 {
-    while(*str) putc(*str++);
+    while(str && *str) putc(*str++);
 }
 
 //=============================================================================
