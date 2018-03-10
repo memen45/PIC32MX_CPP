@@ -1,6 +1,8 @@
 #include "Irq.hpp"
 #include "Reg.hpp"
 
+#include "Irq_isr.hpp"
+
 enum {
     INTCON = 0xBF881000,
         M_VEC = 12,
@@ -60,7 +62,8 @@ const uint8_t Irq::m_lookup_vn[] = {
 		
 		/* UART4_ERR = */ 49, /* UART4_RX = */ 49, /* UART4_TX = */ 49,
 		/* UART6_ERR = */ 50, /* UART6_RX = */ 50, /* UART6_TX = */ 50,	
-		/* UART5_ERR = */ 51, /* UART5_RX = */ 51, /* UART5_TX = */ 51
+		/* UART5_ERR = */ 51, /* UART5_RX = */ 51, /* UART5_TX = */ 51,
+        /* END = */ 52
     };
 
 //=============================================================================

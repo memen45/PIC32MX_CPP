@@ -3,6 +3,7 @@
 //Interrupt
 
 #include <cstdint>
+#include <functional>
 
 struct Irq {
 
@@ -73,6 +74,8 @@ struct Irq {
     static bool     flag            (IRQ_NR);
     static void     on              (IRQ_NR, bool);
     static void     init            (IRQ_NR, uint8_t, uint8_t, bool);
+    static void     init            (IRQ_NR, uint8_t, uint8_t, bool, std::function<void()>);
+    
 
     //to create a list (array) of irq's to init/enable
     using irq_list_t = struct {
@@ -83,15 +86,9 @@ struct Irq {
     };
     static void     init            (irq_list_t*);
 	
-	static const uint8_t m_lookup_vn[94];
+	static const uint8_t m_lookup_vn[95];
 
 };
-
-////////////////////////////////////////////////////////////////////////////////
-// ISR MACRO
-// usage- ISR(ADC){ /* isr code here */ }
-#define ISR(nam) extern "C" __attribute((vector((int)Irq::nam),interrupt))\
-    void nam##_ISR()
 
 ////////////////////////////////////////////////////////////////////////////////
 // ISR MACRO - auto clear irq flag - NOTE- need }} to close isr
