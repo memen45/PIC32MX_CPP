@@ -30,7 +30,9 @@
 #include "Rtcc.hpp"
 #include "Irq.hpp"
 
+//include just to get usb stuff to compile
 #include "Usb.hpp"
+
 
 //svg colors for rgb led
 const uint8_t svg[][3]{
@@ -186,29 +188,29 @@ const uint8_t svg[][3]{
 
 
 Uart info{Uart::UART2, Pins::C6, Pins::C7, 230400};
-//Uart info{Uart::UART2, Pins::C6, Pins::C7, 115200};
+
 
 //printf - use replacement putc
 //will use $ for trigger to print ansi colors (use $$ if want $ character)
-//printf("this is $1red $7white");
+//printf("this is $1red $7white and I have $$1");
 extern "C" void _mon_putc(char c){
     static bool trigger = false;
     if(trigger){
         trigger = false;
         if(c >= '0' && c <= '7'){
             info.puts("\033[3");    //ansi color start
-            info.putc(c);           //plus color
+            info.putchar(c);        //plus color
             c = 'm';                //below will output this
         }
-        info.putc(c);               //'m' from above, or regular char after '$'
+        info.putchar(c);            //'m' from above, or regular char after '$'
         return;
     }
     //not triggered
     if(c == '$') trigger = true;//trigger char
-    else info.putc(c);          //regular char
+    else info.putchar(c);       //regular char
 }
 
-void cls(){ info.putc(12); }
+void cls(){ info.putchar(12); }
 void cursor(bool tf){ printf("\033[?25%c", tf ? 'h' : 'l'); }
 void ansi_reset(){ printf("\033[0m"); }
 
@@ -316,7 +318,7 @@ int main()
     osc.tun_auto(true);                     //let sosc tune frc
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 18, 3, 8, 0, 21, 07, 0} );
+    if(dt.year == 0) Rtcc::datetime( { 18, 3, 9, 0, 18, 22, 0} );
 
     Rtcc::boot_time = Rtcc::datetime();
     Rtcc::on(true);

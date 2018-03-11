@@ -27,7 +27,7 @@ enum {
     U1BDTP3 = 0xBF8086D0,
     U1CNFG1 = 0xBF8086E0,
     U1EP0 = 0xBF808700, U1EP_SPACING = 0x10
-    };
+};
 
 
 Usb::STATE Usb::state = Usb::DETACHED;
@@ -239,7 +239,7 @@ Usb::STATE Usb::state = Usb::DETACHED;
 
 //power down usb module, usb irq's off
 //=============================================================================
-    void            UsbHandlers::detach         (void)
+    void        Usb::detach             (void)
 //=============================================================================
 {
     Usb u; Irq ir;
@@ -261,7 +261,7 @@ Usb::STATE Usb::state = Usb::DETACHED;
 //called from init (which first calls detach)
 //called from isr (when >=DEFAULT and reset flag)
 //=============================================================================
-    void            UsbHandlers::attach         (void)
+    void            Usb::attach         (void)
 //=============================================================================
 {
     Usb u; UsbBuf ubuf; Irq ir;
@@ -291,7 +291,7 @@ Usb::STATE Usb::state = Usb::DETACHED;
 
 //call once to init usb
 //=============================================================================
-    void            UsbHandlers::init           ()
+    void            Usb::init           ()
  //=============================================================================
  {
     UsbConfig::vbus_pin.digital_in();   //vbus/rb6 to input
@@ -306,7 +306,7 @@ Usb::STATE Usb::state = Usb::DETACHED;
 //=============================================================================
 {
     Usb u; Irq ir;                  // u. for Usb:: , ir. for Irq::
-    static Usb::STATE last_state; //keep track of usb state for resumes
+    static Usb::STATE last_state;   //keep track of usb state for resumes
 
     Usb::flags_t flags;
     Usb::eflags_t eflags;
@@ -346,7 +346,7 @@ Usb::STATE Usb::state = Usb::DETACHED;
     //attach() (only called from >=DEFAULT state)
     auto _is_reset = [ & ](){
         if (flags.reset == 0) return false;
-        UsbHandlers::attach();
+        u.attach();
         last_state = u.ATTACHED;
         return true;
     };

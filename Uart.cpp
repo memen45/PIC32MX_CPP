@@ -393,7 +393,7 @@ using vu32ptr = volatile uint32_t*;
 
 //misc
 //=============================================================================
-    void        Uart::putc              (const char c)
+    void        Uart::putchar           (const char c)
 //=============================================================================
 {
     while(tx_full());
@@ -404,13 +404,12 @@ using vu32ptr = volatile uint32_t*;
     void        Uart::puts              (const char* str)
 //=============================================================================
 {
-    while(str && *str) putc(*str++);
+    while(str && *str) putchar(*str++);
 }
 
 //=============================================================================
-    int         Uart::getc              ()
+    int         Uart::getchar           ()
 //=============================================================================
 {
-    if(rx_empty()) return -1;
-    return read();
+    return rx_empty() ? -1 : read();
 }

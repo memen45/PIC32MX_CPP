@@ -84,9 +84,9 @@ struct Uart  {
     uint32_t        baud_clk        ();                 //get uart clock freq
 
     //misc
-    void            putc            (const char);       //simple blocking
-    void            puts            (const char*);      //functions
-    int             getc            ();                 // -1 = none
+    void            putchar         (const char);       //blocking functions
+    void            puts            (const char*);      //(no '\n', like fputs)
+    int             getchar         ();                 // -1 = none
 
     private:
 

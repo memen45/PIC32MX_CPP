@@ -3,8 +3,6 @@
 #include "Usb.hpp"
 #include "UsbBuf.hpp"
 
-
-struct UsbEndptTRx {
 /*______________________________________________________________________________
 
  RX/TX endpoint class
@@ -51,26 +49,32 @@ struct UsbEndptTRx {
 
 ______________________________________________________________________________*/
 
+struct UsbEndptTRx {
+
     using bdt_t = union {
         struct {
-            unsigned :2;
-            unsigned bstall:1;
-            unsigned dts:1;
-            unsigned ninc:1;
-            unsigned keep:1;
-            unsigned data01:1;
-            unsigned uown:1;
-            unsigned :8;
-            unsigned count:10;
-            unsigned :6;
-            unsigned addr:32;
+            unsigned        :2;
+            unsigned bstall :1;
+            unsigned dts    :1;
+            unsigned ninc   :1;
+            unsigned keep   :1;
+            unsigned data01 :1;
+            unsigned uown   :1;
+            unsigned        :8;
+            unsigned count  :10;
+            unsigned        :6;
+            unsigned addr   :32;
         };
-        struct { unsigned :2; unsigned pid:4; };
-        uint8_t ctrl;
-        uint64_t all;
+        struct {
+            unsigned        :2;
+            unsigned pid    :4;
+        };
+        uint8_t     ctrl;
+        uint64_t    all;
     };
 
-                UsbEndptTRx (bdt_t*, uint16_t);
+    UsbEndptTRx (bdt_t*, uint16_t);
+
     void        reinit      ();
     void        options     (uint8_t);
     bool        start       (uint8_t*, uint16_t, bool = 0, bool = 0);
@@ -97,12 +101,6 @@ ______________________________________________________________________________*/
 
 
 
-
-
-
-
-
-struct UsbEndpt {
 /*______________________________________________________________________________
 
     endpoint class
@@ -128,6 +126,7 @@ struct UsbEndpt {
 
 ______________________________________________________________________________*/
 
+struct UsbEndpt {
 
     //capabilities (shifted into U1EPn bit positions)
     enum TR { NONE = 0, TX = 1<<2, RX = 2<<2, TRX = 3<<2 };
@@ -143,14 +142,14 @@ ______________________________________________________________________________*/
     //public functions
     UsbEndpt(uint8_t, TR, uint16_t); //n, TX|RX|TRX, max size
 
-    void deinit ();         //'destructor'-like
-    void reinit ();         //deinit, then run constructor
-    void on     (bool);     //enable/disable endpoint ([tx],[rx],handshake)
-    void on     (uint8_t);  //enable endpoint with specified U1EP reg bits
-    void token  (uint8_t);  //process transaction complete, called by isr
+    void                deinit      ();         //'destructor'-like
+    void                reinit      ();         //deinit, then run constructor
+    void                on          (bool);     //enable/disable endpoint ([tx],[rx],handshake)
+    void                on          (uint8_t);  //enable endpoint with specified U1EP reg bits
+    void                token       (uint8_t);  //process transaction complete, called by isr
 
     //public static function
-    static uint32_t bdt_addr(); //to get bdt address (for Usb::bdt_addr() use)
+    static uint32_t     bdt_addr    ();         //to get bdt address (for Usb::bdt_addr() use)
 
     private:
 
