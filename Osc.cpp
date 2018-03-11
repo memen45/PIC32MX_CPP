@@ -486,9 +486,9 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     Timer1 t1; Cp0 cp0;
     //IDSTAT irstat  = unlock_irq();
     uint8_t irstat  = Sys::unlock_wait();
-   //backup timer1 (we want it, but will give it back)
-    uint16_t t1conbak = *(volatile uint16_t*)t1.T1CON;
-    *(volatile uint16_t*)t1.T1CON = 0; //stop
+    //backup timer1 (we want it, but will give it back)
+    uint16_t t1conbak = t1.t1con();
+    t1.t1con(0); //stop
     uint16_t pr1bak = t1.period();
     uint32_t t1bak = t1.timer();
     //reset
@@ -498,23 +498,23 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     //if sosc enabled, assume it is there
     if(sosc()) t1.clk_src(t1.SOSC);
     else t1.clk_src(t1.LPRC);
-   //start timer1, get cp0 count
+    //start timer1, get cp0 count
     t1.on(true);
     uint32_t c = cp0.count();
-   //wait for ~1/4sec, get cp0 total count
+    //wait for ~1/4sec, get cp0 total count
     while(t1.timer() < 8192);
     c = cp0.count() - c;
-   //cp0 runs at sysclk/2, so x2 x4 = x8 or <<3
+    //cp0 runs at sysclk/2, so x2 x4 = x8 or <<3
     c <<= 3;
-   //resolution only to 0.1Mhz
+    //resolution only to 0.1Mhz
     c /= 100000;
     c *= 100000;
     m_extclk = c;
-   //restore timer1
+    //restore timer1
     t1.on(false);
     t1.timer(t1bak);
     t1.period(pr1bak);
-    *(volatile uint32_t*)t1.T1CON = t1conbak;
+    t1.t1con(t1conbak);
     //lock_irq(irstat);
     Sys::lock(irstat);
     return m_extclk;

@@ -10,7 +10,7 @@ struct Irq {
     static bool     global          ();
     static void     proxtimer       (uint8_t, uint32_t = 0);
 
-    enum EINTXPOL : bool { FALLING = 0, RISING };
+    enum EINTXPOL : bool { FALLING, RISING };
     static void     eint4_pol       (EINTXPOL);
     static void     eint3_pol       (EINTXPOL);
     static void     eint2_pol       (EINTXPOL);
@@ -86,8 +86,11 @@ struct Irq {
     void nam##_ISR()
 
 ////////////////////////////////////////////////////////////////////////////////
-// ISR MACRO - auto clear irq flag - NOTE- need }} to close isr
+// ISR MACRO - auto clear irq flag
 // usage- ISR(ADC){ /* isr code here */ }}
+// NOTE- need }} to close isr
+// NOTE flag is cleared at start of isr, do not use if flag needs clearing
+// after a register is read
 #define ISRautoflag(nam) extern "C" \
     __attribute((vector((int)Irq::nam),interrupt)) \
     void nam##_ISR(){ Irq::flag_clr(Irq::nam); \

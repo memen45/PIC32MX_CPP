@@ -22,8 +22,7 @@ enum {
     UDID2 = 0xBF801850,
     UDID3 = 0xBF801860,
     UDID4 = 0xBF801870,
-    UDID5 = 0xBF801880,
-
+    UDID5 = 0xBF801880
 };
 
 

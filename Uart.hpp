@@ -8,8 +8,21 @@
 
 struct Uart  {
 
-    //instantiate Uart with uart number
-    // | TRX<2> | UART<1:0> |
+    //instantiate Uart with uart number only (pins setup manually)-
+    //(use this for UART1- has fixed pins, so cannot use pps)
+    //  Uart u(UART1);
+
+    //or uart number and tx/rx pin info (tx or rx only), optionally baud rate-
+    //  UARTnTX|RX, tx|rx pin, [baud]
+    //  Uart u(UART2TX, Pins::A0);          //115200 default baud
+    //  Uart u(UART2TX, Pins::A0, 19200);   //specify baud
+    //  Uart u(UART2RX, Pins::A0, 19200);   //specify baud
+
+    //or uart number and both tx/rx pins info, optionally set baud rate
+    //  UARTn, tx pin, rx pin,  [baud]
+    //  Uart u(UART2, Pins::A0, Pins::B0);  //uart#, tx pin, rx pin, [baud]
+    //  Uart u(UART2, Pins::A0, Pins::B0, 230400);
+
     enum UARTX {
         UART1 = 0, UART1TX = UART1|1<<2, UART1RX = UART1,
         UART2 = 1, UART2TX = UART2|1<<2, UART2RX = UART2,
@@ -23,7 +36,7 @@ struct Uart  {
     void            stop_sleep      (bool);             //stop in sleep
     bool            active          ();                 //uart is active
 
-    enum CLKSEL { PBCLK = 0, SYSCLK, FRC, REFO1 };
+    enum CLKSEL { PBCLK, SYSCLK, FRC, REFO1 };
     void            clk_sel         (CLKSEL);           //clock select
 
     void            oflow_stop      (bool);             //stop on OERR
@@ -31,14 +44,14 @@ struct Uart  {
     void            stop_idle       (bool);             //uart stop in idle
     void            irda            (bool);             //irda on/off
 
-    enum RTSMODE { FLOW = 0, SIMPLEX };
+    enum RTSMODE { FLOW, SIMPLEX };
     void            rts_mode        (RTSMODE);          //rts mode
 
     void            wake            (bool);             //wake on start bit
     void            loopback        (bool);             //loopback on/off
     void            autobaud        (bool);             //autobaud on/off
 
-    enum RXPOL { IDLEHIGH = 0, IDLELOW };
+    enum RXPOL { IDLEHIGH, IDLELOW };
     void            rx_pol          (RXPOL);            //rx polarity
 
     enum MODESEL {
@@ -51,7 +64,7 @@ struct Uart  {
     void            rx_mask         (uint8_t);          //address mask
     void            rx_addr         (uint8_t);          //address
 
-    enum UTXISEL : uint8_t { TFREE = 0, TDONE, TEMPTY };
+    enum UTXISEL : uint8_t { TFREE, TDONE, TEMPTY };
     void            tx_irq          (UTXISEL);          //tx irq select
 
     //enum RXPOL { IDLEHIGH = 0, IDLELOW }; //same
@@ -62,7 +75,7 @@ struct Uart  {
     bool            tx_full         ();                 //tx buf is full
     bool            tx_done         ();                 //all tx bits are out
 
-    enum URXISEL : uint8_t { RANY = 0, RHALF, RMOST };
+    enum URXISEL : uint8_t { RANY, RHALF, RMOST };
     void            rx_irq          (URXISEL);          //rx irq select
 
     void            rx_addren       (bool);             //rx addr detect on

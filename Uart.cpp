@@ -42,9 +42,6 @@ enum {
     UXBRG = 16
 };
 
-using vu8ptr = volatile uint8_t*;               //access stat as bytes
-using vu32ptr = volatile uint32_t*;
-
 //Uart
 
 //setup pins manually
@@ -401,10 +398,10 @@ using vu32ptr = volatile uint32_t*;
 }
 
 //=============================================================================
-    void        Uart::puts              (const char* str)
+    void        Uart::puts              (const char* s)
 //=============================================================================
 {
-    while(str && *str) putchar(*str++);
+    while(s && *s) putchar(*s++);
 }
 
 //=============================================================================

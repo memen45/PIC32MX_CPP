@@ -46,9 +46,6 @@ enum :uint32_t {
         AUDOMONO = 3
 };
 
-using vu8ptr = volatile uint8_t*;            //access stat as bytes
-using vu32ptr = volatile uint32_t*;
-
 //Spi
 
 //=============================================================================

@@ -21,7 +21,7 @@ struct Adc {
 
     //adc data output format
     enum FORM : uint8_t {
-        INT16 = 0, SINT16, FR16, SFR16, INT32, SINT32, FR32, SFR32
+        INT16, SINT16, FR16, SFR16, INT32, SINT32, FR32, SFR32
     };
     static void         format          (FORM);
 
@@ -51,7 +51,7 @@ struct Adc {
 
     //set Vr+/Vr- adc voltage reference
     enum VCFG : uint8_t {
-        VDD_VSS = 0, VDD_EXTN, EXTP_VSS, EXTP_EXTN
+        VDD_VSS, VDD_EXTN, EXTP_VSS, EXTP_EXTN
     };
     static void         vref_cfg        (VCFG);
 
@@ -76,7 +76,7 @@ struct Adc {
 //ADC1CON3
 
     //set adc conversion clock source
-    enum CLK { PBCLK = 0, FRC };
+    enum CLK { PBCLK, FRC };
     static void         clk_src         (CLK);
 
     //keep sampling even when samp=0
@@ -100,15 +100,15 @@ struct Adc {
     static void         bandgap         (bool);
 
     //auto scan interrupt modes
-    enum ASINT : uint8_t { NONE = 0, DET, COMP, DETCOMP };
+    enum ASINT : uint8_t { NONE, DET, COMP, DETCOMP };
     static void         scan_autoirq    (ASINT);
 
     //auto scan write mode
-    enum WM : uint8_t { LEGACY = 0, CONVSAV, COMPONLY };
+    enum WM : uint8_t { LEGACY, CONVSAV, COMPONLY };
     static void         write_mode      (WM);
 
     //auto scan compare mode
-    enum CM :uint8_t { LT = 0, GT, INWIN, OUTWIN };
+    enum CM :uint8_t { LT, GT, INWIN, OUTWIN };
     static void         compare_mode    (CM);
 
 //ADC1CHS

@@ -64,7 +64,7 @@ struct Osc {
     static DIVS         pll_div     ();         //get pll divider
 
     enum PLLMUL : uint8_t {
-        MUL2 = 0, MUL3, MUL4, MUL6, MUL8, MUL12, MUL24
+        MUL2, MUL3, MUL4, MUL6, MUL8, MUL12, MUL24
     };
     static PLLMUL       pll_mul     ();         //get pll multiplier
 

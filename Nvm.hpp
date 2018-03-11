@@ -20,17 +20,21 @@ struct Nvm {
 
     enum MEM : uint32_t {
         BASEMEM = 0x9D000000,
-        MAXMEM64 = 0xFFFF,
-        MAXMEM128 = 0x1FFFF,
-        MAXMEM256 = 0x3FFFF,
         PAGESIZE = 512*4, //512words, 2048bytes
         ROWSIZE = 64*4, //64words, 256bytes
-        MAXPAGE256 = ((MAXMEM256+1)/PAGESIZE-1), //0-127
-        MAXPAGE128 = ((MAXMEM128+1)/PAGESIZE-1), //0-63
-        MAXPAGE64 = ((MAXMEM64+1)/PAGESIZE-1), //0-31
-        MAXROW256 = ((MAXMEM256+1)/ROWSIZE-1), //0-1023
-        MAXROW128 = ((MAXMEM128+1)/ROWSIZE-1), //0-511
-        MAXROW64 = ((MAXMEM64+1)/ROWSIZE-1), //0-255
+
+        MAXMEM64 = PAGESIZE*32-1,
+        MAXPAGE64 = 31, //0-31
+        MAXROW64 = 255, //0-255
+
+        MAXMEM128 = PAGESIZE*64-1,
+        MAXPAGE128 = 63, //0-63
+        MAXROW128 = 511, //0-511
+
+        MAXMEM256 = PAGESIZE*128-1,
+        MAXPAGE256 = 127, //0-127
+        MAXROW256 = 1023, //0-1023
+
     };
 
     static uint8_t  write_word      (uint32_t*, uint32_t);
@@ -44,12 +48,12 @@ struct Nvm {
 
     private:
 
-    static uint8_t  unlock      ();
-    static void     lock        (uint8_t);
-    static void     do_wr       ();
-    static void     do_op       (uint8_t);
-    static void     address     (uint32_t);
-    static uint8_t  error       ();
-    static void     write_nop   ();
+    static uint8_t  unlock          ();
+    static void     lock            (uint8_t);
+    static void     do_wr           ();
+    static void     do_op           (uint8_t);
+    static void     address         (uint32_t);
+    static uint8_t  error           ();
+    static void     write_nop       ();
 
 };

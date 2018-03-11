@@ -7,7 +7,7 @@
 struct I2c  {
 
     //instantiate I2c with i2c number
-    enum I2CX { I2C1 = 0, I2C2, I2C3 };
+    enum I2CX { I2C1, I2C2, I2C3 };
     I2c(I2CX);
 
     //I2C1CON
@@ -15,7 +15,7 @@ struct I2c  {
     void            irq_start       (bool);             //irq enable on start
     void            overwrite       (bool);
 
-    enum HOLDTIM : bool { NS100 = 0, NS300 };
+    enum HOLDTIM : bool { NS100, NS300 };
     void            hold_time       (HOLDTIM);
 
     void            irq_collision   (bool);

@@ -7,13 +7,13 @@
 struct Dma {
 
     //instantiate Dma with dma number
-    enum DMAX { DMA0 = 0, DMA1, DMA2, DMA3 };
+    enum DMAX { DMA0, DMA1, DMA2, DMA3 };
     Dma(DMAX);
 
     //DCHXCON
     bool            busy            ();
 
-    enum CHCHAIN : uint8_t { TOHIGHER = 0, TOLOWER = 1, CHAINOFF = 2 };
+    enum CHCHAIN : uint8_t { TOHIGHER, TOLOWER, CHAINOFF };
     void            chain           (CHCHAIN);
 
     void            on              (bool);
@@ -21,7 +21,7 @@ struct Dma {
     void            auto_en         (bool);
     bool            evt             ();
 
-    enum CHPRI : uint8_t { PRI0 = 0, PRI1, PRI2, PRI3 };
+    enum CHPRI : uint8_t { PRI0, PRI1, PRI2, PRI3 };
     void            priority        (CHPRI);
 
     //DCHXECON
@@ -84,17 +84,17 @@ struct Dma {
     static uint32_t last_addr       ();                 //last dma address
 
     //DCRCCON
-    enum CRCBYTO : uint8_t { SAME = 0, REVERSE, SWAPH, SWAPB };
+    enum CRCBYTO : uint8_t { SAME, REVERSE, SWAPH, SWAPB };
     static void     crc_byto        (CRCBYTO);
 
-    enum CRCBITO : bool { MSB = 0, LSB };
+    enum CRCBITO : bool { MSB, LSB };
     static void     crc_bito        (CRCBITO);
 
     static void     crc_polyn       (uint8_t);
     static void     crc_on          (bool);
     static void     crc_append      (bool);
 
-    enum CRCTYPE : bool { LFSR = 0, IP };
+    enum CRCTYPE : bool { LFSR, IP };
     static void     crc_type        (CRCTYPE);
 
     static void     crc_ch          (uint8_t);

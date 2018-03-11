@@ -7,30 +7,30 @@
 struct Spi  {
 
     //instantiate Comp123 with comparator number
-    enum SPIX { SPI1 = 0, SPI2, SPI3 };
+    enum SPIX { SPI1, SPI2, SPI3 };
     Spi(SPIX);
 
     //spixcon
     void            frame           (bool);             //framed support
 
-    enum FRMDIR : bool { MASTER = 0, SLAVE };
+    enum FRMDIR : bool { MASTER, SLAVE };
     void            frame_dir       (FRMDIR);           //frame sync pulse dir
 
-    enum FRMHL : bool { LOW = 0, HIGH };
+    enum FRMHL : bool { LOW, HIGH };
     void            frame_pol       (FRMHL);            //frame sync polarity
     void            slave_sel       (bool);             //slave select enable
 
-    enum FRMPW : bool { CLKW = 0, CHARW };
+    enum FRMPW : bool { CLKW, CHARW };
     void            frame_pwidth    (FRMPW);            //1=1char, 0=1clk
 
-    enum FRMCNT : uint8_t { CNT1 = 0, CNT2, CNT4, CNT8, CNT16, CNT32 };
+    enum FRMCNT : uint8_t { CNT1, CNT2, CNT4, CNT8, CNT16, CNT32 };
     void            frame_count     (FRMCNT);           //frame sync counter
 
-    enum CLKSEL : bool { PBCLK = 0, REFO1 };
+    enum CLKSEL : bool { PBCLK, REFO1 };
     void            clk_sel         (CLKSEL);           //set clock source
     CLKSEL          clk_sel         ();                 //get clock source
 
-    enum FRMEDGE : bool { B4BCLK = 0, ATBCLK };
+    enum FRMEDGE : bool { B4BCLK, ATBCLK };
     void            frame_edge      (FRMEDGE);          //frame sync edge sel
 
     void            enhanced        (bool);             //enhanced buffer mode
@@ -42,23 +42,23 @@ struct Spi  {
     };
     void            mode            (MODE);             //set spi mode
 
-    enum PHASE: bool { SMPMID = 0,SMPEND };
+    enum PHASE: bool { SMPMID, SMPEND };
     void            phase           (PHASE);            //sample phase bit
 
-    enum CLKEDGE : bool { LEAD = 0, TRAIL };
+    enum CLKEDGE : bool { LEAD, TRAIL };
     void            clk_edge        (CLKEDGE);          //clk edge sel
 
     void            ss              (bool);             //slave select enable
 
-    enum CLKPOL : bool { CLKH = 0, CLKL };
+    enum CLKPOL : bool { CLKH, CLKL };
     void            clk_pol         (CLKPOL);           //clock polarity
 
     void            master          (bool);             //master mode
 
-    enum TXIRQ : uint8_t { TDONE = 0, TEMPTY, THALF, TNOTFULL };
+    enum TXIRQ : uint8_t { TDONE, TEMPTY, THALF, TNOTFULL };
     void            tx_irq          (TXIRQ);            //tx irq mode
 
-    enum RXIRQ : uint8_t { REMPTY = 0, RANY, RHALF, RFULL };
+    enum RXIRQ : uint8_t { REMPTY, RANY, RHALF, RFULL };
     void            rx_irq          (RXIRQ);            //rx irq mode
 
     //spixstat
@@ -95,7 +95,7 @@ struct Spi  {
     void            audio           (bool);             //audio mode
     void            mono            (bool);             //audio mono
 
-    enum AUDMOD : uint8_t { I2S = 0, LEFT, RIGHT, PCMDSP };
+    enum AUDMOD : uint8_t { I2S, LEFT, RIGHT, PCMDSP };
     void            audio_mode      (AUDMOD);           //audio mode
 
     private:

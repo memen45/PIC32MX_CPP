@@ -318,9 +318,8 @@ int main()
     osc.tun_auto(true);                     //let sosc tune frc
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 18, 3, 9, 0, 18, 22, 0} );
+    if(dt.year == 0) Rtcc::datetime( { 18, 3, 11, 0, 9, 21, 0} );
 
-    Rtcc::boot_time = Rtcc::datetime();
     Rtcc::on(true);
 
     info.on(true);
@@ -436,8 +435,7 @@ Pmd::PMD pmd_list[] = {                      //list of modules to disable
     Pmd::USB,
     Pmd::HLVD, Pmd::CMP1, Pmd::CMP2, Pmd::CMP3,
     Pmd::I2C1, Pmd::I2C2, Pmd::I2C3,
-    Pmd::T1, Pmd::T2, Pmd::T3,
-    Pmd::END                                //need END or else bad happens
+    Pmd::T1, Pmd::T2, Pmd::T3
 };
 
 /*=============================================================================
@@ -529,7 +527,7 @@ int main(){
     //(no Osc.hpp yet, so pll output running at 24MHz, usb clock is then 12MHz)
     //just run something usb to prevent compiler from optimizing away
     //usb code, so can see if have (bad) code (compile errors)
-    UsbHandlers::init();
+    Usb::init();
 
 
     //__________________________________________________________________________
@@ -592,11 +590,11 @@ int main(){
 
     //__________________________________________________________________________
     //peripheral module disable
-    Pmd::off(pmd_list);                     //test Pmd disable (T1/2/3 disabled)
+    Pmd::off(pmd_list,sizeof(pmd_list));    //test Pmd disable (T1/2/3 disabled)
                                             //can verify T1,T2,T3 no longer work
                                             //with below enable commented out
 
-    Pmd::on(pmd_list);                      //test Pmd enable- all back on again
+    Pmd::on(pmd_list,sizeof(pmd_list));     //test Pmd enable- all back on again
 
     //__________________________________________________________________________
     //see if pps code works (does nothing)
