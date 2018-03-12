@@ -1,4 +1,5 @@
-# PIC32MX_CPPTesting C++ on PIC32MX
+# PIC32MX_CPP
+### Testing C++ on PIC32MX
 The following modules are present in the current repository:
 
 | Module | Code support for PIC32MX795F512L | tested |
