@@ -27,13 +27,13 @@ struct Adc {
 
     //adc conversion trigger source select
     enum SSRC : uint8_t {
-        SOFT = 0, INT0, TMR3, TMR1 = 5, TMR1SLEP, AUTO,
-        MCCP1, MCCP2, MCCP3, SCCP4, SCCP5, SCCP6, CLC1, CLC2
+        SOFT = 0, INT0, TMR3, CTMU, AUTO = 7,
     };
     static void         trig_sel        (SSRC);
 
-    //true = 12bit conversion, false = 10bit conversion
-    static void         mode_12bit      (bool);
+    //true = stop conversions on interrupt, 
+	//false = buffer contents overwritten by next conversion
+    static void         clr_asam      (bool);
 
     //adc sample auto start, false = wait for samp bit set
     static void         samp_auto       (bool);
@@ -51,15 +51,12 @@ struct Adc {
 
     //set Vr+/Vr- adc voltage reference
     enum VCFG : uint8_t {
-        VDD_VSS = 0, VDD_EXTN, EXTP_VSS, EXTP_EXTN
+		VDD_VSS = 0, EXTP_VSS, VDD_EXTN, EXTP_EXTN
     };
     static void         vref_cfg        (VCFG);
 
     //connect SHA inputs to negative reference for offset calibration
     static void         offset_cal      (bool);
-
-    //true = store N channel adc into buffer N, false = FIFO
-    static void         buf_reg         (bool);
 
     //enable channel scan
     static void         scan            (bool);
@@ -72,6 +69,9 @@ struct Adc {
 
     //split buffer into two halves
     static void         buf_split       (bool);
+	
+	//Alternate input for subsequent samples
+	static void			alt_input		(bool);
 
 //ADC1CON3
 
@@ -79,113 +79,87 @@ struct Adc {
     enum CLK { PBCLK = 0, FRC };
     static void         clk_src         (CLK);
 
-    //keep sampling even when samp=0
-    static void         samp_extend     (bool);
-
     //auto sample time, 1-31 Tad
     static void         samp_time       (uint8_t);
 
-    //set conversion clock time Tad, default = 4 (max needed)
-    static void         conv_time       (uint8_t = 4);
-
-//ADC1CON5
-
-    //auto scan enable
-    static void         scan_auto       (bool);
-
-    //enable low power after scan
-    static void         low_power       (bool);
-
-    //enable bandgap when adc on
-    static void         bandgap         (bool);
-
-    //auto scan interrupt modes
-    enum ASINT : uint8_t { NONE = 0, DET, COMP, DETCOMP };
-    static void         scan_autoirq    (ASINT);
-
-    //auto scan write mode
-    enum WM : uint8_t { LEGACY = 0, CONVSAV, COMPONLY };
-    static void         write_mode      (WM);
-
-    //auto scan compare mode
-    enum CM :uint8_t { LT = 0, GT, INWIN, OUTWIN };
-    static void         compare_mode    (CM);
+    //set conversion clock time Tad, default = 7 (max needed)
+    static void         conv_time       (uint8_t = 7);
 
 //ADC1CHS
 
     //adc input channel select
-    enum CH0SA : uint8_t {
+    enum CH0S : uint8_t {
         AN0 = 0, AN1, AN2, AN3, AN4, AN5, AN6, AN7,
         AN8, AN9, AN10, AN11, AN12,AN13, AN14, AN15,
-        AN16, AN17, AN18, AN19,
-        VDD = 27, VBG, AVSS, AVDD, END = 255
+		END = 255
     };
-    static void         ch_sel          (CH0SA);
+	enum CH0N : uint8_t { VREFL = 0 /*, AN1 already defined */ };
+    static void         ch_selA         (CH0S, CH0N = VREFL);
+    static void         ch_selB         (CH0S, CH0N = VREFL);
 
-//ADC1SS
+//AD1CSSL
 
     //enable adc channel scan input, one channel
-    static void         ch_scan         (CH0SA, bool);
+    static void         ch_scan         (CH0S, bool);
 
     //enable adc channel scan input, one or more channels (in array)
-    static void         ch_scan         (CH0SA*);
+    static void         ch_scan         (CH0S*);
 
     //enable adc channel scan input, manually specify channels
     static void         ch_scan         (uint32_t);
 
-//ADC1CHIT
-
-    //get channel adc compare hit bit
-    static bool         ch_hit          (CH0SA);
-
-    //get all channels adc compare hit bit
-    static uint32_t     ch_hit          ();
-
-    //minimal conversion times for frc/pbclk(24MHz) for 10/12bits
-    enum CONVTIME { FRC10BIT = 1, FRC12BIT, PBCLK10BIT, PBCLK12BIT };
 };
 
 
 /*
  misc info
 
-12bit mode
-Tad     ADC Clock Period    280ns
-Tconv   Comversion Time     14Tad
-Tpss    Sample Start Delay  1-3Tad
-Fcnv    Throughput          200ksps
-
 10bit mode
 Tad     ADC Clock Period    200ns
 Tconv   Conversion Time     12Tad
-Tpss    Sample Start Delay  1-3Tad
-Fcnv    Throughput          300ksps
+Tpss    Sample Start Delay  1Tad
+Fcnv    Throughput          400ksps 
 
+10bit mode with external Vref+/- 
+Tad		ADC Clock Period	65ns
+Tsamp	Sampling time		132ns
+Fcnv	Throughput			1Msps to 400ksps
 
-Tsrc    FastRC 8Mhz         1/8MHz  = 125ns
-Tsrc    PBclk 24MHz         1/24MHz = 41.6ns
+Tsrc    FastRC 8Mhz         1/8MHz  = 125ns (behavior with this clock source is not documented
+Tpb    PBclk 40MHz         1/40MHz = 25ns
 
-Tad =   adcs<7:0> * 2 * Tsrc
-        (adcs=0, then Tad=Tsrc)
+Tad =   (adcs<7:0> + 1) * 2 * Tpb
+        (adcs=0, then Tad = 2 * Tpb)
 
-Tsrc = 8MHz (Frc)
-adcs = 0 -> 1 * 125ns = 125ns
-adcs = 1 -> 1 * 2 * 125ns = 250ns <-min use for 10bit Frc
-adcs = 2 -> 2 * 2 * 125ns = 500ns <-min use for 12bit Frc
-adcs = 3 -> 3 * 2 * 125ns = 750ns
-adcs = 4 -> 4 * 2 * 125ns = 1000ns
-adcs = 5 -> 5 * 2 * 125ns = 1250ns
-adcs = 6 -> 6 * 2 * 125ns = 1500ns
-adcs = 255 -> 255 * 2 * 125ns = 63.750us
+Tpb = 8MHz (Frc)
+adcs = 0 -> 1 * 2 * 125ns = 250ns <-min use for 10bit 
+adcs = 1 -> 2 * 2 * 125ns = 500ns
+adcs = 2 -> 3 * 2 * 125ns = 750ns
+adcs = 3 -> 4 * 2 * 125ns = 1000ns
+adcs = 4 -> 5 * 2 * 125ns = 1250ns
+adcs = 5 -> 6 * 2 * 125ns = 1500ns
+adcs = 6 -> 7 * 2 * 125ns = 1750ns
+adcs = 255 -> 256 * 2 * 125ns = 64us
 
-Tsrc = 24MHz (PBclk max)
-adcs = 0 -> 1 * 41.6ns = 41.6ns
-adcs = 1 -> 1 * 2 * 41.6ns = 83ns
-adcs = 2 -> 2 * 2 * 41.6ns = 166ns
-adcs = 3 -> 3 * 2 * 41.6ns = 250ns <-min use for 10bit 24MHz
-adcs = 4 -> 4 * 2 * 41.6ns = 333ns <-min use for 12bit 24MHz
-adcs = 5 -> 5 * 2 * 41.6ns = 416ns
-adcs = 6 -> 6 * 2 * 41.6ns = 500ns
-adcs = 255 -> 255 * 2 * 41.6ns = 21.25us
+Tpb = 40MHz (PBclk)
+adcs = 0 -> 1 * 2 * 25ns = 50ns
+adcs = 1 -> 2 * 2 * 25ns = 100ns <-min use for 10bit 40MHz with external Vref
+adcs = 2 -> 3 * 2 * 25ns = 150ns
+adcs = 3 -> 4 * 2 * 25ns = 200ns <-min use for 10bit 40MHz
+adcs = 4 -> 5 * 2 * 25ns = 250ns
+adcs = 5 -> 6 * 2 * 25ns = 300ns
+adcs = 6 -> 7 * 2 * 25ns = 350ns
+adcs = 255 -> 256 * 2 * 25ns = 12.8us
+
+Tpb = 80MHz (PBclk max)
+adcs = 0 -> 1 * 2 * 12.5ns = 25ns
+adcs = 1 -> 2 * 2 * 12.5ns = 50ns
+adcs = 2 -> 3 * 2 * 12.5ns = 75ns <-min use for 10bit 80MHz with external Vref
+adcs = 3 -> 4 * 2 * 12.5ns = 100ns
+adcs = 4 -> 5 * 2 * 12.5ns = 125ns
+adcs = 5 -> 6 * 2 * 12.5ns = 150ns
+adcs = 6 -> 7 * 2 * 12.5ns = 175ns
+adcs = 7 -> 8 * 2 * 12.5ns = 200ns <-min use for 10bit 80MHz
+adcs = 255 -> 256 * 2 * 12.5ns = 6.4us
 
 */

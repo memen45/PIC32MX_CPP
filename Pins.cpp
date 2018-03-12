@@ -41,7 +41,7 @@ using vu32_ptr = volatile uint32_t*;
 
 // AN0/A0/RP1 format - Pins led1(A0), Pins led2(RP1, DOUT), Pins pv(AN0)
 // m = AIN,DIN,DINPU,DINPD,DINL,DOUT,DOUTL (default is AIN)
-// RPN enum encoded as 0xaaaaarrrrrppnnnn (a = ANn, r=RPn, pp=PORT, nnnn=PIN)
+// RPN enum encoded as 0xaaaacccccpppnnnn (a = ANn, c = CNn, pp = PORT, nnnn = PIN
 //=============================================================================
                     Pins::Pins          (RPN e, IOMODE m)
 //=============================================================================
@@ -82,14 +82,12 @@ using vu32_ptr = volatile uint32_t*;
     uint16_t    Pins::adcval         () const
 //=============================================================================
 {
-    Adc adc;
-    adc.mode_12bit(true);           //12bit mode
-    adc.trig_sel(adc.AUTO);         //adc starts conversion
-    adc.samp_time(31);              //max sampling time- 31Tad
-    adc.conv_time();                //if no arg,default is 4 (for 24MHz)
-    adc.ch_sel((Adc::CH0SA)m_an);   //ANn (AVss if no ANn for pin)
-    adc.on(true);
-    adc.samp(true);
+    Adc::trig_sel(Adc::AUTO);        //adc starts conversion
+    Adc::samp_time(31);              //max sampling time- 31Tad
+    Adc::conv_time(3);               //if no arg,default is 7 (for 40MHz)
+    Adc::ch_selA((Adc::CH0S)m_an);   //ANn
+    Adc::on(true);
+    Adc::samp(true);
     while(not Adc::done());         //blocking
     return Adc::read();             //buf[0]
 }
