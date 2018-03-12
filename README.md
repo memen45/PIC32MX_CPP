@@ -22,7 +22,7 @@ The following modules are present in the current repository:
 | Reg     | yes | yes |
 | Resets  | not (yet) | no |
 | Rtcc    | not (yet) | no |
-| Spi     | not (yet) | no |
+| Spi     | yes | no |
 | Sys     | yes (added support for prefetch cache and wait states) | yes |
 | Timer1  | yes | yes |
 | Timer   | yes | yes |
