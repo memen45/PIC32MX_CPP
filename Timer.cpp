@@ -2,6 +2,7 @@
 #include "Reg.hpp"
 
 enum {
+    T2CON = 0xBF800800, TMRX_SPACING = 0x80,  //spacing in words
     ON = 15,
     SIDL = 13,
     TGATE = 7,
@@ -9,11 +10,6 @@ enum {
     T32 = 3,
     TCS = 1
 };
-
-enum { T2CON = 0xBF800800, TMRX_SPACING = 0x80 }; //spacing in words
-
-using vu32ptr = volatile uint32_t*;
-
 
 //Timer23
 //=============================================================================

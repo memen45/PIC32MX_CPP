@@ -21,7 +21,7 @@ struct Adc {
 
     //adc data output format
     enum FORM : uint8_t {
-        INT16 = 0, SINT16, FR16, SFR16, INT32, SINT32, FR32, SFR32
+        INT16, SINT16, FR16, SFR16, INT32, SINT32, FR32, SFR32
     };
     static void         format          (FORM);
 
@@ -51,7 +51,7 @@ struct Adc {
 
     //set Vr+/Vr- adc voltage reference
     enum VCFG : uint8_t {
-		VDD_VSS = 0, EXTP_VSS, VDD_EXTN, EXTP_EXTN
+		VDD_VSS, EXTP_VSS, VDD_EXTN, EXTP_EXTN
     };
     static void         vref_cfg        (VCFG);
 
@@ -76,7 +76,7 @@ struct Adc {
 //ADC1CON3
 
     //set adc conversion clock source
-    enum CLK { PBCLK = 0, FRC };
+    enum CLK { PBCLK, FRC };
     static void         clk_src         (CLK);
 
     //auto sample time, 1-31 Tad
@@ -89,11 +89,11 @@ struct Adc {
 
     //adc input channel select
     enum CH0S : uint8_t {
-        AN0 = 0, AN1, AN2, AN3, AN4, AN5, AN6, AN7,
+        AN0, AN1, AN2, AN3, AN4, AN5, AN6, AN7,
         AN8, AN9, AN10, AN11, AN12,AN13, AN14, AN15,
 		END = 255
     };
-	enum CH0N : uint8_t { VREFL = 0 /*, AN1 already defined */ };
+	enum CH0N : uint8_t { VREFL /*, AN1 already defined */ };
     static void         ch_selA         (CH0S, CH0N = VREFL);
     static void         ch_selB         (CH0S, CH0N = VREFL);
 

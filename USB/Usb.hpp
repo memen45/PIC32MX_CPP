@@ -39,14 +39,14 @@ struct Usb {
 
     using flags_t = union {
         struct {
-        unsigned reset:1;
-        unsigned error:1;
-        unsigned sof:1;
-        unsigned token:1;
-        unsigned idle:1;
-        unsigned resume:1;
-        unsigned attach:1;
-        unsigned stall:1;
+        unsigned reset  :1;
+        unsigned error  :1;
+        unsigned sof    :1;
+        unsigned token  :1;
+        unsigned idle   :1;
+        unsigned resume :1;
+        unsigned attach :1;
+        unsigned stall  :1;
         };
         uint8_t all;
     };
@@ -60,14 +60,14 @@ struct Usb {
 
     using eflags_t = union {
         struct {
-        unsigned pid:1;
-        unsigned crc5:1;
-        unsigned crc16:1;
-        unsigned datsiz:1;
-        unsigned btmout:1;
-        unsigned dma:1;
+        unsigned pid    :1;
+        unsigned crc5   :1;
+        unsigned crc16  :1;
+        unsigned datsiz :1;
+        unsigned btmout :1;
+        unsigned dma    :1;
         unsigned bmatrix:1;
-        unsigned bstuff:1;
+        unsigned bstuff :1;
         };
         uint8_t all;
     };
@@ -104,10 +104,20 @@ struct Usb {
     //only valid when TOKEN flag set
     using stat_t = union {
         struct {
-        unsigned :2; unsigned eveodd:1; unsigned trx:1; unsigned endpt:4;
+            unsigned        :2;
+            unsigned eveodd :1;
+            unsigned trx    :1;
+            unsigned endpt  :4;
         };
-        struct { unsigned :2; unsigned bdidx:2; unsigned :4; };
-        struct { unsigned :2; unsigned bdn:6; };
+        struct {
+            unsigned        :2;
+            unsigned bdidx  :2;
+            unsigned        :4;
+        };
+        struct {
+            unsigned        :2;
+            unsigned bdn    :6;
+        };
         uint8_t all;
     };
 
@@ -157,17 +167,15 @@ struct Usb {
 
     static STATE state;
 
-};
-
-
-
-
-
-struct UsbHandlers {
-
+    //handlers
     static void     init                ();
     static void     detach              (void);
     static void     attach              (void);
+
 };
+
+
+
+
 
 

@@ -23,13 +23,14 @@ struct Timer1 {
 
     static void         tgate           (bool);
 
-    enum TCKPS : uint8_t { PS1 = 0, PS8, PS64, PS256 };
+    enum TCKPS : uint8_t { PS1, PS8, PS64, PS256 };
     static void         prescale        (TCKPS);
 
     static void         tsync           (bool);
 
-    //public so Osc:: can have it to backup when
-    //it calculates ext clock freq
-    enum { T1CON = 0xBF800600 };
+    //for Osc- so it can backup/restore T1CON if it needs
+    //timer check ext osc speed
+    static uint16_t     t1con           ();
+    static void         t1con           (uint16_t);
 
 };

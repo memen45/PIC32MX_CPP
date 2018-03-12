@@ -33,7 +33,7 @@ enum : uint32_t {
 enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
 
 //store boot time
-Rtcc::datetime_t Rtcc::boot_time;
+Rtcc::datetime_t Rtcc::m_boot_time;
 
 //=============================================================================
     void        Rtcc::alarm             (bool tf)
@@ -69,15 +69,19 @@ Rtcc::datetime_t Rtcc::boot_time;
     void        Rtcc::on                (bool tf)
 //=============================================================================
 {
-    if(tf and Reg::val16(RTCCON2 + 2)){     //div not set, so
-        clk_div(CLK_DIV_32KHZ);             //init ourselves
-        if(Osc::sosc()) clk_src(SOSC);      //use sosc if on
-        else clk_src(LPRC);                 //else use lprc
-        clk_pre(PRE1);                      //should be already
-    }
+    //datasheet shows DIV=0 on reset,
+    //rtcc frm shows DIV=0x3FFF- frm is correct
+    clk_div(CLK_DIV_32KHZ);             //(same as reset value)
+    clk_src(Osc::sosc() ? SOSC : LPRC); //use sosc if on
+    clk_pre(PRE1);                      //(same as reset value)
     unlock();
     Reg::setbit(RTCCON1, 1<<ON, tf);
     lock();
+    //if boot time not already recorded, store it
+    //assumes rtcc will be turned on early in startup and datetime
+    //already set (or reset was not due to power loss)
+    if(not m_boot_time.year) m_boot_time = datetime();
+    //if rtcc was reset, and no datetime set, boot_time will still be clear
 }
 
 //=============================================================================
@@ -197,6 +201,13 @@ Rtcc::datetime_t Rtcc::boot_time;
 {
     alarm_date(dt_to_date(v));
     alarm_time(dt_to_time(v));
+}
+
+//=============================================================================
+    auto        Rtcc::boot_datetime     () -> datetime_t
+//=============================================================================
+{
+    return m_boot_time;
 }
 
 

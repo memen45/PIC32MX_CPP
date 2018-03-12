@@ -42,22 +42,26 @@ enum {
     lock();
 }
 
-//array of modules to disable/enable, END is end of array
+//array of modules to disable/enable
 //=============================================================================
-    void        Pmd::off                (PMD* e)
+    void        Pmd::off                (PMD* e, uint8_t sz)
 //=============================================================================
 {
     unlock();
-    for(; *e not_eq END; e++) Reg::setbit(PMD1 + 16 * (*e / 32), (1<<(*e % 32)));
+    for(uint8_t i = 0; i < sz; i++){
+        Reg::setbit(PMD1 + 16 * (e[i] / 32), (1<<(e[i] % 32)));
+    }
     lock();
 }
 
 //=============================================================================
-    void        Pmd::on                 (PMD* e)
+    void        Pmd::on                 (PMD* e, uint8_t sz)
 //=============================================================================
 {
     unlock();
-    for(; *e not_eq END; e++) Reg::clrbit(PMD1 + 16 * (*e / 32), (1<<(*e % 32)));
+    for(uint8_t i = 0; i < sz; i++){
+        Reg::clrbit(PMD1 + 16 * (e[i] / 32), (1<<(e[i] % 32)));
+    }
     lock();
 }
 

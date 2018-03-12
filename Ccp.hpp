@@ -8,13 +8,13 @@ struct Ccp  {
 
     //instantiate Ccp with CCPn
     enum CCPX {
-        CCP1 = 0, CCP2, CCP3, CCP4, CCP5, CCP6, CCP7, CCP8, CCP9
+        CCP1, CCP2, CCP3, CCP4, CCP5, CCP6, CCP7, CCP8, CCP9
     };
     Ccp(CCPX);
 
 //CCPxCON1
 
-    enum OPOSTSRC : bool { TMRIRQ = 0, EVTTRG };
+    enum OPOSTSRC : bool { TMRIRQ, EVTTRG };
     void            outscale_src    (OPOSTSRC);
 
     void            retrigger       (bool);
@@ -44,7 +44,7 @@ struct Ccp  {
     };
     void            clk_src         (CLKSEL);
 
-    enum TMRPS : uint8_t { PS1 = 0, PS4, PS16, PS64 };
+    enum TMRPS : uint8_t { PS1, PS4, PS16, PS64 };
     void            tmr_prescale    (TMRPS);
 
     enum MODE : uint8_t {
@@ -90,14 +90,14 @@ struct Ccp  {
     };
     void            out_pins        (OUTPINS);
 
-    enum ICGSM : uint8_t { LEVEL = 0, RISEON, FALLOFF  };
+    enum ICGSM : uint8_t { LEVEL, RISEON, FALLOFF  };
     void            gate_mode       (ICGSM);
 
-    enum AUXOUT : uint8_t { OFF = 0, ROLLOVER, SIGNALOUT, CAPCOMPEVT };
+    enum AUXOUT : uint8_t { OFF, ROLLOVER, SIGNALOUT, CAPCOMPEVT };
     void            out_aux         (AUXOUT);
 
     enum ICS : uint8_t {
-        ICMX = 0, ICOMP1, ICOMP2, ICOMP3, ICLC1, ICLC2, ICLC3, ICLC4
+        ICMX, ICOMP1, ICOMP2, ICOMP3, ICLC1, ICLC2, ICLC3, ICLC4
     };
     void            cap_src         (ICS);
 
@@ -127,11 +127,11 @@ struct Ccp  {
     };
     void            out_mode        (OUTM);
 
-    enum POLARITY : bool { ACTHIGH = 0, ACTLOW };
+    enum POLARITY : bool { ACTHIGH, ACTLOW };
     void            polarity_ace    (POLARITY);
     void            polarity_bdf    (POLARITY);
 
-    enum SHUTDOWN : uint8_t { HIGHIMP = 0, INACTIVE, ACTIVE };
+    enum SHUTDOWN : uint8_t { HIGHIMP, INACTIVE, ACTIVE };
     void            shutdown_ace    (SHUTDOWN);
     void            shutdown_bdf    (SHUTDOWN);
 

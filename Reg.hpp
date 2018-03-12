@@ -52,6 +52,10 @@ SFR - kseg0 no SFR available in kseg0 		      <-kseg0 = 0
 
 */
 
+//some typdefs for general use
+using vu32ptr = volatile uint32_t*;
+using vu16ptr = volatile uint16_t*;
+using vu8ptr = volatile uint8_t*;
 
 
 //helper templates- get size in bytes of V type

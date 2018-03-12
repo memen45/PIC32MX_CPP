@@ -1,13 +1,8 @@
-/*==============================================================================
-    UNUSABLE CODE - JUST TRYING TO WORK OUT USB BY PUTTING DOWN SOME CODE
-==============================================================================*/
-
 #pragma once
 
 //USB Host
 
 #include <cstdint>
-#include "Reg.hpp"
 
 struct UsbOTG {
 

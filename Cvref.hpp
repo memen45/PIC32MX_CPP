@@ -9,7 +9,7 @@ struct Cvref {
     static void     on              (bool);
     static void     out             (bool);
 
-    enum REFSEL { NONE = 0, CVREF, AVDD };
+    enum REFSEL { NONE, CVREF, AVDD };
     static void     refsel          (REFSEL);
 
     static void     dacdat          (uint8_t);

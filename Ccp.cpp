@@ -69,9 +69,6 @@ enum : uint32_t {
     CCPXBUF = 32 //offset in words from ccp1con1
 };
 
-using vu8ptr = volatile uint8_t*;
-using vu32ptr = volatile uint32_t*;
-
 //MCCP/SCCP
 
 //=============================================================================

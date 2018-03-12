@@ -54,7 +54,6 @@ enum {
     DCHXDAT = 44
 };
 
-using vu8ptr = volatile uint8_t*;            //access reg as bytes
 
 //=============================================================================
                     Dma::Dma            (DMAX e)

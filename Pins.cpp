@@ -35,17 +35,15 @@ enum {
 
 enum : uint8_t { ACTL = 1<<2  }; //IOMODE ACTL bit (active low bit)
 
-using vu32_ptr = volatile uint32_t*;
-
 //Pins
 
-// AN0/A0/RP1 format - Pins led1(A0), Pins led2(RP1, DOUT), Pins pv(AN0)
+// PIN11/AN0/A0/RP1 format - Pins led1(A0), Pins led2(RP1, DOUT), Pins pv(AN0)
 // m = AIN,DIN,DINPU,DINPD,DINL,DOUT,DOUTL (default is AIN)
 // RPN enum encoded as 0xaaaacccccpppnnnn (a = ANn, c = CNn, pp = PORT, nnnn = PIN
 //=============================================================================
                     Pins::Pins          (RPN e, IOMODE m)
 //=============================================================================
-    : m_pt((vu32_ptr)TRISA + ((e>>PTSHIFT) bitand PTMASK) * TRISX_SPACING),
+    : m_pt((vu32ptr)TRISA + ((e>>PTSHIFT) bitand PTMASK) * TRISX_SPACING),
       m_pn(1<<(e bitand PNMASK)),
       m_lowison(m bitand ACTL),
       m_an((e>>ANSHIFT) bitand ANMASK),

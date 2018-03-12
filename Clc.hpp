@@ -7,7 +7,7 @@
 struct Clc {
 
     //instantiate Clc with CLCn
-    enum CLCX { CLC1 = 0, CLC2, CLC3, CLC4 };
+    enum CLCX { CLC1, CLC2, CLC3, CLC4 };
     Clc(CLCX);
 
     enum GXPOL { G4 = 1<<19, G3 = 1<<18, G2 = 1<<17, G1 = 1<<16 };
@@ -21,7 +21,7 @@ struct Clc {
     bool    out         ();
     void    out_inv     (bool);
 
-    enum MODE : uint8_t { ANDOR = 0, ORXOR, AND, SR, DSR, DR, JKR, LSR };
+    enum MODE : uint8_t { ANDOR, ORXOR, AND, SR, DSR, DR, JKR, LSR };
     void    mode        (MODE e);
 
     void    in_sel      (uint8_t, uint8_t);

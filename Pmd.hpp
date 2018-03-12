@@ -18,14 +18,13 @@ struct Pmd {
         SPI1 = 136, SPI2 = 137, SPI3 = 138,
         I2C1 = 144, I2C2 = 145, I2C3 = 146, USB = 152,
         RTCC = 160, REFO = 168,                                 //PMD6
-        DMA = 196,                                              //PDM7
-        END = 255 //for end of array value if using array
+        DMA = 196                                               //PDM7
     };
 
-    static void     off     (PMD);
-    static void     on      (PMD);
-    static void     off     (PMD*);
-    static void     on      (PMD*);
+    static void     off     (PMD);              //single
+    static void     on      (PMD);              //single
+    static void     off     (PMD*, uint8_t);    //array, size
+    static void     on      (PMD*, uint8_t);    //array, size
 
     private:
 

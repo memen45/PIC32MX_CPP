@@ -70,7 +70,7 @@ struct Osc {
 	static IDIVS		pll_idiv	();			//get pll input divider
 
     enum PLLMUL : uint8_t {
-        MUL15 = 0, MUL16, MUL17, MUL18, MUL19, MUL20, MUL21, MUL24
+        MUL15, MUL16, MUL17, MUL18, MUL19, MUL20, MUL21, MUL24
     };
     static PLLMUL       pll_mul     ();         //get pll multiplier
 

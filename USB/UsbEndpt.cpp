@@ -2,7 +2,7 @@
 #include "Reg.hpp"
 #include "UsbConfig.hpp"
 
-enum { U1STAT = 0xBF808640, PPBI = 1<<2 };
+enum { U1STAT = 0xBF808640, PPBI = 2 };
 
 /*______________________________________________________________________________
 
@@ -66,7 +66,7 @@ ______________________________________________________________________________*/
 uint16_t UsbEndptTRx::check()
 //=============================================================================
 {
-    bool eo = Reg::anybit(U1STAT, PPBI);//get PPBI
+    bool eo = Reg::anybit(U1STAT, 1<<PPBI);//get PPBI
     bdt_t& bd = *m_bd[eo];          //references look nicer to user
     uint16_t c = bd.count;          //get actual count rx/tx
     m_trx_count += c;               //add to total

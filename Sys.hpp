@@ -2,14 +2,12 @@
 
 #include <cstdint>
 
-class Sys {
-
-    public:
+struct Sys {
 
     //cfgcon
     //static void     bus_err     (bool);
 
-    enum BMXARB : uint8_t { CPUHIGH = 0, CPULOW, RROBIN };
+    enum BMXARB : uint8_t { CPUHIGH, CPULOW, RROBIN };
     static void     bus_mode    (BMXARB);
 
     static void     jtag        (bool);

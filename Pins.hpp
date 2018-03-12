@@ -15,7 +15,7 @@ struct Pins {
 		CNSHIFT = 7, CNMASK = 31
     };
 
-    //PIN11, A0, RP1, AN0 - use any
+    //PIN11 (physical), A0, RP1, AN0 - use any
     enum RPN : uint16_t {
         // encode as- 0xaaaacccccpppnnnn - | ANn | CNn | PORT | PIN |
         // aaaa = ANn = 0-15
@@ -23,10 +23,10 @@ struct Pins {
         // nnnn = pin = 0-15
         // ccccc = CNn = 1-21 
 
-        //pins without AN will be set to use AVss (29) as AN input
+        //pins without AN (analog in) will be set to use AVss (29) as AN input
         //(since AN0 is 0, we need something other than 0 to signify no AN for pin, so
         // we will just give it something that will result in no result if ever used
-        // by mistake)
+        // adcval() by mistake)
 
         //A0 - A-15
         A0 = 0, A1 = 1,
