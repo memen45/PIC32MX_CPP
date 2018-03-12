@@ -6,8 +6,8 @@
 
 struct Spi  {
 
-    //instantiate Comp123 with comparator number
-    enum SPIX { SPI1, SPI2, SPI3 };
+    //internal SPI register order used here
+    enum SPIX { SPI3, SPI2, SPI4, SPI1 };
     Spi(SPIX);
 
     //spixcon
@@ -26,9 +26,9 @@ struct Spi  {
     enum FRMCNT : uint8_t { CNT1, CNT2, CNT4, CNT8, CNT16, CNT32 };
     void            frame_count     (FRMCNT);           //frame sync counter
 
-    enum CLKSEL : bool { PBCLK, REFO1 };
-    void            clk_sel         (CLKSEL);           //set clock source
-    CLKSEL          clk_sel         ();                 //get clock source
+//    enum CLKSEL : bool { PBCLK, REFO1 };
+//    void            clk_sel         (CLKSEL);           //set clock source
+//    CLKSEL          clk_sel         ();                 //get clock source
 
     enum FRMEDGE : bool { B4BCLK, ATBCLK };
     void            frame_edge      (FRMEDGE);          //frame sync edge sel
@@ -64,15 +64,13 @@ struct Spi  {
     //spixstat
     uint8_t         stat_rxcount    ();                 //enhanced rx buf count
     uint8_t         stat_txcount    ();                 //enhanced tx buf count
-    bool            stat_ferr       ();                 //framing error
-    void            stat_ferrclr    ();                 //framing error clear
     bool            stat_busy       ();                 //spi busy
     bool            stat_txurun     ();                 //tx underrun error
-    bool            stat_sremty     ();                 //shift reg empty
+    bool            stat_srempty     ();                 //shift reg empty
     bool            stat_oerr       ();                 //rx overflow
     void            stat_oerrclr    ();                 //rx overflow clear
-    bool            stat_rxemty     ();                 //rx empty
-    bool            stat_txemty     ();                 //tx empty
+    bool            stat_rxempty     ();                 //rx empty
+    bool            stat_txempty     ();                 //tx empty
     bool            stat_txfull     ();                 //tx full
     bool            stat_rxfull     ();                 //rx full
 
@@ -85,18 +83,18 @@ struct Spi  {
     void            freq            (uint32_t);         //set frequency
     uint32_t        freq            ();                 //get frequency
 
-    //spixcon2
-    void            sign_ext        (bool);             //rx sign extend
-    void            irq_frmerr      (bool);             //frame error irq
-    void            irq_oflow       (bool);             //overflow error irq
-    void            irq_urun        (bool);             //underrun err irq
-    void            ign_oflow       (bool);             //ignore overflow
-    void            ign_urun        (bool);             //ignore underrun
-    void            audio           (bool);             //audio mode
-    void            mono            (bool);             //audio mono
+//    //spixcon2
+//    void            sign_ext        (bool);             //rx sign extend
+//    void            irq_frmerr      (bool);             //frame error irq
+//    void            irq_oflow       (bool);             //overflow error irq
+//    void            irq_urun        (bool);             //underrun err irq
+//    void            ign_oflow       (bool);             //ignore overflow
+//    void            ign_urun        (bool);             //ignore underrun
+//    void            audio           (bool);             //audio mode
+//    void            mono            (bool);             //audio mono
 
-    enum AUDMOD : uint8_t { I2S, LEFT, RIGHT, PCMDSP };
-    void            audio_mode      (AUDMOD);           //audio mode
+//    enum AUDMOD : uint8_t { I2S, LEFT, RIGHT, PCMDSP };
+//    void            audio_mode      (AUDMOD);           //audio mode
 
     private:
 

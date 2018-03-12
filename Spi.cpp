@@ -3,15 +3,14 @@
 #include "Reg.hpp"
 
 enum :uint32_t {
-    SPIX_SPACING = 0x40, //spacing in words
-    SPI1CON = 0xBF808100,
+    SPIX_SPACING = 0x200, //spacing in words
+    SPIXCON_BASE = 0xBF805800,      //Address for SPI3, but the others follow in memory
         FRMEN = 31,
         FRMSYNC = 30,
         FRMPOL = 29,
         MSSEN = 28,
         FRMSYPW = 27,
         FRMCNT_SHIFT = 24, FRMCNT_MASK = 7,
-        MCLKSEL = 23,
         SPIFE = 17,
         ENHBUF = 16,
         ON = 15,
@@ -24,7 +23,6 @@ enum :uint32_t {
         STXISEL_SHIFT = 2, STXISEL_MASK = 3,
         SRXISEL_SHIFT = 0, SRXISEL_MASK = 3,
     SPIXSTAT = 4, //offset from SPIXCON in words
-        FRMERR = 12,
         SPIBUSY = 11,
         SPITUR = 8,
         SRMT = 7,
@@ -35,15 +33,6 @@ enum :uint32_t {
         SPIRBF = 0,
     SPIXBUF = 8, //offset from SPIXCON in words
     SPIXBRG = 12, //offset from SPIXCON in words
-    SPIXCON2 = 16, //offset from SPIXCON in words
-        SPISGNEXT = 15,
-        FRMERREN = 12,
-        SPIROVEN = 11,
-        SPITUREN = 10,
-        IGNROV = 9,
-        IGNTUR = 8,
-        AUDEN = 7,
-        AUDOMONO = 3
 };
 
 //Spi
@@ -51,8 +40,8 @@ enum :uint32_t {
 //=============================================================================
                 Spi::Spi        (SPIX e)
 //=============================================================================
-    : m_spix_con((vu32ptr)SPI1CON + (e * SPIX_SPACING)),
-      m_spixbuf(*((vu32ptr)SPI1CON + (e * SPIX_SPACING) + SPIXBUF)),
+    : m_spix_con((vu32ptr)SPIXCON_BASE + (e * SPIX_SPACING)),
+      m_spixbuf(*((vu32ptr)SPIXCON_BASE + (e * SPIX_SPACING) + SPIXBUF)),
       m_spix_freq(0)
 {
 }
@@ -99,24 +88,6 @@ enum :uint32_t {
 {
     Reg::clrbit(m_spix_con, FRMCNT_MASK<<FRMCNT_SHIFT);
     Reg::setbit(m_spix_con, e<<FRMCNT_SHIFT);
-}
-
-//=============================================================================
-    void        Spi::clk_sel            (CLKSEL e)
-//=============================================================================
-{
-    bool ison = Reg::anybit(m_spix_con, ON);
-    on(false);
-    Reg::setbit(m_spix_con, 1<<MCLKSEL, e);
-    freq(); //recaluclate
-    on(ison);
-}
-
-//=============================================================================
-    auto        Spi::clk_sel            () -> CLKSEL
-//=============================================================================
-{
-    return (CLKSEL)Reg::anybit(m_spix_con, 1<<MCLKSEL);
 }
 
 //=============================================================================
@@ -218,20 +189,6 @@ enum :uint32_t {
 }
 
 //=============================================================================
-    bool        Spi::stat_ferr          ()
-//=============================================================================
-{
-    return Reg::anybit(m_spix_con + SPIXSTAT, 1<<FRMERR);
-}
-
-//=============================================================================
-    void        Spi::stat_ferrclr       ()
-//=============================================================================
-{
-    Reg::clrbit(m_spix_con + SPIXSTAT, 1<<FRMERR);
-}
-
-//=============================================================================
     bool        Spi::stat_busy          ()
 //=============================================================================
 {
@@ -246,7 +203,7 @@ enum :uint32_t {
 }
 
 //=============================================================================
-    bool        Spi::stat_sremty        ()
+    bool        Spi::stat_srempty        ()
 //=============================================================================
 {
     return Reg::anybit(m_spix_con + SPIXSTAT, 1<<SRMT);
@@ -267,14 +224,14 @@ enum :uint32_t {
 }
 
 //=============================================================================
-    bool        Spi::stat_rxemty        ()
+    bool        Spi::stat_rxempty        ()
 //=============================================================================
 {
     return Reg::anybit(m_spix_con + SPIXSTAT, 1<<SPIRBE);
 }
 
 //=============================================================================
-    bool        Spi::stat_txemty        ()
+    bool        Spi::stat_txempty        ()
 //=============================================================================
 {
     return Reg::anybit(m_spix_con + SPIXSTAT, 1<<SPITBE);
@@ -310,8 +267,8 @@ enum :uint32_t {
     uint32_t clk;
 //   if(clk_sel() == REFO1) clk = Osc::refo_freq();
  //   else 
-    clk = Osc::sysclk();
-    uint16_t brg = (2 * v / clk) - 1;
+    clk = Osc::pbclk();
+    uint16_t brg = (clk / (2 * v)) - 1;
     brg and_eq 0x1ff;
     baud(brg);
     freq();
@@ -326,83 +283,9 @@ enum :uint32_t {
     uint32_t clk;
 //    if(clk_sel() == REFO1) clk = Osc::refo_freq();
 //    else 
-    clk = Osc::sysclk();
-    m_spix_freq = clk / (2 * Reg::val16(m_spix_con + SPIXBRG) + 1);
+    clk = Osc::pbclk();
+    m_spix_freq = clk / (2 * (Reg::val16(m_spix_con + SPIXBRG) + 1));
     return m_spix_freq;
-}
-
-//spixcon2
-//=============================================================================
-    void        Spi::sign_ext           (bool tf)
-//=============================================================================
-{
-    Reg::setbit(m_spix_con + SPIXCON2, 1<<SPISGNEXT, tf);
-}
-
-//=============================================================================
-    void        Spi::irq_frmerr         (bool tf)
-//=============================================================================
-{
-    Reg::setbit(m_spix_con + SPIXCON2, 1<<FRMERREN, tf);
-}
-
-//=============================================================================
-    void        Spi::irq_oflow          (bool tf)
-//=============================================================================
-{
-    Reg::setbit(m_spix_con + SPIXCON2, 1<<SPIROVEN, tf);
-}
-
-//=============================================================================
-    void        Spi::irq_urun           (bool tf)
-//=============================================================================
-{
-    Reg::setbit(m_spix_con + SPIXCON2, 1<<SPITUREN, tf);
-}
-
-//=============================================================================
-    void        Spi::ign_oflow          (bool tf)
-//=============================================================================
-{
-    Reg::setbit(m_spix_con + SPIXCON2, 1<<IGNROV, tf);
-}
-
-//=============================================================================
-    void        Spi::ign_urun           (bool tf)
-//=============================================================================
-{
-    Reg::setbit(m_spix_con + SPIXCON2, 1<<IGNTUR, tf);
-}
-
-//=============================================================================
-    void        Spi::audio              (bool tf)
-//=============================================================================
-{
-    bool ison = Reg::anybit(m_spix_con, 1<<ON);
-    on(false);
-    Reg::setbit(m_spix_con + SPIXCON2, 1<<AUDEN, tf);
-    on(ison);
-}
-
-//=============================================================================
-    void        Spi::mono               (bool tf)
-//=============================================================================
-{
-    bool ison = Reg::anybit(m_spix_con, 1<<ON);
-    on(false);
-    Reg::setbit(m_spix_con + SPIXCON2, 1<<AUDOMONO, tf);
-    on(ison);
-}
-
-//=============================================================================
-    void        Spi::audio_mode         (AUDMOD e)
-//=============================================================================
-{
-    bool ison = Reg::anybit(m_spix_con, 1<<ON);
-    on(false);
-    Reg::clrbit(m_spix_con + SPIXCON2, PCMDSP);
-    Reg::setbit(m_spix_con + SPIXCON2, e);
-    on(ison);
 }
 
 //spixbuf
