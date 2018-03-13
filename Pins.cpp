@@ -82,8 +82,8 @@ enum : uint8_t { ACTL = 1<<2  }; //IOMODE ACTL bit (active low bit)
 {
     Adc::trig_sel(Adc::AUTO);        //adc starts conversion
     Adc::samp_time(31);              //max sampling time- 31Tad
-    Adc::conv_time(3);               //if no arg,default is 7 (for 40MHz)
-    Adc::ch_selA((Adc::CH0S)m_an);   //ANn
+    Adc::conv_time(3);               //if no arg,default is 7 (for 80MHz)
+    Adc::ch_sel((Adc::CH0S)m_an);   //ANn
     Adc::on(true);
     Adc::samp(true);
     while(not Adc::done());         //blocking

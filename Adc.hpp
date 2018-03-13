@@ -88,14 +88,14 @@ struct Adc {
 //ADC1CHS
 
     //adc input channel select
-    enum CH0S : uint8_t {
+    enum CH0S : uint32_t {
         AN0, AN1, AN2, AN3, AN4, AN5, AN6, AN7,
         AN8, AN9, AN10, AN11, AN12,AN13, AN14, AN15,
 		END = 255
     };
-	enum CH0N : uint8_t { VREFL /*, AN1 already defined */ };
-    static void         ch_selA         (CH0S, CH0N = VREFL);
-    static void         ch_selB         (CH0S, CH0N = VREFL);
+	enum CH0N : uint32_t { VREFL /*, AN1 already defined as 1 */ }; /* Negative reference select */
+    enum SAMPLE : bool { A, B };                                    /* Choose to write A or B sample */
+    static void         ch_sel         (CH0S, CH0N = VREFL, SAMPLE = A);
 
 //AD1CSSL
 

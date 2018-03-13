@@ -26,10 +26,9 @@ enum {
         ADRC = 15,
         SAMC_SHIFT = 8, SAMC_MASK = 31,
     ADC1CHS = 0xBF809040,
-		CH0NB = 31,
-		CH0SB_SHIFT = 24, CH0SB_MASK = 15,
+        CH0NB = 31,
 		CH0NA = 23,
-		CH0SA_SHIFT = 16, CH0SA_MASK = 15,
+		CH0SA_SHIFT = 16, CH0SB_SHIFT = 24, CH0S_MASK = 15,
 		
     ADC1CSS = 0xBF809050
 };
@@ -189,17 +188,10 @@ enum {
 
 //ADC1CHS
 //=============================================================================
-    void            Adc::ch_selA         (CH0S pos, CH0N neg)
+    void            Adc::ch_sel         (CH0S pos, CH0N neg, SAMPLE sam)
 //=============================================================================
 {
-    Reg::val(ADC1CHS, (pos << CH0SA_SHIFT) bitand (neg << CH0NA));
-}
-
-//=============================================================================
-    void            Adc::ch_selB         (CH0S pos, CH0N neg)
-//=============================================================================
-{
-    Reg::val(ADC1CHS, (pos << CH0SB_SHIFT) bitand (neg << CH0NB));
+    Reg::val(ADC1CHS, (pos << (sam ? CH0SB_SHIFT : CH0SA_SHIFT)) bitor (neg << sam ? CH0NB : CH0NA));
 }
 
 //ADC1SS
