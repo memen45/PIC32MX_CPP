@@ -35,11 +35,9 @@ struct Spi  {
 
     void            enhanced        (bool);             //enhanced buffer mode
     void            on              (bool);             //spi on/off
+    void            dis_sdo         (bool);             //true: disable sdo pin
 
-    enum MODE : uint8_t {
-        MODE8 = 0, MODE16, MODE32,
-        AMODE1616 = 0, AMODE1632, AMODE3232, AMODE2432
-    };
+    enum MODE : uint8_t { MODE8 = 0, MODE16, MODE32 };
     void            mode            (MODE);             //set spi mode
 
     enum PHASE: bool { SMPMID, SMPEND };
@@ -50,7 +48,7 @@ struct Spi  {
 
     void            ss              (bool);             //slave select enable
 
-    enum CLKPOL : bool { CLKH, CLKL };
+    enum CLKPOL : bool { CLKH = false, CLKL };
     void            clk_pol         (CLKPOL);           //clock polarity
 
     void            master          (bool);             //master mode
@@ -82,19 +80,6 @@ struct Spi  {
     void            baud            (uint16_t);         //set baud
     void            freq            (uint32_t);         //set frequency
     uint32_t        freq            ();                 //get frequency
-
-//    //spixcon2
-//    void            sign_ext        (bool);             //rx sign extend
-//    void            irq_frmerr      (bool);             //frame error irq
-//    void            irq_oflow       (bool);             //overflow error irq
-//    void            irq_urun        (bool);             //underrun err irq
-//    void            ign_oflow       (bool);             //ignore overflow
-//    void            ign_urun        (bool);             //ignore underrun
-//    void            audio           (bool);             //audio mode
-//    void            mono            (bool);             //audio mono
-
-//    enum AUDMOD : uint8_t { I2S, LEFT, RIGHT, PCMDSP };
-//    void            audio_mode      (AUDMOD);           //audio mode
 
     private:
 
