@@ -129,22 +129,19 @@ enum {
 
 //init list (array) of irq's
 //=============================================================================
-    void        Irq::init               (irq_list_t* arr)
+    void        Irq::init               (irq_list_t* arr, uint8_t sz)
 //=============================================================================
 {
-    for(; arr->irqvn < END; arr++){
-        init(arr->irqvn, arr->p, arr->s, arr->en);
-    }
+    for(; sz; arr++, sz--) init(arr->irqvn, arr->p, arr->s, arr->en);
 }
 
-//priority shadow set, 0 or 1
-//pri = 1-7, tf =0,1 (0=normal, 1=shadow)
-//pri is masked to 0-7
-//pri val of 0 will set/clr SS0- no harm as not using (single vector ss)
+//priority shadow set (there is only 1 extra in pic32mm)
+//set specified priority (1-7) to use shadow register set
+//priority values of 0 will disable shadow register set
 //=============================================================================
-    void        Irq::shadow_set         (uint8_t pri, bool tf)
+    void        Irq::shadow_set         (uint8_t pri)
 //=============================================================================
 {
-    pri and_eq 7; pri <<= 2; //0*4=0 1*4=4, 7*4=28
-    Reg::setbit(PRISS, 1<<pri, tf);
+    uint32_t p = (pri and_eq 7)*4; //p makes sure Reg::val uses 32bit version
+    Reg::val(PRISS, p ? 1<<p : 0); //0=all clear, else single bit set
 }

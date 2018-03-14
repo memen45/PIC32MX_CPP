@@ -97,7 +97,6 @@ struct Usb {
         PENDING = 1<<7, SLEEPGUARD = 1<<4, BUSY = 1<<3, SUSPEND = 1<<1,
         USBPWR = 1<<0
     };
-
     static bool             power               (POWER);
     static void             power               (POWER, bool);
 

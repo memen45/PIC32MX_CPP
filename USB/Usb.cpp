@@ -10,6 +10,8 @@
 #include "UsbConfig.hpp"
 #include "UsbBuf.hpp"
 
+#include <cstdio>
+
 //registers - all registers use only first 8bits
 enum {
     U1PWRC = 0xBF808480,
@@ -247,6 +249,8 @@ Usb::STATE Usb::state = Usb::DETACHED;
     ir.on(ir.USB, false);       //all usb irqs off
     while(u.power(u.BUSY));     //wait for busy bit to clear first
     u.power(u.USBPWR, false);   //usb module off
+    u.flags_clr(u.ALLFLAGS);    //clear all flags
+    u.flags_clr(u.ALLEFLAGS);   //clear all eflags
 
     u.state = u.DETACHED;
 
@@ -255,6 +259,8 @@ Usb::STATE Usb::state = Usb::DETACHED;
     //if was a usb reset that caused the attach function to run (and this)
     //then the usb host already is in reset and a quick attach will cause no
     //problems (I think that's correct)
+
+printf("USB::detach done\r\n");
 }
 
 
@@ -279,10 +285,10 @@ Usb::STATE Usb::state = Usb::DETACHED;
     u.irqs(u.RESET); // only looking for reset first
     //u.irqs(u.STALL|u.IDLE|u.TOKEN|u.SOF|u.ERROR|u.RESET);
     //u.eirqs(u.BSTUFF|u.BTMOUT|u.DATSIZ|u.CRC16|u.CRC5|u.PID);
-    ir.init(ir.USB, UsbConfig::usb_irq_pri, UsbConfig::usb_irq_subpri, true);
 
     u.state = u.ATTACHED;
-
+    ir.init(ir.USB, UsbConfig::usb_irq_pri, UsbConfig::usb_irq_subpri, true);
+    
     u.control(u.USBEN, true);       //enable usb
 
     //isr takes over
@@ -294,6 +300,7 @@ Usb::STATE Usb::state = Usb::DETACHED;
     void            Usb::init           ()
  //=============================================================================
  {
+printf("USB::init:\r\n");
     UsbConfig::vbus_pin.digital_in();   //vbus/rb6 to input
     UsbConfig::vbus_pin.pulldn(true);   //pulldown when no vbus keeps pin low
     attach();                           //init all things
@@ -305,6 +312,7 @@ Usb::STATE Usb::state = Usb::DETACHED;
     ISR(USB)
 //=============================================================================
 {
+printf("USB ISR> ");
     Usb u; Irq ir;                  // u. for Usb:: , ir. for Irq::
     static Usb::STATE last_state;   //keep track of usb state for resumes
 
@@ -326,6 +334,9 @@ Usb::STATE Usb::state = Usb::DETACHED;
     //shouldn't happen, but check anyway to make sure we stay inside
     //our ep array
     if(stat.endpt > UsbConfig::last_endp) return;
+
+printf("flags: %u  eflags: %u  stat: %u  state: %u  endpoint: %u\r\n",
+        flags.all, eflags.all, stat.all, u.state, stat.endpt);
 
     //nested function, check if need to suspend (idle detected >3ms)
     //if go SUSPENDED, all flags will be cleared and only a resume
@@ -393,6 +404,8 @@ Usb::STATE Usb::state = Usb::DETACHED;
             return;
     }
 
+    printf("ISR after switch...\r\n");
+
     //DEFAULT, ADDRESS, or CONFIGURED state
     //now we can check flags and do important stuff
     if(flags.error){
@@ -406,6 +419,7 @@ Usb::STATE Usb::state = Usb::DETACHED;
 
     //and here we go to work moving bytes
     if(flags.token){
+        printf("ISR calling token...\r\n");
         UsbConfig::endpoints[stat.endpt].token((uint8_t)stat.bdidx); //call endpoint
     }
 

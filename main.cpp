@@ -30,9 +30,6 @@
 #include "Rtcc.hpp"
 #include "Irq.hpp"
 
-//include just to get usb stuff to compile
-#include "Usb.hpp"
-
 
 //svg colors for rgb led
 const uint8_t svg[][3]{
@@ -318,7 +315,7 @@ int main()
     osc.tun_auto(true);                     //let sosc tune frc
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 18, 3, 11, 0, 9, 21, 0} );
+    if(dt.year == 0) Rtcc::datetime( { 18, 3, 14, 0, 17, 40, 0} );
 
     Rtcc::on(true);
 
@@ -388,7 +385,7 @@ Pins& led2 = leds[4];
 /*=============================================================================
  Switches - all in array
 =============================================================================*/
-Pins sw[] = {                   //true=lowison
+Pins sw[] = {
     { Pins::B9,  Pins::INPU }, //SW1 (rotate delays))
     { Pins::C10, Pins::INPU }, //SW2 cp0 irq blink rate++
     { Pins::C4,  Pins::INPU }  //SW3 cp0 irq blink rate--
@@ -416,7 +413,6 @@ Timer23 timer3(Timer23::TMR3);
 
 /*=============================================================================
  Irq's
- (letting USB code take care of setting up/enabling USB irq)
 =============================================================================*/
 Irq::irq_list_t irqlist[] = {               //list of irq's to init/enable
     //vector#           pri sub enable
@@ -424,8 +420,7 @@ Irq::irq_list_t irqlist[] = {               //list of irq's to init/enable
     { Irq::TIMER_2,     1,  0,  true },
     { Irq::TIMER_3,     1,  0,  true },
     { Irq::CORE_TIMER,  5,  0,  true },
-    { Irq::RTCC,        1,  0,  true },
-    { Irq::END }                            //need END or else bad happens
+    { Irq::RTCC,        1,  0,  true }
 };
 
 /*=============================================================================
@@ -643,8 +638,8 @@ int main(){
 
     //__________________________________________________________________________
     //irq's init/enable
-    Irq::init(irqlist);                     //init all irq's
-    Irq::shadow_set(5, 1);                  //priority5 (usb) using shadow set
+    Irq::init(irqlist,sizeof(irqlist)/sizeof(irqlist[0])); //init all irq's
+    Irq::shadow_set(5);                     //priority5 (usb) using shadow set
     Irq::global(true);                      //global irq enable
 
     //__________________________________________________________________________

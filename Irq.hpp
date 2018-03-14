@@ -58,8 +58,7 @@ struct Irq {
         PERFORMANCE_COUNTER = 95,
         //96
         ECCSB_ERR = 97,
-        DMA0 = 98, DMA1, DMA2, DMA3 = 101,
-        END
+        DMA0 = 98, DMA1, DMA2, DMA3 = 101
     };
     static void     flag_clr        (IRQ_VN);
     static bool     flag            (IRQ_VN);
@@ -73,9 +72,9 @@ struct Irq {
         uint8_t s;      //sub-priority
         bool en;        //enable
     };
-    static void     init            (irq_list_t*);
+    static void     init            (irq_list_t*, uint8_t);
 
-    static void     shadow_set      (uint8_t, bool);
+    static void     shadow_set      (uint8_t);
 
 };
 

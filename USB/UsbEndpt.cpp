@@ -1,6 +1,9 @@
 #include "UsbEndpt.hpp"
 #include "Reg.hpp"
 #include "UsbConfig.hpp"
+#include "UsbDescriptors.hpp"
+
+#include <cstdio>
 
 enum { U1STAT = 0xBF808640, PPBI = 2 };
 
@@ -185,11 +188,11 @@ UsbEndpt::UsbEndpt(uint8_t n, TR tr, uint16_t max) :
 //=============================================================================
     m_ep_n(n&15),
     m_ep_trx(tr),
-    m_bd{&m_bdt[n*4],&m_bdt[n*4+1],&m_bdt[n*4+2],&m_bdt[n*4+3]},
-    m_ep_reg((volatile uint8_t*)U1EP0+n*U1EP_SPACING),
+    m_bd{&m_bdt[n*4], &m_bdt[n*4+1], &m_bdt[n*4+2], &m_bdt[n*4+3]},
+    m_ep_reg((volatile uint8_t*)U1EP0 + n*U1EP_SPACING),
     m_setup_pkt{0},
     m_setup_stage(COMPLETE),
-    m_rxbuf{tr&RX?UsbBuf::get64():0,tr&RX?UsbBuf::get64():0},
+    m_rxbuf{tr&RX ? UsbBuf::get64() : 0, tr&RX ? UsbBuf::get64() : 0},
     m_RX(&m_bdt[n*4], tr bitand RX ? max : 0),
     m_TX(&m_bdt[n*4+2], tr bitand TX ? max : 0)
 {
@@ -203,8 +206,8 @@ void UsbEndpt::deinit()
 //=============================================================================
 {
     epreg(0);
-    UsbBuf::release((uint8_t*)m_rxbuf[0]);
-    UsbBuf::release((uint8_t*)m_rxbuf[1]);
+    UsbBuf::release(m_rxbuf[0]);
+    UsbBuf::release(m_rxbuf[1]);
     m_TX.stop();
     m_RX.stop();
 }
@@ -307,6 +310,8 @@ void UsbEndpt::setup_token()
 //=============================================================================
 {
 
+printf("setup token: %u\r\n",m_setup_pkt.bRequest);
+
     bool dir = m_setup_pkt.dir;
     //uint8_t typ = m_setup_pkt.type;
     //uint8_t recip = m_setup_pkt.recip;
@@ -324,7 +329,8 @@ void UsbEndpt::setup_token()
             break;
         //case UsbCh9::SET_ADDRESS:
             //do after status
-            //break;
+            Usb::dev_addr(m_setup_pkt.wValue); //do now, see what happens
+            break;
         case UsbCh9::SET_CONFIGURATION:
             //m_setup_pkt.wValue
             break;
@@ -336,7 +342,15 @@ void UsbEndpt::setup_token()
             m_tx_ptr->buf[1] = 0;
             break;
         case UsbCh9::GET_DESCRIPTOR:
-            //
+            //m_setup_pkt.wValue
+            //need more than 64bytes for config descriptor
+            UsbBuf::release(m_tx_ptr);
+            m_tx_ptr = (UsbBuf::buffer64_t*)UsbBuf::get1024();
+            UsbDescriptors::get(m_setup_pkt.wValue, *m_tx_ptr);
+            if(not m_tx_ptr->status){ //failed
+                UsbBuf::release(m_tx_ptr); //release buffer
+                return; //just return
+            }
             break;
         case UsbCh9::SET_DESCRIPTOR:
             //
@@ -353,12 +367,19 @@ void UsbEndpt::setup_token()
         m_TX.start(0,0,1);          //set for 0byte status
     } else if(dir == IN) {
         //need to check buffer size vs wLength
-        //assume <= 64 for now
-        m_TX.start((uint8_t*)m_tx_ptr, m_setup_pkt.wLength, 1); //d01=1
+        //if we have more than requested, only do requested amount
+        //else if we have less than requested only do what we have
+        //TODO: also check if we have less than requested and our amount
+        //is same as size of endpoint packet, then we need to terminate with 0
+        //length packet
+        if(m_tx_ptr->status > m_setup_pkt.wLength){
+            m_tx_ptr->status = m_setup_pkt.wLength;
+        }
+        m_TX.start(m_tx_ptr->buf, m_tx_ptr->status, 1); //d01=1
     } else {
         //need to check buffer size vs wLength
         //assume <= 64 for now
-        m_RX.start((uint8_t*)m_rxbuf[0], m_setup_pkt.wLength, 1); //d01=1
+        m_RX.start(m_rxbuf[0]->buf, m_setup_pkt.wLength, 1); //d01=1
     }
 
     //if no data stage,
@@ -375,7 +396,7 @@ void UsbEndpt::in_token()
 {
     if(m_setup_stage == STATUS){
         m_setup_stage = COMPLETE;
-        UsbBuf::release((uint8_t*)m_tx_ptr);
+        UsbBuf::release(m_tx_ptr);
         m_tx_ptr = 0;
     }
     if(m_setup_stage == IN){
@@ -395,7 +416,7 @@ void UsbEndpt::out_token()
 {
     if(m_setup_stage == STATUS){
         m_setup_stage = COMPLETE;
-        UsbBuf::release((uint8_t*)m_tx_ptr);
+        UsbBuf::release((void*)m_tx_ptr);
         m_tx_ptr = 0;
         return;
     }
