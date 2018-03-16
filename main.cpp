@@ -303,8 +303,16 @@ struct Led12 {
 
 };
 
+extern "C" {
+#include "usb.h"
+}
+
+
 int main()
 {
+
+
+
     //just get/store resets cause (not used here,though)
     Resets::cause();
 
@@ -315,7 +323,7 @@ int main()
     osc.tun_auto(true);                     //let sosc tune frc
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 18, 3, 14, 0, 17, 40, 0} );
+    if(dt.year == 0) Rtcc::datetime( { 18, 3, 15, 0, 22, 50, 0} );
 
     Rtcc::on(true);
 
@@ -323,11 +331,36 @@ int main()
     cls(); //cls
     cursor(false); //hide cursor
 
+
+Delay::wait_s(2);
+Irq::init(Irq::USB, 1, 0, false);
+USBDeviceInit();
+USBDeviceAttach();
+Irq::global(true);
+
+
+#include <stdio.h>
+
+
+
+
+
     Rgb rgb;
     Led12 led12;
+    Delay dly;
+    dly.set_ms(100);
 
-    for(;;){
+    for(uint32_t i = 0;;i++){
         Wdt::reset(), led12.update(), rgb.update();
+
+        if(USBUSARTIsTxTrfReady() && dly.expired())
+        {
+            char data[32];
+            snprintf(data, 32, "%08X ",  USBGet1msTickCount());
+            putsUSBUSART(data);
+            dly.restart();
+        }
+        CDCTxService();
     }
 }
 

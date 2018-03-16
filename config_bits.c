@@ -1,4 +1,3 @@
-
 // PIC32MM0256GPM064 Configuration Bit Settings
 
 // 'C' source line config statements

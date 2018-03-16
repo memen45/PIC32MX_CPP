@@ -74,12 +74,10 @@ const uint8_t Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
     void            Osc::clk_src        (CNOSC e)
 //=============================================================================
 {
-    //IDSTAT irstat = unlock_irq();
     uint8_t irstat = Sys::unlock_wait();
     Reg::val(OSCCON + 1, e);
     Reg::setbit(OSCCON, 1<<OSWEN);
     while(Reg::anybit(OSCCON, 1<<OSWEN));
-    //lock_irq(irstat);
     Sys::lock(irstat);
     m_sysclk = 0;
     sysclk();

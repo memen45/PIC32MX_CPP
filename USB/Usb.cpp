@@ -288,7 +288,7 @@ printf("USB::detach done\r\n");
 
     u.state = u.ATTACHED;
     ir.init(ir.USB, UsbConfig::usb_irq_pri, UsbConfig::usb_irq_subpri, true);
-    
+
     u.control(u.USBEN, true);       //enable usb
 
     //isr takes over
@@ -343,7 +343,7 @@ printf("flags: %u  eflags: %u  stat: %u  state: %u  endpoint: %u\r\n",
     //or reset will get us going again (we were idle for a while so
     //nothing going on, so safe to clear all flags)
     auto _is_idle = [ & ](){
-        if (flags.idle == 0) return false;
+        if (flags.all != u.IDLE) return false;
         last_state = u.state;               //save state for resume
         u.state = u.SUSPENDED;              //now in SUSPENDED state
         u.flags_clr(u.ALLFLAGS);            //clear flags
@@ -368,7 +368,7 @@ printf("flags: %u  eflags: %u  stat: %u  state: %u  endpoint: %u\r\n",
     auto _default = [ & ](){
         u.flags_clr(u.ALLFLAGS);            //clear flags
         u.eflags_clr(u.ALLEFLAGS);          //clear flags
-        u.irqs(u.STALL|u.IDLE|u.TOKEN|u.SOF|u.ERROR|u.RESET);
+        u.irqs(u.STALL|u.IDLE|u.TOKEN|/*u.SOF|*/u.ERROR|u.RESET);
         u.eirqs(u.BSTUFF|u.BTMOUT|u.DATSIZ|u.CRC16|u.CRC5|u.PID);
     };
 
