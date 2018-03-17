@@ -1,7 +1,5 @@
 #include "UsbDescriptors.hpp"
 #include "UsbCh9.hpp"
-#include "UsbBuf.hpp"
-
 
 //CDC Demo
 const UsbCh9::DeviceDescriptor_t device = {
@@ -29,10 +27,10 @@ const uint8_t config1[] = {
     //interface0
     9, UsbCh9::INTERFACE, 0, 0, 0, 2, 2, 1, 0,
     //cdc descriptors
-    5, 0x24, 0, 0x10, 0x01,     //cdc header
-    4, 0x24, 2, 2,              //acm, the last 2 is support line requests only
-    5, 0x24, 6, 0, 1,           //union comm id=0, data id=1
-    5, 0x24, 1, 0, 1,            //call management
+    5, 36, 0, 16, 1,        //cdc header
+    4, 36, 2, 2,            //acm, the last 2 is support line requests only
+    5, 36, 6, 0, 1,         //union comm id=0, data id=1
+    5, 36, 1, 0, 1,         //call management
     //endpoint  //8,0 = 0x0008
     7, UsbCh9::ENDPOINT, UsbCh9::IN1, UsbCh9::INTERRUPT, 8, 0, 2,
     //interface1
@@ -54,45 +52,52 @@ const char* strings[] = {
 
 
 
+//private
 
-void get_device(UsbBuf::buffer64_t& buf){
-    if(buf.buf_size < device.bLength) return;
+//always 18bytes
+uint16_t get_device(uint8_t* buf, uint16_t sz){
+    if(sz < device.bLength) return 0;
     const uint8_t* dev = (const uint8_t*)&device;
-    for(; buf.status < device.bLength; buf.status++){
-        buf.buf[buf.status] = *dev++;
-    }
+    uint16_t i = 0;
+    for(; i < device.bLength; i++) buf[i] = *dev++;
+    return i;
 }
 
-void get_config(UsbBuf::buffer64_t& buf, uint8_t idx){
-    if(idx != 1 or buf.buf_size < sizeof(config1)) return;
+//could be >255 bytes
+uint16_t get_config(uint8_t* buf, uint16_t sz, uint8_t idx){
+    if(idx != 1 or sz < sizeof(config1)) return 0;
     uint8_t* cfg = (uint8_t*)config1;
-    for(;buf.status < sizeof(config1); buf.status++){
-        buf.buf[buf.status] = *cfg++;
-    }
-    buf.buf[2] = buf.status; //fill in total config size
-    buf.buf[3] = buf.status>>8;
+    uint16_t i = 0;
+    for(; i < sizeof(config1); i++) buf[i] = *cfg++;
+    buf[2] = i; //fill in total config size
+    buf[3] = i>>8; //upper byte
+    return i;
 }
 
-void get_string(UsbBuf::buffer64_t& buf, uint8_t idx){
-    if(idx > sizeof(strings)) return;
+//up to 255bytes
+uint16_t get_string(uint8_t* buf, uint16_t sz, uint8_t idx){
+    if(idx > sizeof(strings)) return 0;
     const char* str = strings[idx];
-    buf.buf[1] = UsbCh9::STRING; //type
-    uint8_t i = 0;
-    for(; *str && i < buf.buf_size-1; i += 2){
-        buf.buf[i] = *str++;
-        buf.buf[i+1] = 0; //wide char
+    buf[1] = UsbCh9::STRING; //type
+    uint16_t i = 0;
+    for(; *str && i < sz-1; i += 2){
+        buf[i] = *str++;
+        buf[i+1] = 0; //wide char
     }
-    buf.buf[0] = i; //fill in string length
-    buf.status = *str ? 0 : i; //if string too long, return 0
+    buf[0] = i; //fill in string length (max 255)
+    //string > 255chars, or buffer too small, return 0, else string size
+    return (*str || i > 255) ? 0 : i;
 }
+
+//public
 
 //m_setup_pkt.wValue high=descriptor type, low=index
 //device=1, config=2, string=3
-void UsbDescriptors::get(uint16_t wValue, UsbBuf::buffer64_t& buf){
+uint16_t UsbDescriptors::get(uint16_t wValue, uint8_t* buf, uint16_t sz){
     uint8_t idx = wValue;
     uint8_t typ = wValue>>8;
-    buf.status = 0; //assume failure
-    if(typ == 1){ get_device(buf); }
-    if(typ == 2){ get_config(buf, idx); }
-    if(typ == 3){ get_string(buf, idx); }
+    if(typ == 1){ return get_device(buf, sz); }
+    if(typ == 2){ return get_config(buf, sz, idx); }
+    if(typ == 3){ return get_string(buf, sz, idx); }
+    return 0;
 }

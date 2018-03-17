@@ -14,7 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-To request to license the code under the MLA license (www.microchip.com/mla_license), 
+To request to license the code under the MLA license (www.microchip.com/mla_license),
 please contact mla_licensing@microchip.com
 *******************************************************************************/
 //DOM-IGNORE-END
@@ -48,8 +48,7 @@ please contact mla_licensing@microchip.com
  *******************************************************************/
 bool USER_USB_CALLBACK_EVENT_HANDLER(USB_EVENT event, void *pdata, uint16_t size)
 {
-    switch( (int) event )
-    {
+    switch( (int) event ){
         case EVENT_TRANSFER:
             break;
 
@@ -67,7 +66,7 @@ bool USER_USB_CALLBACK_EVENT_HANDLER(USB_EVENT event, void *pdata, uint16_t size
 
         case EVENT_RESUME:
             //Call the hardware platform specific resume from suspend handler (ex: to
-            //restore I/O pins to higher power states if they were changed during the 
+            //restore I/O pins to higher power states if they were changed during the
             //preceding SYSTEM_Initialize(SYSTEM_STATE_USB_SUSPEND) call at the start
             //of the suspend condition.
             break;

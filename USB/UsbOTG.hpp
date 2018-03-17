@@ -35,7 +35,6 @@ struct UsbOTG {
         DPUP = 1<<7, DMUP = 1<<6, DPDN = 1<<5, DMDN = 1<<4,
         VBUSON = 1<<3, OTGON = 1<<2, VCHARGE = 1<<1, VDISCHARGE = 1<<0
     };
-
     static void     otg                 (OTG, bool);
 
     //U1ADDR
