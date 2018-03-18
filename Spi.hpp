@@ -48,7 +48,7 @@ struct Spi  {
 
     void            ss              (bool);             //slave select enable
 
-    enum CLKPOL : bool { CLKH = false, CLKL };
+    enum CLKPOL : bool { CLKH, CLKL };                  //CLKH --> Idle Low, Active High | CLKL --> Idle High, Active Low
     void            clk_pol         (CLKPOL);           //clock polarity
 
     void            master          (bool);             //master mode
