@@ -76,7 +76,7 @@ static volatile uint8_t unlock_count;
     void        Sys::lock           (uint8_t v)
 //=============================================================================
 {
-    Reg::val(SYSKEY, 0);                            //lock
+    lock();
     Dma::all_suspend(v & 2);                        //restore dma
     if(v & 1) Irq::global(true);                    //restore irq
 }
@@ -90,8 +90,13 @@ static volatile uint8_t unlock_count;
     Irq::global(false);
     bool dmasusp = Dma::all_suspend();              //get DMA suspend status
     Dma::all_suspend(true);                         //suspend DMA
-    Reg::val(SYSKEY, MAGIC1);
-    Reg::val(SYSKEY, MAGIC2);
+    //
+    if(unlock_count == 0){                          //first time, unlock
+        Reg::val(SYSKEY, MAGIC1);
+        Reg::val(SYSKEY, MAGIC2);
+    }
+    unlock_count++;                                 //inc unlock_count
+    //
     return (dmasusp<<1) bitor irqstate;
 }
 

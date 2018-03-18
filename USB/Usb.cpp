@@ -2,36 +2,144 @@
 
 #include <cstdint>
 #include "Reg.hpp"
-#include "UsbCh9.hpp"
-#include "Pins.hpp"
-#include "Irq.hpp"
-
-#include "Usb.hpp"
 #include "UsbConfig.hpp"
-#include "UsbBuf.hpp"
+#include "Pins.hpp"
 
 //registers - all registers use only first 8bits
 enum {
+    U1OTGIR = 0xBF808440,   //no SET, INV - all bits write-1-to-clear
+    U1OTGIE = 0xBF808450,
+    U1OTGSTAT = 0xBF808460, //no SET, INV, CLR
+    U1OTGCON = 0xBF808470,
     U1PWRC = 0xBF808480,
     U1IR = 0xBF808600,//no SET, INV
     U1IE = 0xBF808610,
     U1EIR = 0xBF808620,//no SET, INV
     U1EIE = 0xBF808630,
     U1STAT = 0xBF808640,//no SET, INV, CLR
+        ENDPT_SHIFT = 4, ENDPT_MASK = 15,
+        DIR = 3,
+        PPBI = 2,
     U1CON = 0xBF808650,
     U1ADDR = 0xBF808660,
+        LSEN = 7,
     U1BDTP1 = 0xBF808670,
     U1FRML = 0xBF808680, //no SET, INV, CLR
     U1FRMH = 0xBF808690, //no SET, INV, CLR
+    U1TOK = 0xBF8086A0,
+    U1SOF = 0xBF8086B0,
     U1BDTP2 = 0xBF8086C0,
     U1BDTP3 = 0xBF8086D0,
     U1CNFG1 = 0xBF8086E0,
     U1EP0 = 0xBF808700, U1EP_SPACING = 0x10
 };
 
+volatile Usb::BDT_ENTRY Usb::BDT[16] = {0};
+Pins vbus_pin(UsbConfig::vbus_pin_n, Pins::INPD);
 
-Usb::STATE Usb::state = Usb::DETACHED;
+//U1OTGIR
+//=============================================================================
+    uint8_t     Usb::otg_flags          ()
+//=============================================================================
+{
+    return Reg::val8(U1OTGIR);
+}
 
+//=============================================================================
+    bool        Usb::otg_flag           (FLAGSOTG e)
+//=============================================================================
+{
+    return Reg::anybit(U1OTGIR, e);
+}
+
+//=============================================================================
+    void        Usb::otg_flags_clr      ()
+//=============================================================================
+{
+    Reg::val8(U1OTGIR, 255);
+}
+
+//=============================================================================
+    void        Usb::otg_flags_clr      (uint8_t v)
+//=============================================================================
+{
+    Reg::val8(U1OTGIR, v);
+}
+
+//=============================================================================
+    void        Usb::otg_flag_clr       (FLAGSOTG e)
+//=============================================================================
+{
+    Reg::val8(U1OTGIR, e);
+}
+
+//U1OTGIE
+//=============================================================================
+    uint8_t     Usb::otg_irqs           ()
+//=============================================================================
+{
+    return Reg::val8(U1OTGIR);
+}
+
+//=============================================================================
+    bool        Usb::otg_irq            (FLAGSOTG e)
+//=============================================================================
+{
+    return Reg::anybit(U1OTGIR, e);
+}
+
+//=============================================================================
+    void        Usb::otg_irqs_clr       ()
+//=============================================================================
+{
+    Reg::val8(U1OTGIR, 255);
+}
+
+//=============================================================================
+    void        Usb::otg_irqs_clr       (uint8_t v)
+//=============================================================================
+{
+    Reg::val8(U1OTGIR, v);
+}
+
+//=============================================================================
+    void        Usb::otg_irq_clr        (FLAGSOTG e)
+//=============================================================================
+{
+    Reg::val8(U1OTGIR, e);
+}
+
+//U1OTGSTAT
+//=============================================================================
+    uint8_t     Usb::otg_stat           ()
+//=============================================================================
+{
+    return Reg::val8(U1OTGSTAT);
+}
+
+//=============================================================================
+    bool        Usb::otg_stat           (FLAGSOTG e)
+//=============================================================================
+{
+    return Reg::anybit(U1OTGSTAT, e);
+}
+
+//U1OTGCON
+//=============================================================================
+    void        Usb::otg                (OTG e, bool tf)
+//=============================================================================
+{
+    Reg::setbit(U1OTGCON, e, tf);
+}
+
+//=============================================================================
+    void        Usb::otg                (uint8_t v)
+//=============================================================================
+{
+    Reg::val8(U1OTGCON, v);
+}
+
+//U1PWRC
 //=============================================================================
     bool        Usb::power              (POWER e)
 //=============================================================================
@@ -46,18 +154,12 @@ Usb::STATE Usb::state = Usb::DETACHED;
     Reg::setbit(U1PWRC, e, tf);
 }
 
+//U1IR
 //=============================================================================
     uint8_t     Usb::flags              ()
 //=============================================================================
 {
-    return Reg::val(U1IR);
-}
-
-//=============================================================================
-    uint8_t     Usb::eflags             ()
-//=============================================================================
-{
-    return Reg::val(U1EIR);
+    return Reg::val8(U1IR);
 }
 
 //=============================================================================
@@ -68,38 +170,18 @@ Usb::STATE Usb::state = Usb::DETACHED;
 }
 
 //=============================================================================
-    bool        Usb::eflag              (EFLAGS e)
-//=============================================================================
-{
-    return Reg::anybit(U1EIR, e);
-}
-
-//=============================================================================
     void        Usb::flags_clr          (uint8_t v)
 //=============================================================================
 {
-    Reg::val(U1IR, v);
+    Reg::val8(U1IR, v);
 }
 
-//=============================================================================
-    void        Usb::eflags_clr         (uint8_t v)
-//=============================================================================
-{
-    Reg::val(U1EIR, v);
-}
-
+//U1IE
 //=============================================================================
     uint8_t     Usb::irqs               ()
 //=============================================================================
 {
-    return Reg::val(U1IE);
-}
-
-//=============================================================================
-    uint8_t     Usb::eirqs              ()
-//=============================================================================
-{
-    return Reg::val(U1EIE);
+    return Reg::val8(U1IE);
 }
 
 //=============================================================================
@@ -110,24 +192,10 @@ Usb::STATE Usb::state = Usb::DETACHED;
 }
 
 //=============================================================================
-    bool        Usb::eirq               (EFLAGS e)
-//=============================================================================
-{
-    return Reg::anybit(U1EIE, e);
-}
-
-//=============================================================================
     void        Usb::irqs               (uint8_t v)
 //=============================================================================
 {
-    Reg::val(U1IE, v);
-}
-
-//=============================================================================
-    void        Usb::eirqs              (uint8_t v)
-//=============================================================================
-{
-    Reg::val(U1EIE, v);
+    Reg::val8(U1IE, v);
 }
 
 //=============================================================================
@@ -137,6 +205,50 @@ Usb::STATE Usb::state = Usb::DETACHED;
     Reg::setbit(U1IE, e, tf);
 }
 
+//U1EIR
+//=============================================================================
+    uint8_t     Usb::eflags             ()
+//=============================================================================
+{
+    return Reg::val8(U1EIR);
+}
+
+//=============================================================================
+    bool        Usb::eflag              (EFLAGS e)
+//=============================================================================
+{
+    return Reg::anybit(U1EIR, e);
+}
+
+//=============================================================================
+    void        Usb::eflags_clr         (uint8_t v)
+//=============================================================================
+{
+    Reg::val8(U1EIR, v);
+}
+
+//U1EIE
+//=============================================================================
+    uint8_t     Usb::eirqs              ()
+//=============================================================================
+{
+    return Reg::val8(U1EIE);
+}
+
+//=============================================================================
+    bool        Usb::eirq               (EFLAGS e)
+//=============================================================================
+{
+    return Reg::anybit(U1EIE, e);
+}
+
+//=============================================================================
+    void        Usb::eirqs              (uint8_t v)
+//=============================================================================
+{
+    Reg::val8(U1EIE, v);
+}
+
 //=============================================================================
     void        Usb::eirq               (EFLAGS e, bool tf)
 //=============================================================================
@@ -144,13 +256,29 @@ Usb::STATE Usb::state = Usb::DETACHED;
     Reg::setbit(U1EIE, e, tf);
 }
 
+//U1STAT
 //=============================================================================
-    uint8_t     Usb::stat               ()
+    uint8_t     Usb::stat_endp          ()
 //=============================================================================
 {
-    return Reg::val(U1STAT);
+    return (Reg::val8(U1STAT) >> ENDPT_SHIFT) & ENDPT_MASK;
 }
 
+//=============================================================================
+    bool        Usb::stat_dir           ()
+//=============================================================================
+{
+    return Reg::anybit(U1STAT, 1<<DIR);
+}
+
+//=============================================================================
+    bool        Usb::stat_ppbi          ()
+//=============================================================================
+{
+    return Reg::anybit(U1STAT, 1<<PPBI);
+}
+
+//U1CON
 //=============================================================================
     bool        Usb::control            (CONTROL e)
 //=============================================================================
@@ -169,50 +297,85 @@ Usb::STATE Usb::state = Usb::DETACHED;
     void        Usb::control            (uint8_t v)
 //=============================================================================
 {
-    Reg::val(U1CON, v);
+    Reg::val8(U1CON, v);
+}
+
+//U1ADDR
+//=============================================================================
+    void        Usb::low_speed          (bool tf)
+//=============================================================================
+{
+    Reg::setbit(U1ADDR, 1<<LSEN, tf);
 }
 
 //=============================================================================
     uint8_t     Usb::dev_addr           ()
 //=============================================================================
 {
-    return Reg::val(U1ADDR) bitand 127;
+    return Reg::val8(U1ADDR) bitand 127;
 }
 
 //=============================================================================
     void        Usb::dev_addr           (uint8_t v)
 //=============================================================================
 {
-    Reg::setbit(U1ADDR, 0x7F, 0);
-    Reg::setbit(U1ADDR, v);
+    Reg::clrbit(U1ADDR, 127);
+    Reg::setbit(U1ADDR, v bitand 127);
 }
 
+//U1FRML,H
 //=============================================================================
     uint16_t    Usb::frame              ()
 //=============================================================================
 {
-    return (Reg::val(U1FRMH)<<8) | Reg::val(U1FRML);
+    return (Reg::val8(U1FRMH)<<8) | Reg::val8(U1FRML);
 }
 
+//U1TOK
+//=============================================================================
+    uint8_t     Usb::tok_pid            (TOKPID e)
+//=============================================================================
+{
+    Reg::val8(U1TOK, e<<4);
+}
+
+//=============================================================================
+    void        Usb::tok_ep             (uint8_t v)
+//=============================================================================
+{
+    Reg::clrbit(U1TOK, 15);
+    Reg::setbit(U1TOK, v bitand 15);
+}
+
+//U1SOF
+//=============================================================================
+    void        Usb::sof_cnt            (SOFVALS e)
+//=============================================================================
+{
+    Reg::val8(U1SOF, e);
+}
+
+//U1BDTP1,2,3
 //=============================================================================
     void        Usb::bdt_addr           (uint32_t v)
 //=============================================================================
 {
     v = Reg::k2phys(v); //physical address
-    Reg::val(U1BDTP1, v>>8); //512byte aligned (bit0 of this reg unused)
-    Reg::val(U1BDTP2, v>>16);
-    Reg::val(U1BDTP3, v>>24);
+    Reg::val8(U1BDTP1, v>>8); //512byte aligned (bit0 of this reg unused)
+    Reg::val8(U1BDTP2, v>>16);
+    Reg::val8(U1BDTP3, v>>24);
 }
 
 //=============================================================================
     uint32_t    Usb::bdt_addr           ()
 //=============================================================================
 {
-    return  Reg::p2kseg0( (uint32_t)
-    Reg::val(U1BDTP1)<<8 | Reg::val(U1BDTP2)<<16 | Reg::val(U1BDTP3)<<24
-    ); //kseg0
+    uint32_t ret =
+        Reg::val8(U1BDTP3)<<24 | Reg::val8(U1BDTP2)<<16 | Reg::val8(U1BDTP1)<<8;
+    return  Reg::p2kseg0(ret); //virtual address i kseg0
 }
 
+//U1CNFG1
 //=============================================================================
     void        Usb::config             (CONFIG e, bool tf)
 //=============================================================================
@@ -231,12 +394,65 @@ Usb::STATE Usb::state = Usb::DETACHED;
     void        Usb::config             (uint8_t v)
 //=============================================================================
 {
-    Reg::val(U1CNFG1, v);
+    Reg::val8(U1CNFG1, v);
+}
+
+//U1EP0-15
+//=============================================================================
+    void        Usb::epcontrol          (uint8_t n, EPCTRL e, bool tf)
+//=============================================================================
+{
+    n and_eq 15;
+    Reg::setbit(U1EP0+(n * U1EP_SPACING), e, tf);
+}
+
+//=============================================================================
+    bool        Usb::epcontrol          (uint8_t n, EPCTRL e)
+//=============================================================================
+{
+    n and_eq 15;
+    Reg::anybit(U1EP0+(n * U1EP_SPACING), e);
+}
+
+//=============================================================================
+    void        Usb::epcontrol          (uint8_t n, uint8_t v)
+//=============================================================================
+{
+    n and_eq 15;
+    Reg::val8(U1EP0+(n * U1EP_SPACING), v);
+}
+
+//=============================================================================
+    uint8_t     Usb::epcontrol          (uint8_t n)
+//=============================================================================
+{
+    n and_eq 15;
+    return Reg::val8(U1EP0+(n * U1EP_SPACING));
+}
+
+//misc
+//init usb (or reinit)
+//=============================================================================
+    bool        Usb::init               ()
+//=============================================================================
+{
+    power(USBPWR, false);       //power off
+    while(power(USBBUSY));      //wait for busy
+    UsbBdt::init();             //clear bdt table
+    if(not vbus_pin.ison()) return false; //no vbus present
+    power(USBPWR, true);        //power on
+    bdt_addr(UsbBdt::table);    //record address in usb bdt reg
+    return true;
+}
+
+//add irq here
+#include "Irq.hpp"
+ISR(USB){
+    USBDeviceTasks(); //whatever function name this will be
 }
 
 
-
-
+#if 0
 //power down usb module, usb irq's off
 //=============================================================================
     void        Usb::detach             (void)
@@ -247,6 +463,8 @@ Usb::STATE Usb::state = Usb::DETACHED;
     ir.on(ir.USB, false);       //all usb irqs off
     while(u.power(u.BUSY));     //wait for busy bit to clear first
     u.power(u.USBPWR, false);   //usb module off
+    u.flags_clr(u.ALLFLAGS);    //clear all flags
+    u.flags_clr(u.ALLEFLAGS);   //clear all eflags
 
     u.state = u.DETACHED;
 
@@ -279,9 +497,9 @@ Usb::STATE Usb::state = Usb::DETACHED;
     u.irqs(u.RESET); // only looking for reset first
     //u.irqs(u.STALL|u.IDLE|u.TOKEN|u.SOF|u.ERROR|u.RESET);
     //u.eirqs(u.BSTUFF|u.BTMOUT|u.DATSIZ|u.CRC16|u.CRC5|u.PID);
-    ir.init(ir.USB, UsbConfig::usb_irq_pri, UsbConfig::usb_irq_subpri, true);
 
     u.state = u.ATTACHED;
+    ir.init(ir.USB, UsbConfig::usb_irq_pri, UsbConfig::usb_irq_subpri, true);
 
     u.control(u.USBEN, true);       //enable usb
 
@@ -294,6 +512,7 @@ Usb::STATE Usb::state = Usb::DETACHED;
     void            Usb::init           ()
  //=============================================================================
  {
+printf("USB::init:\r\n");
     UsbConfig::vbus_pin.digital_in();   //vbus/rb6 to input
 //    UsbConfig::vbus_pin.pulldn(true);   //pulldown when no vbus keeps pin low
     attach();                           //init all things
@@ -305,6 +524,7 @@ Usb::STATE Usb::state = Usb::DETACHED;
     ISR(USB)
 //=============================================================================
 {
+printf("USB ISR> ");
     Usb u; Irq ir;                  // u. for Usb:: , ir. for Irq::
     static Usb::STATE last_state;   //keep track of usb state for resumes
 
@@ -327,12 +547,15 @@ Usb::STATE Usb::state = Usb::DETACHED;
     //our ep array
     if(stat.endpt > UsbConfig::last_endp) return;
 
+printf("flags: %u  eflags: %u  stat: %u  state: %u  endpoint: %u\r\n",
+        flags.all, eflags.all, stat.all, u.state, stat.endpt);
+
     //nested function, check if need to suspend (idle detected >3ms)
     //if go SUSPENDED, all flags will be cleared and only a resume
     //or reset will get us going again (we were idle for a while so
     //nothing going on, so safe to clear all flags)
     auto _is_idle = [ & ](){
-        if (flags.idle == 0) return false;
+        if (flags.all != u.IDLE) return false;
         last_state = u.state;               //save state for resume
         u.state = u.SUSPENDED;              //now in SUSPENDED state
         u.flags_clr(u.ALLFLAGS);            //clear flags
@@ -357,7 +580,7 @@ Usb::STATE Usb::state = Usb::DETACHED;
     auto _default = [ & ](){
         u.flags_clr(u.ALLFLAGS);            //clear flags
         u.eflags_clr(u.ALLEFLAGS);          //clear flags
-        u.irqs(u.STALL|u.IDLE|u.TOKEN|u.SOF|u.ERROR|u.RESET);
+        u.irqs(u.STALL|u.IDLE|u.TOKEN|/*u.SOF|*/u.ERROR|u.RESET);
         u.eirqs(u.BSTUFF|u.BTMOUT|u.DATSIZ|u.CRC16|u.CRC5|u.PID);
     };
 
@@ -393,6 +616,8 @@ Usb::STATE Usb::state = Usb::DETACHED;
             return;
     }
 
+    printf("ISR after switch...\r\n");
+
     //DEFAULT, ADDRESS, or CONFIGURED state
     //now we can check flags and do important stuff
     if(flags.error){
@@ -406,12 +631,13 @@ Usb::STATE Usb::state = Usb::DETACHED;
 
     //and here we go to work moving bytes
     if(flags.token){
+        printf("ISR calling token...\r\n");
         UsbConfig::endpoints[stat.endpt].token((uint8_t)stat.bdidx); //call endpoint
     }
 
 }
 
-
+#endif
 
 /*
 ________________________________________________________________________________

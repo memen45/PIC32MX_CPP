@@ -30,9 +30,6 @@
 #include "Rtcc.hpp"
 #include "Irq.hpp"
 
-//include just to get usb stuff to compile
-#include "Usb.hpp"
-
 
 //svg colors for rgb led
 const uint8_t svg[][3]{
@@ -306,8 +303,16 @@ struct Led12 {
 
 };
 
+extern "C" {
+#include "usb.h"
+}
+
+
 int main()
 {
+
+
+
     //just get/store resets cause (not used here,though)
     Resets::cause();
 
@@ -318,7 +323,7 @@ int main()
     osc.tun_auto(true);                     //let sosc tune frc
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 18, 3, 11, 0, 9, 21, 0} );
+    if(dt.year == 0) Rtcc::datetime( { 18, 3, 16, 0, 10, 32, 0} );
 
     Rtcc::on(true);
 
@@ -326,11 +331,36 @@ int main()
     cls(); //cls
     cursor(false); //hide cursor
 
+
+Delay::wait_s(2);
+Irq::init(Irq::USB, 1, 0, false);
+USBDeviceInit();
+USBDeviceAttach();
+Irq::global(true);
+
+
+#include <stdio.h>
+
+
+
+
+
     Rgb rgb;
     Led12 led12;
+    Delay dly;
+    dly.set_ms(100);
 
-    for(;;){
+    for(uint32_t i = 0;;i++){
         Wdt::reset(), led12.update(), rgb.update();
+
+        if(USBUSARTIsTxTrfReady() && dly.expired())
+        {
+            char data[32];
+            snprintf(data, 32, "%08X ",  USBGet1msTickCount());
+            putsUSBUSART(data);
+            dly.restart();
+        }
+        CDCTxService();
     }
 }
 
@@ -388,7 +418,7 @@ Pins& led2 = leds[4];
 /*=============================================================================
  Switches - all in array
 =============================================================================*/
-Pins sw[] = {                   //true=lowison
+Pins sw[] = {
     { Pins::B9,  Pins::INPU }, //SW1 (rotate delays))
     { Pins::C10, Pins::INPU }, //SW2 cp0 irq blink rate++
     { Pins::C4,  Pins::INPU }  //SW3 cp0 irq blink rate--
@@ -416,7 +446,6 @@ Timer23 timer3(Timer23::TMR3);
 
 /*=============================================================================
  Irq's
- (letting USB code take care of setting up/enabling USB irq)
 =============================================================================*/
 Irq::irq_list_t irqlist[] = {               //list of irq's to init/enable
     //vector#           pri sub enable
@@ -424,8 +453,7 @@ Irq::irq_list_t irqlist[] = {               //list of irq's to init/enable
     { Irq::TIMER_2,     1,  0,  true },
     { Irq::TIMER_3,     1,  0,  true },
     { Irq::CORE_TIMER,  5,  0,  true },
-    { Irq::RTCC,        1,  0,  true },
-    { Irq::END }                            //need END or else bad happens
+    { Irq::RTCC,        1,  0,  true }
 };
 
 /*=============================================================================
@@ -643,8 +671,8 @@ int main(){
 
     //__________________________________________________________________________
     //irq's init/enable
-    Irq::init(irqlist);                     //init all irq's
-    Irq::shadow_set(5, 1);                  //priority5 (usb) using shadow set
+    Irq::init(irqlist,sizeof(irqlist)/sizeof(irqlist[0])); //init all irq's
+    Irq::shadow_set(5);                     //priority5 (usb) using shadow set
     Irq::global(true);                      //global irq enable
 
     //__________________________________________________________________________

@@ -67,7 +67,6 @@ struct Irq {
 		UART4_ERR = 67, UART4_RX, UART4_TX,
 		UART6_ERR = 70, UART6_RX, UART6_TX,	
 		UART5_ERR = 73, UART5_RX, UART5_TX,
-		END
     };
 
     static void     flag_clr        (IRQ_NR);
@@ -84,10 +83,9 @@ struct Irq {
         uint8_t s;      //sub-priority
         bool en;        //enable
     };
-    static void     init            (irq_list_t*);
+    static void     init            (irq_list_t*, uint8_t);
 	
 	static const uint8_t m_lookup_vn[95];
-
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,7 +1,3 @@
-/*==============================================================================
-    UNUSABLE CODE - JUST TRYING TO WORK OUT USB BY PUTTING DOWN SOME CODE
-==============================================================================*/
-
 #pragma once
 
 //USB Chapter 9 stuff

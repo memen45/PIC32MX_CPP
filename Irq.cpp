@@ -63,7 +63,6 @@ const uint8_t Irq::m_lookup_vn[] = {
 		/* UART4_ERR = */ 49, /* UART4_RX = */ 49, /* UART4_TX = */ 49,
 		/* UART6_ERR = */ 50, /* UART6_RX = */ 50, /* UART6_TX = */ 50,	
 		/* UART5_ERR = */ 51, /* UART5_RX = */ 51, /* UART5_TX = */ 51,
-        /* END = */ 52
     };
 
 //=============================================================================
@@ -187,12 +186,10 @@ const uint8_t Irq::m_lookup_vn[] = {
     
 //init list (array) of irq's
 //=============================================================================
-    void        Irq::init               (irq_list_t* arr)
+    void        Irq::init               (irq_list_t* arr, uint8_t sz)
 //=============================================================================
 {
-    for(; arr->irqvn < END; arr++){
-        init(arr->irqvn, arr->p, arr->s, arr->en);
-    }
+    for(; sz; arr++, sz--) init(arr->irqvn, arr->p, arr->s, arr->en);
 }
 
 //enables multi vectored interrupts

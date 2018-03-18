@@ -65,13 +65,11 @@ const uint8_t Osc::m_idiv_lookup[] = {1, 2, 3, 4, 5, 6, 10, 12};
     void            Osc::clk_src        (CNOSC e)
 //=============================================================================
 {
-    //IDSTAT irstat = unlock_irq();
     uint8_t irstat = Sys::unlock_wait();
     Reg::clrbit(OSCCON, NOSC_MASK << NOSC_SHIFT);
     Reg::setbit(OSCCON, e << NOSC_SHIFT);
     Reg::setbit(OSCCON, 1<<OSWEN);
     while(Reg::anybit(OSCCON, 1<<OSWEN));
-    //lock_irq(irstat);
     Sys::lock(irstat);
     m_sysclk = 0;
     m_pbclk = 0;
