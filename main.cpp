@@ -332,6 +332,7 @@ int main()
     cursor(false); //hide cursor
 
 
+//trying MCHP usb code
 Delay::wait_s(2);
 Irq::init(Irq::USB, 1, 0, false);
 USBDeviceInit();
