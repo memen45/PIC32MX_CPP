@@ -12,7 +12,8 @@ struct Pins {
         PNSHIFT = 0, PNMASK = 15,
         //RPSHIFT = 6, RPMASK = 31,
         ANSHIFT = 12, ANMASK = 15,
-		CNSHIFT = 7, CNMASK = 31
+		CNSHIFT = 7, CNMASK = 31, 
+		NO_CN = 29
     };
 
     //PIN11 (physical), A0, RP1, AN0 - use any
@@ -23,74 +24,75 @@ struct Pins {
         // nnnn = pin = 0-15
         // ccccc = CNn = 1-21 
 
-        //pins without AN (analog in) will be set to use AVss (29) as AN input
-        //(since AN0 is 0, we need something other than 0 to signify no AN for pin, so
+        // NOTE: pins without AN (analog in) will be set to use AVss (29) as AN input
+        // (since AN0 is 0, we need something other than 0 to signify no AN for pin, so
         // we will just give it something that will result in no result if ever used
         // adcval() by mistake)
+		// NOTE: pins without CN (change notice) will be set to use AVss (29) as CN nr
 
         //A0 - A-15
-        A0 = 0, A1 = 1,
-        A2 = 2, A3 = 3,
-        A4 = 4, A5 = 5,
-        A6 = 6, A7 = 7,
-        /* no A8 = 8,*/ A9 = 9,
-        A10 = 10, /* no A11 = 11,
+        A0 = 0|NO_CN<<CNSHIFT, A1 = 1|NO_CN<<CNSHIFT,
+        A2 = 2|NO_CN<<CNSHIFT, A3 = 3|NO_CN<<CNSHIFT,
+        A4 = 4|NO_CN<<CNSHIFT, A5 = 5|NO_CN<<CNSHIFT,
+        A6 = 6|NO_CN<<CNSHIFT, A7 = 7|NO_CN<<CNSHIFT,
+        /* no A8 = 8,*/ A9 = 9|NO_CN<<CNSHIFT,
+        A10 = 10|NO_CN<<CNSHIFT, /* no A11 = 11,
         A12 = 12, A13 = 13,*/
-        A14 = 14, A15 = 15,
+        A14 = 14|NO_CN<<CNSHIFT, A15 = 15|NO_CN<<CNSHIFT,
         //B0-B15
         B0 = 16|2<<CNSHIFT|0<<ANSHIFT, B1 = 17|3<<CNSHIFT|1<<ANSHIFT,
         B2 = 18|4<<CNSHIFT|2<<ANSHIFT, B3 = 19|5<<CNSHIFT|3<<ANSHIFT,
         B4 = 20|6<<CNSHIFT|4<<ANSHIFT, B5 = 21|7<<CNSHIFT|5<<ANSHIFT,
-        B6 = 22|6<<ANSHIFT, B7 = 23|7<<ANSHIFT,
-        B8 = 24|8<<ANSHIFT, B9 = 25|9<<ANSHIFT,
-        B10 = 26|10<<ANSHIFT, B11 = 27|11<<ANSHIFT,
-        B12 = 28|12<<ANSHIFT, B13 = 29|13<<ANSHIFT,
-        B14 = 30|14<<ANSHIFT, B15 = 31|12<<CNSHIFT|15<<ANSHIFT,
+        B6 = 22|6<<ANSHIFT|NO_CN<<CNSHIFT, B7 = 23|7<<ANSHIFT|NO_CN<<CNSHIFT,
+        B8 = 24|8<<ANSHIFT|NO_CN<<CNSHIFT, B9 = 25|9<<ANSHIFT|NO_CN<<CNSHIFT,
+        B10 = 26|10<<ANSHIFT|NO_CN<<CNSHIFT, B11 = 27|11<<ANSHIFT|NO_CN<<CNSHIFT,
+        B12 = 28|12<<ANSHIFT|NO_CN<<CNSHIFT, B13 = NO_CN|13<<ANSHIFT|NO_CN<<CNSHIFT,
+        B14 = 30|14<<ANSHIFT|NO_CN<<CNSHIFT, B15 = 31|15<<ANSHIFT|12<<CNSHIFT,
         //C0-C15
-        /* no C0 = 32,*/ C1 = 33,
-        C2 = 34, C3 = 35,
-        C4 = 36, /* no C5 = 37,
+        /* no C0 = 32,*/ C1 = 33|NO_CN<<CNSHIFT,
+        C2 = 34|NO_CN<<CNSHIFT, C3 = 35|NO_CN<<CNSHIFT,
+        C4 = 36|NO_CN<<CNSHIFT, /* no C5 = 37,
         C6 = 38, C7 = 39,
         C8 = 40, C9 = 41,
         C10 = 42, C11 = 43,*/
-        C12 = 44, C13 = 45|1<<CNSHIFT,
-        C14 = 46|0<<CNSHIFT, C15 = 47,
+        C12 = 44|NO_CN<<CNSHIFT, C13 = 45|1<<CNSHIFT,
+        C14 = 46|0<<CNSHIFT, C15 = 47|NO_CN<<CNSHIFT,
         //D0-D15
-        D0 = 48, D1 = 49,
-        D2 = 50, D3 = 51,
+        D0 = 48|NO_CN<<CNSHIFT, D1 = 49|NO_CN<<CNSHIFT,
+        D2 = 50|NO_CN<<CNSHIFT, D3 = 51|NO_CN<<CNSHIFT,
         D4 = 52|13<<CNSHIFT, D5 = 53|14<<CNSHIFT,
         D6 = 54|15<<CNSHIFT, D7 = 55|16<<CNSHIFT,
-        D8 = 56, D9 = 57,
-        D10 = 58, D11 = 59,
-        D12 = 60, D13 = 61|19<<CNSHIFT,
+        D8 = 56|NO_CN<<CNSHIFT, D9 = 57|NO_CN<<CNSHIFT,
+        D10 = 58|NO_CN<<CNSHIFT, D11 = 59|NO_CN<<CNSHIFT,
+        D12 = 60|NO_CN<<CNSHIFT, D13 = 61|19<<CNSHIFT,
         D14 = 62|20<<CNSHIFT, D15 = 63|21<<CNSHIFT,
 		//E0-E9
-        E0 = 64, E1 = 65,
-        E2 = 66, E3 = 67,
-        E4 = 68, E5 = 69,
-        E6 = 70, E7 = 71,
-        E8 = 72, E9 = 73,
+        E0 = 64|NO_CN<<CNSHIFT, E1 = 65|NO_CN<<CNSHIFT,
+        E2 = 66|NO_CN<<CNSHIFT, E3 = 67|NO_CN<<CNSHIFT,
+        E4 = 68|NO_CN<<CNSHIFT, E5 = 69|NO_CN<<CNSHIFT,
+        E6 = 70|NO_CN<<CNSHIFT, E7 = 71|NO_CN<<CNSHIFT,
+        E8 = 72|NO_CN<<CNSHIFT, E9 = 73|NO_CN<<CNSHIFT,
         /*no E10 = 74, E11 = 75,
         E12 = 76, E13 = 77,
         E14 = 78, E15 = 79,*/
 		//F0-F13
-        F0 = 80, F1 = 81,
-        F2 = 82, F3 = 83,
+        F0 = 80|NO_CN<<CNSHIFT, F1 = 81|NO_CN<<CNSHIFT,
+        F2 = 82|NO_CN<<CNSHIFT, F3 = 83|NO_CN<<CNSHIFT,
         F4 = 84|17<<CNSHIFT, F5 = 85|18<<CNSHIFT,
         /*no F6 = 86, F7 = 87,*/
-        F8 = 88, /*F9 = 89,
+        F8 = 88|NO_CN<<CNSHIFT, /*F9 = 89,
         F10 = 90, F11 = 91,*/
-        F12 = 92, F13 = 93,
+        F12 = 92|NO_CN<<CNSHIFT, F13 = 93|NO_CN<<CNSHIFT,
         /*no F14 = 94, F15 = 95,*/
 		//G0-G13
-        G0 = 96, G1 = 97,
-        G2 = 98, G3 = 99,
+        G0 = 96|NO_CN<<CNSHIFT, G1 = 97|NO_CN<<CNSHIFT,
+        G2 = 98|NO_CN<<CNSHIFT, G3 = 99|NO_CN<<CNSHIFT,
         /*G4 = 100, G5 = 101,*/
         G6 = 102|8<<CNSHIFT, G7 = 103|9<<CNSHIFT,
         G8 = 104|10<<CNSHIFT, G9 = 105|11<<CNSHIFT,
         /* no G10 = 106, G11 = 107,*/
-        G12 = 108, G13 = 109,
-        G14 = 110, G15 = 111,
+        G12 = 108|NO_CN<<CNSHIFT, G13 = 109|NO_CN<<CNSHIFT,
+        G14 = 110|NO_CN<<CNSHIFT, G15 = 111|NO_CN<<CNSHIFT,
 
         //ANn 0-19
         AN0 = B0, AN1 = B1, AN2 = B2, AN3 = B3, AN4 = B4, 

@@ -10,10 +10,8 @@ enum { //offsets from base address, in words
 enum {
 	TRISX_SPACING = 16, //spacing in words
 	TRISA = 0xBF886000,
-    TRISB = 0xBF886040,
-	
 	AD1PCFG = 0xBF809060,
-	
+    
 	CNCON = 0xBF8861C0,
 	CNEN = 0xBF8861D0,
 	CNPUE = 0xBF8861E0,
@@ -53,7 +51,9 @@ enum : uint8_t { ACTL = 1<<2  }; //IOMODE ACTL bit (active low bit)
     if(m == AIN) analog_in(); 
     else if(m bitand IN) digital_in();
     else digital_out();
-    pullup(m == INPU);
+	
+    if (m_cn != NO_CN)
+		pullup(m == INPU);
 }
 
 //=============================================================================
@@ -145,8 +145,8 @@ enum : uint8_t { ACTL = 1<<2  }; //IOMODE ACTL bit (active low bit)
 //=============================================================================
 {
     Reg::setbit(m_pt + TRIS, m_pn);
-    if (m_pt == (vu32ptr) TRISB)
-        Reg::setbit(AD1PCFG, m_an);
+    if (m_pt == ((vu32ptr)TRISA + TRISX_SPACING))
+        Reg::setbit(AD1PCFG, 1 << m_an);
 }
 
 //=============================================================================
@@ -154,8 +154,8 @@ enum : uint8_t { ACTL = 1<<2  }; //IOMODE ACTL bit (active low bit)
 //=============================================================================
 {
     Reg::setbit(m_pt + TRIS, m_pn);
-    if (m_pt == (vu32ptr) TRISB)
-        Reg::clrbit(AD1PCFG, m_an);
+    if (m_pt == ((vu32ptr)TRISA + TRISX_SPACING))
+        Reg::clrbit(AD1PCFG, 1 << m_an);
 }
 
 //=============================================================================
@@ -163,8 +163,8 @@ enum : uint8_t { ACTL = 1<<2  }; //IOMODE ACTL bit (active low bit)
 //=============================================================================
 {
     Reg::clrbit(m_pt + TRIS, m_pn);
-    if (m_pt == (vu32ptr) TRISB)
-            Reg::setbit(AD1PCFG, m_an);
+    if (m_pt == ((vu32ptr)TRISA + TRISX_SPACING))
+            Reg::setbit(AD1PCFG, 1 << m_an);
 }
 
 //=============================================================================
