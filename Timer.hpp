@@ -20,7 +20,7 @@ class Timer {
     void        stop_idle   (bool) const;
     void        gate        (bool) const;
 
-    enum PRESCALE { PS1, PS2, PS4, PS8, PS16, PS32, PS64, PS256 };
+    enum PRESCALE : uint8_t { PS1, PS2, PS4, PS8, PS16, PS32, PS64, PS256 = 8 };
     void        prescale    (PRESCALE) const;
     PRESCALE    prescale    ();
 

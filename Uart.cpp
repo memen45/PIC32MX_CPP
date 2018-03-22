@@ -1,19 +1,15 @@
 #include "Uart.hpp"
 #include "Reg.hpp"
-#include "Osc.hpp"
 #include "Pins.hpp"
 
 enum {
-    UARTX_SPACING = 0x40,  //spacing in words
+    UARTX_SPACING = 0x80,  //spacing in words
     U1MODE = 0xBF801800,
-        SLPEN = 23,
-        ACTIVE = 22,
-        CLKSEL_SHIFT = 17, CLKSEL_MASK = 3,
-        OVFDIS = 16,
         ON = 15,
         SIDL = 13,
         IREN = 12,
         RTSMD = 11,
+        UEN_SHIFT = 8, UEN_MASK = 3,
         WAKE = 7,
         LPBACK = 6,
         ABAUD = 5,
@@ -21,7 +17,8 @@ enum {
         BRGH = 3,
         MODE_SHIFT = 0, MODE_MASK = 7,
     UXSTA = 4, //offset from UXMODE in words
-        MASK_SHIFT = 24, MASK_MASK = 255, //is byte3
+//        MASK_SHIFT = 24, MASK_MASK = 255, //is byte3
+        ADM_EN = 24,
         ADDR_SHIFT = 16, ADDR_MASK = 255, //is byte2
         UTXISEL_SHIFT = 14, UTXISEL_MASK = 3,
         UTXINV = 13,
@@ -44,38 +41,14 @@ enum {
 
 //Uart
 
-//setup pins manually
 //=============================================================================
-    Uart::Uart      (UARTX e)
+    Uart::Uart      (UARTX e, uint32_t baud)
 //=============================================================================
     : m_uartx_base((vu32ptr)U1MODE + ((e bitand 3) * UARTX_SPACING)),
       m_uartx_tx(*((vu32ptr)U1MODE + ((e bitand 3) * UARTX_SPACING) + UXTXREG)),
       m_uartx_rx(*((vu32ptr)U1MODE + ((e bitand 3) * UARTX_SPACING) + UXRXREG)),
       m_uartx_baud(0)
-{}
-
-//specify pins
-//=============================================================================
-    Uart::Uart      (UARTX e, Pins::RPN tx, Pins::RPN rx, uint32_t baud)
-//=============================================================================
-    : Uart(e)
-{
-    //UART is fixed pins, no pps
-    
-    m_uartx_baud = baud;
-    baud_set();
-    rx_on(true);
-    tx_on(true);
-}
-
-//tx or rx only
-//=============================================================================
-    Uart::Uart      (UARTX e, Pins::RPN trx, uint32_t baud)
-//=============================================================================
-    : Uart(e)
-{
-    //UART is fixed pins, no pps
-    
+{    
     m_uartx_baud = baud;
     baud_set();
 }
@@ -98,36 +71,6 @@ enum {
 
 
 //uxmode
-//=============================================================================
-    void        Uart::stop_sleep        (bool tf)
-//=============================================================================
-{
-    Reg::setbit(m_uartx_base, 1<<SLPEN, not tf);
-}
-
-//=============================================================================
-    bool        Uart::active            ()
-//=============================================================================
-{
-    return Reg::anybit(m_uartx_base, 1<<ACTIVE);
-}
-
-//=============================================================================
-    void        Uart::clk_sel           (CLKSEL e)
-//=============================================================================
-{
-    Reg::clrbit(m_uartx_base, CLKSEL_MASK<<CLKSEL_SHIFT);
-    Reg::setbit(m_uartx_base, e<<CLKSEL_SHIFT);
-    baud_set();
-}
-
-//=============================================================================
-    void        Uart::oflow_stop        (bool tf)
-//=============================================================================
-{
-    Reg::setbit(m_uartx_base, 1<<OVFDIS, not tf);
-}
-
 //=============================================================================
     void        Uart::on                (bool tf)
 //=============================================================================
@@ -202,10 +145,10 @@ enum {
 
 //=============================================================================
 //uxsta
-    void        Uart::rx_mask           (uint8_t v)
+    void        Uart::rx_mask           (bool tf)
 //=============================================================================
 {
-    Reg::val((vu8ptr)m_uartx_base + (UXSTA * 4) + 3, v);
+    Reg::setbit(m_uartx_base + UXSTA, 1 << ADM_EN, tf);
 }
 
 //=============================================================================
@@ -352,18 +295,6 @@ enum {
     //if baud not set, set it to 115200
     baud_set(m_uartx_baud ? m_uartx_baud : 115200);
 }
-
-//=============================================================================
-    uint32_t    Uart::baud_clk          ()
-//=============================================================================
-{
-    CLKSEL e = (CLKSEL)((Reg::val(m_uartx_base)>>17) bitand CLKSEL_MASK);
-//    if(e == REFO1) return Osc::refo_freq();
-//    else 
-    if(e == FRC) return Osc::frcclk();
-    return Osc::sysclk(); //pb/sys are the same
-}
-
 
 //misc
 //=============================================================================

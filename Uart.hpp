@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "Pins.hpp"
+#include "Osc.hpp"
 
 //UART 1/2/3
 
@@ -23,23 +24,12 @@ struct Uart  {
     //  Uart u(UART2, Pins::A0, Pins::B0);  //uart#, tx pin, rx pin, [baud]
     //  Uart u(UART2, Pins::A0, Pins::B0, 230400);
 
-    enum UARTX {
-        UART1 = 0, UART1TX = UART1|1<<2, UART1RX = UART1,
-        UART2 = 1, UART2TX = UART2|1<<2, UART2RX = UART2,
-        UART3 = 2, UART3TX = UART3|1<<2, UART3RX = UART3
+    enum UARTX { UART1 = 0, UART4 = 1, UART3 = 2,
+                    UART6 = 3, UART2 = 4, UART5 = 5,
     };
-    Uart(UARTX);
-    Uart(UARTX, Pins::RPN, uint32_t = 0); //tx/rx only, bit2=1=tx bit2=0=rx
-    Uart(UARTX, Pins::RPN, Pins::RPN, uint32_t = 0);
+    Uart(UARTX, uint32_t = 0);
 
     //uxmode
-    void            stop_sleep      (bool);             //stop in sleep
-    bool            active          ();                 //uart is active
-
-    enum CLKSEL { PBCLK, SYSCLK, FRC, REFO1 };
-    void            clk_sel         (CLKSEL);           //clock select
-
-    void            oflow_stop      (bool);             //stop on OERR
     void            on              (bool);             //uart on/off
     void            stop_idle       (bool);             //uart stop in idle
     void            irda            (bool);             //irda on/off
@@ -47,6 +37,8 @@ struct Uart  {
     enum RTSMODE { FLOW, SIMPLEX };
     void            rts_mode        (RTSMODE);          //rts mode
 
+    enum UEN { BCLK, CTS_RTS, RTS, TX_RX };
+    void            uen             (UEN);              //enable uart pins
     void            wake            (bool);             //wake on start bit
     void            loopback        (bool);             //loopback on/off
     void            autobaud        (bool);             //autobaud on/off
@@ -61,7 +53,7 @@ struct Uart  {
     void            mode            (MODESEL);          //parity, data, stop
 
     //uxsta
-    void            rx_mask         (uint8_t);          //address mask
+    void            rx_mask         (bool);             //address mask
     void            rx_addr         (uint8_t);          //address
 
     enum UTXISEL : uint8_t { TFREE, TDONE, TEMPTY };
@@ -113,3 +105,10 @@ struct Uart  {
     uint32_t m_uartx_baud;                          //desired baud
 
 };
+
+//=============================================================================
+inline   uint32_t    Uart::baud_clk          ()
+//=============================================================================
+{
+    return Osc::pbclk(); //pb/sys are the same
+}
