@@ -21,12 +21,13 @@ struct UsbBuf {
     private:
 
     //up to 32 buffers (using uint32_t for in use flag)
+    //(512byte buffer using bit31)
     static const uint8_t m_buffer64_n = 16; //number of 64byte buffers
 
 
     //internal storage/tracking
     static uint32_t m_status; //inuse bits - 0=available 1=used
-                             //put 512byte buffer status in bit31
+                              //put 512byte buffer status in bit31
     static uint8_t m_buffer64[m_buffer64_n][64] //64byte buffers
         __attribute__ ((aligned (4)));
     static uint8_t m_buffer512[512] //single 512byte buffer
