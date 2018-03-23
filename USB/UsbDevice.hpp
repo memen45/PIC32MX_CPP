@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include "Uart.hpp"
 
 struct UsbDevice {
 
@@ -20,5 +21,6 @@ struct UsbDevice {
     //init- true=detach/then attach, false=detach
     //return true if attached, false if not
     static bool         init        (bool);
+
 
 };

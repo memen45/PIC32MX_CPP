@@ -8,10 +8,22 @@
 
 uint32_t UsbDevice::timer1ms = 0;
 uint32_t UsbDevice::sof_count = 0;
+UsbEP ep[UsbConfig::last_ep_num+1];
 
 //private
 //=============================================================================
-void detach()
+    void debug(...)
+//=============================================================================
+{
+    if(not UsbConfig::debug_on) return;
+    printf("USB: %s:%d:%s(): ", __FILE__, __LINE__, __func__);
+    printf( __VA_ARGS__ );
+    printf("\r\n");
+}
+
+//private
+//=============================================================================
+    void detach()
 //=============================================================================
 {
     Usb usb; UsbBdt bdt; UsbBuf buf; Irq irq;
@@ -19,24 +31,24 @@ void detach()
     irq.on(irq.USB, false);             //usb irq off
     usb.power(usb.USBPWR, false);       //power off
     while(usb.power(usb.USBBUSY));      //wait for busy
-    bdt.table = {0};                    //clear bdt table
     buf.init();                         //reclaim/clear buffers
 }
 
 //private
 //=============================================================================
-void attach()
+    void attach()
 //=============================================================================
 {
-    Usb usb; Irq irq; UsbBdt bdt; UsbConfig cfg;
+    Usb usb; Irq irq; UsbBdt bdt; UsbConfig cfg; UsbBuf ubuf;
 
     timer1ms = 0;                       //reset 1ms timer
     sof_count = 0;                      //and sof count
-    //get ep0 buffers, set bdt table addresses
-    bdt.bufaddr[0], buf.get64());       //ep0 rx even
-    bdt.bufaddr[1], buf.get64());       //ep0 rx odd
-    bdt.bufaddr[2], buf.get64());       //ep0 tx even
-    bdt.bufaddr[3], buf.get64());       //ep0 tx odd
+    bdt.init();                         //clear table
+    for(uint8_t i = 0; i < UsbConfig::last_ep_num+1; i++) ep[i].init(i);
+    ep[0].setbuf(ubuf.get64(), ep[0].RX, ep[0].EVEN, 64);
+    ep[0].setbuf(ubuf.get64(), ep[0].RX, ep[0].ODD, 64);
+    ep[0].setbuf(ubuf.get64(), ep[0].TX, ep[0].EVEN, 64);
+    ep[0].setbuf(ubuf.get64(), ep[0].TX, ep[0].ODD, 64);
     //no writes to usb regs until powered on
     usb.power(usb.USBPWR, true);        //power on
     usb.bdt_addr(bdt.table);            //record address in usb bdt reg
@@ -61,19 +73,20 @@ void attach()
     return true;                        //true=attached
 }
 
-
 //=============================================================================
     ISR(USB)
 //=============================================================================
 {
-    Usb usb; Irq irq; UsbBdt bdt;
+    Usb usb; Irq irq;
+
+    do { //until no more usb irq flag
 
     uint32_t flags = usb.flags();       //get all flags
 
     //get stat (stat values 0-63, only valid if trn set)
     //sie fifo advances when trn cleared, so get a copy before trn cleared
     //(if trn not set, the flag clearing below will not clear, so no advance)
-    uint8_t stat = usb.stat();
+    uint8_t ustat = usb.stat();
 
     usb.flags_clr(flags);               //clear all flags we found
     irq.flag_clr(irq.USB);              //clear usb irq flag
@@ -82,14 +95,6 @@ void attach()
     //all flags cleared now, and only interested in flags where irq
     //was also enabled, we also have stat if trn was set
 
-    //enable ep0 rx (even=false|0, odd=true|1)
-    auto enable_ep0rx = [&](bool eo){
-        bdt.table[eo].ctrl.count = 64;
-        bdt.table[eo].ctrl.data01 = 0;
-        bdt.table[eo].ctrl.bstall = 1;
-        bdt.table[eo].ctrl.uown = 1;
-    }
-
     //set 'normal' irq's, enable ep0 rx even/odd
     auto irqs_normal = [&](){
         usb.irqs(usb.IDLE bitor
@@ -97,17 +102,9 @@ void attach()
                  usb.URST bitor
                  usb.T1MSEC bitor
                  usb.SOF);
-        enable_ep0rx(0);
-        enable_ep0rx(1);
+        enable_ep0rx();
+        enable_ep0rx();
     }
-
-    //set 'suspend' irq's
-    auto irqs_suspend = [&](){
-        usb.irqs(usb.RESUME bitor
-                 usb.URST bitor
-                 usb.T1MSEC bitor);
-    }
-
 
     if(flags bitand usb.T1MSEC){        //update 1ms timer
         timer1ms++;
@@ -130,14 +127,23 @@ void attach()
     }
 
     if(flags bitand usb.IDLE){          //idle (>3ms)
-        irqs_suspend();
+        //set 'suspend' irq's
+        usb.irqs(usb.RESUME bitor
+                 usb.URST bitor
+                 usb.T1MSEC bitor);
     }
 
     if(flags bitand usb.TRN){           //token complete
-        //if ep0 rx, arm the next rx buffer
-        //stat-> ep0rxeven = 0, ep0rxodd=1
-        if(stat <= 1) enable_ep0rx(stat xor 1);
-        //call something with stat (index into table buffer)
-        //some_trn_func(stat)
+        //although improbable, make sure an endpoint we use
+        if(stat < UsbBdt::bdt_table_siz){
+            ep[ustat>>2].trn_service(ustat bitand 3);
+        }
+        //else is not valid endpoint
     }
+
+    //more flags to check- stall, etc.
+
+    } while(irq.flag(irq.USB); //check if irq set again before leaving isr
 }
+
+

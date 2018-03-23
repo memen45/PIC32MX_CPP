@@ -96,7 +96,7 @@ struct Usb {
 
     //U1STAT
     //only valid when TOKEN flag set
-    //value return is shifted right 1 bits, so can be used as bdt index
+    //value return is shifted right 2 bits, so can be used as bdt index
     static uint8_t      stat        ();             //U1STAT>>2
 
     //U1CON

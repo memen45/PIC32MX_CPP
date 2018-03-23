@@ -110,12 +110,6 @@ struct UsbCh9 {
         uint8_t     packet[8];
         uint16_t    wRequest;
         struct {
-            unsigned recip:2;   //0=device,1=iface,2=endpt,3=other
-            unsigned :3;        //unused bits for recip
-            unsigned type:2;    //0=std,1=class,2=vendor
-            unsigned dir:1;     //data phase, 1=to host, 0=from host
-        };
-        struct {
             uint8_t     bmRequestType;
             uint8_t     bRequest;
             uint16_t    wValue;

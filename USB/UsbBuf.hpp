@@ -14,7 +14,8 @@
 struct UsbBuf {
 
     static uint8_t*         get64       ();
-    static void             release64   (uint8_t* bufp);
+    static uint8_t*         get512      ();
+    static void             release     (uint8_t* bufp);
     static void             init        ();
 
     private:
@@ -25,7 +26,10 @@ struct UsbBuf {
 
     //internal storage/tracking
     static uint32_t m_status; //inuse bits - 0=available 1=used
-    static uint8_t m_buffer64[m_buffer64_n] //64byte buffers
+                             //put 512byte buffer status in bit31
+    static uint8_t m_buffer64[m_buffer64_n][64] //64byte buffers
+        __attribute__ ((aligned (4)));
+    static uint8_t m_buffer512[512] //single 512byte buffer
         __attribute__ ((aligned (4)));
 
 };

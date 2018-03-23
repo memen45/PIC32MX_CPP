@@ -2,7 +2,7 @@
 #include "UsbCh9.hpp"
 
 //CDC Demo
-const UsbCh9::DeviceDescriptor_t device = {
+static const UsbCh9::DeviceDescriptor_t device = {
     18,             //length
     UsbCh9::DEVICE, //1
     0x0200,         //(bcd) usb 2.0
@@ -21,9 +21,10 @@ const UsbCh9::DeviceDescriptor_t device = {
 
 
 
-const uint8_t config1[] = {
+static const uint8_t config1[] = {
     //let function fill in size (third,fourth byte, word size)
     9, UsbCh9::CONFIGURATION, 0, 0, 2, 1, 0, UsbCh9::SELFPOWER, 50,
+
     //interface0
     9, UsbCh9::INTERFACE, 0, 0, 0, 2, 2, 1, 0,
     //cdc descriptors
@@ -33,6 +34,7 @@ const uint8_t config1[] = {
     5, 36, 1, 0, 1,         //call management
     //endpoint  //8,0 = 0x0008
     7, UsbCh9::ENDPOINT, UsbCh9::IN1, UsbCh9::INTERRUPT, 8, 0, 2,
+
     //interface1
     9, UsbCh9::INTERFACE, 1, 0, 2, 10, 0, 0, 0,
     //endpoint //64,0 = 0x0040
@@ -43,7 +45,7 @@ const uint8_t config1[] = {
 
 
 //Language code string descriptor
-const char* strings[] = {
+static const char* strings[] = {
     "\x09\x04",                     //language (low byte, high byte)
     "Microchip Techonology Inc.",   //manufacturer
     "CDC RS-232 Emulation Demo"     //product
@@ -68,7 +70,7 @@ uint16_t get_config(uint8_t* buf, uint16_t sz, uint8_t idx){
     if(idx != 1 or sz < sizeof(config1)) return 0;
     uint8_t* cfg = (uint8_t*)config1;
     uint16_t i = 0;
-    for(; i < sizeof(config1); i++) buf[i] = *cfg++;
+    for(; i < sizeof(config1); ) buf[i++] = *cfg++;
     buf[2] = i; //fill in total config size
     buf[3] = i>>8; //upper byte
     return i;
@@ -80,9 +82,9 @@ uint16_t get_string(uint8_t* buf, uint16_t sz, uint8_t idx){
     const char* str = strings[idx];
     buf[1] = UsbCh9::STRING; //type
     uint16_t i = 0;
-    for(; *str && i < sz-1; i += 2){
-        buf[i] = *str++;
-        buf[i+1] = 0; //wide char
+    for(; *str && i < sz-1; ){
+        buf[i++] = *str++;
+        buf[i++] = 0; //wide char
     }
     buf[0] = i; //fill in string length (max 255)
     //string > 255chars, or buffer too small, return 0, else string size
