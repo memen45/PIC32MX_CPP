@@ -247,6 +247,10 @@ bool setup_service(uint8_t n, UsbBdt::stat_t stat)
 
         case DEV_GET_CONFIGURATION:
             uint16_t dsiz = UsbDescriptors::get(pkt->wValue, txbuf, txsiz );
+            if(not dsiz){ //could not get descriptor (bad index, or buffer too small)
+                release_tx();
+                return false;
+            }
             if(dsiz < pkt->wLength) m_buf[n].xmitbytes = dsiz; //smaller than requested
             break;
         case DEV_SET_CONFIGURATION:
