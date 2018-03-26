@@ -43,12 +43,8 @@ UsbEP ep[UsbConfig::last_ep_num+1];
 
     timer1ms = 0;                       //reset 1ms timer
     sof_count = 0;                      //and sof count
-    bdt.init();                         //clear table
+    bdt.init();                         //clear bdt table
     for(uint8_t i = 0; i < UsbConfig::last_ep_num+1; i++) ep[i].init(i);
-    ep[0].setbuf(ubuf.get64(), ep[0].RX, ep[0].EVEN, 64);
-    ep[0].setbuf(ubuf.get64(), ep[0].RX, ep[0].ODD, 64);
-    ep[0].setbuf(ubuf.get64(), ep[0].TX, ep[0].EVEN, 64);
-    ep[0].setbuf(ubuf.get64(), ep[0].TX, ep[0].ODD, 64);
     //no writes to usb regs until powered on
     usb.power(usb.USBPWR, true);        //power on
     usb.bdt_addr(bdt.table);            //record address in usb bdt reg
@@ -102,8 +98,8 @@ UsbEP ep[UsbConfig::last_ep_num+1];
                  usb.URST bitor
                  usb.T1MSEC bitor
                  usb.SOF);
-        enable_ep0rx();
-        enable_ep0rx();
+        //TODO enable_ep0rx();
+        //TODO enable_ep0rx();
     }
 
     if(flags bitand usb.T1MSEC){        //update 1ms timer

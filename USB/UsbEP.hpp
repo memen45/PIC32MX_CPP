@@ -4,45 +4,107 @@
 
 #include <cstdint>
 #include "UsbBdt.hpp"
+#include "UsbCh9.hpp"
 
 struct UsbEP {
 
-    enum TXRX : bool { RX = 0, TX = 2 };
-    enum EVEODD : bool { EVEN, ODD };
+    enum TXRX : bool { RX = 0, TX = 1 };
 
-    bool init(uint8_t);
-    void setbuf(uint8_t* buf, TXRX, trx, EVEODD e, uint16_t siz); //specify
-    void setbuf(uint8_t* buf, TXRX, trx, uint16_t siz); //current
-    uint8_t* getbuf(TXRX trx, EVEODD e); //specify even/odd
-    uint8_t* getbuf(TXRX trx); //current one (not in use)
-    bool setup(TXRX trx, EVEODD e, uint16_t count, uint8_t opt); //specify even/odd
-    bool setup(TXRX trx, EVEODD e, UsbBdt::ctrl_t ctrl);
-    bool setup(TXRX trx, uint16_t count, uint8_t opt); //current
-    bool setup(TXRX trx, UsbBdt::ctrl_t ctrl);
+    using callme_tx_t = void(*)();
+    using callme_rx_t = void(*)(uint8_t*, uint16_t);
+    using other_req_t = int16_t(*)(UsbCh9.SetupPkt_t*, uint8_t*, uint16_t);
+
+    bool        init            (uint8_t);
+    void        set_callme_rx   (callme_rx_t);
+    void        set_callme_tx   (callme_tx_t);
+    int16_t     set_other_req   (other_req_t);
+    bool        setup           (TXRX);
+    bool        trn_service     (uint8_t);
 
     private:
 
-    bool setup_service(uint8_t n, UsbBdt::stat_t stat);
-    bool out_service(uint8_t n, UsbBdt::stat_t stat);
-    bool in_service(uint8_t n, UsbBdt::stat_t stat);
+    void        setup_service   ();
+    void        out_service     ();
+    void        in_service      ();
 
-    const uint8_t           m_epnum{0};
-    const UsbBdt::bdt_t*    m_bdt{0};
+    uint8_t         m_epnum{0};
+    UsbBdt::bdt_t*  m_bdt{0};
+    UsbBdt::stat_t  m_stat{0};  //bdt stat
+    uint8_t         m_idx{0};   //usb hardware stat, 0-3, index into m_buf
+
+    //our ping-pong index [0]=rx, [1]=tx
+    //update from usb stat, so is lagging
+    bool            m_ppbi[2]{0};
+
+
+    callme_t    m_callme_rx{0};
+    callme_t    m_callme_tx{0};
+    other_req_t m_other_req{0};
 
     using buf_t = struct {
-        bool                eveodd; //current unused buffer
-        bool                active; //uown set (our bit)
-        uint8_t*            addr;   //buffer address (virtual)
-        uint16_t            siz;    //buffer size
-        uint16_t            count;  //bdt set count (<= max packet size)
-        uint16_t            xmitted;//total bytes xmitted
-        uint16_t            xmitbytes; //total to xmit
+        uint8_t*    addr;       //buffer address
+        uint16_t    siz;        //buffer size
+        uint16_t    bdone;      //total bytes done
+        uint16_t    btogo;      //total bytes to go
+        bool        zlp;        //need zero length end packet
+        bool        d01;        //data01
     };
-    buf_t                   m_buf[4]{0};
+    buf_t           m_buf[2]{0}; //RX,TX
 
 };
 
 
+#if 0
+
+ppbi uown
+ 0    0     even, cpu
+ 0    1     even, sie
+ 1    0     odd, cpu
+ 1    1     odd, sie
+
+trn
+m_ppbi[m_idx>>1] = not (m_idx bitand 1)
+
+
+reset, init rx
+m_ppbi[0] = 0
+m_ppbi[1] = 0
+
+trn out/rx (setup packet)
+m_ppbi[0] = 1 //toggle ppbi
+m_ppbi[1] = 0
+
+send zlp
+m_ppbi[0] = 0
+m_ppbi[1] = 0
+
+trn in
+m_ppbi[0] = 0
+m_ppbi[1] = 1 //toggle ppbi
+
+
+
+reset, init rx
+m_ppbi[0] = 0
+m_ppbi[1] = 0
+
+trn out/rx (setup packet)
+m_ppbi[0] = 1 //toggle ppbi
+m_ppbi[1] = 0
+
+in
+m_ppbi[0] = 0
+m_ppbi[1] = 0
+
+zlp
+m_ppbi[0] = 0
+m_ppbi[1] = 0
+
+trn in
+m_ppbi[0] = 0
+m_ppbi[1] = 1 //toggle ppbi
+
+#endif
 
 
 

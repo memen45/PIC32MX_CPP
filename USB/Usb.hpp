@@ -102,7 +102,7 @@ struct Usb {
     //U1CON
     enum CONTROL : uint8_t {
         JSTATE = 1<<7, SE0 = 1<<6, PKTDIS = 1<<5, TOKBUSY = 1<<5,
-        USBRST = 1<<4, HOSTEN = 1<<3, RESUME = 1<<2, PPBRST = 1<<1,
+        USBRST = 1<<4, HOSTEN = 1<<3, RESUM = 1<<2, PPBRST = 1<<1,
         USBEN = 1<<0, SOFEN = 1<<0
     };
     static bool         control     (CONTROL);      //get one

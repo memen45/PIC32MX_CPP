@@ -23,6 +23,7 @@ uint8_t UsbBuf::m_buffer512[512] = {0};
 //=============================================================================
 {
     if(m_status bitand (1<<31)) return 0;
+    m_status or_eq (1<<31);
     return m_buffer512;
 }
 
