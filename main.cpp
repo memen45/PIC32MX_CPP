@@ -335,7 +335,6 @@ Irq::global(true);
 
 
 
-
     Rgb rgb;
     Led12 led12;
     Delay dly;
