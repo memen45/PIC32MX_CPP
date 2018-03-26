@@ -220,6 +220,7 @@ printf("\r\nsetup pkt: %02x %02x %02x %02x %02x %02x %02x %02x\r\n\r\n",
             break;
         case UsbCh9::DEV_GET_DESCRIPTOR:
             xlen = UsbDescriptors::get(pkt->wValue, tx.addr, tx.siz);
+            if(xlen == 0) xlen = -1;
             break;
 
         case UsbCh9::DEV_SET_DESCRIPTOR:
@@ -241,6 +242,7 @@ printf("\r\nsetup pkt: %02x %02x %02x %02x %02x %02x %02x %02x\r\n\r\n",
         default:
             xlen = -1;
             if(m_other_req) xlen = m_other_req(pkt, tx.addr, tx.siz);
+            if(xlen == 0) xlen = -1;
             break;
     }
 
