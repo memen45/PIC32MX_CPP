@@ -22,6 +22,7 @@ struct UsbBdt {
         unsigned        :6;
         };
         uint8_t val8;
+        uint32_t val32;
     };
     //USB Buffer Descriptor Status Format
     using stat_t = union {
@@ -35,10 +36,11 @@ struct UsbBdt {
         unsigned        :6;
         };
         uint8_t val8;
+        uint32_t val32;
     };
 
     using bdt_t = struct {
-        union { ctrt_t ctrl; stat_t stat; };
+        union { ctrl_t ctrl; stat_t stat; };
         uint32_t bufaddr;
     };
 
@@ -48,7 +50,7 @@ struct UsbBdt {
     //ep0 tx odd    ctrl|stat,addr 2words/8bytes table[3]
     //...
 
-    static const bdt_table_siz = (UsbConfig::last_ep_num+1)*4;
+    static const uint8_t bdt_table_siz = (UsbConfig::last_ep_num+1)*4;
     static volatile bdt_t table[bdt_table_siz]
         __attribute__ ((aligned (512)));
 

@@ -100,13 +100,13 @@ struct UsbCh9 {
     };
 
     //String descriptor (header only)
-    using StringDescriptor_t = struct __attribute__ ((packed)){
+    using StringDescriptor_t = struct {
         uint8_t bLength;
         uint8_t bDescriptorType;    // 3 - STRING
     };
 
     //setup packet
-    using SetupPkt_t = union __attribute__ ((packed)){
+    using SetupPkt_t = union {
         uint8_t     packet[8];
         uint16_t    wRequest;
         struct {

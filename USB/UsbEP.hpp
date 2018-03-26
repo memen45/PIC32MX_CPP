@@ -12,33 +12,35 @@ struct UsbEP {
 
     using callme_tx_t = void(*)();
     using callme_rx_t = void(*)(uint8_t*, uint16_t);
-    using other_req_t = int16_t(*)(UsbCh9.SetupPkt_t*, uint8_t*, uint16_t);
+    using other_req_t = int16_t(*)(UsbCh9::SetupPkt_t*, uint8_t*, uint16_t);
 
     bool        init            (uint8_t);
     void        set_callme_rx   (callme_rx_t);
     void        set_callme_tx   (callme_tx_t);
-    int16_t     set_other_req   (other_req_t);
+    void        set_other_req   (other_req_t);
     bool        setup           (TXRX);
-    bool        trn_service     (uint8_t);
+    void        trn_service     (uint8_t);
 
     private:
 
     void        setup_service   ();
     void        out_service     ();
     void        in_service      ();
+    void        release_tx      ();
 
     uint8_t         m_epnum{0};
-    UsbBdt::bdt_t*  m_bdt{0};
+    volatile UsbBdt::bdt_t*  m_bdt{0};
     UsbBdt::stat_t  m_stat{0};  //bdt stat
-    uint8_t         m_idx{0};   //usb hardware stat, 0-3, index into m_buf
+    uint8_t         m_idx{0};   //usb hardware stat, 0-3, index into m_bdt
+                                //and >>1 = index into m_buf (RX or TX)
 
     //our ping-pong index [0]=rx, [1]=tx
     //update from usb stat, so is lagging
     bool            m_ppbi[2]{0};
 
 
-    callme_t    m_callme_rx{0};
-    callme_t    m_callme_tx{0};
+    callme_rx_t m_callme_rx{0};
+    callme_tx_t m_callme_tx{0};
     other_req_t m_other_req{0};
 
     using buf_t = struct {
@@ -49,7 +51,7 @@ struct UsbEP {
         bool        zlp;        //need zero length end packet
         bool        d01;        //data01
     };
-    buf_t           m_buf[2]{0}; //RX,TX
+    buf_t       m_buf[2]{{0},{0}}; //RX,TX
 
 };
 

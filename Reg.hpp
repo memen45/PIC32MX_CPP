@@ -185,7 +185,7 @@ template <typename T> uint32_t Reg::val(T r){
  template <typename T> uint16_t Reg::val16(T r){
      return *(volatile uint16_t*)r;
  }
- //return uint16_t value of register r
+ //return uint8_t value of register r
  template <typename T> uint8_t Reg::val8(T r){
      return *(volatile uint8_t*)r;
  }

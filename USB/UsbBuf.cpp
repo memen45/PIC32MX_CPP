@@ -35,7 +35,6 @@ uint8_t UsbBuf::m_buffer512[512] = {0};
     for( ; j < m_buffer64_n; i <<= 1, j++){
         if(p < &m_buffer64[j][0] or p > &m_buffer64[j][63]) continue;//no match
         m_status and_eq compl i;                //match, set to not inuse
-        m_buffer64[j] = {0};                    //clear it (not necessary)
         return;
     }
     if(p >= &m_buffer512[0] and p <= &m_buffer512[511]){
@@ -48,7 +47,10 @@ uint8_t UsbBuf::m_buffer512[512] = {0};
 //=============================================================================
 {
     m_status = 0;
-    m_buffer64 = {0};   //clear everything (really only need to clear .status)
-                        //only takes <20us/kb @24MHz to clear everything
-    m_buffer512 = {0};
+    //clear everything (really only need to clear .status)
+    //takes <20us/kb @24MHz
+    for(auto& i : m_buffer512) i = 0;
+    for(auto& i : m_buffer64){
+        for(auto& ii : i) ii = 0;
+    }
 }

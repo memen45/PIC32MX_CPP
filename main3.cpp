@@ -22,7 +22,6 @@
 #include "Cp0.hpp"
 #include "Rtcc.hpp"
 #include "Irq.hpp"
-#include "UsbDevice.hpp"
 
 
 //svg colors for rgb led
@@ -165,6 +164,10 @@ struct Led12 {
 
 };
 
+extern "C" {
+#include "usb.h"
+}
+
 
 int main()
 {
@@ -190,15 +193,15 @@ int main()
     cursor(false); //hide cursor
 
 
-//trying my usb code
+//trying MCHP usb code
 Delay::wait_s(2);
-Pins sw3{ Pins::C4, Pins::INPU };
-Pins sw1{ Pins::B9, Pins::INPU };
+Irq::init(Irq::USB, 1, 0, false);
+USBDeviceInit();
+USBDeviceAttach();
+Irq::global(true);
+#include <stdio.h>
 
-while(not sw3.ison());
-UsbDevice::init(true);
-while(not sw1.ison());
-UsbDevice::init(false);
+
 
     Rgb rgb;
     Led12 led12;
@@ -207,6 +210,16 @@ UsbDevice::init(false);
 
     for(uint32_t i = 0;;i++){
         Wdt::reset(), led12.update(), rgb.update();
+
+        if(USBUSARTIsTxTrfReady() && dly.expired())
+        {
+            char data[32];
+            snprintf(data, 32, "%08X ",  USBGet1msTickCount());
+            putsUSBUSART(data);
+            dly.restart();
+        }
+        CDCTxService();
     }
 }
+
 

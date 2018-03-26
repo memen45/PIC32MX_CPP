@@ -25,7 +25,7 @@ struct Usb {
         eflag, eirq functions mirror above but are for error flags
     */
 
-    enum FLAGS : uint8_t {
+    enum FLAGS : uint32_t {
         //U1OTGIR, U1OTGIE, U1OTGSTAT
         ID = 1<<23,
         T1MSEC = 1<<22,     /*no STAT*/
