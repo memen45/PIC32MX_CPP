@@ -192,8 +192,8 @@ int main()
 
 //trying my usb code
 Delay::wait_s(2);
-Pins sw3{ Pins::C4, Pins::INPU };
-Pins sw1{ Pins::B9, Pins::INPU };
+Pins sw3{ Pins::C4, Pins::INPU }; //turn on usb
+Pins sw1{ Pins::B9, Pins::INPU }; //turn off usb
 
 while(not sw3.ison());
 UsbDevice::init(true);

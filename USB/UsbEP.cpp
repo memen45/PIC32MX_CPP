@@ -115,6 +115,9 @@ void UsbEP::trn_service(uint8_t ustat) //called from ISR
     //set next data01
     m_buf[m_idx>>1].d01 = m_stat.data01 xor 1;
 
+debug("%s:%d:%s():\r\n", __FILE__, __LINE__, __func__);
+debug("\tEP: %d\r\n", m_epnum);
+
     //if we are endpoint 0 and ep was rx, get next rx ready
     //if we are endpoint 0 and was setup pkt (rx), service setup pkt
     if(m_epnum == 0 and m_idx <= 1){
@@ -195,7 +198,7 @@ void UsbEP::setup_service()
     tx.addr[1] = 0;
     tx.d01 = 1;
 
-    uint16_t xlen = pkt->wLength; //total to xmit
+    int16_t xlen = pkt->wLength; //total to xmit
 
 debug("%s:%d:%s():\r\n", __FILE__, __LINE__, __func__);
 debug("\t%04x %04x %04x %04x\r\n",
@@ -261,7 +264,6 @@ debug("\t%04x %04x %04x %04x\r\n",
             break;
 
         case UsbCh9::DEV_SET_CONFIGURATION:
-            xlen = -1;
             break;
 
         case UsbCh9::IF_GET_IFACE:

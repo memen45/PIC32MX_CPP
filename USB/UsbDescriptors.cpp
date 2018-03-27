@@ -29,7 +29,7 @@ static const uint8_t config1[] = {
     9, UsbCh9::INTERFACE, 0, 0, 1, 2, 2, 1, 0,
     //cdc descriptors
     5, 36, 0, 16, 1,        //cdc header
-    4, 36, 2, 2,            //acm, the last 2 is support line requests only
+    4, 36, 2, 0,            //acm, the last is D0|D1|D2|D3- don't need yet
     5, 36, 6, 0, 1,         //union comm id=0, data id=1
     5, 36, 1, 0, 1,         //call management
     //endpoint  //8,0 = 0x0008
