@@ -19,7 +19,6 @@ Pins vbus_pin(UsbConfig::vbus_pin_n);
 //=============================================================================
 {
     if(not UsbConfig::debug_on) return;
-//    printf("USB: %s:%d:%s(): ", __FILE__, __LINE__, __func__);
     va_list args;
     va_start(args, fmt);
     vprintf(fmt,args);
@@ -128,14 +127,7 @@ else debug("\r\n");
     }
 
     if(flags bitand usb.URST){
-        //if idle or resume irq was on, was not just attached
-        //so is a reset when irq's were 'normal', so reinit
-//         if(usb.irq(usb.RESUME) or usb.irq(usb.IDLE)){
-//             UsbDevice::init(true);
-//         }
-//         else {
-            irqs_normal();             //just attached + reset
-        //}
+        irqs_normal();                  //enable normal irq's
         return;                         //nothing more to do here
     }
 
