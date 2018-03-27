@@ -15,13 +15,15 @@ Pins vbus_pin(UsbConfig::vbus_pin_n);
 
 //private
 //=============================================================================
-    void debug(...)
+    void debug(const char* fmt, ...)
 //=============================================================================
 {
-//    if(not UsbConfig::debug_on) return;
+    if(not UsbConfig::debug_on) return;
 //    printf("USB: %s:%d:%s(): ", __FILE__, __LINE__, __func__);
-//    printf( __VA_ARGS__ );
-//    printf("\r\n");
+    va_list args;
+    va_start(args, fmt);
+    vprintf(fmt,args);
+    va_end(args);
 }
 
 //private
@@ -56,7 +58,6 @@ Pins vbus_pin(UsbConfig::vbus_pin_n);
     irq.init(irq.USB, cfg.usb_irq_pri, cfg.usb_irq_subpri, true); //usb irq on
     usb.control(usb.USBEN, true);       //enable usb module
     irq.global(true);                   //global irq's on if not already
-    ep[0].init(0);
 }
 
 //init usb (or reinit, or detach) true=init/reinit, false=detach
@@ -66,7 +67,8 @@ Pins vbus_pin(UsbConfig::vbus_pin_n);
     bool        UsbDevice::init         (bool tf)
 //=============================================================================
 {
-printf("init> %d\r\n",tf);
+debug("%s:%d:%s():\r\n", __FILE__, __LINE__, __func__);
+debug("\ttf: %d\r\n",tf);
     detach();
     //if no vbus pin voltage or tf=false (wanted only detach)
     if(not vbus_pin.ison() || not tf) return false;
@@ -97,8 +99,11 @@ printf("init> %d\r\n",tf);
     //was also enabled, we also have stat if trn was set
 
 if(flags bitand compl (usb.T1MSEC bitor usb.SOF)){
-printf("ISR> 1ms: %08x  sof: %08x  flags: %06x  ustat: %02x\r\n",
-        UsbDevice::timer1ms,UsbDevice::sof_count,flags,ustat);
+debug("%s:%d:%s():\r\n", __FILE__, __LINE__, __func__);
+debug("\t1ms: %06d  sof: %06d  flags: %06x",
+        UsbDevice::timer1ms,UsbDevice::sof_count,flags);
+if(flags bitand usb.TRN) debug("  %s:%s\r\n",ustat>>1 ? "TX":"RX",ustat bitand 1?"ODD":"EVEN");
+else debug("\r\n");
 }
 
     //set 'normal' irq's, enable ep0 rx even/odd
@@ -125,16 +130,17 @@ printf("ISR> 1ms: %08x  sof: %08x  flags: %06x  ustat: %02x\r\n",
     if(flags bitand usb.URST){
         //if idle or resume irq was on, was not just attached
         //so is a reset when irq's were 'normal', so reinit
-        if(usb.irq(usb.RESUME) or usb.irq(usb.IDLE)){
-            UsbDevice::init(true);
-        }
-        else {
+//         if(usb.irq(usb.RESUME) or usb.irq(usb.IDLE)){
+//             UsbDevice::init(true);
+//         }
+//         else {
             irqs_normal();             //just attached + reset
-        }
+        //}
         return;                         //nothing more to do here
     }
 
     if(flags bitand usb.IDLE){          //idle (>3ms)
+debug("\tIDLE\r\n");
         //set 'suspend' irq's
         usb.irqs(usb.RESUME bitor
                  usb.URST bitor

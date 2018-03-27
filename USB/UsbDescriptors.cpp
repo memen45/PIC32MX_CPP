@@ -5,7 +5,7 @@
 static const UsbCh9::DeviceDescriptor_t device = {
     18,             //length
     UsbCh9::DEVICE, //1
-    0x0200,         //(bcd) usb 2.0
+    0x0101,//0x0200,         //(bcd) usb 2.0
     2,              //class (CDC device)
     0,              //subclass
     0,              //protocol
@@ -26,7 +26,7 @@ static const uint8_t config1[] = {
     9, UsbCh9::CONFIGURATION, 0, 0, 2, 1, 0, UsbCh9::SELFPOWER, 50,
 
     //interface0
-    9, UsbCh9::INTERFACE, 0, 0, 0, 2, 2, 1, 0,
+    9, UsbCh9::INTERFACE, 0, 0, 1, 2, 2, 1, 0,
     //cdc descriptors
     5, 36, 0, 16, 1,        //cdc header
     4, 36, 2, 2,            //acm, the last 2 is support line requests only
@@ -58,22 +58,20 @@ static const char* strings[] = {
 
 //always 18bytes
 uint16_t get_device(uint8_t* buf, uint16_t sz){
-    if(sz < device.bLength) return 0;
     const uint8_t* dev = (const uint8_t*)&device;
     uint16_t i = 0;
-    for(; i < device.bLength; i++) buf[i] = *dev++;
+    for(; i < sz; i++) buf[i] = *dev++;
     return i;
 }
 
 //could be >255 bytes
 uint16_t get_config(uint8_t* buf, uint16_t sz, uint8_t idx){
-    if(idx != 1 or sz < sizeof(config1)) return 0;
+    if(idx != 0) return 0;
     uint8_t* cfg = (uint8_t*)config1;
-    uint16_t i = 0;
-    for(; i < sizeof(config1); ) buf[i++] = *cfg++;
-    buf[2] = i; //fill in total config size
-    buf[3] = i>>8; //upper byte
-    return i;
+    for(uint16_t i = 0; i < sz; i++) buf[i] = *cfg++;
+    buf[2] = sizeof(config1); //fill in total config size
+    buf[3] = sizeof(config1)>>8; //upper byte
+    return sz;
 }
 
 //up to 255bytes

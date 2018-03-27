@@ -16,6 +16,25 @@
 //use half (64) for even, half for odd
 static uint8_t ep0buf[128] = {0};
 
+//private
+//=============================================================================
+    void debug(const char* fmt, ...)
+//=============================================================================
+{
+    if(not UsbConfig::debug_on) return;
+    va_list args;
+    va_start(args, fmt);
+    vprintf(fmt, args);
+    va_end(args);
+}
+//=============================================================================
+    void debug_bytes(uint8_t* buf, uint16_t count)
+//=============================================================================
+{
+    if(not UsbConfig::debug_on) return;
+    for(auto i = 0; i < count; i++) printf("%s%02x",i%16==0?"\r\n\t":" ",buf[i]);
+    printf("\r\n");
+}
 
 //=============================================================================
 bool UsbEP::init(uint8_t n)
@@ -64,7 +83,8 @@ void UsbEP::set_other_req(other_req_t f)
 bool UsbEP::setup(TXRX trx)
 //=============================================================================
 {
-printf("setup %s  %08x %04x %d\r\n",trx?"TX":"RX",
+debug("%s:%d:%s():\r\n", __FILE__, __LINE__, __func__);
+debug("\t%s  %08x %04x %d\r\n",trx?"TX":"RX",
         (uint32_t)m_buf[trx].addr,m_buf[trx].btogo,m_ppbi[trx]);
     if(not m_buf[trx].addr) return false;            //no buffer set
     uint8_t i = (trx<<1) + m_ppbi[trx];     //bdt index
@@ -77,6 +97,8 @@ printf("setup %s  %08x %04x %d\r\n",trx?"TX":"RX",
     ctrl.count = m_buf[trx].btogo < 64 ? m_buf[trx].btogo : 64;
     m_bdt[i].bufaddr = Reg::k2phys((uint32_t)m_buf[trx].addr);
     m_bdt[i].ctrl.val32 = ctrl.val32;
+
+if(trx == TX) debug_bytes(m_buf[TX].addr, ctrl.count);
     return true;
 }
 
@@ -91,7 +113,7 @@ void UsbEP::trn_service(uint8_t ustat) //called from ISR
     //stat is pid, count, etc. from bdt table
     m_stat.val32 = m_bdt[m_idx].stat.val32;
     //set next data01
-    m_buf[m_idx].d01 = m_stat.data01 xor 1;
+    m_buf[m_idx>>1].d01 = m_stat.data01 xor 1;
 
     //if we are endpoint 0 and ep was rx, get next rx ready
     //if we are endpoint 0 and was setup pkt (rx), service setup pkt
@@ -104,7 +126,10 @@ void UsbEP::trn_service(uint8_t ustat) //called from ISR
         rx.btogo = 64;
         rx.bdone = 0;
         setup(RX);
-        if(m_stat.pid == UsbCh9::SETUP) setup_service();
+        if(m_stat.pid == UsbCh9::SETUP){
+            setup_service();
+            return;
+        }
     }
 
     if(m_stat.pid == UsbCh9::OUT) out_service();
@@ -172,10 +197,9 @@ void UsbEP::setup_service()
 
     uint16_t xlen = pkt->wLength; //total to xmit
 
-printf("\r\nsetup pkt: %02x %02x %02x %02x %02x %02x %02x %02x\r\n\r\n",
-       pkt->packet[0],pkt->packet[1],pkt->packet[2],pkt->packet[3],
-       pkt->packet[4],pkt->packet[5],pkt->packet[6],pkt->packet[7]
-      );
+debug("%s:%d:%s():\r\n", __FILE__, __LINE__, __func__);
+debug("\t%04x %04x %04x %04x\r\n",
+       pkt->wRequest,pkt->wValue,pkt->wIndex,pkt->wLength);
 
     switch(pkt->wRequest){
 
@@ -203,23 +227,27 @@ printf("\r\nsetup pkt: %02x %02x %02x %02x %02x %02x %02x %02x\r\n\r\n",
         case UsbCh9::EP_CLEAR_FEATURE:
             // only option is ENDPOINT_HALT (0x00)
             //clear enpoint halt
+            xlen = -1;
             break;
 
         case UsbCh9::DEV_SET_FEATURE:
+            xlen = -1;
             break; //remote wakup, test mode, ignore both
 
         case UsbCh9::IF_SET_FEATURE:
+            xlen = -1;
             break; //nothing
 
         case UsbCh9::EP_SET_FEATURE:
             // only option is ENDPOINT_HALT (0x00)
             //set endpoint halt
+            xlen = -1;
             break;
 
         case UsbCh9::DEV_SET_ADDRESS:
             break;
         case UsbCh9::DEV_GET_DESCRIPTOR:
-            xlen = UsbDescriptors::get(pkt->wValue, tx.addr, tx.siz);
+            xlen = UsbDescriptors::get(pkt->wValue, tx.addr, pkt->wLength);
             if(xlen == 0) xlen = -1;
             break;
 
@@ -228,21 +256,29 @@ printf("\r\nsetup pkt: %02x %02x %02x %02x %02x %02x %02x %02x\r\n\r\n",
             break;
 
         case UsbCh9::DEV_GET_CONFIGURATION:
-            xlen = UsbDescriptors::get(pkt->wValue, tx.addr, tx.siz );
+            xlen = UsbDescriptors::get(pkt->wValue, tx.addr, pkt->wLength );
             if(not xlen) xlen = -1;
             break;
 
         case UsbCh9::DEV_SET_CONFIGURATION:
+            xlen = -1;
+            break;
 
         case UsbCh9::IF_GET_IFACE:
+            xlen = -1;
+            break;
         case UsbCh9::IF_SET_IFACE:
+            xlen = -1;
+            break;
 
         case UsbCh9::EP_SYNC_HFRAME:
+            xlen = -1;
+            break;
 
         default:
             xlen = -1;
             if(m_other_req) xlen = m_other_req(pkt, tx.addr, tx.siz);
-            if(xlen == 0) xlen = -1;
+            if(not xlen) xlen = -1;
             break;
     }
 
@@ -272,7 +308,8 @@ printf("\r\nsetup pkt: %02x %02x %02x %02x %02x %02x %02x %02x\r\n\r\n",
 void UsbEP::out_service()
 //=============================================================================
 {
-printf("UsbEP-RX> count: %x\r\n",m_stat.count);
+debug("%s:%d:%s():\r\n", __FILE__, __LINE__, __func__);
+debug("\tcount: %x\r\n",m_stat.count);
     //if count was 0 and was ep0 rx, was control zlp/status, done here
     if(m_stat.count == 0 and m_epnum == 0) return;
     //do something with other rx data here
@@ -287,13 +324,11 @@ void set_address()
     if(Usb::dev_addr()) return;
     //not sure which one, check both for now
     //set_address is 0x500, if we find it, set address
-    uint16_t* b1 = (uint16_t*)&ep0buf[0];
-    uint16_t* b2 = (uint16_t*)&ep0buf[64];
-    if(b1[0] == 0x500) Usb::dev_addr(b1[1]);
-    else if(b2[0] == 0x500) Usb::dev_addr(b2[1]);
+    if(ep0buf[0] == 0 and ep0buf[1] == 5) Usb::dev_addr(ep0buf[2]);
+    else if(ep0buf[64] == 0 and ep0buf[65] == 5) Usb::dev_addr(ep0buf[66]);
 
-    printf("ADDR> %04x %04x | %04x %04x | %02x\r\n",
-            b1[0],b1[1],b2[0],b2[1],Usb::dev_addr());
+debug("%s:%d:%s():\r\n", __FILE__, __LINE__, __func__);
+debug("\tdev_addr: %02x\r\n",Usb::dev_addr());
 }
 
 //=============================================================================
@@ -310,7 +345,8 @@ void UsbEP::in_service()
     if(m_stat.count > tx.btogo) tx.btogo = 0;//just in case, prevent uint wrap
     else tx.btogo -= m_stat.count;          //and amount left to do
 
-printf("UsbEP-TX> count: %04x bdone: %04x  btogo: %04x\r\n",
+debug("%s:%d:%s():\r\n", __FILE__, __LINE__, __func__);
+debug("\tcount: %04x bdone: %04x  btogo: %04x\r\n",
        m_stat.count,tx.bdone,tx.btogo);
 
     if(not tx.btogo){                       //all done?
