@@ -281,12 +281,12 @@ enum {
 {
     m_uartx_baud = v;
     uint32_t bclk = baud_clk();
-    v = (bclk / 16 / (m_uartx_baud / 100));
-    if( ((v / 100 * 100) / ((v % 100) + 1)) < 50 ){ //<50 = >2% error,
-        v *= 4; //so switch to hispeed
-        hispeed(true);
-    } else { hispeed(false); }
-    Reg::val(m_uartx_base + UXBRG, (v/100)-1);
+    v = ((bclk / v) >> 2) - 1;          //desired baud
+    if( (v >> 16) != 0 ){               //check if fits in 16bit
+        v = ((v + 1) >> 2) - 1;         //if not, switch to standard speed
+        hispeed(false);
+    } else { hispeed(true); }
+    Reg::val(m_uartx_base + UXBRG, v);
 }
 // 115200 8MHz
 //8000000 / 16 / 1152 = 434,
