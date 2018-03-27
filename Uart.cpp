@@ -4,7 +4,7 @@
 
 enum {
     UARTX_SPACING = 0x80,  //spacing in words
-    U1MODE = 0xBF801800,
+    U1MODE = 0xBF806000,
         ON = 15,
         SIDL = 13,
         IREN = 12,
@@ -44,9 +44,9 @@ enum {
 //=============================================================================
     Uart::Uart      (UARTX e, uint32_t baud)
 //=============================================================================
-    : m_uartx_base((vu32ptr)U1MODE + ((e bitand 3) * UARTX_SPACING)),
-      m_uartx_tx(*((vu32ptr)U1MODE + ((e bitand 3) * UARTX_SPACING) + UXTXREG)),
-      m_uartx_rx(*((vu32ptr)U1MODE + ((e bitand 3) * UARTX_SPACING) + UXRXREG)),
+    : m_uartx_base((vu32ptr)U1MODE + (e * UARTX_SPACING)),
+      m_uartx_tx(*((vu32ptr)U1MODE + (e * UARTX_SPACING) + UXTXREG)),
+      m_uartx_rx(*((vu32ptr)U1MODE + (e * UARTX_SPACING) + UXRXREG)),
       m_uartx_baud(0)
 {    
     m_uartx_baud = baud;
@@ -267,7 +267,7 @@ enum {
     m_uartx_baud = v;
     uint32_t bclk = baud_clk();
     v = (bclk / 16 / (m_uartx_baud / 100));
-    if( ((v / 100 * 100) / (v % 100)) < 50 ){ //<50 = >2% error,
+    if( ((v / 100 * 100) / ((v % 100) + 1)) < 50 ){ //<50 = >2% error,
         v *= 4; //so switch to hispeed
         hispeed(true);
     } else { hispeed(false); }
@@ -286,6 +286,11 @@ enum {
 // (651 / 100 * 100) / (651 % 100) = 11 = 8.5%error -> need hispeed
 //24000000 / 4 / 2304 = 2604,
 // (2604 / 100 * 100) / (2604 % 100) = 650 = 0.15%error -> ok
+    
+/* 250000 40MHz
+ * 40000000 / 16 / 2500 = 1000
+ * 
+    */
 
 //called by clk_sel(), on()
 //=============================================================================
