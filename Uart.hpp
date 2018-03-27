@@ -75,6 +75,7 @@ struct Uart  {
     bool            rx_perr         ();                 //rx parity err
     bool            rx_ferr         ();                 //rx framing err
     bool            rx_oerr         ();                 //rx overrun err
+    void            rx_oerr_clr     ();                 //clear rx overrun err
     bool            rx_empty        ();                 //rx is empty
 
     //uxtxreg
