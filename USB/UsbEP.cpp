@@ -5,6 +5,7 @@
 #include "UsbBdt.hpp"
 #include "Usb.hpp"
 #include "UsbDescriptors.hpp"
+#include "UsbConfig.hpp"
 
 //USB peripheral - PIC32MM0256GPM064
 
@@ -36,6 +37,7 @@ static uint8_t ep0buf[128] = {0};
     printf("\r\n");
 }
 
+//usb needs to be on, as we write to usb registers
 //=============================================================================
 bool UsbEP::init(uint8_t n)
 //=============================================================================
@@ -55,6 +57,7 @@ bool UsbEP::init(uint8_t n)
         setup(RX);
         release_tx();
     }
+    Usb::epcontrol(n, UsbConfig::ep_ctrl[n]); //set endpoint control
     return true;
 }
 

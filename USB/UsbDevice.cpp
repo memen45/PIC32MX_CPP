@@ -48,11 +48,13 @@ Pins vbus_pin(UsbConfig::vbus_pin_n);
     UsbDevice::timer1ms = 0;            //reset 1ms timer
     UsbDevice::sof_count = 0;           //and sof count
     bdt.init();                         //clear bdt table
-    for(uint8_t i = 0; i < UsbConfig::last_ep_num+1; i++) ep[i].init(i);
     //no writes to usb regs until powered on
     usb.power(usb.USBPWR, true);        //power on
     usb.bdt_addr((uint32_t)bdt.table);  //record address in usb bdt reg
-    usb.epcontrol(0, usb.EPRXEN|usb.EPTXEN|usb.EPHSHK); //enable endpoint 0
+    for(uint8_t i = 0; i < UsbConfig::last_ep_num+1; i++) ep[i].init(i);
+// usb.epcontrol(0, usb.EPRXEN|usb.EPTXEN|usb.EPHSHK); //enable endpoint 0
+// usb.epcontrol(1, usb.EPTXEN|usb.EPHSHK);
+// usb.epcontrol(2, usb.EPRXEN|usb.EPTXEN|usb.EPHSHK);
     usb.irqs(usb.URST|usb.T1MSEC);      //enable some irqs
     irq.init(irq.USB, cfg.usb_irq_pri, cfg.usb_irq_subpri, true); //usb irq on
     usb.control(usb.USBEN, true);       //enable usb module
