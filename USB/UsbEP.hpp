@@ -18,8 +18,9 @@ struct UsbEP {
     void        set_callme_rx   (callme_rx_t);
     void        set_callme_tx   (callme_tx_t);
     void        set_other_req   (other_req_t);
-    bool        setup           (TXRX);
+    bool        setup           (TXRX, bool = false);
     void        trn_service     (uint8_t);
+    bool        xfer            (TXRX, uint8_t*, uint16_t);
 
     private:
 

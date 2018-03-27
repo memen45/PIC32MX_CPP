@@ -80,17 +80,20 @@ void UsbEP::set_other_req(other_req_t f)
 }
 
 //=============================================================================
-bool UsbEP::setup(TXRX trx)
+bool UsbEP::setup(TXRX trx, bool stall)
 //=============================================================================
 {
 debug("%s:%d:%s():\r\n", __FILE__, __LINE__, __func__);
-debug("\t%s  %08x %04x %d\r\n",trx?"TX":"RX",
-        (uint32_t)m_buf[trx].addr,m_buf[trx].btogo,m_ppbi[trx]);
-    if(not m_buf[trx].addr) return false;            //no buffer set
+debug("\t%s  %08x %04x %d %s\r\n",trx?"TX":"RX",
+        (uint32_t)m_buf[trx].addr,m_buf[trx].btogo,m_ppbi[trx],stall?"STALL":"");
+
+    if(not m_buf[trx].addr) return false;   //no buffer set
     uint8_t i = (trx<<1) + m_ppbi[trx];     //bdt index
     if(m_bdt[i].stat.uown) i xor_eq 1;      //in use, try next
     if(m_bdt[i].stat.uown) return false;    //both in use
+
     volatile UsbBdt::ctrl_t ctrl = {0};
+    ctrl.bstall = stall;
     ctrl.data01 = m_buf[trx].d01;
     ctrl.uown = 1;
     ctrl.dts = 1;
@@ -197,6 +200,9 @@ void UsbEP::setup_service()
     tx.addr[0] = 0;
     tx.addr[1] = 0;
     tx.d01 = 1;
+    tx.zlp = false;
+    tx.btogo = pkt->wLength;
+    tx.bdone= 0;
 
     int16_t xlen = pkt->wLength; //total to xmit
 
@@ -286,13 +292,14 @@ debug("\t%04x %04x %04x %04x\r\n",
 
     //ignore whatever we don't support
     if(xlen == -1){
-        release_tx();
+        //release_tx();
+        tx.btogo = 0;
+        setup(TX, true); //stall
+        Usb::control(Usb::PKTDIS, false);
         return;
     }
 
-    tx.zlp = false;
-    tx.btogo = pkt->wLength;
-    tx.bdone= 0;
+
 
     //if have less than requested, change xtogo
     //if then also falls on ep size boundary, also need a zlp to notify end
@@ -357,8 +364,9 @@ debug("\tcount: %04x bdone: %04x  btogo: %04x\r\n",
             setup(TX);                      //zlp
             return;
         }
-        if(m_epnum == 0) release_tx();      //release if ep0
+        //if(m_epnum == 0) release_tx();      //release if ep0
         if(m_callme_tx) m_callme_tx();      //notify someone if needed
+        release_tx();
         return;                             //done
     }
     //need more bytes xmitted
@@ -369,15 +377,14 @@ debug("\tcount: %04x bdone: %04x  btogo: %04x\r\n",
 }
 
 //=============================================================================
-//bool UsbEP::send(uint8_t* buf, uint16_t siz)
+bool UsbEP::xfer(TXRX trx, uint8_t* buf, uint16_t siz)
 //=============================================================================
-//{
-//    buf_t& tx = m_buf[TX];
-//    if(tx.addr) return false; //tx is in use
-//    tx.addr = buf;
-//    tx.siz = siz;
-//    tx.btogo = siz;
-//    tx.bdone = 0;
-//    tx.d01 = 1;
-//    return setup(TX);
-//}
+{
+   buf_t& x = m_buf[trx];
+   if(x.addr) return false; //is in use
+   x.addr = buf;
+   x.siz = siz;
+   x.btogo = siz;
+   x.bdone = 0;
+   return setup(trx);
+}

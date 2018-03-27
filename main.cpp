@@ -23,6 +23,7 @@
 #include "Rtcc.hpp"
 #include "Irq.hpp"
 #include "UsbDevice.hpp"
+#include "UsbBuf.hpp"
 
 
 //svg colors for rgb led
@@ -197,7 +198,12 @@ Pins sw1{ Pins::B9, Pins::INPU }; //turn off usb
 
 while(not sw3.ison());
 UsbDevice::init(true);
-while(not sw1.ison());
+while(not sw1.ison()){
+//    uint8_t* buf = UsbBuf::get64();
+//    buf[0] = 'O'; buf[1] = 'K'; buf[2] = ' ';
+//    UsbDevice::cdc_tx(buf, 3);
+//    Delay::wait_ms(2000);
+}
 UsbDevice::init(false);
 
     Rgb rgb;

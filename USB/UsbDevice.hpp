@@ -22,5 +22,6 @@ struct UsbDevice {
     //return true if attached, false if not
     static bool         init        (bool);
 
-
+    static bool         cdc_tx      (uint8_t*, uint16_t);
+    static bool         cdc_rx      (uint8_t*, uint16_t);
 };

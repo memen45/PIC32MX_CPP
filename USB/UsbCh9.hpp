@@ -81,9 +81,9 @@ struct UsbCh9 {
     //EndpointDescriptor_t.bEndpointAddress
     enum ENDPOINT_ADDRESS {
         OUT0 = 0, OUT1, OUT2, OUT3, OUT4, OUT5, OUT6, OUT7,
-        OUT8 = 8, OUT9, OUT10, OUT11, OUT12, OUT13, OUT14, OUT15,
+        OUT8, OUT9, OUT10, OUT11, OUT12, OUT13, OUT14, OUT15,
         IN0 = 128, IN1, IN2, IN3, IN4, IN5, IN6, IN7,
-        IN8 = 136, IN9, IN10, IN11, IN12, IN13, IN14, IN15,
+        IN8, IN9, IN10, IN11, IN12, IN13, IN14, IN15,
     };
     //EndpointDescriptor_t.bmAttributes
     enum ENDPOINT_ATTRIBUTES {
@@ -97,12 +97,6 @@ struct UsbCh9 {
         ISO_FSMAX = 1023,
         BULK_FSMAX = 64, BULK_FSLARGE = 32,
         BULK_FSMEDIUM = 16, BULK_FSSMALL = 8
-    };
-
-    //String descriptor (header only)
-    using StringDescriptor_t = struct {
-        uint8_t bLength;
-        uint8_t bDescriptorType;    // 3 - STRING
     };
 
     //setup packet
@@ -142,7 +136,7 @@ struct UsbCh9 {
         GET_IFACE = 0x0A,
         SET_IFACE = 0x11,
 
-        SYNC_HFRAME = 0x1202
+        SYNC_HFRAME = 0x12
     };
 
     enum TOKEN_TYPE {
