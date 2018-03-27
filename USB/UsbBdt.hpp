@@ -7,32 +7,60 @@
 
 struct UsbBdt {
 
-    using bdt_t = struct {uint32_t ctrlstat; uint32_t bufaddr; };
+    //USB Buffer Descriptor Control Format
+    using ctrl_t = union {
+        struct {
+        unsigned        :2;
+        unsigned bstall :1;
+        unsigned dts    :1;
+        unsigned ninc   :1;
+        unsigned keep   :1;
+        unsigned data01 :1;
+        unsigned uown   :1;
+        unsigned        :8;
+        unsigned count  :10;
+        unsigned        :6;
+        };
+        uint8_t val8;
+        uint32_t val32;
+    };
+    //USB Buffer Descriptor Status Format
+    using stat_t = union {
+        struct {
+        unsigned        :2;
+        unsigned pid    :4;
+        unsigned data01 :1;
+        unsigned uown   :1;
+        unsigned        :8;
+        unsigned count  :10;
+        unsigned        :6;
+        };
+        uint8_t val8;
+        uint32_t val32;
+    };
 
-    volatile bdt_t table[(UsbConfig::last_ep_num+1)*4]
+    using bdt_t = struct {
+        union { ctrl_t ctrl; stat_t stat; };
+        uint32_t bufaddr;
+    };
+
+    //ep0 rx even   ctrl|stat,addr 2words/8bytes table[0]
+    //ep0 rx odd    ctrl|stat,addr 2words/8bytes table[1]
+    //ep0 tx even   ctrl|stat,addr 2words/8bytes table[2]
+    //ep0 tx odd    ctrl|stat,addr 2words/8bytes table[3]
+    //...
+
+    static const uint8_t bdt_table_siz = (UsbConfig::last_ep_num+1)*4;
+    static volatile bdt_t table[bdt_table_siz]
         __attribute__ ((aligned (512)));
 
     //clear table
     static void         init        ();
 
-    static void         bufaddr     (uint8_t, uint32_t);    //set buffer address
-    static uint8_t      bufaddr     (uint8_t);              //get buffer address
-
-    static void         count       (uint8_t, uint16_t);    //set count (ctrl)
-    static uint16_t     count       (uint8_t);              //get count (stat)
-
-    static void         uown        (uint8_t, bool);        //set uown (ctrl)
-    static bool         uown        (uint8_t);              //get uown (stat)
-
-    static void         data01      (uint8_t, bool);        //set data01 (ctrl)
-    static bool         data01      (uint8_t);              //get data01 (stat)
-
-    static void         keep        (uint8_t, bool);        //set keep (ctrl)
-    static void         ninc        (uint8_t, bool);        //set ninc (ctrl)
-    static void         dts         (uint8_t, bool);        //set dts (ctrl)
-    static void         bstall      (uint8_t, bool);        //set bstall (ctrl)
-
-    static uint8_t      pid         (uint8_t);              //get pid (stat)
-
 };
+
+
+
+
+
 

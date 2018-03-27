@@ -100,21 +100,15 @@ struct UsbCh9 {
     };
 
     //String descriptor (header only)
-    using StringDescriptor_t = struct __attribute__ ((packed)){
+    using StringDescriptor_t = struct {
         uint8_t bLength;
         uint8_t bDescriptorType;    // 3 - STRING
     };
 
     //setup packet
-    using SetupPkt_t = union __attribute__ ((packed)){
+    using SetupPkt_t = union {
         uint8_t     packet[8];
         uint16_t    wRequest;
-        struct {
-            unsigned recip:2;   //0=device,1=iface,2=endpt,3=other
-            unsigned :3;        //unused bits for recip
-            unsigned type:2;    //0=std,1=class,2=vendor
-            unsigned dir:1;     //data phase, 1=to host, 0=from host
-        };
         struct {
             uint8_t     bmRequestType;
             uint8_t     bRequest;

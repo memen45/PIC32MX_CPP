@@ -2,10 +2,10 @@
 #include "UsbCh9.hpp"
 
 //CDC Demo
-const UsbCh9::DeviceDescriptor_t device = {
+static const UsbCh9::DeviceDescriptor_t device = {
     18,             //length
     UsbCh9::DEVICE, //1
-    0x0200,         //(bcd) usb 2.0
+    0x0101,//0x0200,         //(bcd) usb 2.0
     2,              //class (CDC device)
     0,              //subclass
     0,              //protocol
@@ -21,18 +21,20 @@ const UsbCh9::DeviceDescriptor_t device = {
 
 
 
-const uint8_t config1[] = {
+static const uint8_t config1[] = {
     //let function fill in size (third,fourth byte, word size)
     9, UsbCh9::CONFIGURATION, 0, 0, 2, 1, 0, UsbCh9::SELFPOWER, 50,
+
     //interface0
-    9, UsbCh9::INTERFACE, 0, 0, 0, 2, 2, 1, 0,
+    9, UsbCh9::INTERFACE, 0, 0, 1, 2, 2, 1, 0,
     //cdc descriptors
     5, 36, 0, 16, 1,        //cdc header
-    4, 36, 2, 2,            //acm, the last 2 is support line requests only
+    4, 36, 2, 0,            //acm, the last is D0|D1|D2|D3- don't need yet
     5, 36, 6, 0, 1,         //union comm id=0, data id=1
     5, 36, 1, 0, 1,         //call management
     //endpoint  //8,0 = 0x0008
     7, UsbCh9::ENDPOINT, UsbCh9::IN1, UsbCh9::INTERRUPT, 8, 0, 2,
+
     //interface1
     9, UsbCh9::INTERFACE, 1, 0, 2, 10, 0, 0, 0,
     //endpoint //64,0 = 0x0040
@@ -43,7 +45,7 @@ const uint8_t config1[] = {
 
 
 //Language code string descriptor
-const char* strings[] = {
+static const char* strings[] = {
     "\x09\x04",                     //language (low byte, high byte)
     "Microchip Techonology Inc.",   //manufacturer
     "CDC RS-232 Emulation Demo"     //product
@@ -56,37 +58,47 @@ const char* strings[] = {
 
 //always 18bytes
 uint16_t get_device(uint8_t* buf, uint16_t sz){
-    if(sz < device.bLength) return 0;
     const uint8_t* dev = (const uint8_t*)&device;
     uint16_t i = 0;
-    for(; i < device.bLength; i++) buf[i] = *dev++;
+    for(; i < sz and i < sizeof(device); i++) buf[i] = *dev++;
     return i;
 }
 
 //could be >255 bytes
 uint16_t get_config(uint8_t* buf, uint16_t sz, uint8_t idx){
-    if(idx != 1 or sz < sizeof(config1)) return 0;
+    if(idx != 0) return 0;
+    uint16_t n = sizeof(config1);
     uint8_t* cfg = (uint8_t*)config1;
     uint16_t i = 0;
-    for(; i < sizeof(config1); i++) buf[i] = *cfg++;
-    buf[2] = i; //fill in total config size
-    buf[3] = i>>8; //upper byte
+    for(; i < sz and i < n; i++) buf[i] = *cfg++;
+    buf[2] = n; //fill in total config size
+    buf[3] = n>>8; //upper byte
     return i;
+}
+
+//up to 255bytes
+uint16_t get_string0(uint8_t* buf, uint16_t sz){
+    const char* str = strings[0];
+    uint8_t i = 2;
+    for(; *str; buf[i++] = *str++);
+    buf[1] = UsbCh9::STRING; //type
+    buf[0] = i;
+    return i < sz ? i : sz;
 }
 
 //up to 255bytes
 uint16_t get_string(uint8_t* buf, uint16_t sz, uint8_t idx){
     if(idx > sizeof(strings)) return 0;
+    if(idx == 0) return get_string0(buf, sz);
     const char* str = strings[idx];
-    buf[1] = UsbCh9::STRING; //type
-    uint16_t i = 0;
-    for(; *str && i < sz-1; i += 2){
-        buf[i] = *str++;
-        buf[i+1] = 0; //wide char
+    uint16_t i = 2;
+    for(; *str && i < sz-1; ){
+        buf[i++] = *str++;
+        buf[i++] = 0; //wide char
     }
+    buf[1] = UsbCh9::STRING; //type
     buf[0] = i; //fill in string length (max 255)
-    //string > 255chars, or buffer too small, return 0, else string size
-    return (*str || i > 255) ? 0 : i;
+    return i;
 }
 
 //public

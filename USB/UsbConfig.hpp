@@ -14,8 +14,8 @@ struct UsbConfig {
     ///////////////////////////////////////////////////////////////////////////////
 
     //---power/wakeup options-------------------------------------------------------
-    static const bool self_powered = 1;         //self-powered=1, bus-powered=0
-    static const bool remote_wakeup = 1;        //remote wakeup enabled=1
+    static const bool self_powered = true;      //self-powered=1, bus-powered=0
+    static const bool remote_wakeup = true;     //remote wakeup enabled=1
 
     //---interrupt------------------------------------------------------------------
     static const uint8_t usb_irq_pri = 1;       //usb interrupt priority
@@ -26,6 +26,9 @@ struct UsbConfig {
 
     //---vbus pin-------------------------------------------------------------------
     static const Pins::RPN vbus_pin_n = Pins::B6; //fixed pin, check datasheet
+
+    //---debug----------------------------------------------------------------------
+    static const bool debug_on = true;          //debug usb
 };
 
 
