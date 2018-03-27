@@ -60,33 +60,45 @@ static const char* strings[] = {
 uint16_t get_device(uint8_t* buf, uint16_t sz){
     const uint8_t* dev = (const uint8_t*)&device;
     uint16_t i = 0;
-    for(; i < sz; i++) buf[i] = *dev++;
+    for(; i < sz and i < sizeof(device); i++) buf[i] = *dev++;
     return i;
 }
 
 //could be >255 bytes
 uint16_t get_config(uint8_t* buf, uint16_t sz, uint8_t idx){
     if(idx != 0) return 0;
+    uint16_t n = sizeof(config1);
     uint8_t* cfg = (uint8_t*)config1;
-    for(uint16_t i = 0; i < sz; i++) buf[i] = *cfg++;
-    buf[2] = sizeof(config1); //fill in total config size
-    buf[3] = sizeof(config1)>>8; //upper byte
-    return sz;
+    uint16_t i = 0;
+    for(; i < sz and i < n; i++) buf[i] = *cfg++;
+    buf[2] = n; //fill in total config size
+    buf[3] = n>>8; //upper byte
+    return i;
+}
+
+//up to 255bytes
+uint16_t get_string0(uint8_t* buf, uint16_t sz){
+    const char* str = strings[0];
+    uint8_t i = 2;
+    for(; *str; buf[i++] = *str++);
+    buf[1] = UsbCh9::STRING; //type
+    buf[0] = i;
+    return i < sz ? i : sz;
 }
 
 //up to 255bytes
 uint16_t get_string(uint8_t* buf, uint16_t sz, uint8_t idx){
     if(idx > sizeof(strings)) return 0;
+    if(idx == 0) return get_string0(buf, sz);
     const char* str = strings[idx];
-    buf[1] = UsbCh9::STRING; //type
-    uint16_t i = 0;
+    uint16_t i = 2;
     for(; *str && i < sz-1; ){
         buf[i++] = *str++;
         buf[i++] = 0; //wide char
     }
+    buf[1] = UsbCh9::STRING; //type
     buf[0] = i; //fill in string length (max 255)
-    //string > 255chars, or buffer too small, return 0, else string size
-    return (*str || i > 255) ? 0 : i;
+    return i;
 }
 
 //public
