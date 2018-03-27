@@ -10,8 +10,6 @@
 
 #include <functional>
 
-#include "Irq.hpp"
-
 std::function<void()> isr_callback[52];
 
 #endif	/* IRQ_ISR_HPP */

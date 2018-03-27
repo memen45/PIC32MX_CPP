@@ -10,7 +10,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // ISR MACRO
 // usage- ISR_DEFAULT(ADC)
-#define ISR_DEFAULT(nam) extern "C" __attribute((vector((int)Irq::nam),interrupt))  \
+#define ISR_DEFAULT(nam) extern "C" __attribute((vector((int)(Irq::m_lookup_vn[Irq::nam])),interrupt))  \
     void nam##_ISR() {                                                      \
         if (isr_callback[Irq::m_lookup_vn[Irq::nam]])                       \
         isr_callback[Irq::m_lookup_vn[Irq::nam]]();                         \

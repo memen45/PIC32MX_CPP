@@ -68,6 +68,53 @@ struct Irq {
 		UART6_ERR = 70, UART6_RX, UART6_TX,	
 		UART5_ERR = 73, UART5_RX, UART5_TX,
     };
+    
+    static constexpr uint8_t m_lookup_vn[] = {
+    /*CORE_TIMER = */ 0, /* CORE_SOFTWARE_0 = */ 1, /* CORE_SOFTWARE_1 = */ 2,
+
+    /* EXTERNAL_0 = */ 3, /* TIMER_1 = */ 4, 	/* INPUT_CAPTURE_1 =  */5, /* OUTPUT_COMPARE_1 = */ 6,
+    /* EXTERNAL_1 = */ 7, 	/* TIMER_2 = */ 8, 		/* INPUT_CAPTURE_2 = */ 9, 		/* OUTPUT_COMPARE_2 = */ 10,
+    /* EXTERNAL_2 = */ 11, 	/* TIMER_3 = */ 12, 		/* INPUT_CAPTURE_3 = */ 13, 		/* OUTPUT_COMPARE_3 = */ 14,
+    /* EXTERNAL_3 = */ 15, 	/* TIMER_4 = */ 16, 		/* INPUT_CAPTURE_4 = */ 17, 		/* OUTPUT_COMPARE_4 = */ 18,
+    /* EXTERNAL_4 = */ 19, 	/* TIMER_5 = */ 20, 		/* INPUT_CAPTURE_5 = */ 21, 		/* OUTPUT_COMPARE_5 = */ 22,
+
+    /* SPI1_ERR = */ 23, /* SPI1_RX = */ 23, /* SPI1_TX = */ 23,
+
+    /* UART1_ERR = */ 24, /* SPI3_ERR = */ 24, /* I2C3_BUS = */ 24,
+    /* UART1_RX = */ 24, /* SPI3_RX = */ 24, /* I2C3_SLAVE = */ 24,
+    /* UART1_TX = */ 24, /* SPI3_TX = */ 24, /* I2C3_MASTER = */ 24,
+
+    /* I2C1_BUS = */ 25, /* I2C1_SLAVE = */ 25, /* I2C1_MASTER = */ 25,
+    /* CHANGE_NOTICE = */ 26,
+    /* ADC = */ 27,
+    /* PMP = */ 28,
+    /* CMP_1 = */ 29, /* CMP_2 = */ 30,
+
+    /* UART3_ERR = */ 31, /* SPI2_ERR = */ 31, /* I2C4_BUS = */ 31,
+    /* UART3_RX = */ 31, /* SPI2_RX = */ 31, /* I2C4_SLAVE = */ 31,
+    /* UART3_TX = */ 31, /* SPI2_TX = */ 31, /* I2C4_MASTER = */ 31,
+
+    /* UART2_ERR = */ 32, /* SPI4_ERR = */ 32, /* I2C5_BUS = */ 32,
+    /* UART2_RX = */ 32,/*  SPI4_RX = */ 32, /* I2C5_SLAVE = */ 32,
+    /* UART2_TX = */ 32, /* SPI4_TX = */ 32, /* I2C5_MASTER = */ 32,
+
+    /* I2C2_BUS = */ 33, /* I2C2_SLAVE = */ 33, /* I2C2_MASTER = */ 33,
+
+    /* FSCM = */ 34,
+    /* RTCC = */ 35,
+    /* DMA0 = */ 36, /* DMA1 = */ 37, /* DMA2 = */ 38, /* DMA3 = */ 39, /* DMA4 = */ 40, /* DMA5 = */ 41, /* DMA6 = */ 42, /* DMA7 = */ 43,
+    /* FCE = */ 44,
+    /* USB = */ 45,
+    /* CAN1 = */ 46, /* CAN2 = */ 47,
+    /* ETHERNET = */ 48,
+
+    /* INPUT_CAPTURE_1_ERROR = */ 5, /* INPUT_CAPTURE_2_ERROR = */ 9, /* INPUT_CAPTURE_3_ERROR = */ 13, /* INPUT_CAPTURE_4_ERROR = */ 17, /* INPUT_CAPTURE_5_ERROR = */ 21,
+    /* PMP_ERROR = */ 28, 
+
+    /* UART4_ERR = */ 49, /* UART4_RX = */ 49, /* UART4_TX = */ 49,
+    /* UART6_ERR = */ 50, /* UART6_RX = */ 50, /* UART6_TX = */ 50,	
+    /* UART5_ERR = */ 51, /* UART5_RX = */ 51, /* UART5_TX = */ 51,
+};
 
     static void     flag_clr        (IRQ_NR);
     static bool     flag            (IRQ_NR);
@@ -85,7 +132,7 @@ struct Irq {
     };
     static void     init            (irq_list_t*, uint8_t);
 	
-	static const uint8_t m_lookup_vn[95];
+//	static const uint8_t m_lookup_vn[95];
 };
 
 ////////////////////////////////////////////////////////////////////////////////
