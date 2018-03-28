@@ -11,8 +11,8 @@ struct UsbEP {
     enum TXRX : bool { RX = 0, TX = 1 };
 
     using callme_tx_t = void(*)();
-    using callme_rx_t = void(*)(uint8_t*, uint16_t);
-    using other_req_t = int16_t(*)(UsbCh9::SetupPkt_t*, uint8_t*, uint16_t);
+    using callme_rx_t = int16_t(*)(uint8_t*, uint16_t);
+    using other_req_t = int16_t(*)(uint8_t*, uint16_t, UsbCh9::SetupPkt_t*);
 
     bool        init            (uint8_t);
     void        set_callme_rx   (callme_rx_t);
@@ -21,6 +21,8 @@ struct UsbEP {
     bool        setup           (TXRX, bool = false);
     void        trn_service     (uint8_t);
     bool        xfer            (TXRX, uint8_t*, uint16_t);
+
+    static int16_t cdc_service     (uint8_t*, uint16_t, UsbCh9::SetupPkt_t* = 0);
 
     private:
 

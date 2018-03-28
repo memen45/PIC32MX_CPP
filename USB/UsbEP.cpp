@@ -286,9 +286,18 @@ debug("\t%04x %04x %04x %04x\r\n",
             xlen = -1;
             break;
 
+        //CDC here for now
+        case UsbCh9::CDC_SET_CONTROL_LINE_STATE:
+            //do nothing, just let tx status proceed
+            break;
+        case UsbCh9::CDC_SET_LINE_CODING:
+        case UsbCh9::CDC_GET_LINE_CODING:
+            xlen = cdc_service(tx.addr, pkt->wLength, pkt);
+            break;
+
         default:
             xlen = -1;
-            if(m_other_req) xlen = m_other_req(pkt, tx.addr, tx.siz);
+            if(m_other_req) xlen = m_other_req(tx.addr, tx.siz, pkt);
             if(not xlen) xlen = -1;
             break;
     }
@@ -302,7 +311,13 @@ debug("\t%04x %04x %04x %04x\r\n",
         return;
     }
 
-
+     //TODO for now, just let the rx happen, setup tx for zlp status
+    if(xlen == -2){ //rx data is next (rx already setup)
+        tx.btogo = 0; //setup for status zlp
+        setup(TX);
+        Usb::control(Usb::PKTDIS, false);
+        return;
+    }
 
     //if have less than requested, change xtogo
     //if then also falls on ep size boundary, also need a zlp to notify end
@@ -315,6 +330,40 @@ debug("\t%04x %04x %04x %04x\r\n",
     //clear PKTDIS to let control xfer resume
     Usb::control(Usb::PKTDIS, false);
 }
+//=============================================================================
+int16_t UsbEP::cdc_service(uint8_t* buf, uint16_t len, UsbCh9::SetupPkt_t* pkt)
+//=============================================================================
+{
+    //dwDETERate = uint32_t; //baud 0x0001C200 = 115200
+    //bCharFormat = uint8_t; //0,1(1.5),2 stop bits
+    //bParityType = uint8_t; //None=0,Odd,Even,Mark,Space
+    //bDataBits = uint8_t; //5,6,7,8,16
+    //not using, but just respond to set/get
+    //(I think I have them disabled in descriptor, but still see get/set)
+    static uint8_t line_coding[] = {0x00,0xC2,0x01,0x00, 0, 0, 8};
+
+debug("%s:%d:%s():\r\n", __FILE__, __LINE__, __func__);
+debug("\tpkt: %08x  buf: %08x  len: %04x\r\n",pkt,buf,len);
+
+    if(pkt == 0){ //is rx callback
+        if(len == 7){
+            for(auto i = 0; i < 7; i++) line_coding[i] = buf[i];
+        }
+        return 7;
+    }
+
+    if(pkt->wRequest == UsbCh9::CDC_SET_LINE_CODING){
+        //next ep0 rx will have the data
+        return -2; //rx next
+    }
+    else if(pkt->wRequest == UsbCh9::CDC_GET_LINE_CODING){
+        //copy current setting to buffer provided
+        if(len > 7) len = 7; //make sure;
+        for(auto i = 0; i < len; i++) buf[i] = line_coding[i];
+        return len; //tx is next
+    }
+    return -1; //unkown- stall
+}
 
 //=============================================================================
 void UsbEP::out_service()
@@ -322,10 +371,19 @@ void UsbEP::out_service()
 {
 debug("%s:%d:%s():\r\n", __FILE__, __LINE__, __func__);
 debug("\tcount: %x\r\n",m_stat.count);
-    //if count was 0 and was ep0 rx, was control zlp/status, done here
-    if(m_stat.count == 0 and m_epnum == 0) return;
-    //do something with other rx data here
-    if(m_callme_rx) m_callme_rx(m_buf[RX].addr, m_stat.count);
+    if(m_epnum){ //not ep0
+        //do something with other rx data here
+        if(m_callme_rx) m_callme_rx(m_buf[RX].addr, m_stat.count);
+        return;
+    }
+    //is ep0
+    //if count was 0, was control zlp/status, done here
+    if(m_stat.count == 0) return;
+    //if count was >0, some ep0 rx data
+    //we already switched addr, get previous addr
+    uint8_t* rxbuf = m_buf[RX].addr == &ep0buf[0] ? &ep0buf[64] : &ep0buf[0];
+debug_bytes(rxbuf, m_stat.count);
+    cdc_service(rxbuf, m_stat.count);
 }
 
 //=============================================================================

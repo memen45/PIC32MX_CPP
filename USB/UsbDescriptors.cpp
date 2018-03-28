@@ -5,7 +5,7 @@
 static const UsbCh9::DeviceDescriptor_t device = {
     18,             //length
     UsbCh9::DEVICE, //1
-    0x0101,//0x0200,         //(bcd) usb 2.0
+    0x0101,//0x0200,         //(bcd) usb 2.0 (changed to 1.1)
     2,              //class (CDC device)
     0,              //subclass
     0,              //protocol
@@ -76,7 +76,7 @@ uint16_t get_config(uint8_t* buf, uint16_t sz, uint8_t idx){
     return i;
 }
 
-//up to 255bytes
+//string 0 is language id(s)
 uint16_t get_string0(uint8_t* buf, uint16_t sz){
     const char* str = strings[0];
     uint8_t i = 2;
@@ -88,7 +88,7 @@ uint16_t get_string0(uint8_t* buf, uint16_t sz){
 
 //up to 255bytes
 uint16_t get_string(uint8_t* buf, uint16_t sz, uint8_t idx){
-    if(idx > sizeof(strings)) return 0;
+    if(idx >= sizeof(strings)) return 0;
     if(idx == 0) return get_string0(buf, sz);
     const char* str = strings[idx];
     uint16_t i = 2;

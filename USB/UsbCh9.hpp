@@ -124,7 +124,13 @@ struct UsbCh9 {
         IF_SET_IFACE = 0x1101,
 
         EP_GET_STATUS = 0x0082, EP_CLEAR_FEATURE = 0x0102,
-        EP_SET_FEATURE = 0x0302, EP_SYNC_HFRAME = 0x1202
+        EP_SET_FEATURE = 0x0302, EP_SYNC_HFRAME = 0x1202,
+
+        //we will put cdc stuff here for now
+        CDC_SET_LINE_CODING = 0x2021,
+        CDC_GET_LINE_CODING = 0x2121,
+        CDC_SET_CONTROL_LINE_STATE = 0x2221
+
     };
     //SetupPkt_t.bRequest
     enum SETUP_BREQUEST {

@@ -195,22 +195,27 @@ int main()
 Delay::wait_s(2);
 Pins sw3{ Pins::C4, Pins::INPU }; //turn on usb
 Pins sw1{ Pins::B9, Pins::INPU }; //turn off usb
+Pins sw2{ Pins::C10, Pins::INPU }; //xmit data
 
-while(not sw3.ison());
-UsbDevice::init(true);
-while(not sw1.ison()){
-    uint8_t* buf = UsbBuf::get64();
-    buf[0] = 'O'; buf[1] = 'K'; buf[2] = ' ';
+Delay dly;
+dly.set_ms(2000);
+
+uint8_t buf[3] = {'O','K',' '};
+bool ison = false;
+bool xmit = false;
+for(;;){
+if(sw3.ison()){ ison = UsbDevice::init(true); Delay::wait_ms(500); }
+if(sw1.ison()){ ison = UsbDevice::init(false); Delay::wait_ms(500); }
+if(sw2.ison()){ xmit = not xmit; Delay::wait_ms(100); }
+if(ison and dly.expired() and xmit){
+    dly.restart();
     UsbDevice::cdc_tx(buf, 3);
-    UsbBuf::release(buf);
-    Delay::wait_ms(200);
 }
-UsbDevice::init(false);
+}
+
 
     Rgb rgb;
     Led12 led12;
-    Delay dly;
-    dly.set_ms(100);
 
     for(uint32_t i = 0;;i++){
         Wdt::reset(), led12.update(), rgb.update();
