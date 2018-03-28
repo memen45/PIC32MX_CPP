@@ -3,7 +3,7 @@
 #include "Reg.hpp"
 
 enum :uint32_t {
-    SPIX_SPACING = 0x200, //spacing in words
+    SPIX_SPACING = 0x80, //spacing in words
     SPIXCON_BASE = 0xBF805800,      //Address for SPI3, but the others follow in memory
         FRMEN = 31,
         FRMSYNC = 30,
