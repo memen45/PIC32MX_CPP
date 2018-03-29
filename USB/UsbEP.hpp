@@ -22,7 +22,7 @@ struct UsbEP {
     void        trn_service     (uint8_t);
     bool        xfer            (TXRX, uint8_t*, uint16_t);
 
-    static int16_t cdc_service     (uint8_t*, uint16_t, UsbCh9::SetupPkt_t* = 0);
+    //static int16_t cdc_service     (uint8_t*, uint16_t, UsbCh9::SetupPkt_t* = 0);
 
     private:
 
@@ -37,10 +37,6 @@ struct UsbEP {
     uint8_t         m_idx{0};   //usb hardware stat, 0-3, index into m_bdt
                                 //and >>1 = index into m_buf (RX or TX)
 
-    //our ping-pong index [0]=rx, [1]=tx
-    //update from usb stat, so is lagging
-    bool            m_ppbi[2]{0};
-
 
     callme_rx_t m_callme_rx{0};
     callme_tx_t m_callme_tx{0};
@@ -53,8 +49,10 @@ struct UsbEP {
         uint16_t    btogo;      //total bytes to go
         bool        zlp;        //need zero length end packet
         bool        d01;        //data01
+        bool        ppbi;       //our ppbi from usb stat, so is lagging
     };
-    buf_t       m_buf[2]{{0},{0}}; //RX,TX
+    buf_t       m_rx{0};
+    buf_t       m_tx{0};
 
 };
 

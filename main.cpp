@@ -198,19 +198,19 @@ Pins sw1{ Pins::B9, Pins::INPU }; //turn off usb
 Pins sw2{ Pins::C10, Pins::INPU }; //xmit data
 
 Delay dly;
-dly.set_ms(2000);
+dly.set_ms(500);
 
 uint8_t buf[3] = {'O','K',' '};
 bool ison = false;
 bool xmit = false;
 for(;;){
-if(sw3.ison()){ ison = UsbDevice::init(true); Delay::wait_ms(500); }
-if(sw1.ison()){ ison = UsbDevice::init(false); Delay::wait_ms(500); }
-if(sw2.ison()){ xmit = not xmit; Delay::wait_ms(100); }
-if(ison and dly.expired() and xmit){
-    dly.restart();
-    UsbDevice::cdc_tx(buf, 3);
-}
+    if(sw3.ison()){ ison = UsbDevice::init(true); Delay::wait_ms(500); }
+    if(sw1.ison()){ ison = UsbDevice::init(false); Delay::wait_ms(500); }
+    if(sw2.ison()){ xmit = not xmit; Delay::wait_ms(100); }
+    if(ison and dly.expired()){
+        dly.restart();
+        if(xmit) UsbDevice::cdc_tx(buf, 3);
+    }
 }
 
 

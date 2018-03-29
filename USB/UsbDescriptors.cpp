@@ -19,8 +19,6 @@ static const UsbCh9::DeviceDescriptor_t device = {
     1               //#of configurations
 };
 
-
-
 static const uint8_t config1[] = {
     //let function fill in size (third,fourth byte, word size)
     9, UsbCh9::CONFIGURATION, 0, 0, 2, 1, 0, UsbCh9::SELFPOWER, 50,
@@ -44,6 +42,7 @@ static const uint8_t config1[] = {
 };
 
 
+
 //Language code string descriptor
 static const char* strings[] = {
     "\x09\x04",                     //language (low byte, high byte)
@@ -56,21 +55,22 @@ static const char* strings[] = {
 
 //private
 
-//always 18bytes
+//18bytes (but initially may ask for less)
 uint16_t get_device(uint8_t* buf, uint16_t sz){
+    if(sz > sizeof(device)) sz = sizeof(device);
     const uint8_t* dev = (const uint8_t*)&device;
-    uint16_t i = 0;
-    for(; i < sz and i < sizeof(device); i++) buf[i] = *dev++;
-    return i;
+    for(uint8_t i = 0; i < sz; i++) *buf++ = *dev++;
+    return sz;
 }
 
 //could be >255 bytes
 uint16_t get_config(uint8_t* buf, uint16_t sz, uint8_t idx){
-    if(idx != 0) return 0;
+    if(idx != 0) return 0; //only 1 config
     uint16_t n = sizeof(config1);
-    uint8_t* cfg = (uint8_t*)config1;
+    if(sz > n) sz = n;
+    const uint8_t* cfg = (const uint8_t*)config1;
     uint16_t i = 0;
-    for(; i < sz and i < n; i++) buf[i] = *cfg++;
+    for(; i < sz; i++) buf[i] = *cfg++;
     buf[2] = n; //fill in total config size
     buf[3] = n>>8; //upper byte
     return i;
@@ -82,7 +82,7 @@ uint16_t get_string0(uint8_t* buf, uint16_t sz){
     uint8_t i = 2;
     for(; *str; buf[i++] = *str++);
     buf[1] = UsbCh9::STRING; //type
-    buf[0] = i;
+    buf[0] = i; //length
     return i < sz ? i : sz;
 }
 
@@ -92,7 +92,8 @@ uint16_t get_string(uint8_t* buf, uint16_t sz, uint8_t idx){
     if(idx == 0) return get_string0(buf, sz);
     const char* str = strings[idx];
     uint16_t i = 2;
-    for(; *str && i < sz-1; ){
+    sz--; //leave room for 0 byte
+    for(; *str && i < sz; ){
         buf[i++] = *str++;
         buf[i++] = 0; //wide char
     }
