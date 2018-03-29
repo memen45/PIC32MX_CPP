@@ -51,10 +51,8 @@ Pins vbus_pin(UsbConfig::vbus_pin_n);
     //no writes to usb regs until powered on
     usb.power(usb.USBPWR, true);        //power on
     usb.bdt_addr((uint32_t)bdt.table);  //record address in usb bdt reg
+    //init all ep (done with init function as need usb on first)
     for(uint8_t i = 0; i < UsbConfig::last_ep_num+1; i++) ep[i].init(i);
-// usb.epcontrol(0, usb.EPRXEN|usb.EPTXEN|usb.EPHSHK); //enable endpoint 0
-// usb.epcontrol(1, usb.EPTXEN|usb.EPHSHK);
-// usb.epcontrol(2, usb.EPRXEN|usb.EPTXEN|usb.EPHSHK);
     usb.irqs(usb.URST|usb.T1MSEC);      //enable some irqs
     irq.init(irq.USB, cfg.usb_irq_pri, cfg.usb_irq_subpri, true); //usb irq on
     usb.control(usb.USBEN, true);       //enable usb module
@@ -68,8 +66,8 @@ Pins vbus_pin(UsbConfig::vbus_pin_n);
     bool        UsbDevice::init         (bool tf)
 //=============================================================================
 {
-debug("%s:%d:%s():\r\n", __FILE__, __LINE__, __func__);
-debug("\ttf: %d\r\n",tf);
+debug("%s:%d:%s(%s):\r\n", __FILE__, __LINE__, __func__,tf?"true":"false");
+
     detach();
     //if no vbus pin voltage or tf=false (wanted only detach)
     if(not vbus_pin.ison() || not tf) return false;
@@ -92,6 +90,8 @@ debug("%s:%d:%s(%08x, %d):\r\n", __FILE__, __LINE__, __func__,buf,count);
 debug("%s:%d:%s(%08x, %d):\r\n", __FILE__, __LINE__, __func__,buf,count);
     return ep[2].xfer(ep[2].RX, buf, count);
 }
+
+
 
 
 
@@ -118,11 +118,12 @@ debug("%s:%d:%s(%08x, %d):\r\n", __FILE__, __LINE__, __func__,buf,count);
     //was also enabled, we also have stat if trn was set
 
 if(flags bitand compl (usb.T1MSEC bitor usb.SOF)){
-debug("%s:%d:%s():\r\n", __FILE__, __LINE__, __func__);
-debug("\t1ms: %06d  sof: %06d  flags: %06x",
-        UsbDevice::timer1ms,UsbDevice::sof_count,flags);
-if(flags bitand usb.TRN) debug("  %s:%s\r\n",ustat>>1 ? "TX":"RX",ustat bitand 1?"ODD":"EVEN");
-else debug("\r\n");
+    debug("%s:%d:%s():", __FILE__, __LINE__, __func__);
+    debug("  1ms: %06d  sof: %06d  flags: %06x",
+            UsbDevice::timer1ms,UsbDevice::sof_count,flags);
+    if(flags bitand usb.TRN) debug("  %s-%s\r\n",ustat>>1 ? "TX":"RX",
+        ustat bitand 1?"ODD":"EVEN");
+    else debug("\r\n");
 }
 
     //set 'normal' irq's, enable ep0 rx even/odd
