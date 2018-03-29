@@ -93,7 +93,7 @@ debug("  %08x %04x %d %s\r\n",
         (uint32_t)x.addr,x.btogo,x.ppbi,stall?"STALL":"");
 
     if(not x.addr) return false;         //no buffer set
-    uint8_t i = 2 + x.ppbi;              //bdt index
+    uint8_t i = (trx<<1) + x.ppbi;              //bdt index
     if(m_bdt[i].stat.uown) i xor_eq 1;      //in use, try next
     if(m_bdt[i].stat.uown) return false;    //both in use
 
