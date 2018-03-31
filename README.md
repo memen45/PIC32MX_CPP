@@ -15,6 +15,7 @@ The following modules are present in the current repository:
 | I2c     | not (yet) | no |
 | Irq     | yes | yes |
 | Nvm     | not (yet) | no |
+| Oc      | yes | no |
 | Osc     | partial (no ext clock sources) | partially |
 | Pins    | yes | partially (an pins not) |
 | Pmd     | not (yet) | no |
