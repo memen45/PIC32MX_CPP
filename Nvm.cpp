@@ -48,7 +48,7 @@ enum : uint32_t {
     void        Nvm::lock           (uint8_t v)
 //=============================================================================
 {
-    *(vu32ptr)NVMKEY = 0;
+    Reg::val(NVMKEY, 0);
     Sys::lock(v);
 }
 
@@ -66,35 +66,26 @@ enum : uint32_t {
     void        Nvm::do_op          (uint8_t v)
 //=============================================================================
 {
-    Reg::clrbit(NVMCON, NVMOP_CLR | 1<<WREN);
-    Reg::setbit(NVMCON, v | 1<<WREN);
+    Reg::clrbit(NVMCON, NVMOP_CLR bitor (1<<WREN));
+    Reg::setbit(NVMCON, v bitor (1<<WREN));
     do_wr();
-    Reg::clrbit(NVMCON, NVMOP_CLR | 1<<WREN);
+    Reg::clrbit(NVMCON, NVMOP_CLR bitor (1<<WREN));
 }
 
 //=============================================================================
     void        Nvm::address        (uint32_t v)
 //=============================================================================
 {
-    //all addr to physical
+    //all addr to physical (and 0 based to kseg based)
+    v or_eq BASEMEM;
     Reg::val(NVMADDR, Reg::k2phys(v));
 }
 
 //=============================================================================
-    uint8_t     Nvm::write_word     (uint32_t* addr, uint32_t v)
+    uint8_t     Nvm::write_2word    (uint32_t addr, uint32_t hw, uint32_t lw)
 //=============================================================================
 {
-    //figure out which word to program, the other will be set to 0xFFFFFFFF
-    uint32_t hi = -1;
-    if((uint32_t)addr bitand 2){ hi = v; v = -1; } //swap
-    return write_2word(addr, hi, v);
-}
-
-//=============================================================================
-    uint8_t     Nvm::write_2word    (uint32_t* addr, uint32_t hw, uint32_t lw)
-//=============================================================================
-{
-    address((uint32_t)addr);
+    address(addr);
     Reg::val(NVMDATA1, hw);
     Reg::val(NVMDATA0, lw);
     do_op(PGMDWORD);
@@ -102,11 +93,11 @@ enum : uint32_t {
 }
 
 //=============================================================================
-    uint8_t     Nvm::write_row      (uint32_t* src, uint32_t dst)
+    uint8_t     Nvm::write_row      (uint32_t src, uint32_t dst)
 //=============================================================================
 {
     //flash (dst may be 0 based, OR kseg0 flash addr)
-    address(dst | BASEMEM);
+    address(dst);
     Reg::val(NVMSRCADDR, Reg::k2phys(src)); //sram
     do_op(PGMROW);
     return error();
@@ -117,16 +108,9 @@ enum : uint32_t {
 //=============================================================================
 {
     //flash (v may be 0 based, OR kseg0 flash addr)
-    address(v | BASEMEM);
+    address(v);
     do_op(ERASEPAGE);
     return error();
-}
-
-//=============================================================================
-    void        Nvm::write_nop      ()
-//=============================================================================
-{
-    do_op(NOP);
 }
 
 //=============================================================================
@@ -134,7 +118,7 @@ enum : uint32_t {
 //=============================================================================
 {
     uint8_t err = (Reg::val16(NVMCON)>>12) bitand 3;
-    if(err) write_nop();
+    if(err) do_op(NOP);
     return err;
 }
 

@@ -10,19 +10,15 @@ struct UsbEP {
 
     enum TXRX : bool { RX = 0, TX = 1 };
 
-    using callme_tx_t = void(*)();
-    using callme_rx_t = int16_t(*)(uint8_t*, uint16_t);
-    using other_req_t = int16_t(*)(uint8_t*, uint16_t, UsbCh9::SetupPkt_t*);
+    using callme_t = int16_t(*)(uint8_t*, uint16_t, UsbCh9::SetupPkt_t*);
 
     bool        init            (uint8_t);
-    void        set_callme_rx   (callme_rx_t);
-    void        set_callme_tx   (callme_tx_t);
-    void        set_other_req   (other_req_t);
-    bool        setup           (TXRX, bool = false);
+    void        set_callme_rx   (callme_t);
+    void        set_callme_tx   (callme_t);
+    void        set_other_req   (callme_t);
+    bool        setup           (TXRX);
     void        trn_service     (uint8_t);
     bool        xfer            (TXRX, uint8_t*, uint16_t);
-
-    //static int16_t cdc_service     (uint8_t*, uint16_t, UsbCh9::SetupPkt_t* = 0);
 
     private:
 
@@ -38,9 +34,9 @@ struct UsbEP {
                                 //and >>1 = index into m_buf (RX or TX)
 
 
-    callme_rx_t m_callme_rx{0};
-    callme_tx_t m_callme_tx{0};
-    other_req_t m_other_req{0};
+    callme_t m_callme_rx{0};
+    callme_t m_callme_tx{0};
+    callme_t m_other_req{0};
 
     using buf_t = struct {
         uint8_t*    addr;       //buffer address
@@ -50,6 +46,7 @@ struct UsbEP {
         bool        zlp;        //need zero length end packet
         bool        d01;        //data01
         bool        ppbi;       //our ppbi from usb stat, so is lagging
+        bool        stall;
     };
     buf_t       m_rx{0};
     buf_t       m_tx{0};

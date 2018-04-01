@@ -169,9 +169,6 @@ struct Led12 {
 
 int main()
 {
-
-
-
     //just get/store resets cause (not used here,though)
     Resets::cause();
 
@@ -190,6 +187,8 @@ int main()
     cls(); //cls
     cursor(false); //hide cursor
 
+    Rgb rgb;
+    Led12 led12;
 
 //trying my usb code
 Delay::wait_s(2);
@@ -211,14 +210,8 @@ for(;;){
         dly.restart();
         if(xmit) UsbDevice::cdc_tx(buf, 3);
     }
+    Wdt::reset(), led12.update(), rgb.update();
 }
 
-
-    Rgb rgb;
-    Led12 led12;
-
-    for(uint32_t i = 0;;i++){
-        Wdt::reset(), led12.update(), rgb.update();
-    }
 }
 

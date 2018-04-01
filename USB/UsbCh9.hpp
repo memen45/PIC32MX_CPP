@@ -6,23 +6,6 @@
 
 struct UsbCh9 {
 
-    //Device Descriptor
-    using DeviceDescriptor_t =  struct __attribute__ ((packed)) {
-        uint8_t     bLength;            // 18
-        uint8_t     bDescriptorType;    // 1 - DEVICE
-        uint16_t    bcdUSB;
-        uint8_t     bDeviceClass;
-        uint8_t     bDeviceSubClass;
-        uint8_t     bDeviceProtocol;
-        uint8_t     bMaxPacketSize0;    // 8,16,32,64
-        uint16_t    idVendor;
-        uint16_t    idProduct;
-        uint16_t    bcdDevice;
-        uint8_t     iManufacturer;
-        uint8_t     iProduct;
-        uint8_t     iSerialNumber;
-        uint8_t     bNumConfigurations;
-    };
     //DeviceDescriptor_t.bDescriptorType
     enum DESCRIPTOR_TYPE {
         DEVICE = 1,
@@ -36,18 +19,6 @@ struct UsbCh9 {
         OTG //9
     };
 
-
-    //Configuration Descriptor Structure
-    using ConfigurationDescriptor_t = struct __attribute__ ((packed)) {
-        uint8_t     bLength;            // 9
-        uint8_t     bDescriptorType;    // 2 - CONFIGURATION
-        uint16_t    wTotalLength;
-        uint8_t     bNumInterfaces;
-        uint8_t     bConfigurationValue;
-        uint8_t     iConfiguration;
-        uint8_t     bmAttributes;
-        uint8_t     bMaxPower;          // in 2ma units
-    };
     //ConfigurationDescriptor_t.bmAttributes
     enum CONFIGURATION_ATTRIBUTES {
         REQUIRED = 0x80,
@@ -55,29 +26,6 @@ struct UsbCh9 {
         REMOTEWAKE = REQUIRED|0x20
     };
 
-
-    //Interface Descriptor
-    using InterfaceDescriptor_t = struct __attribute__ ((packed)){
-        uint8_t     bLength;            // 9
-        uint8_t     bDescriptorType;    // 4 - INTERFACE
-        uint8_t     bInterfaceNumber;
-        uint8_t     bAlternateSetting;
-        uint8_t     bNumEndpoints;
-        uint8_t     bInterfaceClass;
-        uint8_t     bInterfaceSubClass;
-        uint8_t     bInterfaceProtocol;
-        uint8_t     iInterface;
-    };
-
-    //Endpoint Descriptor
-    using EndpointDescriptor_t = struct __attribute__ ((packed)){
-        uint8_t     bLength;            // 7
-        uint8_t     bDescriptorType;    // 5 - ENDPOINT
-        uint8_t     bEndpointAddress;   // OUT0-OUT15, IN0-IN15
-        uint8_t     bmAttributes;
-        uint16_t    wMaxPacketSize;
-        uint8_t     bInterval;
-    };
     //EndpointDescriptor_t.bEndpointAddress
     enum ENDPOINT_ADDRESS {
         OUT0 = 0, OUT1, OUT2, OUT3, OUT4, OUT5, OUT6, OUT7,

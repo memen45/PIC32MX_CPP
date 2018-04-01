@@ -2,21 +2,25 @@
 #include "UsbCh9.hpp"
 
 //CDC Demo
-static const UsbCh9::DeviceDescriptor_t device = {
-    18,             //length
-    UsbCh9::DEVICE, //1
-    0x0101,//0x0200,         //(bcd) usb 2.0 (changed to 1.1)
-    2,              //class (CDC device)
-    0,              //subclass
-    0,              //protocol
-    64,             //max ep0 packet size
-    0x04D8,         //VID
-    0x000A,         //PID
-    0x0100,         //(bcd) release number
-    1,              //string index- manufacturer
-    2,              // -product
-    0,              // -serial number
-    1               //#of configurations
+static const uint8_t device[] = {
+    18,                 //length
+    UsbCh9::DEVICE,     //1
+    0x0101&0xFF,        //0x0200 //(bcd) usb 2.0 (changed to 1.1)
+    0x0101>>8,
+    2,                  //class (CDC device)
+    0,                  //subclass
+    0,                  //protocol
+    64,                 //max ep0 packet size
+    0x04D8&0xFF,        //VID
+    0x04D8>>8,
+    0x000A&0xFF,        //PID
+    0x000A>>8,
+    0x0100&0xFF,        //(bcd) release number
+    0x0100>>8,
+    1,                  //string index- manufacturer
+    2,                  // -product
+    0,                  // -serial number
+    1                   //#of configurations
 };
 
 static const uint8_t config1[] = {
