@@ -200,6 +200,7 @@ Delay dly;
 dly.set_ms(500);
 
 uint8_t buf[3] = {'O','K',' '};
+uint8_t bufrx[64] = {0};
 bool ison = false;
 bool xmit = false;
 for(;;){
