@@ -91,9 +91,9 @@ bool UsbEP::setup(TXRX trx)
 {
     buf_t& x = trx ? m_tx : m_rx;
 
-debug("%s:%d:%s():", __FILE__, __LINE__, __func__);
-debug("  %08x %04x %d %s\r\n",
-        (uint32_t)x.addr,x.btogo,x.ppbi,x.stall?"STALL":"");
+debug("%s:%d:%s(): [%s]", __FILE__, __LINE__, __func__, trx?"TX":"RX");
+debug("  %08x %04x ppbi: %d  data01: %d  %s\r\n",
+        (uint32_t)x.addr,x.btogo,x.ppbi,x.d01,x.stall?"STALL":"");
 
     if(not x.addr) return false;         //no buffer set
     uint8_t i = (trx<<1) + x.ppbi;              //bdt index
@@ -131,8 +131,8 @@ void UsbEP::trn_service(uint8_t ustat) //called from ISR
         m_tx.d01 = m_stat.data01 xor 1;
     }
 
-debug("%s:%d:%s():", __FILE__, __LINE__, __func__);
-debug("  EP: %d  ustat: %02x  bdt-stat: %08x\r\n", m_epnum,ustat,m_stat.val32);
+debug("%s:%d:%s(): [%s:%d]", __FILE__, __LINE__, __func__,m_idx<2?"RX":"TX",m_idx&1);
+debug("  EP: %d  pid: %02x  ustat: %02x  bdt-stat: %08x\r\n", m_epnum,m_stat.pid,ustat,m_stat.val32);
 
     //if we are endpoint 0 and ep was rx, get next rx ready
     //if we are endpoint 0 and was setup pkt (rx), service setup pkt
@@ -144,12 +144,12 @@ debug("  EP: %d  ustat: %02x  bdt-stat: %08x\r\n", m_epnum,ustat,m_stat.val32);
         m_rx.addr = m_rx.addr == &ep0buf[0] ? &ep0buf[64] : &ep0buf[0];
         m_rx.btogo = 64;
         m_rx.bdone = 0;
-        m_rx.stall = 0;
         if(m_stat.pid == UsbCh9::SETUP and m_stat.count == 8){
             setup_service();
             //clear PKTDIS to let control xfer resume
             Usb::control(Usb::PKTDIS, false);
         }
+        else if(m_stat.pid == UsbCh9::OUT) out_service();
         setup(RX);
         return;
     }
@@ -295,11 +295,8 @@ debug("  %04x %04x %04x %04x %s\r\n",
             break;
 
         case UsbCh9::CDC_SET_LINE_CODING:
-            break;
         case UsbCh9::CDC_GET_LINE_CODING:
-            break;
         case UsbCh9::CDC_SET_CONTROL_LINE_STATE:
-            break;
 
         default:
             xlen = -1;
@@ -307,16 +304,13 @@ debug("  %04x %04x %04x %04x %s\r\n",
             break;
     }
 
-    //stall IN whatever we don't support
-    if(xlen == -1){
+    //stall whatever we don't support
+    if(xlen < 0){
         xlen = 0;
         m_tx.stall = 1;
-    }
-
-    if(xlen == -2){
-        xlen = 0;
         m_rx.stall = 1;
     }
+
     //if have less than requested, change xtogo
     //if then also falls on ep size boundary, also need a zlp to notify end
     if(xlen < pkt->wLength){
