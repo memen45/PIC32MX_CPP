@@ -11,7 +11,7 @@ struct UsbEP {
 
     enum TXRX : bool { RX, TX };
 
-    void reset      ();
+    void reset      (TXRX, bool = false); //bool = save ppbi?
     bool init       (uint8_t, uint16_t);
     bool set_buf    (TXRX, uint8_t*, uint16_t);
     void set_notify (TXRX, notify_t);

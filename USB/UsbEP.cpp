@@ -49,6 +49,8 @@ bool UsbEP::init(uint8_t n)
     m_epnum = n bitand 15;
     if(n >= bdt.bdt_table_siz/4) return false;
     m_bdt = &bdt.table[n<<2]; //start of bdt table for this ep
+    m_rx.epsiz = UsbDescriptors::get_epsiz(n, 1);
+    m_tx.epsiz = UsbDescriptors::get_epsiz(n, 0);
     if(n == 0){
         //clear ep0 rx buf
         for(auto& i : ep0buf) i = 0;
@@ -134,7 +136,7 @@ void UsbEP::trn_service(uint8_t ustat) //called from ISR
 debug("%s:%d:%s(): [%s:%d]", __FILE__, __LINE__, __func__,m_idx<2?"RX":"TX",m_idx&1);
 debug("  EP: %d  pid: %02x  ustat: %02x  bdt-stat: %08x\r\n", m_epnum,m_stat.pid,ustat,m_stat.val32);
 
-    //if we are endpoint 0 and ep was rx, get next rx ready
+    //if we are endpoint 0 rx, get next rx ready
     //if we are endpoint 0 and was setup pkt (rx), service setup pkt
     if(m_epnum == 0 and m_idx <= 1){
         //enable next RX
@@ -194,13 +196,8 @@ void UsbEP::setup_service()
     //get our own tx buffers in setup_service
 
     //get a tx buffer
-    if(pkt->wLength <= 64){
-        m_tx.addr = ubuf.get64();
-        m_tx.siz = 64;
-    } else {
-        m_tx.addr = ubuf.get512();
-        m_tx.siz = 512;
-    }
+    m_tx.addr = ubuf.get64();
+    m_tx.siz = 64;
     if(not m_tx.addr){
         m_tx.siz = 0;
         return; //could not get a buffer (unlikely)
@@ -214,7 +211,7 @@ void UsbEP::setup_service()
     m_tx.bdone= 0;
     m_tx.stall = 0;
 
-    int16_t xlen = pkt->wLength; //total to xmit
+    uint16_t xlen = pkt->wLength; //total to xmit
 
 debug("%s:%d:%s():", __FILE__, __LINE__, __func__);
 debug("  %04x %04x %04x %04x %s\r\n",
@@ -249,34 +246,41 @@ debug("  %04x %04x %04x %04x %s\r\n",
             break;
 
         case UsbCh9::DEV_SET_FEATURE:
-            xlen = -2;
+            xlen = -1;
             break; //remote wakup, test mode, ignore both
 
         case UsbCh9::IF_SET_FEATURE:
-            xlen = -2;
+            xlen = -1;
             break; //nothing
 
         case UsbCh9::EP_SET_FEATURE:
             // only option is ENDPOINT_HALT (0x00)
             //set endpoint halt
-            xlen = -2;
+            xlen = -1;
             break;
 
         case UsbCh9::DEV_SET_ADDRESS:
             set_callme_tx(set_address);
             break;
+
         case UsbCh9::DEV_GET_DESCRIPTOR:
-            xlen = UsbDescriptors::get(pkt->wValue, m_tx.addr, pkt->wLength);
+            UsbBuf::release(m_tx.addr); //nedd bigger than 64 for config
+            m_tx.addr = ubuf.get512(); //should be plenty
+            m_tx.siz = 512;
+            if(not m_tx.addr){
+                m_tx.siz = 0;
+                return; //could not get a buffer (unlikely)
+            }
+            xlen = UsbDescriptors::get(pkt->wValue, m_tx.addr, xlen);
             if(xlen == 0) xlen = -1;
             break;
 
         case UsbCh9::DEV_SET_DESCRIPTOR:
-            xlen = -2;
+            xlen = -1;
             break;
 
         case UsbCh9::DEV_GET_CONFIGURATION:
-            xlen = UsbDescriptors::get(pkt->wValue, m_tx.addr, pkt->wLength );
-            if(not xlen) xlen = -1;
+            xlen = -1;
             break;
 
         case UsbCh9::DEV_SET_CONFIGURATION:
@@ -287,17 +291,23 @@ debug("  %04x %04x %04x %04x %s\r\n",
             xlen = -1;
             break;
         case UsbCh9::IF_SET_IFACE:
-            xlen = -2;
+            xlen = -1;
             break;
 
         case UsbCh9::EP_SYNC_HFRAME:
             xlen = -1;
             break;
 
-        case UsbCh9::CDC_SET_LINE_CODING:
-        case UsbCh9::CDC_GET_LINE_CODING:
-        case UsbCh9::CDC_SET_CONTROL_LINE_STATE:
 
+        case UsbCh9::CDC_SET_CONTROL_LINE_STATE:
+            break;
+
+        case UsbCh9::CDC_SET_LINE_CODING:
+            m_rx.d01 = 1;
+            m_rx.btogo = xlen;
+            m_tx.btogo = 0;
+            break;
+        case UsbCh9::CDC_GET_LINE_CODING:
         default:
             xlen = -1;
             if(m_other_req) xlen = m_other_req(m_tx.addr, m_tx.siz, pkt);
@@ -305,7 +315,7 @@ debug("  %04x %04x %04x %04x %s\r\n",
     }
 
     //stall whatever we don't support
-    if(xlen < 0){
+    if(xlen == -1){
         xlen = 0;
         m_tx.stall = 1;
         m_rx.stall = 1;
@@ -324,8 +334,9 @@ debug("  %04x %04x %04x %04x %s\r\n",
 void UsbEP::out_service()
 //=============================================================================
 {
-debug("%s:%d:%s():\r\n", __FILE__, __LINE__, __func__);
-debug("\tcount: %x\r\n",m_stat.count);
+debug("%s:%d:%s():", __FILE__, __LINE__, __func__);
+debug("  count: %x\r\n",m_stat.count);
+debug_bytes(m_rx.addr, m_stat.count);
     if(m_epnum){ //not ep0
         //do something with other rx data here
         if(m_callme_rx) m_callme_rx(m_rx.addr, m_stat.count,0);
@@ -392,7 +403,7 @@ debug("  count: %04x bdone: %04x  btogo: %04x\r\n",
     }
     //need more bytes xmitted
     //adjust buffer address up by amount already transmitted
-    m_tx.addr = &m_tx.addr[m_tx.bdone];
+    m_tx.addr += m_stat.count;
 
     setup(TX);
 }

@@ -40,6 +40,7 @@ struct UsbEP {
 
     using buf_t = struct {
         uint8_t*    addr;       //buffer address
+        uint16_t    epsiz;      //endpoint size from descriptors
         uint16_t    siz;        //buffer size
         uint16_t    bdone;      //total bytes done
         uint16_t    btogo;      //total bytes to go

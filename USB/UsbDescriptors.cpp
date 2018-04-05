@@ -5,8 +5,11 @@
 
 //uint16_t-> byte, byte
 #define BB(v) v bitand 0xFF, v >> 8
+// //uint8_t,uin8_t-> uint16_t
+// #define W(b1,b2) (b2<<8 bitor b1)
 
-//CDC Demo
+
+//CDC-ACM
 static const uint8_t device[] = {
     18,                 //length
     UsbCh9::DEVICE,     //1
@@ -25,7 +28,7 @@ static const uint8_t device[] = {
 };
 
 static const uint8_t config1[] = {
-    //total size in third,fourth byte (added later by get_config)
+    //total size in third,fourth byte
     9, UsbCh9::CONFIGURATION, BB(0), 2, 1, 0, UsbCh9::SELFPOWER, 50,
 
     //interface0
@@ -53,14 +56,11 @@ static const char* strings[] = {
    "CDC RS-232 Emulation Demo"     //product
 };
 
-
-
-
 //private
 
 //18bytes (but may ask for less)
 uint16_t get_device(uint8_t* buf, uint16_t siz){
-    if(siz > sizeof(device)) siz = sizeof(device);
+    if(siz > device[0]) siz = device[0];
     memcpy(buf, device, siz);
     return siz;
 }
@@ -99,11 +99,74 @@ uint16_t get_string(uint8_t* buf, uint16_t siz, uint8_t idx){
 
 //pkt.wValue high=descriptor type, low=index
 //device=1, config=2, string=3
-uint16_t UsbDescriptors::get(uint16_t wValue, uint8_t* buf, uint16_t sz){
+uint16_t UsbDescriptors::get(uint16_t wValue, uint8_t* buf, uint16_t siz){
     uint8_t idx = wValue;
     uint8_t typ = wValue>>8;
-    if(typ == 1){ return get_device(buf, sz); }
-    if(typ == 2){ return get_config(buf, sz, idx); }
-    if(typ == 3){ return get_string(buf, sz, idx); }
+    if(typ == 1){ return get_device(buf, siz); }
+    if(typ == 2){ return get_config(buf, siz, idx); }
+    if(typ == 3){ return get_string(buf, siz, idx); }
     return 0;
+}
+
+
+// static const uint16_t language[] = {
+//     W(4,3), 0x0409
+// };
+// static const uint16_t manufacturer[] = {
+//     W(36,3), 'P','I','C','3','2','M','M','0','2','5','6','G','P','M','0','6','4'
+// };
+// static const uint16_t product[] = {
+//     W(16,3), 'C','D','C','-','A','C','M'
+// };
+// static const uint16_t* strings[] = {
+//     language, manufacturer, product
+// };
+
+//private
+
+//18bytes (but may ask for less)
+// const uint8_t* get_device(uint16_t* siz){
+//     if(*siz > sizeof(device)) *siz = sizeof(device);
+//     return device;
+// }
+//
+// //could be >255 bytes
+// const uint8_t* get_config(uint16_t* siz, uint8_t idx){
+//     if(idx != 0){ *siz = 0; return 0; } //only 1 config
+//     if(*siz > sizeof(config1)) *siz = sizeof(config1);
+//     return config1;
+// }
+//
+// //up to 255bytes
+// const uint8_t* get_string(uint16_t* siz, uint8_t idx){
+//     if(idx >= sizeof(strings)){ *siz = 0;  return 0; } //bad index
+//     uint8_t* str = (uint8_t*)strings[idx];
+//     auto ssiz = str[0];
+//     if(*siz > ssiz) *siz = ssiz;
+//     return (const uint8_t*)strings[idx];
+// }
+//
+// //public
+//
+// //pkt.wValue high=descriptor type, low=index
+// //device=1, config=2, string=3
+// uint8_t* UsbDescriptors::get(uint16_t wValue, uint16_t* siz){
+//     uint8_t idx = wValue;
+//     uint8_t typ = wValue>>8;
+//     if(typ == 1){ return (uint8_t*)get_device(siz); }
+//     if(typ == 2){ return (uint8_t*)get_config(siz, idx); }
+//     if(typ == 3){ return (uint8_t*)get_string(siz, idx); }
+//     *siz = 0;
+//     return 0;
+// }
+
+uint16_t UsbDescriptors::get_epsiz(uint8_t n, bool io){
+    if(n == 0) return device[7];
+    if(io) n += 128;
+    for(uint16_t i = 0; i < sizeof(config1); i += config1[i]){
+        if(config1[i] == 7 and config1[i+2] == n){
+            return config1[i+5]<<8 bitor config1[i+4];
+        }
+    }
+    return 0; //not found
 }

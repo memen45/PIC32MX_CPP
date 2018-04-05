@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <cstring> //memset, memcpy
 
-//this file only
+//this file only, for ep0
 static uint8_t ep0rxbuf[64] = {0};
 static uint8_t pkt[8] = {0};
 static uint8_t* ep0txbuf;
@@ -15,13 +15,14 @@ static bool set_address(UsbEP*);
 //
 
 //=============================================================================
-    void    UsbEP::reset            ()
+    void    UsbEP::reset            (TXRX trx, bool saveppbi)
 //=============================================================================
 {
-    m_rx = {0};
-    m_tx = {0};
-    m_rx.bdt = &UsbBdt::table[m_epnum<<2]; //rx even/odd
-    m_tx.bdt = &UsbBdt::table[m_epnum<<2 bitor (1<<1)]; //tx even/odd
+    info_t& x = m_ep[trx];
+    bool ppbi = saveppbi ? x.ppbi : 0;
+    x = {0};
+    x.ppbi = ppbi;
+    x.bdt = &UsbBdt::table[m_epnum<<2 bitor trx<<1];
 }
 
 //=============================================================================
@@ -32,7 +33,8 @@ static bool set_address(UsbEP*);
     m_epnum = n;
     m_rx.epsiz = siz;
     m_tx.epsiz = siz;
-    reset();
+    reset(TX);
+    reset(RX);
     if(n) return true;
     //ep0
     memset(pkt, 0, sizeof(pkt));
@@ -116,7 +118,7 @@ bool UsbEP::xfer(TXRX trx, uint8_t* buf, uint16_t siz, notify_t f)
     info_t& x = m_ep[ustat>>1]; //tx or rx
     x.stat = x.bdt.stat;        //get bdt stat
     x.ppbi xor_eq 1;            //toggle ppbi
-    x.d01 xor_eq x.stat.data01; //set d01 to next data01
+    x.d01 xor_eq 1;             //toggle d01
 
     //in (tx), out (rx)
     switch(x.stat.pid){
@@ -155,11 +157,7 @@ bool UsbEP::xfer(TXRX trx, uint8_t* buf, uint16_t siz, notify_t f)
         x.bdt[1].uown = 0;
         x.ppbi xor_eq 1;
     }
-    x.buf = 0;
-    x.siz = 0;
-    x.btogo = 0;
-    x.done = 0;
-    x.zlp = 0;
+    reset(trx, true); //reset, but save ppbi
 }
 //=============================================================================
     void    UsbEP::txzlp                ()
@@ -224,20 +222,15 @@ static bool control (UsbEP* ep)
     //take back any pending tx on ep0
     ep->takeback(ep->TX);
     //in all cases after a setup, next tx is data1 for either data or status
-    ep->m_rx.d01 = 1;
+    ep->m_tx.d01 = 1;
+    //assume rx needs to be set for next setup (change if need rx dat phase)
+    ep->m_rx.d01 = 0;
 
     //release any previous tx
     UsbBuf::release(ep0txbuf);
 
     //get a tx buffer
-    uint16_t bufsiz;
-    if(pkt.wLength <= 64){
-        ep0txbuf = UsbBuf::get64();
-        bufsiz = 64;
-    } else {
-        ep0txbuf = UsbBuf::get512();
-        bufsiz = 512;
-    }
+    ep0txbuf = UsbBuf::get64();
     if(not ep0txbuf){
         return false; //could not get a buffer (unlikely)
     }
@@ -247,7 +240,7 @@ static bool control (UsbEP* ep)
     ep0txbuf[1] = 0;
 
     //assume tx (IN) length requested
-    uint16_t dlen = pkt.wLength;
+    uint16_t tlen = pkt.wLength;
     //assume rx (OUT) status
     uint16_t rlen = 0;
 
@@ -258,17 +251,17 @@ static bool control (UsbEP* ep)
 
         case UsbCh9::DEV_GET_STATUS:
             //setup (here), tx 2bytes (data1), status (rx zlp data1)
-            //dlen should be 2
+            //tlen should be 2
             ep0txbuf[0] = ucfg.self_powered bitor (ucfg.remote_wakeup<<1);
             break;
         case UsbCh9::IF_GET_STATUS:
             //setup (here), tx 2bytes 0x00 0x00 (data1), status (rx zlp data1)
-            //dlen should be 2
+            //tlen should be 2
             //already setup
             break;
         case UsbCh9::EP_GET_STATUS:
             //setup (here), tx 2bytes (data1), status (rx zlp data1)
-            //dlen should be 2
+            //tlen should be 2
             ep0txbuf[0] = usb.epcontrol(pkt.wIndex, usb.EPSTALL);
             break;
 
@@ -276,13 +269,13 @@ static bool control (UsbEP* ep)
             //setup (here), no data, status (tx zlp)
             //remote wakup, test mode, ignore both
             //let status proceed
-            //dlen should be 0
+            //tlen should be 0
             break;
 
         case UsbCh9::EP_CLEAR_FEATURE:
             //setup (here), no data, status (tx zlp)
             // only option is ENDPOINT_HALT (0x00) (not for ep0)
-            //dlen should be 0
+            //tlen should be 0
             if(pkt.wIndex and not pkt.wValue){
                 usb.epcontrol(pkt.wIndex, usb.EPSTALL, false);
             }
@@ -292,13 +285,13 @@ static bool control (UsbEP* ep)
             //setup (here), no data, status (tx zlp)
             //remote wakup, test mode, ignore both
             //let status proceed
-            //dlen should be 0
+            //tlen should be 0
             break;
 
         case UsbCh9::EP_SET_FEATURE:
             //setup (here), no data, status (tx zlp)
             //only option is ENDPOINT_HALT (0x00) (not for ep0)
-            //dlen should be 0
+            //tlen should be 0
             if(pkt.wIndex and not pkt.wValue){
                 usb.epcontrol(pkt.wIndex, usb.EPSTALL, true);
             }
@@ -307,29 +300,34 @@ static bool control (UsbEP* ep)
         case UsbCh9::DEV_SET_ADDRESS:
             //setup (here), no data, status (tx zlp)
             //set address via tx callback
-            //dlen should be 0
+            //tlen should be 0
             ep->set_notify(ep->TX, set_address);
             break;
 
         case UsbCh9::DEV_GET_DESCRIPTOR:
-            //setup (here), tx dlen bytes (data1), status (rx zlp data1)
-            txlen = UsbDescriptors::get(pkt.wValue, ep0txbuf, pkt.wLength);
+            //setup (here), tx tlen bytes (data1), status (rx zlp data1)
+            uint8_t* sbuf;
+            sbuf = UsbDescriptors::get(pkt.wValue, &tlen);
+            if(not sbuf) break; //tlen is also 0
+            UsbBuf::release(ep0txbuf);
+            ep0txbuf = sbuf;
             break;
 
         case UsbCh9::DEV_SET_DESCRIPTOR:
             //setup (here), no data, status (tx zlp)
-            //dlen should be 0
+            //tlen should be 0
             break;
 
         case UsbCh9::DEV_GET_CONFIGURATION:
-            //setup (here), tx dlen bytes (data1), status (rx zlp data1)
-            txlen = UsbDescriptors::get(pkt.wValue, ep0txbuf, pkt.wLength);
+            //setup (here), tx tlen bytes (data1), status (rx zlp data1)
+            //send 0=not configured, anything else=configured
+            ep0txbuf[0] = 1; //TODO
             break;
 
         case UsbCh9::DEV_SET_CONFIGURATION:
             //setup (here), no data, status (tx zlp)
             //let status proceed
-            //dlen should be 0
+            //tlen should be 0
             break;
 
         case UsbCh9::IF_GET_IFACE:
@@ -341,8 +339,8 @@ static bool control (UsbEP* ep)
 
         case UsbCh9::CDC_SET_LINE_CODING:
             //setup (here), rx data1, status (tx zlp)
-            rxlen = pkt.wLength; //7
-            txlen = 0;
+            rlen = pkt.wLength; //7
+            tlen = 0;
             break;
         case UsbCh9::CDC_GET_LINE_CODING:
             //setup (here), tx data1, status (rx zlp)
@@ -357,24 +355,18 @@ static bool control (UsbEP* ep)
     }
 
     //check if no data for request (bad string index, etc)
-    if((txlen == 0) and (rxlen == 0) and pkt.wLength){
+    if((tlen == 0) and (rlen == 0) and pkt.wLength){
         //stall
     }
     //check for tx data that is less than requested (strings,descriptors,etc)
-    else if(txlen != pkt.wLength){
-        if(not (dlen % 64)) ep->txzlp(); //add zlp if same size as packet
+    else if(tlen and (tlen != pkt.wLength)){
+        if(not (tlen % 64)) ep->txzlp(); //add zlp if same size as packet
     }
 
     //tx already setup for zlp status if no data stage
-    //setup tx or rx
-    if(txlen){ //TX IN, RX zlp status
-        ep->xfer(ep->TX, ep0txbuf, txlen, 1);
-        ep->xfer(ep->RX, ep0rxbuf, rxlen ? rxlen : 0);
-    } else { //RX OUT or no data, TX xlp status
-        ep->xfer(ep->TX, ep0txbuf, 0, 1);
-        //if no rx data, just setup rx for next setup
-        ep->xfer(ep->RX, ep0rxbuf, rxlen ? rxlen : 64);
-    }
+    //rx for setup, unless out data stage, then rlen and data1
+    ep->xfer(ep->TX, ep0txbuf, tlen, 1);
+    ep->xfer(ep->RX, ep0rxbuf, rlen ? rlen : 64, rlen ? 1 : 0);
 
     return true;
 }

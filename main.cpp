@@ -197,10 +197,10 @@ Pins sw1{ Pins::B9, Pins::INPU }; //turn off usb
 Pins sw2{ Pins::C10, Pins::INPU }; //xmit data
 
 Delay dly;
-dly.set_ms(500);
+dly.set_ms(50);
 
 uint8_t buf[3] = {'O','K',' '};
-uint8_t bufrx[64] = {0};
+
 bool ison = false;
 bool xmit = false;
 for(;;){
@@ -211,7 +211,7 @@ for(;;){
         dly.restart();
         if(xmit) UsbDevice::cdc_tx(buf, 3);
     }
-    //Wdt::reset(), led12.update(), rgb.update();
+    Wdt::reset(), led12.update(), rgb.update();
 }
 
 }

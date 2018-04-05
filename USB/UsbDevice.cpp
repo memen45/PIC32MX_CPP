@@ -5,6 +5,7 @@
 #include "UsbBuf.hpp"
 #include "Irq.hpp"
 #include "UsbEP.hpp"
+#include "Delay.hpp"
 
 #include <cstdio>
 
@@ -27,15 +28,17 @@ Pins vbus_pin(UsbConfig::vbus_pin_n);
 
 //private
 //=============================================================================
-    void detach()
+    bool detach()
 //=============================================================================
 {
     Usb usb; UsbBuf buf; Irq irq;
 
+    bool wason = usb.power(usb.USBPWR);
     irq.on(irq.USB, false);             //usb irq off
     usb.power(usb.USBPWR, false);       //power off
     while(usb.power(usb.USBBUSY));      //wait for busy
     buf.init();                         //reclaim/clear buffers
+    return wason;
 }
 
 //private
@@ -68,9 +71,10 @@ Pins vbus_pin(UsbConfig::vbus_pin_n);
 {
 debug("%s:%d:%s(%s):\r\n", __FILE__, __LINE__, __func__,tf?"true":"false");
 
-    detach();
+    bool wason = detach();
     //if no vbus pin voltage or tf=false (wanted only detach)
     if(not vbus_pin.ison() || not tf) return false;
+    if(wason) Delay::wait_ms(100);      //delay if was previously on
     attach();
     return true;                        //true=attached
 }
