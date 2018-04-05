@@ -120,7 +120,8 @@ struct Irq {
     static bool     flag            (IRQ_NR);
     static void     on              (IRQ_NR, bool);
     static void     init            (IRQ_NR, uint8_t, uint8_t, bool);
-    static void     init            (IRQ_NR, uint8_t, uint8_t, bool, std::function<void()>);
+	
+	static void 	isr_fun			(IRQ_NR, std::function<void()>);
     
 
     //to create a list (array) of irq's to init/enable
@@ -131,8 +132,6 @@ struct Irq {
         bool en;        //enable
     };
     static void     init            (irq_list_t*, uint8_t);
-	
-//	static const uint8_t m_lookup_vn[95];
 };
 
 ////////////////////////////////////////////////////////////////////////////////

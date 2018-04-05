@@ -130,14 +130,6 @@ constexpr uint8_t Irq::m_lookup_vn[];
     flag_clr(e);
     on(e, tf);
 }
-
-//=============================================================================
-    void        Irq::init       (IRQ_NR e, uint8_t pri, uint8_t sub, bool tf, std::function<void()> callback)
-//=============================================================================
-{
-    isr_callback[m_lookup_vn[e]] = callback;
-    init(e, pri, sub, tf);
-}
     
 //init list (array) of irq's
 //=============================================================================
@@ -145,6 +137,17 @@ constexpr uint8_t Irq::m_lookup_vn[];
 //=============================================================================
 {
     for(; sz; arr++, sz--) init(arr->irqvn, arr->p, arr->s, arr->en);
+}
+
+/* Note that on the PIC32MX795F512L and alike not every isr flag has its own 
+ * vector. Only one callback function can exist for one vector, last is used, 
+ * so make sure a callback function deals with all possible isr causes for 
+ * that vector */
+//=============================================================================
+    void        Irq::isr_fun	(IRQ_NR e, std::function<void()> callback)
+//=============================================================================
+{
+	isr_callback[m_lookup_vn[e]] = callback;
 }
 
 //enables multi vectored interrupts
