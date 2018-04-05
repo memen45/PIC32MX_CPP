@@ -1,0 +1,309 @@
+//=============================================================================
+// first ISR with TRN bit set
+// RX/EVEN EP0 SETUP DATA0 8BYTES
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000234  sof: 000057  flags: 000008
+USB/UsbEP.cpp:134:trn_service():    [RX:0]  EP: 0  pid: 0d  ustat: 00  bdt-stat: 00080034
+
+//-----------------------------------------------------------------------------
+// 0680 = DEV_GET_DESCRIPTOR TYPE=DEVICE
+// setup TX/EVEN for 0x12 bytes, DATA1
+// setup RX/ODD for 64bytes, DATA0 (next setup)
+//-----------------------------------------------------------------------------
+USB/UsbEP.cpp:219:setup_service():  0680 0100 0000 0040
+USB/UsbEP.cpp:94:setup():           [TX]  80000038 0012 ppbi: 0  data01: 1
+        12 01 01 01 02 00 00 40 d8 04 0a 00 00 01 01 02
+        00 01
+USB/UsbEP.cpp:94:setup():           [RX]  80000c38 0040 ppbi: 1  data01: 0
+
+
+//=============================================================================
+// ISR with TRN bit set
+// TX/EVEN EP0 DATA1 IN, 0x12bytes were sent ok
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000234  sof: 000057  flags: 40000c
+USB/UsbEP.cpp:134:trn_service():    [TX:0]  EP: 0  pid: 09  ustat: 02  bdt-stat: 00120064
+USB/UsbEP.cpp:369:in_service():     count: 0012 bdone: 0012  btogo: 0000
+
+
+//=============================================================================
+//ISR- usb reset
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000235  sof: 000058  flags: 400001
+
+
+//=============================================================================
+// ISR with TRN bit set
+// RX/ODD EP0 SETUP DATA0 8BYTES
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000390  sof: 000169  flags: 000008
+USB/UsbEP.cpp:134:trn_service():    [RX:1]  EP: 0  pid: 0d  ustat: 01  bdt-stat: 00080034
+
+//-----------------------------------------------------------------------------
+// 0500 = DEV_SET_ADDRESS
+// setup TX/ODD for 0 bytes, DATA1 (IN status zlp)
+// setup RX/EVEN for 64bytes, DATA0 (next setup)
+//-----------------------------------------------------------------------------
+USB/UsbEP.cpp:219:setup_service():  0500 000d 0000 0000
+USB/UsbEP.cpp:94:setup():           [TX]  80000038 0000 ppbi: 1  data01: 1
+USB/UsbEP.cpp:94:setup():           [RX]  80000bf8 0040 ppbi: 0  data01: 0
+
+
+//=============================================================================
+// ISR with TRN bit set
+// TX/ODD EP0 IN DATA1 0BYTES
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000390  sof: 000169  flags: 40000c
+USB/UsbEP.cpp:134:trn_service():    [TX:1]  EP: 0  pid: 09  ustat: 03  bdt-stat: 00000064
+USB/UsbEP.cpp:369:in_service():     count: 0000 bdone: 0000  btogo: 0000
+
+//-----------------------------------------------------------------------------
+// callback for setting address (after status)
+//-----------------------------------------------------------------------------
+USB/UsbEP.cpp:352:set_address():    dev_addr: 0d
+
+
+//=============================================================================
+// ISR with TRN bit set
+// RX/EVEN EP0 SETUP DATA0 8BYTES
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000393  sof: 000172  flags: 000008
+USB/UsbEP.cpp:134:trn_service():    [RX:0]  EP: 0  pid: 0d  ustat: 00  bdt-stat: 00080034
+
+//-----------------------------------------------------------------------------
+// 0680 = DEV_GET_DESCRIPTOR TYPE=DEVICE
+// setup TX/EVEN for 0x12 bytes, DATA1
+// setup RX/ODD for 64bytes, DATA0 (next setup)
+//-----------------------------------------------------------------------------
+USB/UsbEP.cpp:219:setup_service():  0680 0100 0000 0012
+USB/UsbEP.cpp:94:setup():           [TX]  80000038 0012 ppbi: 0  data01: 1
+        12 01 01 01 02 00 00 40 d8 04 0a 00 00 01 01 02
+        00 01
+USB/UsbEP.cpp:94:setup():           [RX]  80000c38 0040 ppbi: 1  data01: 0
+
+
+//=============================================================================
+// ISR with TRN bit set
+// TX/EVEN EP0 DATA1 IN, 0x12bytes were sent ok
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000393  sof: 000172  flags: 40000c
+USB/UsbEP.cpp:134:trn_service():    [TX:0]  EP: 0  pid: 09  ustat: 02  bdt-stat: 00120064
+USB/UsbEP.cpp:369:in_service():     count: 0012 bdone: 0012  btogo: 0000
+
+
+//=============================================================================
+// ISR with TRN bit set
+// RX/ODD EP0 SETUP DATA0 8BYTES
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000394  sof: 000173  flags: 40000c
+USB/UsbEP.cpp:134:trn_service():    [RX:1]  EP: 0  pid: 0d  ustat: 01  bdt-stat: 00080034
+
+//-----------------------------------------------------------------------------
+// 0680 = DEV_GET_DESCRIPTOR TYPE=CONFIG INDEX=0 (9BYTES only)
+// setup TX/ODD for 9 bytes, DATA1
+// setup RX/EVEN for 64bytes, DATA0 (next setup)
+//-----------------------------------------------------------------------------
+USB/UsbEP.cpp:219:setup_service():  0680 0200 0000 0009
+USB/UsbEP.cpp:94:setup():           [TX]  80000038 0009 ppbi: 1  data01: 1
+        09 02 43 00 02 01 00 c0 32
+USB/UsbEP.cpp:94:setup():           [RX]  80000bf8 0040 ppbi: 0  data01: 0
+
+
+//=============================================================================
+// ISR with TRN bit set
+// TX/ODD EP0 DATA1 IN, 9bytes were sent ok
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000395  sof: 000174  flags: 40000c
+USB/UsbEP.cpp:134:trn_service():    [TX:1]  EP: 0  pid: 09  ustat: 03  bdt-stat: 00090064
+USB/UsbEP.cpp:369:in_service():     count: 0009 bdone: 0009  btogo: 0000
+
+
+//=============================================================================
+// ISR with TRN bit set
+// RX/EVEN EP0 SETUP DATA0 8BYTES
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000396  sof: 000175  flags: 40000c
+USB/UsbEP.cpp:134:trn_service():    [RX:0]  EP: 0  pid: 0d  ustat: 00  bdt-stat: 00080034
+
+//-----------------------------------------------------------------------------
+// 0680 = DEV_GET_DESCRIPTOR TYPE=CONFIG INDEX=0 (0x43 BYTES)
+// setup TX/EVEN for 0x43 bytes, DATA1
+// setup RX/ODD for 64bytes, DATA0 (next setup)
+//-----------------------------------------------------------------------------
+USB/UsbEP.cpp:219:setup_service():  0680 0200 0000 0043
+USB/UsbEP.cpp:94:setup():           [TX]  80000438 0043 ppbi: 0  data01: 1
+        09 02 43 00 02 01 00 c0 32 09 04 00 00 01 02 02
+        01 00 05 24 00 10 01 04 24 02 00 05 24 06 00 01
+        05 24 01 00 01 07 05 81 03 08 00 02 09 04 01 00
+        02 0a 00 00 00 07 05 02 02 40 00 00 07 05 82 02
+USB/UsbEP.cpp:94:setup():           [RX]  80000c38 0040 ppbi: 1  data01: 0
+
+
+//=============================================================================
+// ISR with TRN bit set
+// TX/EVEN EP0 IN DATA1,  0x40 bytes sent ok (0x03 to go)
+// setup TX/ODD for 0x03 bytes, DATA0
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000397  sof: 000176  flags: 40000c
+USB/UsbEP.cpp:134:trn_service():    [TX:0]  EP: 0  pid: 09  ustat: 02  bdt-stat: 00400064
+USB/UsbEP.cpp:369:in_service():     count: 0040 bdone: 0040  btogo: 0003
+USB/UsbEP.cpp:94:setup():           [TX]  80000478 0003 ppbi: 1  data01: 0
+        40 00 00
+
+
+//=============================================================================
+// ISR with TRN bit set
+// TX/ODD EP0 DATA1 IN, 3bytes were sent ok
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000398  sof: 000177  flags: 40000c
+USB/UsbEP.cpp:134:trn_service():    [TX:1]  EP: 0  pid: 09  ustat: 03  bdt-stat: 00030024
+USB/UsbEP.cpp:369:in_service():     count: 0003 bdone: 0043  btogo: 0000
+
+
+//=============================================================================
+// ISR with TRN bit set
+// RX/ODD EP0 SETUP DATA0 8BYTES
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000399  sof: 000178  flags: 40000c
+USB/UsbEP.cpp:134:trn_service():    [RX:1]  EP: 0  pid: 0d  ustat: 01  bdt-stat: 00080034
+
+//-----------------------------------------------------------------------------
+// 0680 = DEV_GET_DESCRIPTOR TYPE=STRING INDEX=0 (255 BYTES)
+// setup TX/EVEN for 4 bytes, DATA1
+// setup RX/EVEN for 64bytes, DATA0 (next setup)
+//-----------------------------------------------------------------------------
+USB/UsbEP.cpp:219:setup_service():  0680 0300 0000 00ff
+USB/UsbEP.cpp:94:setup():           [TX]  80000438 0004 ppbi: 0  data01: 1
+        04 03 09 04
+USB/UsbEP.cpp:94:setup():           [RX]  80000bf8 0040 ppbi: 0  data01: 0
+
+
+//=============================================================================
+// ISR with TRN bit set
+// TX/EVEN EP0 DATA1 IN, 4bytes were sent ok
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000400  sof: 000179  flags: 40000c
+USB/UsbEP.cpp:134:trn_service():    [TX:0]  EP: 0  pid: 09  ustat: 02  bdt-stat: 00040064
+USB/UsbEP.cpp:369:in_service():     count: 0004 bdone: 0004  btogo: 0000
+
+
+//=============================================================================
+// ISR with TRN bit set
+// RX/EVEN EP0 SETUP DATA0 8BYTES
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000401  sof: 000180  flags: 40000c
+USB/UsbEP.cpp:134:trn_service():    [RX:0]  EP: 0  pid: 0d  ustat: 00  bdt-stat: 00080034
+
+//-----------------------------------------------------------------------------
+// 0680 = DEV_GET_DESCRIPTOR TYPE=STRING INDEX=2 (255 BYTES)
+// setup TX/ODD for 0x34 bytes, DATA1
+// setup RX/ODD for 64bytes, DATA0 (next setup)
+//-----------------------------------------------------------------------------
+USB/UsbEP.cpp:219:setup_service():  0680 0302 0409 00ff
+USB/UsbEP.cpp:94:setup():           [TX]  80000438 0034 ppbi: 1  data01: 1
+        34 03 43 00 44 00 43 00 20 00 52 00 53 00 2d 00
+        32 00 33 00 32 00 20 00 45 00 6d 00 75 00 6c 00
+        61 00 74 00 69 00 6f 00 6e 00 20 00 44 00 65 00
+        6d 00 6f 00
+USB/UsbEP.cpp:94:setup():           [RX]  80000c38 0040 ppbi: 1  data01: 0
+
+
+//=============================================================================
+// ISR with TRN bit set
+// TX/ODD EP0 DATA1 IN, 0x34 bytes were sent ok
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000402  sof: 000181  flags: 40000c
+USB/UsbEP.cpp:134:trn_service():    [TX:1]  EP: 0  pid: 09  ustat: 03  bdt-stat: 00340064
+USB/UsbEP.cpp:369:in_service():     count: 0034 bdone: 0034  btogo: 0000
+
+
+//=============================================================================
+// ISR with TRN bit set
+// RX/ODD EP0 SETUP DATA0 8BYTES
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000403  sof: 000182  flags: 40000c
+USB/UsbEP.cpp:134:trn_service():    [RX:1]  EP: 0  pid: 0d  ustat: 01  bdt-stat: 00080034
+
+//-----------------------------------------------------------------------------
+// 0680 = DEV_GET_DESCRIPTOR TYPE=STRING INDEX=1 (255 BYTES)
+// setup TX/EVEN for 0x36 bytes, DATA1
+// setup RX/ODD for 64bytes, DATA0 (next setup)
+//-----------------------------------------------------------------------------
+USB/UsbEP.cpp:219:setup_service():  0680 0301 0409 00ff
+USB/UsbEP.cpp:94:setup():           [TX]  80000438 0036 ppbi: 0  data01: 1
+        36 03 4d 00 69 00 63 00 72 00 6f 00 63 00 68 00
+        69 00 70 00 20 00 54 00 65 00 63 00 68 00 6f 00
+        6e 00 6f 00 6c 00 6f 00 67 00 79 00 20 00 49 00
+        6e 00 63 00 2e 00
+USB/UsbEP.cpp:94:setup():           [RX]  80000bf8 0040 ppbi: 0  data01: 0
+
+
+//=============================================================================
+// ISR with TRN bit set
+// TX/EVEN EP0 DATA1 IN, 0x36 bytes were sent ok
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000404  sof: 000183  flags: 40000c
+USB/UsbEP.cpp:134:trn_service():    [TX:0]  EP: 0  pid: 09  ustat: 02  bdt-stat: 00360064
+USB/UsbEP.cpp:369:in_service():     count: 0036 bdone: 0036  btogo: 0000
+
+
+//=============================================================================
+// ISR with TRN bit set
+// RX/EVEN EP0 SETUP DATA0 8BYTES
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000405  sof: 000184  flags: 40000c
+USB/UsbEP.cpp:134:trn_service():    [RX:0]  EP: 0  pid: 0d  ustat: 00  bdt-stat: 00080034
+
+//-----------------------------------------------------------------------------
+// 0900 = DEV_SET_CONFIGURATION (1)
+// setup TX/ODD for 0 bytes, DATA1 (zlp)
+// setup RX/ODD for 64bytes, DATA0 (next setup)
+//-----------------------------------------------------------------------------
+USB/UsbEP.cpp:219:setup_service():  0900 0001 0000 0000
+USB/UsbEP.cpp:94:setup():           [TX]  80000038 0000 ppbi: 1  data01: 1
+USB/UsbEP.cpp:94:setup():           [RX]  80000c38 0040 ppbi: 1  data01: 0
+
+
+//=============================================================================
+// ISR with TRN bit set
+// TX/ODD EP0 DATA1 IN, 0 bytes were sent ok
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000406  sof: 000185  flags: 40000c
+USB/UsbEP.cpp:134:trn_service():    [TX:1]  EP: 0  pid: 09  ustat: 03  bdt-stat: 00000064
+USB/UsbEP.cpp:369:in_service():     count: 0000 bdone: 0000  btogo: 0000
+
+
+//=============================================================================
+// ISR with TRN bit set
+// RX/ODD EP0 SETUP DATA0 8BYTES
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000407  sof: 000186  flags: 40000c
+USB/UsbEP.cpp:134:trn_service():    [RX:1]  EP: 0  pid: 0d  ustat: 01  bdt-stat: 00080034
+
+//-----------------------------------------------------------------------------
+// 2021 = CDC_SET_LINE_CODING (OUT 7bytes)
+// setup TX/ODD for 0 bytes, DATA1 STALL
+// setup RX/ODD for 64bytes, DATA0 STALL
+//-----------------------------------------------------------------------------
+USB/UsbEP.cpp:219:setup_service():  2021 0000 0000 0007
+USB/UsbEP.cpp:94:setup():           [TX]  80000038 0000 ppbi: 0  data01: 1  STALL
+USB/UsbEP.cpp:94:setup():           [RX]  80000bf8 0040 ppbi: 0  data01: 0  STALL
+
+
+//=============================================================================
+// ISR with TRN bit set
+// RX/ODD EP0 SETUP DATA0 8BYTES
+//=============================================================================
+USB/UsbDevice.cpp:121:USB_ISR():    1ms: 000410  sof: 000188  flags: 000008
+USB/UsbEP.cpp:134:trn_service():    [RX:0]  EP: 0  pid: 0d  ustat: 00  bdt-stat: 00080034
+
+//-----------------------------------------------------------------------------
+// 2221 = CDC_SET_CONTROL_LINE_STATE
+// setup TX/ODD for 0 bytes, DATA1 STALL
+// setup RX/ODD for 64bytes, DATA0 STALL
+//-----------------------------------------------------------------------------
+USB/UsbEP.cpp:219:setup_service():  2221 0003 0000 0000
+USB/UsbEP.cpp:94:setup():           [TX]  80000038 0000 ppbi: 1  data01: 1  STALL
+USB/UsbEP.cpp:94:setup():           [RX]  80000c38 0040 ppbi: 1  data01: 0  STALL
+
+

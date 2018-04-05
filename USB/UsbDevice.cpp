@@ -119,11 +119,8 @@ debug("%s:%d:%s(%08x, %d):\r\n", __FILE__, __LINE__, __func__,buf,count);
 
 if(flags bitand compl (usb.T1MSEC bitor usb.SOF)){
     debug("%s:%d:%s():", __FILE__, __LINE__, __func__);
-    debug("  1ms: %06d  sof: %06d  flags: %06x",
+    debug("  1ms: %06d  sof: %06d  flags: %06x\r\n",
             UsbDevice::timer1ms,UsbDevice::sof_count,flags);
-    if(flags bitand usb.TRN) debug("  %s-%s\r\n",ustat>>1 ? "TX":"RX",
-        ustat bitand 1?"ODD":"EVEN");
-    else debug("\r\n");
 }
 
     //set 'normal' irq's, enable ep0 rx even/odd

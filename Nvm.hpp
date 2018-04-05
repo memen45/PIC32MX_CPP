@@ -37,9 +37,8 @@ struct Nvm {
 
     };
 
-    static uint8_t  write_word      (uint32_t*, uint32_t);
-    static uint8_t  write_2word     (uint32_t*, uint32_t, uint32_t);
-    static uint8_t  write_row       (uint32_t*, uint32_t); //src,dst
+    static uint8_t  write_2word     (uint32_t, uint32_t, uint32_t);
+    static uint8_t  write_row       (uint32_t, uint32_t); //src,dst
     static uint8_t  page_erase      (uint32_t);
     static void     write_protect   (uint32_t, bool); //true=lock until reset
 
@@ -54,6 +53,5 @@ struct Nvm {
     static void     do_op           (uint8_t);
     static void     address         (uint32_t);
     static uint8_t  error           ();
-    static void     write_nop       ();
 
 };
