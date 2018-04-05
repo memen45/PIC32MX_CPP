@@ -4,7 +4,7 @@ The following modules are present in the current repository:
 
 | Module | Code support for PIC32MX795F512L | tested |
 | ------- | -------------------------------:| ------:|
-| Adc     | yes | no |
+| Adc     | yes | yes |
 | Ccp     | not (yet) | no |
 | Clc     | not (yet) | no |
 | Comp    | not (yet) | no |
@@ -15,6 +15,7 @@ The following modules are present in the current repository:
 | I2c     | not (yet) | no |
 | Irq     | yes | yes |
 | Nvm     | not (yet) | no |
+| Oc      | yes | no |
 | Osc     | partial (no ext clock sources) | partially |
 | Pins    | yes | partially (an pins not) |
 | Pmd     | not (yet) | no |
@@ -22,11 +23,11 @@ The following modules are present in the current repository:
 | Reg     | yes | yes |
 | Resets  | not (yet) | no |
 | Rtcc    | not (yet) | no |
-| Spi     | yes | no |
+| Spi     | yes | yes |
 | Sys     | yes (added support for prefetch cache and wait states) | yes |
 | Timer1  | yes | yes |
 | Timer   | yes | yes |
-| Uart    | not (yet) | no |
+| Uart    | yes | no |
 | Vdetect | not (yet) | no |
 | Wdt     | not (yet) | no |
 
