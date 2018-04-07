@@ -25,6 +25,12 @@ struct UsbConfig {
     //---endpoints------------------------------------------------------------------
     static const uint8_t last_ep_num = 2;       //last endpoint number used
 
+    static constexpr uint8_t ep_siz[(last_ep_num+1)<<1] = {
+        64, 64,     //0
+        0, 8,       //1
+        64, 64      //2
+    };
+
     static constexpr uint8_t ep_ctrl[last_ep_num+1] = {
         Usb::EPTXEN|Usb::EPRXEN|Usb::EPHSHK,                //ep0
         Usb::EPTXEN|Usb::EPHSHK,                            //ep1
@@ -40,4 +46,5 @@ struct UsbConfig {
 
     //also need outside the class to access
     constexpr uint8_t UsbConfig::ep_ctrl[];
+    constexpr uint8_t UsbConfig::ep_siz[];
 

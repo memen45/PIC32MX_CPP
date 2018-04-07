@@ -13,7 +13,7 @@ struct UsbEP {
 
     void reset      (TXRX, bool = false); //bool = save ppbi?
     bool init       (uint8_t, uint16_t);
-    bool set_buf    (TXRX, uint8_t*, uint16_t);
+    bool set_buf    (TXRX, uint8_t*, uint16_t, uint16_t);
     void set_notify (TXRX, notify_t);
     bool service    (uint8_t); //rx/tx,from ISR (0-3)
     bool xfer       (TXRX, uint8_t*, uint16_t, notify_t = 0);

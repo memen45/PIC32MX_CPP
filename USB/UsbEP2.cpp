@@ -26,20 +26,17 @@ static bool set_address(UsbEP*);
 }
 
 //=============================================================================
-    bool    UsbEP::init             (uint8_t n, uint16_t siz)
+    bool    UsbEP::init             (uint8_t n, uint16_t rxsiz, uint16_t txsiz)
 //=============================================================================
 {
     if(n > UsbConfig::last_ep_num+1) return false;
     m_epnum = n;
-    m_rx.epsiz = siz;
-    m_tx.epsiz = siz;
+    m_rx.epsiz = rxsiz;
+    m_tx.epsiz = txsiz;
     reset(TX);
     reset(RX);
     if(n) return true;
     //ep0
-    memset(pkt, 0, sizeof(pkt));
-    memset(ep0rxbuf, 0, sizeof(ep0rxbuf));
-    set_buf(RX, ep0rxbuf, sizeof(ep0rxbuf));
     return xfer(RX, ep0rxbuf, siz);
 }
 

@@ -22,7 +22,7 @@ Pins vbus_pin(UsbConfig::vbus_pin_n);
     if(not UsbConfig::debug_on) return;
     va_list args;
     va_start(args, fmt);
-    vprintf(fmt,args);
+    vprintf(fmt, args);
     va_end(args);
 }
 
@@ -156,14 +156,12 @@ if(flags bitand compl (usb.T1MSEC bitor usb.SOF)){
     if(flags bitand usb.IDLE){          //idle (>3ms)
 debug("\tIDLE\r\n");
         //set 'suspend' irq's
-        usb.irqs(usb.RESUME bitor
-                 usb.URST bitor
-                 usb.T1MSEC);
+        usb.irqs(usb.RESUME bitor usb.URST bitor usb.T1MSEC);
     }
 
     if(flags bitand usb.TRN){           //token complete
         //although improbable, make sure an endpoint we use
-        if(ustat < UsbBdt::bdt_table_siz){
+        if(ustat <= UsbConfig::last_ep_num){
             ep[ustat>>2].trn_service(ustat bitand 3);
         }
         //else is not valid endpoint

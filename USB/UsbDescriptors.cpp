@@ -1,5 +1,6 @@
 #include "UsbDescriptors.hpp"
 #include "UsbCh9.hpp"
+#include "UsbConfig.hpp"
 #include <cstring> //memcpy
 
 
@@ -11,13 +12,13 @@
 
 //CDC-ACM
 static const uint8_t device[] = {
-    18,                 //length
+    18,                 //length(always)
     UsbCh9::DEVICE,     //1
     BB(0x0101),         //0x0200 //(bcd) usb 2.0 (changed to 1.1)
     2,                  //class (CDC device)
     0,                  //subclass
     0,                  //protocol
-    64,                 //max ep0 packet size
+    UsbConfig::ep_siz[0], //max ep0 packet size (IN/OUT same)
     BB(0x04D8),         //VID
     BB(0x000A),         //PID
     BB(0x0100),         //(bcd) release number
@@ -39,14 +40,14 @@ static const uint8_t config1[] = {
     5, 36, 6, 0, 1,         //union comm id=0, data id=1
     5, 36, 1, 0, 1,         //call management
     //endpoint  //8,0 = 0x0008
-    7, UsbCh9::ENDPOINT, UsbCh9::IN1, UsbCh9::INTERRUPT, 8, 0, 2,
+    7, UsbCh9::ENDPOINT, UsbCh9::IN1, UsbCh9::INTERRUPT, BB(UsbConfig::ep_siz[1<<1|1]), 2,
 
     //interface1
     9, UsbCh9::INTERFACE, 1, 0, 2, 10, 0, 0, 0,
-    //endpoint //64,0 = 0x0040
-    7, UsbCh9::ENDPOINT, UsbCh9::OUT2, UsbCh9::BULK, BB(64), 0,
     //endpoint
-    7, UsbCh9::ENDPOINT, UsbCh9::IN2, UsbCh9::BULK, BB(64), 0
+    7, UsbCh9::ENDPOINT, UsbCh9::OUT2, UsbCh9::BULK, BB(UsbConfig::ep_siz[2<<1|0]), 0,
+    //endpoint
+    7, UsbCh9::ENDPOINT, UsbCh9::IN2, UsbCh9::BULK, BB(UsbConfig::ep_siz[2<<1|1]), 0
 };
 
 //Language code string descriptor
@@ -55,6 +56,7 @@ static const char* strings[] = {
    "Microchip Techonology Inc.",   //manufacturer
    "CDC RS-232 Emulation Demo"     //product
 };
+
 
 //private
 
@@ -109,64 +111,7 @@ uint16_t UsbDescriptors::get(uint16_t wValue, uint8_t* buf, uint16_t siz){
 }
 
 
-// static const uint16_t language[] = {
-//     W(4,3), 0x0409
-// };
-// static const uint16_t manufacturer[] = {
-//     W(36,3), 'P','I','C','3','2','M','M','0','2','5','6','G','P','M','0','6','4'
-// };
-// static const uint16_t product[] = {
-//     W(16,3), 'C','D','C','-','A','C','M'
-// };
-// static const uint16_t* strings[] = {
-//     language, manufacturer, product
-// };
-
-//private
-
-//18bytes (but may ask for less)
-// const uint8_t* get_device(uint16_t* siz){
-//     if(*siz > sizeof(device)) *siz = sizeof(device);
-//     return device;
-// }
-//
-// //could be >255 bytes
-// const uint8_t* get_config(uint16_t* siz, uint8_t idx){
-//     if(idx != 0){ *siz = 0; return 0; } //only 1 config
-//     if(*siz > sizeof(config1)) *siz = sizeof(config1);
-//     return config1;
-// }
-//
-// //up to 255bytes
-// const uint8_t* get_string(uint16_t* siz, uint8_t idx){
-//     if(idx >= sizeof(strings)){ *siz = 0;  return 0; } //bad index
-//     uint8_t* str = (uint8_t*)strings[idx];
-//     auto ssiz = str[0];
-//     if(*siz > ssiz) *siz = ssiz;
-//     return (const uint8_t*)strings[idx];
-// }
-//
-// //public
-//
-// //pkt.wValue high=descriptor type, low=index
-// //device=1, config=2, string=3
-// uint8_t* UsbDescriptors::get(uint16_t wValue, uint16_t* siz){
-//     uint8_t idx = wValue;
-//     uint8_t typ = wValue>>8;
-//     if(typ == 1){ return (uint8_t*)get_device(siz); }
-//     if(typ == 2){ return (uint8_t*)get_config(siz, idx); }
-//     if(typ == 3){ return (uint8_t*)get_string(siz, idx); }
-//     *siz = 0;
-//     return 0;
-// }
-
 uint16_t UsbDescriptors::get_epsiz(uint8_t n, bool io){
-    if(n == 0) return device[7];
-    if(io) n += 128;
-    for(uint16_t i = 0; i < sizeof(config1); i += config1[i]){
-        if(config1[i] == 7 and config1[i+2] == n){
-            return config1[i+5]<<8 bitor config1[i+4];
-        }
-    }
-    return 0; //not found
+    if(n > UsbConfig::last_ep_num) return 0;
+    return UsbConfig::ep_siz[n<<1 bitor io];
 }
