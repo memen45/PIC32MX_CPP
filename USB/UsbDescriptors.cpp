@@ -6,8 +6,12 @@
 
 //uint16_t-> byte, byte
 #define BB(v) v bitand 0xFF, v >> 8
-// //uint8_t,uin8_t-> uint16_t
-// #define W(b1,b2) (b2<<8 bitor b1)
+//endpoint size
+constexpr uint16_t epsize(UsbCh9::ENDPOINT_ADDRESS e){
+    return (e bitand 15) > UsbConfig::last_ep_num ? 0 :
+        UsbConfig::ep_siz[(e bitand 15)<<1 bitor (e >> 7)];
+}
+
 
 
 //CDC-ACM
@@ -40,14 +44,14 @@ static const uint8_t config1[] = {
     5, 36, 6, 0, 1,         //union comm id=0, data id=1
     5, 36, 1, 0, 1,         //call management
     //endpoint  //8,0 = 0x0008
-    7, UsbCh9::ENDPOINT, UsbCh9::IN1, UsbCh9::INTERRUPT, BB(UsbConfig::ep_siz[1<<1|1]), 2,
+    7, UsbCh9::ENDPOINT, UsbCh9::IN1, UsbCh9::INTERRUPT, BB(epsize(UsbCh9::IN1)), 2,
 
     //interface1
     9, UsbCh9::INTERFACE, 1, 0, 2, 10, 0, 0, 0,
     //endpoint
-    7, UsbCh9::ENDPOINT, UsbCh9::OUT2, UsbCh9::BULK, BB(UsbConfig::ep_siz[2<<1|0]), 0,
+    7, UsbCh9::ENDPOINT, UsbCh9::OUT2, UsbCh9::BULK, BB(epsize(UsbCh9::OUT2)), 0,
     //endpoint
-    7, UsbCh9::ENDPOINT, UsbCh9::IN2, UsbCh9::BULK, BB(UsbConfig::ep_siz[2<<1|1]), 0
+    7, UsbCh9::ENDPOINT, UsbCh9::IN2, UsbCh9::BULK, BB(epsize(UsbCh9::IN2)), 0
 };
 
 //Language code string descriptor
@@ -111,7 +115,6 @@ uint16_t UsbDescriptors::get(uint16_t wValue, uint8_t* buf, uint16_t siz){
 }
 
 
-uint16_t UsbDescriptors::get_epsiz(uint8_t n, bool io){
-    if(n > UsbConfig::last_ep_num) return 0;
-    return UsbConfig::ep_siz[n<<1 bitor io];
+uint16_t UsbDescriptors::get_epsiz(UsbCh9::ENDPOINT_ADDRESS e){
+    return epsize(e);
 }

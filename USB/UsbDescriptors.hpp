@@ -2,6 +2,7 @@
 
 //USB Descriptors
 
+#include "UsbCh9.hpp"
 #include <cstdint>
 
 struct UsbDescriptors {
@@ -12,6 +13,6 @@ struct UsbDescriptors {
     //return size of bytes
     static uint16_t get(uint16_t wValue, uint8_t* buf, uint16_t siz);
 
-    //get ep size from descriptor/config (epn=endpoint, io= 0=out, 1=in)
-    static uint16_t get_epsiz(uint8_t epn, bool io);
+    //get ep size from descriptor/config
+    static uint16_t get_epsiz(UsbCh9::ENDPOINT_ADDRESS);
 };

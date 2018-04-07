@@ -206,7 +206,7 @@ bool xmit = false;
 for(;;){
     if(sw3.ison()){ ison = UsbDevice::init(true); Delay::wait_ms(500); }
     if(sw1.ison()){ ison = UsbDevice::init(false); Delay::wait_ms(500); }
-    if(sw2.ison()){ xmit = not xmit; Delay::wait_ms(100); }
+    if(sw2.ison()){ xmit = not xmit; Delay::wait_ms(200); }
     if(ison and dly.expired()){
         dly.restart();
         if(xmit) UsbDevice::cdc_tx(buf, 3);

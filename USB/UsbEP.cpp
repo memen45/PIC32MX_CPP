@@ -45,12 +45,12 @@ int16_t set_address(uint8_t* buf, uint16_t sz, UsbCh9::SetupPkt_t* = 0);
 bool UsbEP::init(uint8_t n)
 //=============================================================================
 {
-    UsbBdt bdt;
+    UsbBdt bdt; UsbDescriptors desc;
     m_epnum = n bitand 15;
     if(n >= bdt.bdt_table_siz/4) return false;
     m_bdt = &bdt.table[n<<2]; //start of bdt table for this ep
-    m_rx.epsiz = UsbDescriptors::get_epsiz(n, 1);
-    m_tx.epsiz = UsbDescriptors::get_epsiz(n, 0);
+    m_rx.epsiz = desc.get_epsiz((UsbCh9::ENDPOINT_ADDRESS)(n bitor 127));
+    m_tx.epsiz = desc.get_epsiz((UsbCh9::ENDPOINT_ADDRESS)n);
     if(n == 0){
         //clear ep0 rx buf
         for(auto& i : ep0buf) i = 0;

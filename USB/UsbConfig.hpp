@@ -26,9 +26,9 @@ struct UsbConfig {
     static const uint8_t last_ep_num = 2;       //last endpoint number used
 
     static constexpr uint8_t ep_siz[(last_ep_num+1)<<1] = {
-        64, 64,     //0
-        0, 8,       //1
-        64, 64      //2
+        64, 64,     //0 - out,in
+        0, 8,       //1 - out,in
+        64, 64      //2 - out,in
     };
 
     static constexpr uint8_t ep_ctrl[last_ep_num+1] = {
