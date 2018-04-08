@@ -47,7 +47,7 @@ struct UsbEP2 {
     info_t m_ep[2]{{0},{0}};      //can use index 0/1 (TXRX)
 
     public:
-    info_t* rx{&m_ep[0]};  //or use these reference names
+    info_t* rx{&m_ep[0]};  //or use these
     info_t* tx{&m_ep[1]};
 
     private:
