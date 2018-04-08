@@ -2,20 +2,44 @@
 #include "UsbBdt.hpp"
 #include "UsbCh9.hpp"
 #include "Usb.hpp"
+#include "UsbBuf.hpp"
+#include "Reg.hpp"
+#include "UsbDescriptors.hpp"
 
 #include <cstdint>
 #include <cstring> //memset, memcpy
+#include <cstdio>
 
 //this file only, for ep0
 static uint8_t ep0rxbuf[64] = {0};
-static uint8_t pkt[8] = {0};
+static UsbCh9::SetupPkt_t pkt = {0};
 static uint8_t* ep0txbuf;
-static bool control (UsbEP*);
-static bool set_address(UsbEP*);
+static bool control (UsbEP2*);
+static bool set_address(UsbEP2*);
 //
 
+//private
 //=============================================================================
-    void    UsbEP::reset            (TXRX trx, bool saveppbi)
+    void debug(const char* fmt, ...)
+//=============================================================================
+{
+    if(not UsbConfig::debug_on) return;
+    va_list args;
+    va_start(args, fmt);
+    vprintf(fmt, args);
+    va_end(args);
+}
+//=============================================================================
+    void debug_bytes(uint8_t* buf, uint16_t count)
+//=============================================================================
+{
+    if(not UsbConfig::debug_on) return;
+    for(auto i = 0; i < count; i++) printf("%s%02x",i%16==0?"\r\n\t":" ",buf[i]);
+    printf("\r\n");
+}
+
+//=============================================================================
+    void    UsbEP2::reset            (TXRX trx, bool saveppbi)
 //=============================================================================
 {
     info_t& x = m_ep[trx];
@@ -26,46 +50,56 @@ static bool set_address(UsbEP*);
 }
 
 //=============================================================================
-    bool    UsbEP::init             (uint8_t n, uint16_t rxsiz, uint16_t txsiz)
+    bool    UsbEP2::init             (uint8_t n, uint16_t rxsiz, uint16_t txsiz)
 //=============================================================================
 {
-    if(n > UsbConfig::last_ep_num+1) return false;
+debug("%s:%d:%s():", __FILE__, __LINE__, __func__);
+debug(" n: %d  rxsiz: %d  txsiz: %d\r\n",n,rxsiz,txsiz);
+
+    if(n > UsbConfig::last_ep_num) return false;
     m_epnum = n;
-    m_rx.epsiz = rxsiz;
-    m_tx.epsiz = txsiz;
+    rx->epsiz = rxsiz;
+    tx->epsiz = txsiz;
+    rx->bdt = &UsbBdt::table[n<<2];
+    tx->bdt = &UsbBdt::table[(n<<2)+2];
     reset(TX);
     reset(RX);
+    Usb::epcontrol(n, UsbConfig::ep_ctrl[n]); //set endpoint control
     if(n) return true;
     //ep0
-    return xfer(RX, ep0rxbuf, siz);
+    return xfer(RX, ep0rxbuf, rxsiz);
 }
 
 //=============================================================================
-    bool    UsbEP::set_buf          (TXRX trx, uint8_t* buf, uint16_t siz)
+    bool    UsbEP2::set_buf          (TXRX trx, uint8_t* buf, uint16_t siz)
 //=============================================================================
 {
     m_ep[trx].buf = buf;
     m_ep[trx].siz = siz;
+    return true;
 }
 
 //=============================================================================
-    bool    UsbEP::set_notify       (TXRX trx, notify_t f)
+    bool    UsbEP2::set_notify       (TXRX trx, notify_t f)
 //=============================================================================
 {
+debug("%s:%d:%s(): %s  notify: %08x\r\n", __FILE__, __LINE__, __func__,
+        trx?"TX":"RX", (uint32_t)f);
     m_ep[trx].notify = f;
+    return true;
 }
 
 //specify d01, notify optional (default = 0)
 //=============================================================================
-bool UsbEP::xfer(TXRX trx, uint8_t* buf, uint16_t siz, bool d01, notify_t f)
+bool UsbEP2::xfer(TXRX trx, uint8_t* buf, uint16_t siz, bool d01, notify_t f)
 //=============================================================================
 {
     m_ep[trx].d01 = d01;
-    return recv(trx, buf, siz, f);
+    return xfer(trx, buf, siz, f);
 }
 
 //=============================================================================
-bool UsbEP::xfer(TXRX trx, uint8_t* buf, uint16_t siz, notify_t f)
+bool UsbEP2::xfer(TXRX trx, uint8_t* buf, uint16_t siz, notify_t f)
 //=============================================================================
 {
     info_t& x = m_ep[trx];
@@ -73,12 +107,14 @@ bool UsbEP::xfer(TXRX trx, uint8_t* buf, uint16_t siz, notify_t f)
     x.siz = siz;
     x.btogo = siz;
     x.bdone = 0;
-    x.notify = f;
+    if(f) x.notify = f;
+debug("%s:%d:%s():", __FILE__, __LINE__, __func__);
+debug(" %s  buf: %08x  btogo: %04x\r\n",trx?"TX":"RX",(uint32_t)x.buf,x.btogo);
     return setup(trx);
 }
 
 //=============================================================================
-    bool    UsbEP::busy                 (TXRX trx)
+    bool    UsbEP2::busy                 (TXRX trx)
 //=============================================================================
 {
     info_t& x = m_ep[trx];
@@ -86,7 +122,7 @@ bool UsbEP::xfer(TXRX trx, uint8_t* buf, uint16_t siz, notify_t f)
 }
 
 //=============================================================================
-    bool    UsbEP::setup                (TXRX trx, bool stall)
+    bool    UsbEP2::setup                (TXRX trx, bool stall)
 //=============================================================================
 {
     info_t& x = m_ep[trx];
@@ -94,6 +130,8 @@ bool UsbEP::xfer(TXRX trx, uint8_t* buf, uint16_t siz, notify_t f)
     bool i = x.ppbi;
     if(x.bdt[i].stat.uown) i xor_eq 1;      //in use, try next
     if(x.bdt[i].stat.uown) return false;    //both in use
+
+debug("%s:%d:%s(): ppbi: %d", __FILE__, __LINE__, __func__,x.ppbi);
 
     volatile UsbBdt::ctrl_t ctrl = {0};
     ctrl.bstall = stall;
@@ -103,19 +141,24 @@ bool UsbEP::xfer(TXRX trx, uint8_t* buf, uint16_t siz, notify_t f)
     ctrl.count = x.btogo < 64 ? x.btogo : 64;
     x.bdt[i].bufaddr = Reg::k2phys((uint32_t)x.buf);
     x.bdt[i].ctrl.val32 = ctrl.val32;
+
+debug(" bufaddr: %08x  ctrl: %08x\r\n",x.bdt[i].bufaddr,x.bdt[i].ctrl.val32);
     return true;
 }
 
 //called from ISR with rx/tx,even/odd (0-3)
 //=============================================================================
-    bool    UsbEP::service              (uint8_t ustat)
+    bool    UsbEP2::service              (uint8_t ustat)
 //=============================================================================
 {
     m_ustat = ustat bitand 3;
     info_t& x = m_ep[ustat>>1]; //tx or rx
-    x.stat = x.bdt.stat;        //get bdt stat
+    x.stat.val32 = x.bdt[ustat bitand 1].stat.val32;        //get bdt stat
     x.ppbi xor_eq 1;            //toggle ppbi
     x.d01 xor_eq 1;             //toggle d01
+
+debug("%s:%d:%s(): [%s:%s]", __FILE__, __LINE__, __func__,m_ustat<2?"RX":"TX",m_ustat&1?"ODD":"EVEN");
+debug("  EP: %d  pid: %02x  bdt-stat: %08x\r\n", m_epnum,x.stat.pid,x.stat.val32);
 
     //in (tx), out (rx)
     switch(x.stat.pid){
@@ -128,7 +171,7 @@ bool UsbEP::xfer(TXRX trx, uint8_t* buf, uint16_t siz, notify_t f)
         case UsbCh9::SETUP:
             if(m_epnum == 0 and x.stat.count == 8){
                 //make copy of setup packet
-                memcpy(pkt, m_rx_buf, sizeof(pkt);
+                memcpy(&pkt.packet[0], rx->buf, sizeof(pkt));
                 control(this);
                 //clear PKTDIS to let control xfer resume
                 Usb::control(Usb::PKTDIS, false);
@@ -142,67 +185,71 @@ bool UsbEP::xfer(TXRX trx, uint8_t* buf, uint16_t siz, notify_t f)
 }
 
 //=============================================================================
-    bool    UsbEP::takeback             (TXRX trx)
+    bool    UsbEP2::takeback             (TXRX trx)
 //=============================================================================
 {
     info_t& x = m_ep[trx];
     if(x.bdt[0].stat.uown){ //check even
-        x.bdt[0].uown = 0;
+        x.bdt[0].ctrl.uown = 0;
         x.ppbi xor_eq 1;
     }
     if(x.bdt[1].stat.uown){ //check odd
-        x.bdt[1].uown = 0;
+        x.bdt[1].ctrl.uown = 0;
         x.ppbi xor_eq 1;
     }
     reset(trx, true); //reset, but save ppbi
+    return true;
 }
 //=============================================================================
-    void    UsbEP::txzlp                ()
+    void    UsbEP2::txzlp                ()
 //=============================================================================
 {
-    m_tx.zlp = true;
+    tx->zlp = true;
 }
 //=============================================================================
-    void    UsbEP::txin                 ()
+    void    UsbEP2::txin                 ()
 //=============================================================================
 {
-    m_tx.bdone += m_tx.stat.count;
-    if(m_tx.stat.count > m_tx.btogo){
-        m_tx.btogo = 0;
-    } else m_tx.btogo -= m_tx.stat.count;
+debug("%s:%d:%s():  count: %d  notify: %08x\r\n",
+      __FILE__, __LINE__, __func__,tx->stat.count,(uint32_t)tx->notify);
+    tx->bdone += tx->stat.count;
+    if(tx->stat.count > tx->btogo){
+        tx->btogo = 0;
+    } else tx->btogo -= tx->stat.count;
 
-    if(m_tx.btogo){
-        m_tx.buf += m_tx.stat.count;
+    if(tx->btogo){
+        tx->buf += tx->stat.count;
         setup(TX);
-    } else if(m_tx.zlp){
-        m_tx.zlp = 0;
+    } else if(tx->zlp){
+        tx->zlp = 0;
         setup(TX);
-    } else if(m_tx.notify){
-        m_tx.notify(this);
-        m_tx.notify = 0;
+    } else if(tx->notify){
+        tx->notify(this);
+        tx->notify = 0;
     }
 
-    if(m_epnum == 0 and m_tx.btogo == 0) UsbBuf::release(ep0txbuf);
+    if(m_epnum == 0 and tx->btogo == 0) UsbBuf::release(ep0txbuf);
 }
 
 //=============================================================================
-    void    UsbEP::rxout                ()
+    void    UsbEP2::rxout                ()
 //=============================================================================
 {
-    m_rx.bdone += m_rx.stat.count;
+debug("%s:%d:%s():  count: %d\r\n", __FILE__, __LINE__, __func__,rx->stat.count);
+    rx->bdone += rx->stat.count;
 
-    if(not m_rx.stat.count or           //zlp
-        m_rx.stat.count > m_rx.btogo or //rx more than planned
-        m_rx.stat.count < m_rx.epsiz){  //short packet
-        m_rx.btogo = 0;                 //no more to do
-    } else m_rx.btogo -= m_rx.stat.count;
+    if(not rx->stat.count or           //zlp
+        rx->stat.count > rx->btogo or //rx more than planned
+        rx->stat.count < rx->epsiz){  //short packet
+        rx->btogo = 0;                 //no more to do
+    } else rx->btogo -= rx->stat.count;
 
-    if(m_rx.btogo){
-        m_rx.buf += m_rx.stat.count;
+    if(rx->btogo){
+        rx->buf += rx->stat.count;
         setup(RX);
-    } else if(m_rx.notify){
-        m_rx.notify(this);
-        m_rx.notify = 0;
+    } else if(rx->notify){
+        rx->notify(this);
+        rx->notify = 0;
     }
 }
 
@@ -210,7 +257,7 @@ bool UsbEP::xfer(TXRX trx, uint8_t* buf, uint16_t siz, notify_t f)
 
 //this file only- for ep0 only
 //=============================================================================
-static bool control (UsbEP* ep)
+static bool control (UsbEP2* ep)
 //=============================================================================
 {
     UsbConfig ucfg; Usb usb;
@@ -219,9 +266,9 @@ static bool control (UsbEP* ep)
     //take back any pending tx on ep0
     ep->takeback(ep->TX);
     //in all cases after a setup, next tx is data1 for either data or status
-    ep->m_tx.d01 = 1;
+    ep->tx->d01 = 1;
     //assume rx needs to be set for next setup (change if need rx dat phase)
-    ep->m_rx.d01 = 0;
+    ep->rx->d01 = 0;
 
     //release any previous tx
     UsbBuf::release(ep0txbuf);
@@ -240,6 +287,11 @@ static bool control (UsbEP* ep)
     uint16_t tlen = pkt.wLength;
     //assume rx (OUT) status
     uint16_t rlen = 0;
+
+
+debug("%s:%d:%s():", __FILE__, __LINE__, __func__);
+debug("  %04x %04x %04x %04x %s\r\n",
+       pkt.wRequest,pkt.wValue,pkt.wIndex,pkt.wLength,Usb::epcontrol(0,Usb::EPSTALL)?"STALLED":"");
 
     //process std req
     //pkt.wRequest, wValue, wIndex, wLength
@@ -302,12 +354,11 @@ static bool control (UsbEP* ep)
             break;
 
         case UsbCh9::DEV_GET_DESCRIPTOR:
-            //setup (here), tx tlen bytes (data1), status (rx zlp data1)
-            uint8_t* sbuf;
-            sbuf = UsbDescriptors::get(pkt.wValue, &tlen);
-            if(not sbuf) break; //tlen is also 0
             UsbBuf::release(ep0txbuf);
-            ep0txbuf = sbuf;
+            ep0txbuf = UsbBuf::get512();
+            //setup (here), tx tlen bytes (data1), status (rx zlp data1)
+            tlen = UsbDescriptors::get(pkt.wValue, ep0txbuf, pkt.wLength);
+            if(not tlen) tlen = -1;
             break;
 
         case UsbCh9::DEV_SET_DESCRIPTOR:
@@ -373,11 +424,11 @@ static bool control (UsbEP* ep)
 
 //callback from ep0 trn in (tx zlp after set address setup packet)
 //=============================================================================
-bool set_address(UsbEP* ep)
+bool set_address(UsbEP2* ep)
 //=============================================================================
 {
+debug("%s:%d:%s(): dev_addr: %d\r\n", __FILE__, __LINE__, __func__,pkt.wValue);
     Usb::dev_addr(pkt.wValue);  //set usb address
-    ep->set_notify(ep->TX, 0);  //clear notify (one time event)
     return true;
 }
 
@@ -392,8 +443,8 @@ bool set_address(UsbEP* ep)
 
 
 /*
-UsbEP  ep0;
-UsbEP  ep2;
+UsbEP2  ep0;
+UsbEP2  ep2;
 
 void test(){
     ep0.init(0,64);

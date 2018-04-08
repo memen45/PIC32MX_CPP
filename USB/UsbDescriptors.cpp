@@ -57,8 +57,8 @@ static const uint8_t config1[] = {
 //Language code string descriptor
 static const char* strings[] = {
    "\x09\x04",                     //language (low byte, high byte)
-   "Microchip Techonology Inc.",   //manufacturer
-   "CDC RS-232 Emulation Demo"     //product
+   "PIC32MM056GPM064",   //manufacturer
+   "CDC-ACM"     //product
 };
 
 

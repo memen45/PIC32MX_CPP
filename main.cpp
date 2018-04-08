@@ -211,7 +211,7 @@ for(;;){
         dly.restart();
         if(xmit) UsbDevice::cdc_tx(buf, 3);
     }
-    Wdt::reset(), led12.update(), rgb.update();
+    //Wdt::reset(), led12.update(), rgb.update();
 }
 
 }

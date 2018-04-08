@@ -7,8 +7,8 @@ struct UsbDevice {
 
     //really no need to keep track of usb states
     //all info is available elsewhere, such as-
-    //if(Usb::power(Usb::USBPWR)){ /*>=ATTACHED*/}
-    //else { /*DETACHED*/}
+    //if(not Usb::power(Usb::USBPWR)){ /*DETACHED*/ }
+    //else if(not Usb::dev_addr()){ /**/ }
     //if(Usb::dev_addr()){ /*>ADDRESS*/ }
     //else { /*<ADDRESS*/ }
     //if(Usb::irq(Usb::RESUME)){ /*SUSPENDED*/ }

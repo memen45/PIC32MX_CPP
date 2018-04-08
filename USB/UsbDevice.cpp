@@ -4,14 +4,14 @@
 #include "UsbBdt.hpp"
 #include "UsbBuf.hpp"
 #include "Irq.hpp"
-#include "UsbEP.hpp"
+#include "UsbEP2.hpp"
 #include "Delay.hpp"
 
 #include <cstdio>
 
 uint32_t UsbDevice::timer1ms = 0;
 uint32_t UsbDevice::sof_count = 0;
-UsbEP ep[UsbConfig::last_ep_num+1];
+UsbEP2 ep[UsbConfig::last_ep_num+1];
 Pins vbus_pin(UsbConfig::vbus_pin_n);
 
 //private
@@ -55,7 +55,10 @@ Pins vbus_pin(UsbConfig::vbus_pin_n);
     usb.power(usb.USBPWR, true);        //power on
     usb.bdt_addr((uint32_t)bdt.table);  //record address in usb bdt reg
     //init all ep (done with init function as need usb on first)
-    for(uint8_t i = 0; i < UsbConfig::last_ep_num+1; i++) ep[i].init(i);
+    for(uint8_t i = 0; i <= UsbConfig::last_ep_num; i++){
+        //ep[i].init(i);
+        ep[i].init(i, UsbConfig::ep_siz[i<<1], UsbConfig::ep_siz[(i<<1)+1] );
+    }
     usb.irqs(usb.URST|usb.T1MSEC);      //enable some irqs
     irq.init(irq.USB, cfg.usb_irq_pri, cfg.usb_irq_subpri, true); //usb irq on
     usb.control(usb.USBEN, true);       //enable usb module
@@ -161,8 +164,10 @@ debug("\tIDLE\r\n");
 
     if(flags bitand usb.TRN){           //token complete
         //although improbable, make sure an endpoint we use
-        if(ustat <= UsbConfig::last_ep_num){
-            ep[ustat>>2].trn_service(ustat bitand 3);
+        uint8_t n = ustat>>2;
+        if(n <= UsbConfig::last_ep_num){
+            //ep[ustat>>2].trn_service(ustat bitand 3);
+            ep[n].service(ustat bitand 3);
         }
         //else is not valid endpoint
     }

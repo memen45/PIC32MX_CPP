@@ -5,16 +5,16 @@
 #include <cstdint>
 
 
-struct UsbEP {
+struct UsbEP2 {
 
-    using notify_t = bool(*)(UsbEP*);
+    using notify_t = bool(*)(UsbEP2*);
 
     enum TXRX : bool { RX, TX };
 
     void reset      (TXRX, bool = false); //bool = save ppbi?
-    bool init       (uint8_t, uint16_t);
-    bool set_buf    (TXRX, uint8_t*, uint16_t, uint16_t);
-    void set_notify (TXRX, notify_t);
+    bool init       (uint8_t, uint16_t, uint16_t);
+    bool set_buf    (TXRX, uint8_t*, uint16_t);
+    bool set_notify (TXRX, notify_t);
     bool service    (uint8_t); //rx/tx,from ISR (0-3)
     bool xfer       (TXRX, uint8_t*, uint16_t, notify_t = 0);
     bool xfer       (TXRX, uint8_t*, uint16_t, bool, notify_t = 0);
@@ -44,11 +44,13 @@ struct UsbEP {
         volatile UsbBdt::bdt_t* bdt;//bdt table ptr
         notify_t        notify;     //callback
     };
-    info_t m_ep[2]{0};      //can use index 0/1 (TXRX)
+    info_t m_ep[2]{{0},{0}};      //can use index 0/1 (TXRX)
 
-    info_t& m_rx{m_ep[0]};  //or use these reference names
-    info_t& m_tx{m_ep[1]};
+    public:
+    info_t* rx{&m_ep[0]};  //or use these reference names
+    info_t* tx{&m_ep[1]};
 
+    private:
     uint8_t m_ustat{0};     //last usb stat (from irq)- 0-3
                             //(dir and ppbi only)
 
