@@ -37,6 +37,13 @@ static bool set_address(UsbEP2*);
     for(auto i = 0; i < count; i++) printf("%s%02x",i%16==0?"\r\n\t":" ",buf[i]);
     printf("\r\n");
 }
+//=============================================================================
+    void debug_func(const char* f)
+//=============================================================================
+{
+    if(not UsbConfig::debug_on) return;
+    printf("%16s: ",f);
+}
 
 //=============================================================================
     void    UsbEP2::reset            (TXRX trx, bool saveppbi)
@@ -53,7 +60,7 @@ static bool set_address(UsbEP2*);
     bool    UsbEP2::init             (uint8_t n, uint16_t rxsiz, uint16_t txsiz)
 //=============================================================================
 {
-debug("%s:%d:%s():", __FILE__, __LINE__, __func__);
+debug_func(__func__);
 debug(" n: %d  rxsiz: %d  txsiz: %d\r\n",n,rxsiz,txsiz);
 
     if(n > UsbConfig::last_ep_num) return false;
@@ -83,8 +90,6 @@ debug(" n: %d  rxsiz: %d  txsiz: %d\r\n",n,rxsiz,txsiz);
     bool    UsbEP2::set_notify       (TXRX trx, notify_t f)
 //=============================================================================
 {
-debug("%s:%d:%s(): %s  notify: %08x\r\n", __FILE__, __LINE__, __func__,
-        trx?"TX":"RX", (uint32_t)f);
     m_ep[trx].notify = f;
     return true;
 }
@@ -108,8 +113,8 @@ bool UsbEP2::xfer(TXRX trx, uint8_t* buf, uint16_t siz, notify_t f)
     x.btogo = siz;
     x.bdone = 0;
     if(f) x.notify = f;
-debug("%s:%d:%s():", __FILE__, __LINE__, __func__);
-debug(" %s  buf: %08x  btogo: %04x\r\n",trx?"TX":"RX",(uint32_t)x.buf,x.btogo);
+debug_func(__func__);
+debug(" %s  buf: %08x  btogo: %dx$7\r\n",trx?"$3TX":"$2RX",(uint32_t)x.buf,x.btogo);
     return setup(trx);
 }
 
@@ -131,8 +136,6 @@ debug(" %s  buf: %08x  btogo: %04x\r\n",trx?"TX":"RX",(uint32_t)x.buf,x.btogo);
     if(x.bdt[i].stat.uown) i xor_eq 1;      //in use, try next
     if(x.bdt[i].stat.uown) return false;    //both in use
 
-debug("%s:%d:%s(): ppbi: %d", __FILE__, __LINE__, __func__,x.ppbi);
-
     volatile UsbBdt::ctrl_t ctrl = {0};
     ctrl.bstall = stall;
     ctrl.data01 = x.d01;
@@ -142,7 +145,8 @@ debug("%s:%d:%s(): ppbi: %d", __FILE__, __LINE__, __func__,x.ppbi);
     x.bdt[i].bufaddr = Reg::k2phys((uint32_t)x.buf);
     x.bdt[i].ctrl.val32 = ctrl.val32;
 
-debug(" bufaddr: %08x  ctrl: %08x\r\n",x.bdt[i].bufaddr,x.bdt[i].ctrl.val32);
+debug_func(__func__);
+debug(" ppbi: %d bufaddr: %08x  ctrl: %08x\r\n",i,x.bdt[i].bufaddr,x.bdt[i].ctrl.val32);
     return true;
 }
 
@@ -157,8 +161,9 @@ debug(" bufaddr: %08x  ctrl: %08x\r\n",x.bdt[i].bufaddr,x.bdt[i].ctrl.val32);
     x.ppbi xor_eq 1;            //toggle ppbi
     x.d01 xor_eq 1;             //toggle d01
 
-debug("%s:%d:%s(): [%s:%s]", __FILE__, __LINE__, __func__,m_ustat<2?"RX":"TX",m_ustat&1?"ODD":"EVEN");
-debug("  EP: %d  pid: %02x  bdt-stat: %08x\r\n", m_epnum,x.stat.pid,x.stat.val32);
+debug_func(__func__);
+debug(" %s:%s",m_ustat<2?"$2RX":"$3TX",m_ustat&1?"ODD ":"EVEN");
+debug("  EP: %d  pid: %02x  bdt-stat: %08x$7\r\n", m_epnum,x.stat.pid,x.stat.val32);
 
     //in (tx), out (rx)
     switch(x.stat.pid){
@@ -210,8 +215,11 @@ debug("  EP: %d  pid: %02x  bdt-stat: %08x\r\n", m_epnum,x.stat.pid,x.stat.val32
     void    UsbEP2::txin                 ()
 //=============================================================================
 {
-debug("%s:%d:%s():  count: %d  notify: %08x\r\n",
-      __FILE__, __LINE__, __func__,tx->stat.count,(uint32_t)tx->notify);
+debug_func(__func__);
+debug(" $3count: %d",tx->stat.count);
+if(tx->notify) debug("  notify: %08x",(uint32_t)tx->notify);
+debug("$7\r\n");
+
     tx->bdone += tx->stat.count;
     if(tx->stat.count > tx->btogo){
         tx->btogo = 0;
@@ -235,7 +243,8 @@ debug("%s:%d:%s():  count: %d  notify: %08x\r\n",
     void    UsbEP2::rxout                ()
 //=============================================================================
 {
-debug("%s:%d:%s():  count: %d\r\n", __FILE__, __LINE__, __func__,rx->stat.count);
+debug_func(__func__);
+debug(" $2count: %d$7\r\n", rx->stat.count);
     rx->bdone += rx->stat.count;
 
     if(not rx->stat.count or           //zlp
@@ -289,8 +298,8 @@ static bool control (UsbEP2* ep)
     uint16_t rlen = 0;
 
 
-debug("%s:%d:%s():", __FILE__, __LINE__, __func__);
-debug("  %04x %04x %04x %04x %s\r\n",
+debug_func(__func__);
+debug(" $1%04x %04x %04x %04x %s$7\r\n",
        pkt.wRequest,pkt.wValue,pkt.wIndex,pkt.wLength,Usb::epcontrol(0,Usb::EPSTALL)?"STALLED":"");
 
     //process std req
@@ -427,7 +436,8 @@ debug("  %04x %04x %04x %04x %s\r\n",
 bool set_address(UsbEP2* ep)
 //=============================================================================
 {
-debug("%s:%d:%s(): dev_addr: %d\r\n", __FILE__, __LINE__, __func__,pkt.wValue);
+debug_func(__func__);
+debug(" dev_addr: %d\r\n",pkt.wValue);
     Usb::dev_addr(pkt.wValue);  //set usb address
     return true;
 }

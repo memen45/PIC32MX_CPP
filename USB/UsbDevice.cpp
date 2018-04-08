@@ -25,6 +25,13 @@ Pins vbus_pin(UsbConfig::vbus_pin_n);
     vprintf(fmt, args);
     va_end(args);
 }
+//=============================================================================
+    void debug_func(const char* f)
+//=============================================================================
+{
+    if(not UsbConfig::debug_on) return;
+    printf("%16s: ",f);
+}
 
 //private
 //=============================================================================
@@ -72,7 +79,9 @@ Pins vbus_pin(UsbConfig::vbus_pin_n);
     bool        UsbDevice::init         (bool tf)
 //=============================================================================
 {
-debug("%s:%d:%s(%s):\r\n", __FILE__, __LINE__, __func__,tf?"true":"false");
+debug("\r\n\r\n");
+debug_func(__func__);
+debug(" $6(%s)$7\r\n\r\n", tf?"true":"false");
 
     bool wason = detach();
     //if no vbus pin voltage or tf=false (wanted only detach)
@@ -86,7 +95,8 @@ debug("%s:%d:%s(%s):\r\n", __FILE__, __LINE__, __func__,tf?"true":"false");
     bool        UsbDevice::cdc_tx       (uint8_t* buf, uint16_t count)
 //=============================================================================
 {
-debug("%s:%d:%s(%08x, %d):\r\n", __FILE__, __LINE__, __func__,buf,count);
+debug_func(__func__);
+debug(" $3(%08x, %d)$7\r\n", buf,count);
     return ep[2].xfer(ep[2].TX, buf, count);
 }
 
@@ -94,7 +104,8 @@ debug("%s:%d:%s(%08x, %d):\r\n", __FILE__, __LINE__, __func__,buf,count);
     bool        UsbDevice::cdc_rx       (uint8_t* buf, uint16_t count)
 //=============================================================================
 {
-debug("%s:%d:%s(%08x, %d):\r\n", __FILE__, __LINE__, __func__,buf,count);
+debug_func(__func__);
+debug(" $2(%08x, %d)$7\r\n", buf,count);
     return ep[2].xfer(ep[2].RX, buf, count);
 }
 
@@ -125,8 +136,9 @@ debug("%s:%d:%s(%08x, %d):\r\n", __FILE__, __LINE__, __func__,buf,count);
     //was also enabled, we also have stat if trn was set
 
 if(flags bitand compl (usb.T1MSEC bitor usb.SOF)){
-    debug("%s:%d:%s():", __FILE__, __LINE__, __func__);
-    debug("  1ms: %06d  sof: %06d  flags: %06x\r\n",
+    debug("\r\n");
+    debug_func(__func__);
+    debug(" $41ms: %06d  sof: %06d  flags: %06x$7\r\n",
             UsbDevice::timer1ms,UsbDevice::sof_count,flags);
 }
 
@@ -157,7 +169,6 @@ if(flags bitand compl (usb.T1MSEC bitor usb.SOF)){
     }
 
     if(flags bitand usb.IDLE){          //idle (>3ms)
-debug("\tIDLE\r\n");
         //set 'suspend' irq's
         usb.irqs(usb.RESUME bitor usb.URST bitor usb.T1MSEC);
     }
