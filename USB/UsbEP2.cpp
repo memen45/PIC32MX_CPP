@@ -114,7 +114,7 @@ bool UsbEP2::xfer(TXRX trx, uint8_t* buf, uint16_t siz, notify_t f)
     x.bdone = 0;
     if(f) x.notify = f;
 debug_func(__func__);
-debug(" %s  buf: %08x  btogo: %dx$7\r\n",trx?"$3TX":"$2RX",(uint32_t)x.buf,x.btogo);
+debug(" %s  buf: %08x  btogo: %d$7\r\n",trx?"$3TX":"$2RX",(uint32_t)x.buf,x.btogo);
     return setup(trx);
 }
 
@@ -181,7 +181,10 @@ debug("  EP: %d  pid: %02x  bdt-stat: %08x$7\r\n", m_epnum,x.stat.pid,x.stat.val
                 //clear PKTDIS to let control xfer resume
                 Usb::control(Usb::PKTDIS, false);
                 //rx,tx setup by control()
-            }
+
+debug_func(__func__);
+debug(" return from control()  bdt[0]: %08x  bdt[1]: %08x\r\n",
+        x.bdt[0].stat.val32, x.bdt[1].stat.val32); }
             break;
         default:
             return false;
