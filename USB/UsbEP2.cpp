@@ -442,23 +442,3 @@ debug(" dev_addr: %d\r\n",pkt.wValue);
     return true;
 }
 
-
-
-
-
-
-
-
-
-
-
-/*
-UsbEP2  ep0;
-UsbEP2  ep2;
-
-void test(){
-    ep0.init(0,64);
-    ep2.init(2,64);
-}
-
-*/
