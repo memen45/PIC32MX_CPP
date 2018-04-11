@@ -16,36 +16,14 @@ Pins vbus_pin(UsbConfig::vbus_pin_n);
 
 //private
 //=============================================================================
-    void debug(const char* fmt, ...)
-//=============================================================================
-{
-    if(not UsbConfig::debug_on) return;
-    va_list args;
-    va_start(args, fmt);
-    vprintf(fmt, args);
-    va_end(args);
-}
-//=============================================================================
-    void debug_func(const char* f)
-//=============================================================================
-{
-    if(not UsbConfig::debug_on) return;
-    printf("%16s: ",f);
-}
-
-//private
-//=============================================================================
-    bool detach()
+    void detach()
 //=============================================================================
 {
     Usb usb; UsbBuf buf; Irq irq;
 
-    bool wason = usb.power(usb.USBPWR);
     irq.on(irq.USB, false);             //usb irq off
     usb.power(usb.USBPWR, false);       //power off
-    while(usb.power(usb.USBBUSY));      //wait for busy
     buf.init();                         //reclaim/clear buffers
-    return wason;
 }
 
 //private
@@ -59,14 +37,14 @@ Pins vbus_pin(UsbConfig::vbus_pin_n);
     UsbDevice::sof_count = 0;           //and sof count
     bdt.init();                         //clear bdt table
     //no writes to usb regs until powered on
+    while(usb.power(usb.USBBUSY));      //wait for busy
     usb.power(usb.USBPWR, true);        //power on
     usb.bdt_addr((uint32_t)bdt.table);  //record address in usb bdt reg
     //init all ep (done with init function as need usb on first)
     for(uint8_t i = 0; i <= UsbConfig::last_ep_num; i++){
-        //ep[i].init(i);
         ep[i].init(i, UsbConfig::ep_siz[i<<1], UsbConfig::ep_siz[(i<<1)+1] );
     }
-    usb.irqs(usb.URST|usb.T1MSEC);      //enable some irqs
+    usb.irqs(usb.SOF|usb.T1MSEC|usb.TRN|usb.IDLE);   //enable some irqs
     irq.init(irq.USB, cfg.usb_irq_pri, cfg.usb_irq_subpri, true); //usb irq on
     usb.control(usb.USBEN, true);       //enable usb module
     irq.global(true);                   //global irq's on if not already
@@ -79,14 +57,10 @@ Pins vbus_pin(UsbConfig::vbus_pin_n);
     bool        UsbDevice::init         (bool tf)
 //=============================================================================
 {
-debug("\r\n\r\n");
-debug_func(__func__);
-debug(" $6(%s)$7\r\n\r\n", tf?"true":"false");
-
-    bool wason = detach();
+printf("\r\n\r\nUsbDevice::init(%d)\r\n",tf);
+    detach();
     //if no vbus pin voltage or tf=false (wanted only detach)
     if(not vbus_pin.ison() || not tf) return false;
-    if(wason) Delay::wait_ms(100);      //delay if was previously on
     attach();
     return true;                        //true=attached
 }
@@ -95,8 +69,6 @@ debug(" $6(%s)$7\r\n\r\n", tf?"true":"false");
     bool        UsbDevice::cdc_tx       (uint8_t* buf, uint16_t count)
 //=============================================================================
 {
-debug_func(__func__);
-debug(" $3(%08x, %d)$7\r\n", buf,count);
     return ep[2].xfer(ep[2].TX, buf, count);
 }
 
@@ -104,8 +76,6 @@ debug(" $3(%08x, %d)$7\r\n", buf,count);
     bool        UsbDevice::cdc_rx       (uint8_t* buf, uint16_t count)
 //=============================================================================
 {
-debug_func(__func__);
-debug(" $2(%08x, %d)$7\r\n", buf,count);
     return ep[2].xfer(ep[2].RX, buf, count);
 }
 
@@ -136,44 +106,26 @@ debug(" $2(%08x, %d)$7\r\n", buf,count);
     //was also enabled, we also have stat if trn was set
 
 if(flags bitand compl (usb.T1MSEC bitor usb.SOF)){
-    debug("\r\n");
-    debug_func(__func__);
-    debug(" $41ms: %06d  sof: %06d  flags: %06x$7\r\n",
-            UsbDevice::timer1ms,UsbDevice::sof_count,flags);
+    printf("\r\nISR> frame: %d  flags: %08x\r\n",Usb::frame(),flags);
 }
 
-    //set 'normal' irq's, enable ep0 rx even/odd
-    auto irqs_normal = [&](){
-        usb.irqs(usb.IDLE bitor
-                 usb.TRN bitor
-                 usb.URST bitor
-                 usb.T1MSEC bitor
-                 usb.SOF);
-    };
-
-    if(flags bitand usb.T1MSEC){        //update 1ms timer
+    if(flags bitand usb.T1MSEC){
         UsbDevice::timer1ms++;
     }
-
-    if(flags bitand usb.SOF){           //sof
+    if(flags bitand usb.SOF){
         UsbDevice::sof_count++;
     }
-
     if(flags bitand usb.RESUME){
-        irqs_normal();
-    }
-
-    if(flags bitand usb.URST){
-        irqs_normal();                  //enable normal irq's
-        return;                         //nothing more to do here
+        usb.irq(usb.RESUME, false);
     }
 
     if(flags bitand usb.IDLE){          //idle (>3ms)
         //set 'suspend' irq's
-        usb.irqs(usb.RESUME bitor usb.URST bitor usb.T1MSEC);
+        usb.irq(usb.RESUME, true);
     }
 
-    if(flags bitand usb.TRN){           //token complete
+    while(flags bitand usb.TRN){           //token complete
+        usb.irq(usb.URST, true);
         //although improbable, make sure an endpoint we use
         uint8_t n = ustat>>2;
         if(n <= UsbConfig::last_ep_num){
@@ -181,8 +133,17 @@ if(flags bitand compl (usb.T1MSEC bitor usb.SOF)){
             ep[n].service(ustat bitand 3);
         }
         //else is not valid endpoint
+        if(usb.flag(usb.TRN)){
+            ustat = usb.stat();
+            usb.flags_clr(usb.TRN);
+            flags = usb.TRN;
+        } else break;
     }
 
+    if(flags bitand usb.URST){
+        UsbDevice::init(true);
+        return;
+    }
     //more flags to check- stall, etc.
 
     } while(irq.flag(irq.USB)); //check if irq set again before leaving isr
