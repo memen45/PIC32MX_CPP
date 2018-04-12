@@ -4,14 +4,14 @@
 #include "UsbBdt.hpp"
 #include "UsbBuf.hpp"
 #include "Irq.hpp"
-#include "UsbEP2.hpp"
+#include "UsbEP.hpp"
 #include "Delay.hpp"
 
 #include <cstdio>
 
 uint32_t UsbDevice::timer1ms = 0;
 uint32_t UsbDevice::sof_count = 0;
-UsbEP2 ep[UsbConfig::last_ep_num+1];
+UsbEP ep[UsbConfig::last_ep_num+1];
 Pins vbus_pin(UsbConfig::vbus_pin_n);
 
 //private

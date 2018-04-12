@@ -1,10 +1,11 @@
-#include "UsbEP2.hpp"
+#include "UsbEP.hpp"
 #include "UsbBdt.hpp"
 #include "UsbCh9.hpp"
 #include "Usb.hpp"
 #include "UsbBuf.hpp"
 #include "Reg.hpp"
 #include "UsbDescriptors.hpp"
+#include "UsbConfig.hpp"
 
 #include <cstdint>
 #include <cstring> //memset, memcpy
@@ -14,34 +15,37 @@
 static uint8_t ep0rxbuf[64] = {0};
 static UsbCh9::SetupPkt_t pkt = {0};
 static uint8_t* ep0txbuf;
-static bool control (UsbEP2*);
-static bool set_address(UsbEP2*);
+static bool control (UsbEP*);
+static bool set_address(UsbEP*);
+//static uint8_t line_coding[7] = {0};
+//static bool set_line_coding(UsbEP*);
 //
 
 
 //=============================================================================
-    void    UsbEP2::reset            (TXRX trx, bool saveppbi)
+    void    UsbEP::reset            (TXRX trx, bool saveppbi)
 //=============================================================================
 {
     info_t& x = m_ep[trx];
     bool ppbi = saveppbi ? x.ppbi : 0;
     x = {0};
     x.ppbi = ppbi;
-    x.bdt = &UsbBdt::table[m_epnum<<2 bitor trx<<1];
+    //x.bdt = &UsbBdt::table[m_epnum<<2 bitor trx<<1];
+    x.bdt = &UsbBdt::table[m_epnum][trx][EVEN];
 }
 
 //=============================================================================
-    bool    UsbEP2::init             (uint8_t n, uint16_t rxsiz, uint16_t txsiz)
+    bool    UsbEP::init             (uint8_t n, uint16_t rxsiz, uint16_t txsiz)
 //=============================================================================
 {
     if(n > UsbConfig::last_ep_num) return false;
-    m_ep[0] = {0};
-    m_ep[1] = {0};
+    m_ep[EVEN] = {0};
+    m_ep[ODD] = {0};
     m_epnum = n;
     rx->epsiz = rxsiz;
     tx->epsiz = txsiz;
-    rx->bdt = &UsbBdt::table[n<<2];
-    tx->bdt = &UsbBdt::table[(n<<2)+2];
+//    rx->bdt = &UsbBdt::table[n<<2];
+//    tx->bdt = &UsbBdt::table[(n<<2)+2];
     reset(TX);
     reset(RX);
     Usb::epcontrol(n, UsbConfig::ep_ctrl[n]); //set endpoint control
@@ -51,7 +55,7 @@ static bool set_address(UsbEP2*);
 }
 
 //=============================================================================
-    bool    UsbEP2::set_buf          (TXRX trx, uint8_t* buf, uint16_t siz)
+    bool    UsbEP::set_buf          (TXRX trx, uint8_t* buf, uint16_t siz)
 //=============================================================================
 {
     m_ep[trx].buf = buf;
@@ -60,7 +64,7 @@ static bool set_address(UsbEP2*);
 }
 
 //=============================================================================
-    bool    UsbEP2::set_notify       (TXRX trx, notify_t f)
+    bool    UsbEP::set_notify       (TXRX trx, notify_t f)
 //=============================================================================
 {
     m_ep[trx].notify = f;
@@ -69,7 +73,7 @@ static bool set_address(UsbEP2*);
 
 //specify d01, notify optional (default = 0)
 //=============================================================================
-bool UsbEP2::xfer(TXRX trx, uint8_t* buf, uint16_t siz, bool d01, notify_t f)
+bool UsbEP::xfer(TXRX trx, uint8_t* buf, uint16_t siz, bool d01, notify_t f)
 //=============================================================================
 {
     m_ep[trx].d01 = d01;
@@ -77,7 +81,7 @@ bool UsbEP2::xfer(TXRX trx, uint8_t* buf, uint16_t siz, bool d01, notify_t f)
 }
 
 //=============================================================================
-bool UsbEP2::xfer(TXRX trx, uint8_t* buf, uint16_t siz, notify_t f)
+bool UsbEP::xfer(TXRX trx, uint8_t* buf, uint16_t siz, notify_t f)
 //=============================================================================
 {
     info_t& x = m_ep[trx];
@@ -90,15 +94,15 @@ bool UsbEP2::xfer(TXRX trx, uint8_t* buf, uint16_t siz, notify_t f)
 }
 
 //=============================================================================
-    bool    UsbEP2::busy                 (TXRX trx)
+    bool    UsbEP::busy                 (TXRX trx)
 //=============================================================================
 {
     info_t& x = m_ep[trx];
-    return x.bdt[0].stat.uown or x.bdt[1].stat.uown;
+    return x.bdt[EVEN].stat.uown or x.bdt[ODD].stat.uown;
 }
 
 //=============================================================================
-    bool    UsbEP2::setup                (TXRX trx, bool stall)
+    bool    UsbEP::setup                (TXRX trx, bool stall)
 //=============================================================================
 {
     info_t& x = m_ep[trx];
@@ -122,7 +126,7 @@ bool UsbEP2::xfer(TXRX trx, uint8_t* buf, uint16_t siz, notify_t f)
 
 //called from ISR with rx/tx,even/odd (0-3)
 //=============================================================================
-    bool    UsbEP2::service              (uint8_t ustat)
+    bool    UsbEP::service              (uint8_t ustat)
 //=============================================================================
 {
     m_ustat = ustat bitand 3;
@@ -158,29 +162,29 @@ printf("unknown x.stat.pid: %d\r\n",x.stat.pid);
 }
 
 //=============================================================================
-    bool    UsbEP2::takeback             (TXRX trx)
+    bool    UsbEP::takeback             (TXRX trx)
 //=============================================================================
 {
     info_t& x = m_ep[trx];
-    if(x.bdt[0].stat.uown){ //check even
-        x.bdt[0].ctrl.uown = 0;
+    if(x.bdt[EVEN].stat.uown){ //check even
+        x.bdt[EVEN].ctrl.uown = 0;
         x.ppbi xor_eq 1;
     }
-    if(x.bdt[1].stat.uown){ //check odd
-        x.bdt[1].ctrl.uown = 0;
+    if(x.bdt[ODD].stat.uown){ //check odd
+        x.bdt[ODD].ctrl.uown = 0;
         x.ppbi xor_eq 1;
     }
     reset(trx, true); //reset, but save ppbi
     return true;
 }
 //=============================================================================
-    void    UsbEP2::txzlp                ()
+    void    UsbEP::txzlp                ()
 //=============================================================================
 {
     tx->zlp = true;
 }
 //=============================================================================
-    void    UsbEP2::txin                 ()
+    void    UsbEP::txin                 ()
 //=============================================================================
 {
     info_t& tx = m_ep[TX];
@@ -207,7 +211,7 @@ printf("unknown x.stat.pid: %d\r\n",x.stat.pid);
 }
 
 //=============================================================================
-    void    UsbEP2::rxout                ()
+    void    UsbEP::rxout                ()
 //=============================================================================
 {
     info_t& rx = m_ep[RX];
@@ -229,16 +233,13 @@ printf("unknown x.stat.pid: %d\r\n",x.stat.pid);
         rx.notify = 0;
     }
 
-    if(not rx.btogo and m_epnum == 0){
-        xfer(RX, ep0rxbuf, 64, false);
-    }
 }
 
 
 
 //this file only- for ep0 only
 //=============================================================================
-static bool control (UsbEP2* ep)
+static bool control (UsbEP* ep)
 //=============================================================================
 {
     UsbConfig ucfg; Usb usb;
@@ -264,7 +265,6 @@ static bool control (UsbEP2* ep)
     uint16_t tlen = pkt.wLength;
     //rx (OUT) length requested, or status
     uint16_t rlen = 0;
-
 
 printf("pkt: $1%04x %04x %04x %04x$7\r\n",pkt.wRequest,pkt.wValue,pkt.wIndex,pkt.wLength);
 
@@ -351,9 +351,12 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",pkt.wRequest,pkt.wValue,pkt.wIndex,pkt
 
         case UsbCh9::CDC_SET_LINE_CODING:
             //rx data1, status (tx zlp)
+            //ep->set_notify(ep->RX, set_line_coding);
+            //tlen = 0;
             break;
         case UsbCh9::CDC_GET_LINE_CODING:
             //tx data1, status (rx zlp)
+            //memcpy(ep0txbuf, line_coding, 7);
             break;
         case UsbCh9::CDC_SET_CONTROL_LINE_STATE:
             //no data, status (tx zlp)
@@ -374,17 +377,30 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",pkt.wRequest,pkt.wValue,pkt.wIndex,pkt
     }
 
     ep->xfer(ep->TX, ep0txbuf, tlen, true); //true = data1
-    ep->xfer(ep->RX, ep0rxbuf, 64, pkt.wLength ? true : false);
+    if(pkt.wLength) ep->xfer(ep->RX, ep0rxbuf, 64, true);
+    ep->xfer(ep->RX, ep0rxbuf, 64, false);
 
     return true;
 }
 
 
 
+////callback from ep0
+////=============================================================================
+//bool set_line_coding(UsbEP* ep)
+////=============================================================================
+//{
+//    memcpy(line_coding, ep->rx->buf, 7);
+//    printf("%02x %02x %02x %02x %02x %02x %02x\r\n",
+//        line_coding[0],line_coding[1],line_coding[2],line_coding[3],
+//        line_coding[4],line_coding[5],line_coding[6]
+//    );
+//    return true;
+//}
 
 //callback from ep0 trn in (tx zlp after set address setup packet)
 //=============================================================================
-bool set_address(UsbEP2* ep)
+bool set_address(UsbEP* ep)
 //=============================================================================
 {
     Usb::dev_addr(pkt.wValue);  //set usb address

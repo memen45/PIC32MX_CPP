@@ -5,11 +5,12 @@
 #include <cstdint>
 
 
-struct UsbEP2 {
+struct UsbEP {
 
-    using notify_t = bool(*)(UsbEP2*);
+    using notify_t = bool(*)(UsbEP*);
 
     enum TXRX : bool { RX, TX };
+    enum EVEODD : bool { EVEN, ODD };
 
     void reset      (TXRX, bool = false); //bool = save ppbi?
     bool init       (uint8_t, uint16_t, uint16_t);

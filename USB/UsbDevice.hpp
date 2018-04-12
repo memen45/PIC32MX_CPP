@@ -3,17 +3,8 @@
 #include <cstdint>
 #include "Uart.hpp"
 
+
 struct UsbDevice {
-
-    //really no need to keep track of usb states
-    //all info is available elsewhere, such as-
-    //if(not Usb::power(Usb::USBPWR)){ /*DETACHED*/ }
-    //else if(not Usb::dev_addr()){ /**/ }
-    //if(Usb::dev_addr()){ /*>ADDRESS*/ }
-    //else { /*<ADDRESS*/ }
-    //if(Usb::irq(Usb::RESUME)){ /*SUSPENDED*/ }
-    //etc.
-
 
     static uint32_t timer1ms;
     static uint32_t sof_count;

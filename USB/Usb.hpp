@@ -45,7 +45,7 @@ struct Usb {
         DFN8 = 1<<11,
         CRC16 = 1<<10,
         CRC5 = 1<<9,
-        EOF = 1<<9,         /*host only*/
+        UEOF = 1<<9,         /*host only*/
         PID = 1<<8,
         ALLEIF = (BTS|BMX|DMA|BTO|DFN8|CRC16|CRC5|PID),
 

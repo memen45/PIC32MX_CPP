@@ -2,8 +2,8 @@
 
 //USB peripheral - PIC32MM0256GPM064
 
-#include <cstdint>
 #include "UsbConfig.hpp"
+#include <cstdint>
 
 struct UsbBdt {
 
@@ -44,14 +44,7 @@ struct UsbBdt {
         uint32_t bufaddr;
     };
 
-    //ep0 rx even   ctrl|stat,addr 2words/8bytes table[0]
-    //ep0 rx odd    ctrl|stat,addr 2words/8bytes table[1]
-    //ep0 tx even   ctrl|stat,addr 2words/8bytes table[2]
-    //ep0 tx odd    ctrl|stat,addr 2words/8bytes table[3]
-    //...
-
-    static const uint8_t bdt_table_siz = (UsbConfig::last_ep_num+1)*4;
-    static volatile bdt_t table[bdt_table_siz]
+    static volatile bdt_t table[UsbConfig::last_ep_num+1][2][2]
         __attribute__ ((aligned (512)));
 
     //clear table

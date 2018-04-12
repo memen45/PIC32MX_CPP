@@ -27,7 +27,7 @@ struct UsbConfig {
 
     static constexpr uint8_t ep_siz[(last_ep_num+1)<<1] = {
         64, 64,     //0 - out,in
-        0, 8,       //1 - out,in
+        0,  8,      //1 - out,in
         64, 64      //2 - out,in
     };
 
@@ -42,50 +42,9 @@ struct UsbConfig {
 
 };
 
-    //also need outside the class to access
-    constexpr uint8_t UsbConfig::ep_ctrl[];
-    constexpr uint8_t UsbConfig::ep_siz[];
+//also need outside the class to access
+constexpr uint8_t UsbConfig::ep_ctrl[];
+constexpr uint8_t UsbConfig::ep_siz[];
 
-//
-//struct UsbConfig1 {
-//
-//    using endpoint_t = struct {
-//        uint16_t max_pkt_out;
-//        uint16_t max_pkt_in;
-//        uint8_t control;
-//    };
-//
-//    using usb_config_t = struct {
-//        bool self_powered;
-//        bool remote_wakeup;
-//        uint8_t usb_irq_priority;
-//        uint8_t usb_irq_subpriority;
-//        endpoint_t endpoint[16];
-//        Pins::RPN vbus_pin;
-//    };
-//
-//    const usb_config_t cfg;
-//
-//    constexpr UsbConfig1(usb_config_t c) : cfg(c){}
-//
-//   uint8_t last_ep(){
-//       uint8_t i = 15;
-//       for(; i and cfg.endpoint[i].control; i--);
-//       return i;
-//   }
-//
-//};
-//
-//UsbConfig1 usb_cdc{
-//    {
-//    true, true,
-//    1, 0,
-//    {
-//        {64, 64, Usb::EPTXEN bitor Usb::EPRXEN bitor Usb::EPHSHK},
-//        {0, 8, Usb::EPTXEN bitor Usb::EPHSHK},
-//        {64, 64, Usb::EPTXEN bitor Usb::EPRXEN bitor Usb::EPCONDIS bitor Usb::EPHSHK}
-//    },
-//    Pins::B6
-//    }
-//};
+
 
