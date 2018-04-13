@@ -23,89 +23,85 @@ static bool set_address(UsbEP*);
 
 
 //=============================================================================
-    void    UsbEP::reset            (TXRX trx, bool saveppbi)
+    void    UsbEP::reset            (TXRX tr, bool saveppbi)
 //=============================================================================
 {
-    info_t& x = m_ep[trx];
+    info_t& x = m_ep[tr];
     bool ppbi = saveppbi ? x.ppbi : 0;
     x = {0};
     x.ppbi = ppbi;
-    //x.bdt = &UsbBdt::table[m_epnum<<2 bitor trx<<1];
-    x.bdt = &UsbBdt::table[m_epnum][trx][EVEN];
+    x.bdt = &UsbBdt::table[m_epnum][tr][EVEN];
 }
 
 //=============================================================================
     bool    UsbEP::init             (uint8_t n, uint16_t rxsiz, uint16_t txsiz)
 //=============================================================================
 {
-    if(n > UsbConfig::last_ep_num) return false;
-    m_ep[EVEN] = {0};
-    m_ep[ODD] = {0};
+    UsbConfig cfg;
+    if(n > cfg.last_ep_num) return false;
     m_epnum = n;
-    rx->epsiz = rxsiz;
-    tx->epsiz = txsiz;
-//    rx->bdt = &UsbBdt::table[n<<2];
-//    tx->bdt = &UsbBdt::table[(n<<2)+2];
     reset(TX);
     reset(RX);
-    Usb::epcontrol(n, UsbConfig::ep_ctrl[n]); //set endpoint control
+    rx->epsiz = rxsiz;
+    tx->epsiz = txsiz;
+    Usb::epcontrol(n, cfg.ep_ctrl[n]); //set endpoint control
     if(n) return true;
     //ep0
     return xfer(RX, ep0rxbuf, rxsiz);
 }
 
 //=============================================================================
-    bool    UsbEP::set_buf          (TXRX trx, uint8_t* buf, uint16_t siz)
+    bool    UsbEP::set_buf          (TXRX tr, uint8_t* buf, uint16_t siz)
 //=============================================================================
 {
-    m_ep[trx].buf = buf;
-    m_ep[trx].siz = siz;
+    m_ep[tr].buf = buf;
+    m_ep[tr].siz = siz;
     return true;
 }
 
 //=============================================================================
-    bool    UsbEP::set_notify       (TXRX trx, notify_t f)
+    bool    UsbEP::set_notify       (TXRX tr, notify_t f)
 //=============================================================================
 {
-    m_ep[trx].notify = f;
+    m_ep[tr].notify = f;
     return true;
 }
 
 //specify d01, notify optional (default = 0)
 //=============================================================================
-bool UsbEP::xfer(TXRX trx, uint8_t* buf, uint16_t siz, bool d01, notify_t f)
+bool UsbEP::xfer(TXRX tr, uint8_t* buf, uint16_t siz, bool d01, notify_t f)
 //=============================================================================
 {
-    m_ep[trx].d01 = d01;
-    return xfer(trx, buf, siz, f);
+    m_ep[tr].d01 = d01;
+    return xfer(tr, buf, siz, f);
 }
 
 //=============================================================================
-bool UsbEP::xfer(TXRX trx, uint8_t* buf, uint16_t siz, notify_t f)
+bool UsbEP::xfer(TXRX tr, uint8_t* buf, uint16_t siz, notify_t f)
 //=============================================================================
 {
-    info_t& x = m_ep[trx];
+    info_t& x = m_ep[tr];
     x.buf = buf;
     x.siz = siz;
     x.btogo = siz;
     x.bdone = 0;
     if(f) x.notify = f;
-    return setup(trx);
+    return setup(tr);
 }
 
 //=============================================================================
-    bool    UsbEP::busy                 (TXRX trx)
+    bool    UsbEP::busy                 (TXRX tr)
 //=============================================================================
 {
-    info_t& x = m_ep[trx];
+    info_t& x = m_ep[tr];
     return x.bdt[EVEN].stat.uown or x.bdt[ODD].stat.uown;
 }
 
 //=============================================================================
-    bool    UsbEP::setup                (TXRX trx, bool stall)
+    bool    UsbEP::setup                (TXRX tr, bool stall)
 //=============================================================================
 {
-    info_t& x = m_ep[trx];
+    info_t& x = m_ep[tr];
     if(not x.buf) return false;//no buffer set
     bool i = x.ppbi;
     if(x.bdt[i].stat.uown) i xor_eq 1;      //in use, try next
@@ -162,10 +158,10 @@ printf("unknown x.stat.pid: %d\r\n",x.stat.pid);
 }
 
 //=============================================================================
-    bool    UsbEP::takeback             (TXRX trx)
+    bool    UsbEP::takeback             (TXRX tr)
 //=============================================================================
 {
-    info_t& x = m_ep[trx];
+    info_t& x = m_ep[tr];
     if(x.bdt[EVEN].stat.uown){ //check even
         x.bdt[EVEN].ctrl.uown = 0;
         x.ppbi xor_eq 1;
@@ -174,7 +170,7 @@ printf("unknown x.stat.pid: %d\r\n",x.stat.pid);
         x.bdt[ODD].ctrl.uown = 0;
         x.ppbi xor_eq 1;
     }
-    reset(trx, true); //reset, but save ppbi
+    reset(tr, true); //reset, but save ppbi
     return true;
 }
 //=============================================================================

@@ -48,8 +48,8 @@ struct UsbEP {
     info_t m_ep[2]{{0},{0}};      //can use index 0/1 (TXRX)
 
     public:
-    info_t* rx{&m_ep[0]};  //or use these
-    info_t* tx{&m_ep[1]};
+    info_t* rx{&m_ep[RX]};  //or use these
+    info_t* tx{&m_ep[TX]};
 
     private:
     uint8_t m_ustat{0};     //last usb stat (from irq)- 0-3
