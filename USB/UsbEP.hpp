@@ -27,7 +27,7 @@ struct UsbEP {
 
     private:
 
-    bool setup      (TXRX, bool = false);
+    bool setup      (TXRX);
 
 
     uint8_t     m_epnum{0};         //endpoint number
@@ -41,6 +41,7 @@ struct UsbEP {
         bool            zlp;        //need zero length end packet
         bool            d01;        //data01
         bool            ppbi;       //our ppbi
+        bool            stall;      //do a stall (cleared by setup())
         UsbBdt::stat_t  stat;       //last bdt stat
         volatile UsbBdt::bdt_t* bdt;//bdt table ptr
         notify_t        notify;     //callback

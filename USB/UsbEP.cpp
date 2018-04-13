@@ -17,8 +17,16 @@ static UsbCh9::SetupPkt_t pkt = {0};
 static uint8_t* ep0txbuf;
 static bool control (UsbEP*);
 static bool set_address(UsbEP*);
-//static uint8_t line_coding[7] = {0};
-//static bool set_line_coding(UsbEP*);
+
+//line coding- just store what pc wants, also return if wanted
+using line_coding_t = struct {
+    uint32_t baud;
+    uint8_t stop_bits; //0-1,1=1.5,2=2
+    uint8_t parity; //none=0,even, odd, mark, space
+    uint8_t data_bits; //5,6,7,8,16
+};
+static line_coding_t line_coding = {115200, 0, 0, 8};
+static bool set_line_coding(UsbEP*);
 //
 
 
@@ -98,7 +106,7 @@ bool UsbEP::xfer(TXRX tr, uint8_t* buf, uint16_t siz, notify_t f)
 }
 
 //=============================================================================
-    bool    UsbEP::setup                (TXRX tr, bool stall)
+    bool    UsbEP::setup                (TXRX tr)
 //=============================================================================
 {
     info_t& x = m_ep[tr];
@@ -108,7 +116,7 @@ bool UsbEP::xfer(TXRX tr, uint8_t* buf, uint16_t siz, notify_t f)
     if(x.bdt[i].stat.uown) return false;    //both in use
 
     volatile UsbBdt::ctrl_t ctrl = {0};
-    ctrl.bstall = stall;
+    ctrl.bstall = x.stall; x.stall = false;
     ctrl.data01 = x.d01;
     ctrl.dts = 1;
     ctrl.uown = 1;
@@ -225,6 +233,7 @@ printf("unknown x.stat.pid: %d\r\n",x.stat.pid);
         rx.buf += rx.stat.count;
         setup(RX);
     } else if(rx.notify){
+printf("rx notify\r\n");
         rx.notify(this);
         rx.notify = 0;
     }
@@ -323,9 +332,9 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",pkt.wRequest,pkt.wValue,pkt.wIndex,pkt
             tlen = UsbDescriptors::get(pkt.wValue, ep0txbuf, tlen);
             break;
 
-        case UsbCh9::DEV_SET_DESCRIPTOR:
-            //no data, status (tx zlp)
-            break;
+//         case UsbCh9::DEV_SET_DESCRIPTOR:
+//             //no data, status (tx zlp)
+//             break;
 
         case UsbCh9::DEV_GET_CONFIGURATION:
             //tx tlen bytes (data1), status (rx zlp data1)
@@ -338,21 +347,24 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",pkt.wRequest,pkt.wValue,pkt.wIndex,pkt
             //let status proceed
             break;
 
-        case UsbCh9::IF_GET_IFACE:
-            break;
-        case UsbCh9::IF_SET_IFACE:
-            break;
-        case UsbCh9::EP_SYNC_HFRAME:
-            break;
+//         case UsbCh9::IF_GET_IFACE:
+//             break;
+//         case UsbCh9::IF_SET_IFACE:
+//             break;
+//         case UsbCh9::EP_SYNC_HFRAME:
+//             break;
 
         case UsbCh9::CDC_SET_LINE_CODING:
             //rx data1, status (tx zlp)
-            //ep->set_notify(ep->RX, set_line_coding);
-            //tlen = 0;
+            ep->set_notify(ep->RX, set_line_coding);
+            ep->xfer(ep->RX, (uint8_t*)&line_coding, 7, true);
+            ep->xfer(ep->RX, ep0rxbuf, 64, false);
+            ep->xfer(ep->TX, ep0txbuf, 0, true);
+            return true;
             break;
         case UsbCh9::CDC_GET_LINE_CODING:
             //tx data1, status (rx zlp)
-            //memcpy(ep0txbuf, line_coding, 7);
+            memcpy(ep0txbuf, (void*)&line_coding, 7);
             break;
         case UsbCh9::CDC_SET_CONTROL_LINE_STATE:
             //no data, status (tx zlp)
@@ -360,12 +372,16 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",pkt.wRequest,pkt.wValue,pkt.wIndex,pkt
 
         default:
             //check other requests
+
+            ep->tx->stall = 1;
+            ep->rx->stall = 1;
             break;
     }
 
     //check if no data for request (bad string index, etc)
     if((tlen == 0) and (rlen == 0) and pkt.wLength){
-        //TODO stall
+        ep->tx->stall = 1;
+        ep->rx->stall = 1;
     }
     //check for tx data that is less than requested (strings,descriptors,etc)
     if(tlen and (tlen != pkt.wLength)){
@@ -381,18 +397,18 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",pkt.wRequest,pkt.wValue,pkt.wIndex,pkt
 
 
 
-////callback from ep0
-////=============================================================================
-//bool set_line_coding(UsbEP* ep)
-////=============================================================================
-//{
-//    memcpy(line_coding, ep->rx->buf, 7);
-//    printf("%02x %02x %02x %02x %02x %02x %02x\r\n",
-//        line_coding[0],line_coding[1],line_coding[2],line_coding[3],
-//        line_coding[4],line_coding[5],line_coding[6]
-//    );
-//    return true;
-//}
+//callback from ep0
+//nothing to do, print just to see what is happening
+//=============================================================================
+bool set_line_coding(UsbEP* ep)
+//=============================================================================
+{
+   printf("%d %d %d %dx\r\n",
+       line_coding.baud,line_coding.stop_bits,line_coding.parity,
+       line_coding.data_bits
+   );
+   return true;
+}
 
 //callback from ep0 trn in (tx zlp after set address setup packet)
 //=============================================================================

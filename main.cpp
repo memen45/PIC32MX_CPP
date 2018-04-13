@@ -218,7 +218,7 @@ for(;;){
                 dt.pm ? "PM" : "AM");
         if(xmit) UsbDevice::cdc_tx((uint8_t*)buf, strlen(buf));
     }
-    Wdt::reset(), led12.update(), rgb.update();
+    //Wdt::reset(), led12.update(), rgb.update();
 }
 
 }
