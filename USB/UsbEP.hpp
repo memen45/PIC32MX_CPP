@@ -21,7 +21,6 @@ struct UsbEP {
     bool xfer       (TXRX, uint8_t*, uint16_t, bool, notify_t = 0);
     bool busy       (TXRX);
     bool takeback   (TXRX);
-    void txzlp      ();
     void txin       ();
     void rxout      ();
 

@@ -60,7 +60,10 @@ Pins vbus_pin(UsbConfig::vbus_pin_n);
 printf("\r\n\r\nUsbDevice::init(%d)\r\n",tf);
     detach();
     //if no vbus pin voltage or tf=false (wanted only detach)
-    if(not vbus_pin.ison() || not tf) return false;
+    if(not vbus_pin.ison() || not tf){
+printf("false\r\n");
+        return false;
+    }
     attach();
     return true;                        //true=attached
 }

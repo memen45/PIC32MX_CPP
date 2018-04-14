@@ -181,12 +181,7 @@ printf("unknown x.stat.pid: %d\r\n",x.stat.pid);
     reset(tr, true); //reset, but save ppbi
     return true;
 }
-//=============================================================================
-    void    UsbEP::txzlp                ()
-//=============================================================================
-{
-    tx->zlp = true;
-}
+
 //=============================================================================
     void    UsbEP::txin                 ()
 //=============================================================================
@@ -385,7 +380,7 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",pkt.wRequest,pkt.wValue,pkt.wIndex,pkt
     }
     //check for tx data that is less than requested (strings,descriptors,etc)
     if(tlen and (tlen != pkt.wLength)){
-        if(not (tlen % 64)) ep->txzlp(); //add zlp if same size as packet
+        if(not (tlen % 64)) ep->tx->zlp = true; //add zlp if same size as packet
     }
 
     ep->xfer(ep->TX, ep0txbuf, tlen, true); //true = data1
