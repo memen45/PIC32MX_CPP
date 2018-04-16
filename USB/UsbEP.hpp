@@ -1,6 +1,6 @@
 #pragma once
 
-#include "UsbBdt.hpp"
+#include "Usb.hpp"
 
 #include <cstdint>
 
@@ -13,7 +13,7 @@ struct UsbEP {
     enum EVEODD : bool { EVEN, ODD };
 
     void reset      (TXRX, bool = false); //bool = save ppbi?
-    bool init       (uint8_t, uint16_t, uint16_t);
+    bool init       (uint8_t);
     bool set_buf    (TXRX, uint8_t*, uint16_t);
     bool set_notify (TXRX, notify_t);
     bool service    (uint8_t); //rx/tx,from ISR (0-3)
@@ -41,8 +41,8 @@ struct UsbEP {
         bool            d01;        //data01
         bool            ppbi;       //our ppbi
         bool            stall;      //do a stall (cleared by setup())
-        UsbBdt::stat_t  stat;       //last bdt stat
-        volatile UsbBdt::bdt_t* bdt;//bdt table ptr
+        Usb::stat_t     stat;       //last bdt stat
+        volatile Usb::bdt_t* bdt;//bdt table ptr
         notify_t        notify;     //callback
     };
     info_t m_ep[2]{{0},{0}};      //can use index 0/1 (TXRX)

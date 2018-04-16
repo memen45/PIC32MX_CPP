@@ -1,18 +1,16 @@
 #include "UsbDevice.hpp"
 #include "Usb.hpp"
-#include "UsbConfig.hpp"
-#include "UsbBdt.hpp"
 #include "UsbBuf.hpp"
 #include "Irq.hpp"
 #include "UsbEP.hpp"
 #include "Delay.hpp"
+#include "UsbDescriptors.hpp"
 
 #include <cstdio>
 
 uint32_t UsbDevice::timer1ms = 0;
 uint32_t UsbDevice::sof_count = 0;
-UsbEP ep[UsbConfig::last_ep_num+1];
-Pins vbus_pin(UsbConfig::vbus_pin_n);
+UsbEP ep[UsbDescriptors::last_ep_num+1];
 
 //private
 //=============================================================================
@@ -31,21 +29,17 @@ Pins vbus_pin(UsbConfig::vbus_pin_n);
     void attach()
 //=============================================================================
 {
-    Usb usb; Irq irq; UsbBdt bdt; UsbConfig cfg;
+    Usb usb; Irq irq;
 
     UsbDevice::timer1ms = 0;            //reset 1ms timer
     UsbDevice::sof_count = 0;           //and sof count
-    bdt.init();                         //clear bdt table
     //no writes to usb regs until powered on
     while(usb.power(usb.USBBUSY));      //wait for busy
-    usb.power(usb.USBPWR, true);        //power on
-    usb.bdt_addr((uint32_t)bdt.table);  //record address in usb bdt reg
+    usb.power(usb.USBPWR, true);        //power on (also inits bdt table)
     //init all ep (done with init function as need usb on first)
-    for(uint8_t i = 0; i <= UsbConfig::last_ep_num; i++){
-        ep[i].init(i, UsbConfig::ep_siz[i<<1], UsbConfig::ep_siz[(i<<1)+1] );
-    }
+    for(uint8_t i = 0; i <= UsbDescriptors::last_ep_num; i++) ep[i].init(i);
     usb.irqs(usb.SOF|usb.T1MSEC|usb.TRN|usb.IDLE);   //enable some irqs
-    irq.init(irq.USB, cfg.usb_irq_pri, cfg.usb_irq_subpri, true); //usb irq on
+    irq.init(irq.USB, Usb::usb_irq_pri, Usb::usb_irq_subpri, true); //usb irq on
     usb.control(usb.USBEN, true);       //enable usb module
     irq.global(true);                   //global irq's on if not already
 }
@@ -60,7 +54,7 @@ Pins vbus_pin(UsbConfig::vbus_pin_n);
 printf("\r\n\r\nUsbDevice::init(%d)\r\n",tf);
     detach();
     //if no vbus pin voltage or tf=false (wanted only detach)
-    if(not vbus_pin.ison() || not tf){
+    if(not Usb::vbus_ison() || not tf){
 printf("false\r\n");
         return false;
     }
@@ -131,7 +125,7 @@ if(flags bitand compl (usb.T1MSEC bitor usb.SOF)){
         usb.irq(usb.URST, true);
         //although improbable, make sure an endpoint we use
         uint8_t n = ustat>>2;
-        if(n <= UsbConfig::last_ep_num){
+        if(n <= UsbDescriptors::last_ep_num){
             //ep[ustat>>2].trn_service(ustat bitand 3);
             ep[n].service(ustat bitand 3);
         }

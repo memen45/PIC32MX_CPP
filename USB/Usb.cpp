@@ -1,9 +1,9 @@
 //USB peripheral - PIC32MM0256GPM064
 
 #include <cstdint>
+#include <cstring>
 #include "Usb.hpp"
 #include "Reg.hpp"
-#include "UsbConfig.hpp"
 #include "Pins.hpp"
 
 //registers - all registers use only first 8bits
@@ -35,8 +35,23 @@ enum {
     U1EP0 = 0xBF808700, U1EP_SPACING = 0x10
 };
 
+volatile Usb::bdt_t Usb::bdt_table[][2][2] = {0};
+Pins vbus_pin(Usb::vbus_pin_n, Pins::INPD);
 
-Pins vbus_pin(UsbConfig::vbus_pin_n, Pins::INPD);
+//=============================================================================
+    void        Usb::bdt_init           ()
+//=============================================================================
+{
+    memset((void*)&bdt_table, 0, sizeof(bdt_table));
+    bdt_addr((uint32_t)bdt_table);
+}
+
+//=============================================================================
+    bool        Usb::vbus_ison          ()
+//=============================================================================
+{
+    return vbus_pin.ison();
+}
 
 //U1OTGIR/IE, U1IR/IE, U1EIR/IE
 //=============================================================================
@@ -142,6 +157,7 @@ Pins vbus_pin(UsbConfig::vbus_pin_n, Pins::INPD);
 //=============================================================================
 {
     Reg::setbit(U1PWRC, e, tf);
+    if(e == USBPWR) bdt_init();
 }
 
 
@@ -244,14 +260,16 @@ Pins vbus_pin(UsbConfig::vbus_pin_n, Pins::INPD);
 }
 
 //=============================================================================
-    uint32_t    Usb::bdt_addr           ()
+    volatile Usb::bdt_t*    Usb::bdt_addr           (uint8_t n, bool trx, bool eveodd)
 //=============================================================================
 {
-    uint32_t ret =
+    if(n > max_endpoint) return 0;          //invalid endpoint
+    uint32_t v = Reg::p2kseg0(              //check if bdt table address set
         Reg::val8(U1BDTP3)<<24 bitor
         Reg::val8(U1BDTP2)<<16 bitor
-        Reg::val8(U1BDTP1)<<8;
-    return  Reg::p2kseg0(ret); //virtual address i kseg0
+        Reg::val8(U1BDTP1)<<8 );
+    if(v != (uint32_t)bdt_table) return 0;  //something wrong
+    return &bdt_table[n][trx][eveodd];
 }
 
 //U1CNFG1

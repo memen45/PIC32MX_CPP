@@ -8,11 +8,20 @@
 struct UsbDescriptors {
 
     //wValue=descriptor type,index (directly from setup packet)
-    //buf = buffer to copy info to
     //siz = requested size, change to actual size in function if smaller
-    //return size of bytes
-    static uint16_t get(uint16_t wValue, uint8_t* buf, uint16_t siz);
+    //return pointer to wanted bytes
+    static uint8_t* get(uint16_t wValue, uint16_t* siz);
 
     //get ep size from descriptor/config
-    static uint16_t get_epsiz(UsbCh9::ENDPOINT_ADDRESS);
+    static uint16_t get_epsiz(uint8_t n, bool tr);
+
+    //get endpoint control info based on descriptor info
+    static uint8_t get_epctrl(uint8_t n);
+
+    //self-powered, remote wakeup
+    static uint8_t get_status();
+
+
+    static const uint8_t last_ep_num = 2;
+
 };

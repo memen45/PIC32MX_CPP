@@ -3,8 +3,70 @@
 //USB peripheral - PIC32MM0256GPM064
 
 #include <cstdint>
+#include "Pins.hpp"
 
 struct Usb {
+
+    //BDT table
+
+    //set/change as needed- instead of fixing bdt table size
+    //exactly to configuration used, just set max endpoint here
+    //and change if needed- (there will be some wasted space)
+    //will assume most configs will use ep <= 7
+    static const uint8_t max_endpoint = 7;
+
+    //USB Buffer Descriptor Control Format
+    using ctrl_t = union {
+        struct {
+        unsigned        :2;
+        unsigned bstall :1;
+        unsigned dts    :1;
+        unsigned ninc   :1;
+        unsigned keep   :1;
+        unsigned data01 :1;
+        unsigned uown   :1;
+        unsigned        :8;
+        unsigned count  :10;
+        unsigned        :6;
+        };
+        uint8_t val8;
+        uint32_t val32;
+    };
+    //USB Buffer Descriptor Status Format
+    using stat_t = union {
+        struct {
+        unsigned        :2;
+        unsigned pid    :4;
+        unsigned data01 :1;
+        unsigned uown   :1;
+        unsigned        :8;
+        unsigned count  :10;
+        unsigned        :6;
+        };
+        uint8_t val8;
+        uint32_t val32;
+    };
+
+    using bdt_t = struct {
+        union { ctrl_t ctrl; stat_t stat; };
+        uint32_t bufaddr;
+    };
+
+    static volatile bdt_t bdt_table[max_endpoint+1][2][2]
+        __attribute__ ((aligned (512)));
+
+    static void bdt_init();
+
+
+    //vbus pin
+    static const Pins::RPN vbus_pin_n = Pins::B6;
+    static bool vbus_ison();
+
+
+    //irq priority
+    static const uint8_t usb_irq_pri = 1;       //usb interrupt priority
+    static const uint8_t usb_irq_subpri = 0;    //usb interrupt sub-priority
+
 
     //U1OTGIR/IE, U1EIR/IE, U1IR/IE
     //all flags combined into uint32_t
@@ -130,7 +192,8 @@ struct Usb {
 
     //U1BDTP1,2,3
     static void         bdt_addr    (uint32_t);     //set bdt table address
-    static uint32_t     bdt_addr    ();             //get bdt table address
+    static volatile bdt_t* bdt_addr (uint8_t = 0, bool = 0, bool = 0);
+                                    //get bdt table address (n,tx/rx,even/odd)
 
     //U1CNFG1
     enum CONFIG : uint8_t {
