@@ -42,8 +42,8 @@ static const uint8_t device[] = {
     1                   //#of configurations
 };
 
-static const uint8_t config1[] = {
-    //total size (2 bytes) after CONFIGURATION
+static const uint8_t config[] = {
+    //total size of this configuration (2 bytes) after CONFIGURATION
     9, UsbCh9::CONFIGURATION, BB((9+9+5+4+5+5+7+9+7+7)), 2, 1, 0,
         UsbCh9::SELFPOWER, 50,
 
@@ -86,6 +86,7 @@ static const uint16_t strings[] = {
 ///////////////////////////////////////////////////////////////////////////////
 
 
+
 //private
 
 //18bytes (but may ask for less)
@@ -96,12 +97,16 @@ uint8_t* get_device(uint16_t* siz){
 
 //could be >255 bytes
 uint8_t* get_config(uint16_t* siz, uint8_t idx){
-    if(idx != 0){               //only 1 config
+    uint16_t i = 0;
+    uint16_t csiz = config[2] bitor (config[3]<<8);
+    for( ; i < sizeof(config) and idx;
+            csiz = config[i+2] bitor (config[i+3]<<8), i += csiz, idx--);
+    if((i + csiz) > sizeof(config)){
         *siz = 0;
         return 0;
     }
-    if(*siz > sizeof(config1)) *siz = sizeof(config1);//limit siz
-    return (uint8_t*)config1;
+    if(*siz > csiz) *siz = csiz;//limit siz
+    return (uint8_t*)&config[i];
 }
 
 //up to 255bytes
@@ -119,6 +124,7 @@ uint8_t* get_string(uint16_t* siz, uint8_t idx){
 }
 
 //public
+uint16_t UsbDescriptors::current_config = 1;
 
 //pkt.wValue high=descriptor type, low=index
 //device=1, config=2, string=3
@@ -131,12 +137,25 @@ uint8_t* UsbDescriptors::get(uint16_t wValue, uint16_t* siz){
     return 0;
 }
 
+//do nothing, just check if valid config number for now
+uint16_t UsbDescriptors::set_config(uint16_t wValue){
+    for(uint16_t i = 0; i < sizeof(config);
+        i += config[i+2] + (config[i+3]<<8)){
+        if(config[i+5] == wValue){
+            current_config = wValue;
+            return i;
+        }
+    }
+    return 1;
+}
+
 uint16_t UsbDescriptors::get_epsiz(uint8_t n, bool tr){
     if(n == 0) return device[7];
     if(tr) n += 128;    //if tx, set bit7
-    for(uint8_t i = 0; i < sizeof(config1); i += config1[i]){
-        if(config1[i+1] != UsbCh9::ENDPOINT or config1[i+2] != n) continue;
-        return config1[i+4] bitor config1[i+5]<<8;
+    uint16_t i = set_config(current_config); //get current config offset
+    for(; i < sizeof(config); i += config[i]){
+        if(config[i+1] != UsbCh9::ENDPOINT or config[i+2] != n) continue;
+        return config[i+4] bitor config[i+5]<<8;
     }
     return 0;
 }
@@ -144,15 +163,20 @@ uint16_t UsbDescriptors::get_epsiz(uint8_t n, bool tr){
 uint8_t UsbDescriptors::get_epctrl(uint8_t n){
     if(n == 0) return Usb::EPTXEN|Usb::EPRXEN|Usb::EPHSHK;
     uint8_t ret = 0;
-    for(uint8_t i = 0; i < sizeof(config1); i += config1[i]){
-        if(config1[i+1] != UsbCh9::ENDPOINT) continue;
-        if(config1[i+2] == n) ret or_eq Usb::EPRXEN;
-        if(config1[i+2] == n+128) ret or_eq Usb::EPTXEN;
-        if(config1[i+3] != UsbCh9::ISOCHRONOUS) ret or_eq Usb::EPHSHK;
+    uint16_t i = set_config(current_config); //get current config offset
+    for(; i < sizeof(config); i += config[i]){
+        if(config[i+1] != UsbCh9::ENDPOINT) continue;
+        if(config[i+2] == n) ret or_eq Usb::EPRXEN;
+        if(config[i+2] == n+128) ret or_eq Usb::EPTXEN;
+        if(config[i+3] != UsbCh9::ISOCHRONOUS) ret or_eq Usb::EPHSHK;
     }
     return ret;
 }
 
 uint8_t UsbDescriptors::get_status(){
-    return self_powered bitor (remote_wakeup<<1);
+    uint16_t i = set_config(current_config); //get current config offset
+    uint8_t ret = 0;
+    if(config[i+7] bitand 0x40) ret = 1;
+    if(config[i+7] bitand 0x20) ret or_eq 2;
+    return ret;
 }

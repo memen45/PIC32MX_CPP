@@ -291,6 +291,7 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",pkt.wRequest,pkt.wValue,pkt.wIndex,pkt
             // only option is ENDPOINT_HALT (0x00) (not for ep0)
             if(pkt.wIndex and not pkt.wValue){
                 usb.epcontrol(pkt.wIndex, usb.EPSTALL, false);
+                //data toggle resets to data0
             }
             break;
         case UsbCh9::DEV_SET_FEATURE: //no data, tx status
@@ -315,10 +316,12 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",pkt.wRequest,pkt.wValue,pkt.wIndex,pkt
 //             break;
         case UsbCh9::DEV_GET_CONFIGURATION: //tx tlen bytes, rx status
             //send 0=not configured, anything else=configured
-            ep0txbuf[0] = 1; //TODO
+            ep0txbuf[0] = usb.dev_addr() ? 1 : 0; //show configured if address set
             break;
         case UsbCh9::DEV_SET_CONFIGURATION: //no data, tx status
-            //do nothing
+            if(usb.dev_addr() and not pkt.wValue) usb.dev_addr(0);
+            else UsbDescriptors::set_config(pkt.wValue);
+            //clear endpoint halt, data toggle resets to data0
             break;
 //         case UsbCh9::IF_GET_IFACE:
 //             break;
