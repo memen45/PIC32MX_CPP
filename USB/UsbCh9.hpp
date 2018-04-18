@@ -73,12 +73,6 @@ struct UsbCh9 {
 
         EP_GET_STATUS = 0x0082, EP_CLEAR_FEATURE = 0x0102,
         EP_SET_FEATURE = 0x0302, EP_SYNC_HFRAME = 0x1202,
-
-        //we will put cdc stuff here for now
-        CDC_SET_LINE_CODING = 0x2021,
-        CDC_GET_LINE_CODING = 0x2121,
-        CDC_SET_CONTROL_LINE_STATE = 0x2221
-
     };
     //SetupPkt_t.bRequest
     enum SETUP_BREQUEST {
@@ -91,6 +85,20 @@ struct UsbCh9 {
         SET_IFACE = 0x11,
 
         SYNC_HFRAME = 0x12
+    };
+
+    //we will put cdc stuff here for now
+    //SetupPkt_t.wRequest  (bRequest<<8|bmRequestType)
+    enum SETUP_WREQUEST_CDC {
+        CDC_SEND_ENCAP_COMMAND = 0x0021,
+        CDC_GET_ENCAP_RESPONSE = 0x0121,
+        CDC_SET_COMM_FEATURE = 0x0221,
+        CDC_GET_COMM_FEATURE = 0x0321,
+        CDC_CLEAR_COMM_FEATURE = 0x0421,
+        CDC_SET_LINE_CODING = 0x2021,
+        CDC_GET_LINE_CODING = 0x2121,
+        CDC_SET_CONTROL_LINE_STATE = 0x2221,
+        CDC_SEND_BREAK = 0x2321
     };
 
     enum TOKEN_TYPE {

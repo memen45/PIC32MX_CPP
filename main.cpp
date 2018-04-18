@@ -10,6 +10,7 @@
 
 
 #include <cstdint>
+#include <cstring> //strlen
 #include <stdio.h>
 
 #include "Pins.hpp"
@@ -22,8 +23,9 @@
 #include "Cp0.hpp"
 #include "Rtcc.hpp"
 #include "Irq.hpp"
+
 #include "UsbDevice.hpp"
-#include "UsbBuf.hpp"
+
 
 
 //svg colors for rgb led
@@ -179,7 +181,7 @@ int main()
     osc.tun_auto(true);                     //let sosc tune frc
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 18, 3, 16, 0, 10, 32, 0} );
+    if(dt.year == 0) Rtcc::datetime( { 18, 4, 13, 0, 17, 41, 0} );
 
     Rtcc::on(true);
 
@@ -197,19 +199,24 @@ Pins sw1{ Pins::B9, Pins::INPU }; //turn off usb
 Pins sw2{ Pins::C10, Pins::INPU }; //xmit data
 
 Delay dly;
-dly.set_ms(500);
+dly.set_ms(1000);
 
-uint8_t buf[3] = {'O','K',' '};
-uint8_t bufrx[64] = {0};
+char buf[64];
+
 bool ison = false;
 bool xmit = false;
 for(;;){
     if(sw3.ison()){ ison = UsbDevice::init(true); Delay::wait_ms(500); }
     if(sw1.ison()){ ison = UsbDevice::init(false); Delay::wait_ms(500); }
-    if(sw2.ison()){ xmit = not xmit; Delay::wait_ms(100); }
+    if(sw2.ison()){ xmit = not xmit; Delay::wait_ms(200); }
     if(ison and dly.expired()){
         dly.restart();
-        if(xmit) UsbDevice::cdc_tx(buf, 3);
+
+        dt = Rtcc::datetime();
+        snprintf(buf, 64, "%02d-%02d-%04d %02d:%02d:%02d %s  ",
+                dt.month, dt.day, dt.year+2000, dt.hour12, dt.minute, dt.second,
+                dt.pm ? "PM" : "AM");
+        if(xmit) UsbDevice::cdc_tx((uint8_t*)buf, strlen(buf));
     }
     //Wdt::reset(), led12.update(), rgb.update();
 }

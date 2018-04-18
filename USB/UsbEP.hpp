@@ -1,110 +1,59 @@
 #pragma once
 
-//USB peripheral - PIC32MM0256GPM064
+#include "Usb.hpp"
 
 #include <cstdint>
-#include "UsbBdt.hpp"
-#include "UsbCh9.hpp"
+
 
 struct UsbEP {
 
-    enum TXRX : bool { RX = 0, TX = 1 };
+    using notify_t = bool(*)(UsbEP*);
 
-    using callme_t = int16_t(*)(uint8_t*, uint16_t, UsbCh9::SetupPkt_t*);
+    enum TXRX : bool { RX, TX };
+    enum EVEODD : bool { EVEN, ODD };
 
-    bool        init            (uint8_t);
-    void        set_callme_rx   (callme_t);
-    void        set_callme_tx   (callme_t);
-    void        set_other_req   (callme_t);
-    bool        setup           (TXRX);
-    void        trn_service     (uint8_t);
-    bool        xfer            (TXRX, uint8_t*, uint16_t);
+    void reset      (TXRX, bool = false); //bool = save ppbi?
+    bool init       (uint8_t);
+    bool set_buf    (TXRX, uint8_t*, uint16_t);
+    bool set_notify (TXRX, notify_t);
+    bool service    (uint8_t); //rx/tx,from ISR (0-3)
+    bool xfer       (TXRX, uint8_t*, uint16_t, notify_t = 0);
+    bool xfer       (TXRX, uint8_t*, uint16_t, bool, notify_t = 0);
+    bool busy       (TXRX);
+    bool takeback   (TXRX);
+    void txin       ();
+    void rxout      ();
 
     private:
 
-    void        setup_service   ();
-    void        out_service     ();
-    void        in_service      ();
-    void        release_tx      ();
-
-    uint8_t         m_epnum{0};
-    volatile UsbBdt::bdt_t*  m_bdt{0};
-    UsbBdt::stat_t  m_stat{0};  //bdt stat
-    uint8_t         m_idx{0};   //usb hardware stat, 0-3, index into m_bdt
-                                //and >>1 = index into m_buf (RX or TX)
+    bool setup      (TXRX);
 
 
-    callme_t m_callme_rx{0};
-    callme_t m_callme_tx{0};
-    callme_t m_other_req{0};
+    uint8_t     m_epnum{0};         //endpoint number
 
-    using buf_t = struct {
-        uint8_t*    addr;       //buffer address
-        uint16_t    siz;        //buffer size
-        uint16_t    bdone;      //total bytes done
-        uint16_t    btogo;      //total bytes to go
-        bool        zlp;        //need zero length end packet
-        bool        d01;        //data01
-        bool        ppbi;       //our ppbi from usb stat, so is lagging
-        bool        stall;
+    using info_t = struct {
+        uint8_t*        buf;        //buffer address
+        uint16_t        siz;        //buffer size
+        uint16_t        epsiz;      //endpoint size
+        uint16_t        bdone;      //total bytes done
+        uint16_t        btogo;      //total bytes to go
+        bool            zlp;        //need zero length end packet
+        bool            d01;        //data01
+        bool            ppbi;       //our ppbi
+        bool            stall;      //do a stall (cleared by setup())
+        Usb::stat_t     stat;       //last bdt stat
+        volatile Usb::bdt_t* bdt;//bdt table ptr
+        notify_t        notify;     //callback
     };
-    buf_t       m_rx{0};
-    buf_t       m_tx{0};
+    info_t m_ep[2]{{0},{0}};      //can use index 0/1 (TXRX)
+
+    public:
+    info_t* rx{&m_ep[RX]};  //or use these
+    info_t* tx{&m_ep[TX]};
+
+    private:
+    uint8_t m_ustat{0};     //last usb stat (from irq)- 0-3
+                            //(dir and ppbi only)
 
 };
-
-
-#if 0
-
-ppbi uown
- 0    0     even, cpu
- 0    1     even, sie
- 1    0     odd, cpu
- 1    1     odd, sie
-
-trn
-m_ppbi[m_idx>>1] = not (m_idx bitand 1)
-
-
-reset, init rx
-m_ppbi[0] = 0
-m_ppbi[1] = 0
-
-trn out/rx (setup packet)
-m_ppbi[0] = 1 //toggle ppbi
-m_ppbi[1] = 0
-
-send zlp
-m_ppbi[0] = 0
-m_ppbi[1] = 0
-
-trn in
-m_ppbi[0] = 0
-m_ppbi[1] = 1 //toggle ppbi
-
-
-
-reset, init rx
-m_ppbi[0] = 0
-m_ppbi[1] = 0
-
-trn out/rx (setup packet)
-m_ppbi[0] = 1 //toggle ppbi
-m_ppbi[1] = 0
-
-in
-m_ppbi[0] = 0
-m_ppbi[1] = 0
-
-zlp
-m_ppbi[0] = 0
-m_ppbi[1] = 0
-
-trn in
-m_ppbi[0] = 0
-m_ppbi[1] = 1 //toggle ppbi
-
-#endif
-
-
 
