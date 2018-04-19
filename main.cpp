@@ -24,7 +24,8 @@
 #include "Rtcc.hpp"
 #include "Irq.hpp"
 
-#include "UsbDevice.hpp"
+
+#include "UsbCdcAcm.hpp"
 
 
 
@@ -205,9 +206,11 @@ char buf[64];
 
 bool ison = false;
 bool xmit = false;
+UsbCdcAcm cdc;
+
 for(;;){
-    if(sw3.ison()){ ison = UsbDevice::init(true); Delay::wait_ms(500); }
-    if(sw1.ison()){ ison = UsbDevice::init(false); Delay::wait_ms(500); }
+    if(sw3.ison()){ ison = cdc.init(true); Delay::wait_ms(500); }
+    if(sw1.ison()){ ison = cdc.init(false); Delay::wait_ms(500); }
     if(sw2.ison()){ xmit = not xmit; Delay::wait_ms(200); }
     if(ison and dly.expired()){
         dly.restart();
