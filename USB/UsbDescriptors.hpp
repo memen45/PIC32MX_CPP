@@ -10,9 +10,11 @@ struct UsbDescriptors {
     //function call to service irq for non-endpoint0 (current device)
     using service_t = bool(*)(uint32_t, uint8_t);
 
-    //set descriptor before any usb init- done in Usb<device>.cpp
+    //set descriptor before any usb init- called from Usb<device>.cpp
     //d=descriptor array, len=descriptor length
-    static void             set_device      (const uint8_t*, service_t);
+    //also calls Usb::init(true) if both args are not 0
+    //else calls Usb::init(false), return result of init
+    static bool             set_device      (const uint8_t*, service_t);
 
     //wValue=descriptor type,index (directly from setup packet)
     //siz = requested size, change to actual size in function if smaller

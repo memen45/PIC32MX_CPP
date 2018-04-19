@@ -1,6 +1,7 @@
 #include "UsbDescriptors.hpp"
 #include "UsbCh9.hpp"
 #include "Usb.hpp"
+#include "UsbDevice.hpp"
 
 //=============================================================================
 const uint8_t*              UsbDescriptors::m_descriptor = 0;
@@ -49,11 +50,12 @@ uint8_t                     UsbDescriptors::current_config = 1; //config 1
 
 //set to descriptor wanted (set before usb init)
 //=============================================================================
-    void    UsbDescriptors::set_device      (const uint8_t * d, service_t f)
+    bool    UsbDescriptors::set_device      (const uint8_t * d, service_t f)
 //=============================================================================
 {
     m_descriptor = d;
     m_service = f;
+    return UsbDevice::init(d and f);
 }
 
 //do nothing, return descriptor ptr for config if found, 0 if not

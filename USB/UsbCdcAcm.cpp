@@ -85,8 +85,7 @@ static UsbEP m_ep_txrx;   //ep2 = tx/rx
     bool        UsbCdcAcm::init         (bool tf)
 //=============================================================================
 {
-    UsbDescriptors::set_device(m_descriptor, service);
-    bool ret = UsbDevice::init(tf);
+    bool ret = UsbDescriptors::set_device(m_descriptor, tf ? service : 0);
     m_ep_state.init(1);
     m_ep_txrx.init(2);
     return ret;
