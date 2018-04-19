@@ -10,9 +10,9 @@
 #include <cstdio>
 
 //this file only, for ep0
-static uint8_t ep0rxbuf[64] = {0};
-static UsbCh9::SetupPkt_t pkt = {0};
-static uint8_t* ep0txbuf;
+static uint8_t              ep0rxbuf[64] = {0};
+static UsbCh9::SetupPkt_t   pkt = {0};
+static uint8_t*             ep0txbuf;
 static bool control (UsbEP*);
 static bool set_address(UsbEP*);
 
@@ -23,7 +23,7 @@ using line_coding_t = struct {
     uint8_t parity; //none=0,even, odd, mark, space
     uint8_t data_bits; //5,6,7,8,16
 };
-static line_coding_t line_coding = {115200, 0, 0, 8};
+static line_coding_t        line_coding = {115200, 0, 0, 8};
 static bool set_line_coding(UsbEP*);
 //
 
@@ -308,7 +308,7 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",pkt.wRequest,pkt.wValue,pkt.wIndex,pkt
             break;
         case UsbCh9::DEV_GET_DESCRIPTOR: //tx tlen bytes, rx status
             UsbBuf::release(ep0txbuf); //buffer not needed
-            ep0txbuf = UsbDescriptors::get(pkt.wValue, &tlen);
+            ep0txbuf = (uint8_t*)UsbDescriptors::get_desc(pkt.wValue, &tlen);
             //if error, tlen=0 and ep0txbuf=0
             break;
 //         case UsbCh9::DEV_SET_DESCRIPTOR:

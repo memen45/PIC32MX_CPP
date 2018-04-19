@@ -7,26 +7,41 @@
 
 struct UsbDescriptors {
 
+    //function call to service irq for non-endpoint0 (current device)
+    using service_t = bool(*)(uint32_t, uint8_t);
+
+    //set descriptor before any usb init- done in Usb<device>.cpp
+    //d=descriptor array, len=descriptor length
+    static void             set_device      (const uint8_t*, service_t);
+
     //wValue=descriptor type,index (directly from setup packet)
     //siz = requested size, change to actual size in function if smaller
     //return pointer to wanted bytes
-    static uint8_t* get(uint16_t wValue, uint16_t* siz);
+    static const uint8_t*   get_desc        (uint16_t wValue, uint16_t* siz);
 
-    //set configuration (return index into config- 1=bad index)
-    static uint16_t set_config(uint16_t wValue);
+    //set configuration (return pointer to config or 0 if bad index)
+    static const uint8_t*   set_config      (uint16_t wValue);
 
     //get ep size from descriptor/config
-    static uint16_t get_epsiz(uint8_t n, bool tr);
+    static uint16_t         get_epsiz       (uint8_t n, bool tr);
 
     //get endpoint control info based on descriptor info
-    static uint8_t get_epctrl(uint8_t n);
+    static uint8_t          get_epctrl      (uint8_t n);
 
     //self-powered, remote wakeup
-    static uint8_t get_status();
+    static uint8_t          get_status      ();
 
 
-    static const uint8_t last_ep_num = 2;
+    static const uint8_t    last_ep_num = 2; //TODO get rid of (temp use)
 
-    static uint16_t current_config;
+    static uint8_t          current_config;
+
+    static bool             service         (uint32_t, uint8_t);
+
+    private:
+
+    //specific device info
+    static const uint8_t*   m_descriptor;
+    static service_t        m_service;
 
 };
