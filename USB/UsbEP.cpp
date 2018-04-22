@@ -3,7 +3,7 @@
 #include "Usb.hpp"
 #include "UsbBuf.hpp"
 #include "Reg.hpp"
-#include "UsbDescriptors.hpp"
+#include "UsbCentral.hpp"
 
 #include <cstdint>
 #include <cstring> //memset, memcpy
@@ -50,13 +50,13 @@ void print_bytes(uint8_t* buf, uint16_t siz){
     bool    UsbEP::init             (uint8_t n)
 //=============================================================================
 {
-    if(n > UsbDescriptors::last_ep_num) return false;
+    if(n > UsbCentral::last_ep_num) return false;
     m_epnum = n;
     reset(TX);
     reset(RX);
-    rx->epsiz = UsbDescriptors::get_epsiz(n, 0);
-    tx->epsiz = UsbDescriptors::get_epsiz(n, 1);
-    Usb::epcontrol(n, UsbDescriptors::get_epctrl(n)); //set endpoint control
+    rx->epsiz = UsbCentral::get_epsiz(n, 0);
+    tx->epsiz = UsbCentral::get_epsiz(n, 1);
+    Usb::epcontrol(n, UsbCentral::get_epctrl(n)); //set endpoint control
     if(n) return true;
     //ep0
     return xfer(RX, ep0rxbuf, rx->epsiz);
@@ -276,7 +276,7 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",pkt.wRequest,pkt.wValue,pkt.wIndex,pkt
     switch(pkt.wRequest){
 
         case UsbCh9::DEV_GET_STATUS: //tx 2bytes, rx status
-            ep0txbuf[0] = UsbDescriptors::get_status();
+            ep0txbuf[0] = UsbCentral::get_status();
             break;
         case UsbCh9::IF_GET_STATUS: //tx 2bytes, rx status
             //bytes already already setup
@@ -308,7 +308,7 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",pkt.wRequest,pkt.wValue,pkt.wIndex,pkt
             break;
         case UsbCh9::DEV_GET_DESCRIPTOR: //tx tlen bytes, rx status
             UsbBuf::release(ep0txbuf); //buffer not needed
-            ep0txbuf = (uint8_t*)UsbDescriptors::get_desc(pkt.wValue, &tlen);
+            ep0txbuf = (uint8_t*)UsbCentral::get_desc(pkt.wValue, &tlen);
             //if error, tlen=0 and ep0txbuf=0
             break;
 //         case UsbCh9::DEV_SET_DESCRIPTOR:
@@ -320,7 +320,7 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",pkt.wRequest,pkt.wValue,pkt.wIndex,pkt
             break;
         case UsbCh9::DEV_SET_CONFIGURATION: //no data, tx status
             if(usb.dev_addr() and not pkt.wValue) usb.dev_addr(0);
-            else UsbDescriptors::set_config(pkt.wValue);
+            else UsbCentral::set_config(pkt.wValue);
             //clear endpoint halt, data toggle resets to data0
             break;
 //         case UsbCh9::IF_GET_IFACE:

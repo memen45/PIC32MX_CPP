@@ -1,18 +1,18 @@
-#include "UsbDescriptors.hpp"
+#include "UsbCentral.hpp"
 #include "UsbCh9.hpp"
 #include "Usb.hpp"
 #include "UsbDevice.hpp"
 
 //=============================================================================
-const uint8_t*              UsbDescriptors::m_descriptor = 0;
-UsbDescriptors::service_t   UsbDescriptors::m_service = 0;
-uint8_t                     UsbDescriptors::current_config = 1; //config 1
+const uint8_t*              UsbCentral::m_descriptor = 0;
+UsbCentral::service_t       UsbCentral::m_service = 0;
+uint8_t                     UsbCentral::current_config = 1; //config 1
 //=============================================================================
 
 
 
 //=============================================================================
-    bool            UsbDescriptors::service (uint32_t flags, uint8_t ustat)
+    bool            UsbCentral::service (uint32_t flags, uint8_t ustat)
 //=============================================================================
 {
     if(m_service) return m_service(flags, ustat);
@@ -22,7 +22,7 @@ uint8_t                     UsbDescriptors::current_config = 1; //config 1
 //pkt.wValue high=descriptor type, low=index
 //device=1, config=2, string=3
 //=============================================================================
-    const uint8_t*  UsbDescriptors::get_desc (uint16_t wValue, uint16_t* siz)
+    const uint8_t*  UsbCentral::get_desc (uint16_t wValue, uint16_t* siz)
 //=============================================================================
 {
     if(not m_descriptor){ *siz = 0; return 0; }
@@ -50,7 +50,7 @@ uint8_t                     UsbDescriptors::current_config = 1; //config 1
 
 //set to descriptor wanted (set before usb init)
 //=============================================================================
-    bool    UsbDescriptors::set_device      (const uint8_t * d, service_t f)
+    bool    UsbCentral::set_device      (const uint8_t * d, service_t f)
 //=============================================================================
 {
     m_descriptor = d;
@@ -60,7 +60,7 @@ uint8_t                     UsbDescriptors::current_config = 1; //config 1
 
 //do nothing, return descriptor ptr for config if found, 0 if not
 //=============================================================================
-    const uint8_t*  UsbDescriptors::set_config  (uint16_t wValue)
+    const uint8_t*  UsbCentral::set_config  (uint16_t wValue)
 //=============================================================================
 {
     wValue and_eq 0xFF;                             //low byte only
@@ -79,7 +79,7 @@ uint8_t                     UsbDescriptors::current_config = 1; //config 1
 }
 
 //=============================================================================
-    uint16_t    UsbDescriptors::get_epsiz       (uint8_t n, bool tr)
+    uint16_t    UsbCentral::get_epsiz       (uint8_t n, bool tr)
 //=============================================================================
 {
     if(not m_descriptor) return 0;
@@ -94,7 +94,7 @@ uint8_t                     UsbDescriptors::current_config = 1; //config 1
 }
 
 //=============================================================================
-    uint8_t     UsbDescriptors::get_epctrl      (uint8_t n)
+    uint8_t     UsbCentral::get_epctrl      (uint8_t n)
 //=============================================================================
 {
     if(not m_descriptor) return 0;
@@ -104,7 +104,7 @@ uint8_t                     UsbDescriptors::current_config = 1; //config 1
     for(; p[1] != UsbCh9::STRING; p += p[0]){       //until into STRINGs
         if(p[1] != UsbCh9::ENDPOINT) continue;      //not an endpoint, continue
         if(p[2] == n) ret or_eq Usb::EPRXEN;        //if rx, enable rx
-        if(p[2] == n+128) ret or_eq Usb::EPTXEN;    //if tx, nebale tx
+        if(p[2] == n+128) ret or_eq Usb::EPTXEN;    //if tx, enbale tx
         //enable handshake unless isochronous
         if(p[3] != UsbCh9::ISOCHRONOUS) ret or_eq Usb::EPHSHK;
     }
@@ -112,7 +112,7 @@ uint8_t                     UsbDescriptors::current_config = 1; //config 1
 }
 
 //=============================================================================
-    uint8_t     UsbDescriptors::get_status      ()
+    uint8_t     UsbCentral::get_status      ()
 //=============================================================================
 {
     if(not m_descriptor) return 0;

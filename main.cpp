@@ -26,6 +26,7 @@
 
 
 #include "UsbCdcAcm.hpp"
+#include "UsbDevice.hpp"
 
 
 

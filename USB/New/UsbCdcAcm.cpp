@@ -96,11 +96,11 @@ static UsbEP m_ep_txrx;   //ep2 = tx/rx
 }
 
 //=============================================================================
-    bool        UsbCdcAcm::service      (uint32_t flags, uint8_t ustat)
+    bool        UsbCdcAcm::service      (uint8_t ustat)
 //=============================================================================
 {
     //first check for reset
-    if(flags and Usb::URST){        //called by UsbDevice::attach
+    if(ustat == 0xFF){              //called by UsbDevice::attach
         m_ep_state.init(1);         //via UsbCentral::service
         m_ep_txrx.init(2);          //init our endpoints
         return true;

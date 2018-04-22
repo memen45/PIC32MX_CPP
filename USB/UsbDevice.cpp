@@ -4,13 +4,13 @@
 #include "Irq.hpp"
 #include "UsbEP.hpp"
 #include "Delay.hpp"
-#include "UsbDescriptors.hpp"
+#include "UsbCentral.hpp"
 
 #include <cstdio>
 
 uint32_t UsbDevice::timer1ms = 0;
 uint32_t UsbDevice::sof_count = 0;
-UsbEP ep[UsbDescriptors::last_ep_num+1];
+UsbEP ep[UsbCentral::last_ep_num+1];
 
 //private
 //=============================================================================
@@ -37,7 +37,15 @@ UsbEP ep[UsbDescriptors::last_ep_num+1];
     while(usb.power(usb.USBBUSY));      //wait for busy
     usb.power(usb.USBPWR, true);        //power on (also inits bdt table)
     //init all ep (done with init function as need usb on first)
-    for(uint8_t i = 0; i <= UsbDescriptors::last_ep_num; i++) ep[i].init(i);
+    for(uint8_t i = 0; i <= UsbCentral::last_ep_num; i++) ep[i].init(i);
+
+//TODO
+//init ep0 here
+//call UsbCentral::service(usb.URST, 0) , which will init
+//current config (endpoints, whatever it needs done
+//passing reset flag will indicate it needs to reset itself
+
+
     usb.irqs(usb.SOF|usb.T1MSEC|usb.TRN|usb.IDLE);   //enable some irqs
     irq.init(irq.USB, Usb::usb_irq_pri, Usb::usb_irq_subpri, true); //usb irq on
     usb.control(usb.USBEN, true);       //enable usb module
@@ -121,11 +129,17 @@ if(flags bitand compl (usb.T1MSEC bitor usb.SOF)){
         usb.irq(usb.RESUME, true);
     }
 
-    while(flags bitand usb.TRN){           //token complete
-        usb.irq(usb.URST, true);
+    while(flags bitand usb.TRN){        //token complete
+        usb.irq(usb.URST, true);        //enable reset irq after any token
+
+//TODO
+//change
+//check for ep0, handle in this file
+//else send to UsbCentral::service
+
         //although improbable, make sure an endpoint we use
         uint8_t n = ustat>>2;
-        if(n <= UsbDescriptors::last_ep_num){
+        if(n <= UsbCentral::last_ep_num){
             //ep[ustat>>2].trn_service(ustat bitand 3);
             ep[n].service(ustat bitand 3);
         }

@@ -5,12 +5,12 @@
 #include "UsbCh9.hpp"
 #include <cstdint>
 
-struct UsbDescriptors {
+struct UsbCentral {
 
     //function call to service irq for non-endpoint0 (current device)
-    using service_t = bool(*)(uint32_t, uint8_t);
+    using service_t = bool(*)(uint8_t);
 
-    //set descriptor before any usb init- called from Usb<device>.cpp
+    //set device before any usb init- called from Usb<device>.cpp
     //d=descriptor array, len=descriptor length
     //also calls Usb::init(true) if both args are not 0
     //else calls Usb::init(false), return result of init
@@ -33,12 +33,13 @@ struct UsbDescriptors {
     //self-powered, remote wakeup
     static uint8_t          get_status      ();
 
-
-    static const uint8_t    last_ep_num = 2; //TODO get rid of (temp use)
-
+    //store current descriptor config
     static uint8_t          current_config;
 
+    //service- called from isr
     static bool             service         (uint32_t, uint8_t);
+    //service- call registered service (m_service)
+    static bool             service         (uint8_t ustat)
 
     private:
 
