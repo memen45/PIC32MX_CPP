@@ -288,7 +288,7 @@ static bool control (UsbEP0* ep0)
     uint16_t tlen = 0;
 
     //if data stage, device->host (IN, TX)
-    if((ep0->setup_pkt.bmRequestType bitand 128) and ep0->setup_pkt.wLength){
+    if((ep0->setup_pkt.bmRequestType bitand (1<<7)) and ep0->setup_pkt.wLength){
         tlen = ep0->setup_pkt.wLength;
     }
 
