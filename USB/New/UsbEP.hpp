@@ -14,11 +14,11 @@ struct UsbEP {
     enum EVEODD : bool { EVEN, ODD };
 
     void reset      (TXRX, bool = false); //bool = save ppbi?
-    void init       (uint8_t);
+    bool init       (uint8_t);
 
     bool service    (uint8_t);
-    void service_in ();
-    void service_out();
+    bool service_in ();
+    bool service_out();
 
     bool send       (uint8_t*, uint16_t, notify_t = 0);
     bool send       (uint8_t*, uint16_t, bool, notify_t = 0); //specify data01
@@ -41,6 +41,15 @@ struct UsbEP {
     bool takeback   (TXRX);
 
 
+    private:
+
+    bool setup      (info_t&);
+
+    bool xfer       (info_t&, uint8_t*, uint16_t, notify_t);
+
+
+    uint8_t     m_epnum{0};         //endpoint number
+
     using info_t = struct {
         uint8_t*        buf;        //buffer address
         uint16_t        epsiz;      //endpoint size
@@ -55,17 +64,6 @@ struct UsbEP {
         notify_t        notify;     //callback
     };
 
-    private:
-
-    bool setup      (info_t&);
-
-    bool xfer       (info_t&, uint8_t*, uint16_t, notify_t);
-
-protected:
-
-    uint8_t     m_epnum{0};         //endpoint number
-
-
     info_t m_rx{0};
     info_t m_tx{0};
 
@@ -73,13 +71,13 @@ protected:
 
 struct UsbEP0 : public UsbEP {
 
-    void init       ();
+    bool init       ();
 
     bool service    (uint8_t);
 
-    void service_in ();
+    bool service_in ();
 
-    UsbCh9::SetupPkt_t setup_pkt;
+    SetupPkt_t setup_pkt;
 
 };
 

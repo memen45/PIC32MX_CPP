@@ -3,6 +3,7 @@
 //USB Descriptors
 
 #include "UsbCh9.hpp"
+#include "UsbEP.hpp"
 #include <cstdint>
 
 struct UsbCentral {
@@ -39,7 +40,8 @@ struct UsbCentral {
     //service- called from isr
     static bool             service         (uint32_t, uint8_t);
     //service- call registered service (m_service)
-    static bool             service         (uint8_t ustat)
+    static bool             service         (uint8_t ustat, UsbEP0* = 0);
+
 
     private:
 

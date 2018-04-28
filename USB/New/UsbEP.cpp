@@ -22,7 +22,7 @@
 }
 
 //=============================================================================
-    void    UsbEP::init             (uint8_t n)
+    bool    UsbEP::init             (uint8_t n)
 //=============================================================================
 {
     m_epnum = n;
@@ -31,6 +31,7 @@
     m_rx.epsiz = UsbCentral::get_epsiz(n, 0);
     m_tx.epsiz = UsbCentral::get_epsiz(n, 1);
     Usb::epcontrol(n, UsbCentral::get_epctrl(n)); //set endpoint control
+    return true;
 }
 
 //=============================================================================
@@ -40,7 +41,7 @@
     x.buf = buf;
     x.btogo = siz;
     x.bdone = 0;
-    if(f) x.notify = f;
+    if(f) x.notify = f
     return setup(x);
 }
 
@@ -138,12 +139,9 @@
 //=============================================================================
 {
     if(not x.buf) return false;//no buffer set
-
     bool i = x.ppbi;
     if(x.bdt[i].stat.uown) i xor_eq 1;      //in use, try next
     if(x.bdt[i].stat.uown) return false;    //both in use
-
-printf("%s %s %d\r\n",&x == &m_tx ? "TX" : "RX",i ? "ODD" : "EVEN",x.btogo);
 
     volatile Usb::ctrl_t ctrl = {0};
     ctrl.bstall = x.stall; x.stall = false;
@@ -179,6 +177,7 @@ printf("service(%d) %d %d %08x\r\n",ustat,m_epnum,x.stat.pid,x.stat.val32);
             service_in();
             break;
         default:
+printf("unknown x.stat.pid: %d\r\n",x.stat.pid);
             return false;
     }
     return true;
@@ -260,7 +259,6 @@ bool set_address(UsbEP* ep)
     //callbacks are UsbEP, cast to UsbEP0 in this case
     UsbEP0* ep0 = (UsbEP0*)ep;
     Usb::dev_addr(ep0->setup_pkt.wValue);  //set usb address
-printf("set_address: %d\r\n",ep0->setup_pkt.wValue);
     return true;
 }
 
@@ -295,11 +293,9 @@ static bool control (UsbEP0* ep0)
     uint16_t tlen = 0;
 
     //if data stage, device->host (IN, TX)
-    if((ep0->setup_pkt.bmRequestType bitand 128) and ep0->setup_pkt.wLength){
+    if((ep0->setup_pkt.bmRequestType bitand 7) and ep0->setup_pkt.wLength){
         tlen = ep0->setup_pkt.wLength;
     }
-
-    bool stall = false;
 
 
 printf("pkt: $1%04x %04x %04x %04x$7\r\n",
@@ -345,7 +341,6 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",
             UsbBuf::release(ep0txbuf); //buffer not needed
             ep0txbuf = (uint8_t*)UsbCentral::get_desc(ep0->setup_pkt.wValue, &tlen);
             //if error, tlen=0 and ep0txbuf=0
-            if((tlen == 0) or (ep0txbuf == 0)) stall = true;
             break;
 //         case UsbCh9::DEV_SET_DESCRIPTOR:
 //             //no data, status (tx zlp)
@@ -369,21 +364,20 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",
             UsbBuf::release(ep0txbuf); //buffer not needed
             //check other requests
             if(UsbCentral::service(0, ep0)){ //true=all handled, except
-                ep0->recv(ep0rxbuf, 64, false); //we take care of next setup
+                ep->recv(ep0rxbuf, 64, false); //we take care of next setup
                 return true;
             }
             //bad request, stall
-            stall = true;
+            ep->send_stall();
+            ep->recv_stall();
             break;
     }
 
-    if(stall){
-        ep0->send_stall();
-        ep0->recv_stall();
-        ep0->recv(ep0rxbuf, 64, false);
-        return false;
+    //check if no data for request (bad string index, etc)
+    if((tlen == 0) and ep0->setup_pkt.wLength){
+        ep->send_stall();
+        ep->recv_stall();
     }
-
     //check for tx data that is less than requested (strings,descriptors,etc)
     //if less and if is same size as ep packet size, add zlp
     if(tlen and (tlen != ep0->setup_pkt.wLength) and (not (tlen % 64))) ep0->send_zlp();
@@ -392,7 +386,7 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",
     //tx is always data1- either status, or send data in data stage
     ep0->send(ep0txbuf, tlen, true);
     //if data stage, next rx is always data1 either rx data or rx status
-    if(ep0->setup_pkt.wLength) ep0->recv(ep0rxbuf, 64, true);
+    if(ep0->setup_pkt.wLength) ep->recv(ep0rxbuf, 64, true);
     //next setup packet (data0) in all cases
     //(rx data stage is always <64, so there is only one rx data packet)
     ep0->recv(ep0rxbuf, 64, false);
@@ -402,25 +396,28 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",
 
 
 //=============================================================================
-    void    UsbEP0::init             ()
+    bool    UsbEP0::init             ()
 //=============================================================================
 {
-    UsbEP::init(0);
-    recv(ep0rxbuf, 64, false);
+    return UsbEP::init(0);
 }
 
 //=============================================================================
     bool    UsbEP0::service              (uint8_t ustat)
 //=============================================================================
 {
-info_t& x = ustat bitand 2 ? m_tx : m_rx; //tx or rx
+    info_t& x = ustat bitand 2 ? m_tx : m_rx; //tx or rx
+    x.stat.val32 = x.bdt[ustat bitand 1].stat.val32; //get bdt stat
+    x.ppbi xor_eq 1;            //toggle ppbi
+    x.d01 xor_eq 1;             //toggle d01
+
+printf("EP0 service(%d) %d %d %08x\r\n",ustat,m_epnum,x.stat.pid,x.stat.val32);
 
     //check for in/out first, if returned false, check for setup here
     if(UsbEP::service(ustat)) return true;
 
-printf("EP0 service(%d) %d %d %08x\r\n",ustat,m_epnum,x.stat.pid,x.stat.val32);
     //ep0 setup packet
-    if(x.stat.pid == UsbCh9::SETUP and x.stat.count == 8){
+    if(x.stat.pid == UsbCh9::SETUP and x.stat.count == 8)
         //make copy of setup packet
         memcpy(&setup_pkt.packet[0], m_rx.buf, 8);
         control(this);
@@ -437,7 +434,7 @@ printf("EP0 unknown x.stat.pid: %d\r\n",x.stat.pid);
     void    UsbEP0::service_in              ()
 //=============================================================================
 {
-    UsbEP::service_in();
+    Usb::EP.service_in();
     //release ep0 tx buffer here
     if(m_tx.btogo == 0) UsbBuf::release(m_tx.buf);
 }

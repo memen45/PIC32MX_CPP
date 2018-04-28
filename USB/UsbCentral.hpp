@@ -3,12 +3,15 @@
 //USB Descriptors
 
 #include "UsbCh9.hpp"
+#include "UsbEP.hpp"
 #include <cstdint>
 
 struct UsbCentral {
 
     //function call to service irq for non-endpoint0 (current device)
-    using service_t = bool(*)(uint32_t, uint8_t);
+    using service_t = bool(*)(uint8_t, UsbEP0*);
+
+    static bool             init            (bool);
 
     //set device before any usb init- called from Usb<device>.cpp
     //d=descriptor array, len=descriptor length
@@ -33,12 +36,14 @@ struct UsbCentral {
     //self-powered, remote wakeup
     static uint8_t          get_status      ();
 
-
-    static const uint8_t    last_ep_num = 2; //TODO get rid of (temp use)
-
+    //store current descriptor config
     static uint8_t          current_config;
 
-    static bool             service         (uint32_t, uint8_t);
+    //service- called from isr
+    static void             service         (uint32_t, uint8_t);
+    //service- call registered service (m_service)
+    static bool             service         (uint8_t ustat, UsbEP0* = 0);
+
 
     private:
 

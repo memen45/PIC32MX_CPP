@@ -26,7 +26,7 @@
 
 
 #include "UsbCdcAcm.hpp"
-#include "UsbDevice.hpp"
+
 
 
 
@@ -183,7 +183,7 @@ int main()
     osc.tun_auto(true);                     //let sosc tune frc
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 18, 4, 13, 0, 17, 41, 0} );
+    if(dt.year == 0) Rtcc::datetime( { 18, 4, 27, 0, 19, 27, 0} );
 
     Rtcc::on(true);
 
@@ -194,6 +194,7 @@ int main()
     Rgb rgb;
     Led12 led12;
 
+printf("starting...\r\n");
 //trying my usb code
 Delay::wait_s(2);
 Pins sw3{ Pins::C4, Pins::INPU }; //turn on usb
@@ -220,7 +221,7 @@ for(;;){
         snprintf(buf, 64, "%02d-%02d-%04d %02d:%02d:%02d %s  ",
                 dt.month, dt.day, dt.year+2000, dt.hour12, dt.minute, dt.second,
                 dt.pm ? "PM" : "AM");
-        if(xmit) UsbDevice::cdc_tx((uint8_t*)buf, strlen(buf));
+        if(xmit) cdc.send((uint8_t*)buf, strlen(buf));
     }
     //Wdt::reset(), led12.update(), rgb.update();
 }

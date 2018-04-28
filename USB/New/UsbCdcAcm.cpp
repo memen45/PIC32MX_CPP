@@ -82,24 +82,54 @@ static const uint8_t m_descriptor[] = {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-static UsbEP m_ep_state;  //ep1 = serial state
-static UsbEP m_ep_txrx;   //ep2 = tx/rx
+//private
+static UsbEP                m_ep_state;  //ep1 = serial state
+static UsbEP                m_ep_txrx;   //ep2 = tx/rx
+
+//line coding- just store what pc wants, also return if wanted
+using line_coding_t = struct {
+    uint32_t baud;
+    uint8_t stop_bits; //0-1,1=1.5,2=2
+    uint8_t parity; //none=0,even, odd, mark, space
+    uint8_t data_bits; //5,6,7,8,16
+};
+static line_coding_t        m_line_coding = {115200, 0, 0, 8};
+
+//private
+//=============================================================================
+    bool    ep0_request                 (UsbEP0* ep0)
+//=============================================================================
+{
+    switch(ep0->setup_pkt.wRequest){
+        case UsbCh9::CDC_SET_LINE_CODING: //rx tlen bytes, tx status
+            ep0->recv((uint8_t*)&line_coding, 7, true);
+            ep0->send((uint8_t*)&line_coding, 0, true);
+            return true;
+        case UsbCh9::CDC_GET_LINE_CODING: //tx line coding, rx status
+            ep0->send((void*)&line_coding, 7, true);
+            ep0->recv((uint8_t*)&line_coding, 0, true);
+            return true;
+        case UsbCh9::CDC_SET_CONTROL_LINE_STATE: //no data, tx status
+             ep0->send((uint8_t*)&line_coding, 0, true);
+            return true;
+            break;
+    }
+    return false; //unhandled
+}
+
 
 //=============================================================================
     bool        UsbCdcAcm::init         (bool tf)
 //=============================================================================
 {
-    bool ret = UsbCentral::set_device(m_descriptor, tf ? service : 0);
-    //set_device will call UsbDevice::init, which will end up back
-    //at service() with reset flag, where we init
-    return ret;
+    return UsbCentral::set_device(m_descriptor, tf ? service : 0);
 }
 
 //=============================================================================
-    bool        UsbCdcAcm::service      (uint8_t ustat)
+    bool        UsbCdcAcm::service      (uint8_t ustat, UsbEP0* ep0)
 //=============================================================================
 {
-    //first check for reset
+    //check for reset
     if(ustat == 0xFF){              //called by UsbDevice::attach
         m_ep_state.init(1);         //via UsbCentral::service
         m_ep_txrx.init(2);          //init our endpoints
@@ -116,6 +146,8 @@ static UsbEP m_ep_txrx;   //ep2 = tx/rx
         //handle tx/rx
         //return
     }
+    if(ep0) return ep0_request(ep0);
+
 
     return true;
 }

@@ -12,7 +12,7 @@
 //=============================================================================
 uint32_t                    timer1ms = 0;
 uint32_t                    sof_count = 0;
-UsbEP                       ep0;
+UsbEP0                      ep0;
 //=============================================================================
 
 //class vars
@@ -50,7 +50,7 @@ uint8_t                     UsbCentral::current_config = 1; //config 1
     usb.power(usb.USBPWR, true);        //power on (also inits bdt table)
 
     //init all ep (can only do now,since need usb power first)
-    ep0.init(0);                        //endpoint 0 handled here
+    ep0.init();                         //endpoint 0 handled here
 
     //others, call registered service with ustat set to 0xFF- which will
     //reset any other endpoints
@@ -101,13 +101,15 @@ if(flags bitand compl (usb.T1MSEC bitor usb.SOF)){
 
     if(flags bitand usb.T1MSEC) timer1ms++;
     if(flags bitand usb.SOF) sof_count++;
+//     if(flags bitand usb.RESUME) usb.irq(usb.RESUME, false);
+//     if(flags bitand usb.IDLE) usb.irq(usb.RESUME, true); //idle (>3ms)
+
 
     for(uint8_t i = 0; ustat[i] != 0xFF; i++){
         //if for ep0, and ep0 serviced request ok, continue
         if(ustat[i] < 4){
             if(ep0.service(ustat[i])) //if not std request
-            else UsbCentral.service(ustat[i]); //try others
-            //TODO - need access to ep0 pkt,tx,rx
+            else UsbCentral.service(ustat[i], &ep0); //try others
         }
         else UsbCentral.service(ustat[i]);
     }
@@ -124,12 +126,14 @@ if(flags bitand compl (usb.T1MSEC bitor usb.SOF)){
 
 
 //=============================================================================
-    bool            UsbCentral::service (uint8_t ustat)
+    bool            UsbCentral::service (uint8_t ustat, UsbEP* ep)
 //=============================================================================
 {
-    if(m_service) return m_service(ustat);
+    if(m_service) return m_service(ustat, ep);
     return false;
 }
+
+
 
 //pkt.wValue high=descriptor type, low=index
 //device=1, config=2, string=3
