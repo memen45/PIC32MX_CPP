@@ -85,7 +85,9 @@ static const uint8_t m_descriptor[] = {
 
 //private
 static UsbEP                m_ep_state;  //ep1 = serial state
+static const uint8_t        m_ep_state_num = 1;
 static UsbEP                m_ep_txrx;   //ep2 = tx/rx
+static const uint8_t        m_ep_txrx_num = 2;
 
 //line coding- just store what pc wants, also return if wanted
 using line_coding_t = struct {
@@ -123,23 +125,21 @@ static line_coding_t        m_line_coding = {115200, 0, 0, 8};
 //=============================================================================
 {
     //check for reset
-    if(ustat == 0xFF){              //called by UsbDevice::attach
-        m_ep_state.init(1);         //via UsbCentral::service
-        m_ep_txrx.init(2);          //init our endpoints when ustat = 0xFF
+    if(ustat == 0xFF){                  //called by UsbDevice::attach
+        m_ep_state.init(m_ep_state_num);//via UsbCentral::service
+        m_ep_txrx.init(m_ep_txrx_num);  //init our endpoints when ustat = 0xFF
         return true;
     }
 
     //ustat = ep<5:2>|dir<1>|even/odd<0>
-    //check if one of our endpoints
-    if(ustat>>2 == 1){
-        //handle serial state
-        return true;
-    }
 
-    if(ustat>>2 == 2) return m_ep_txrx.service(ustat); //handle tx/rx
-
+    //handle serial state
+    if(ustat>>2 == m_ep_state_num) return true;
+    //handle tx/rx
+    if(ustat>>2 == m_ep_txrx_num) return m_ep_txrx.service(ustat);
+    //handle any endpoint 0 setup requests
     if(ep0) return ep0_request(ep0);
-
+    //not for us
     return false;
 }
 

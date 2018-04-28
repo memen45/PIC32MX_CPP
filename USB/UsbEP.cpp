@@ -168,24 +168,18 @@ printf("%s %s %d\r\n",&x == &m_tx ? "TX" : "RX",i ? "ODD" : "EVEN",x.btogo);
     x.ppbi xor_eq 1;            //toggle ppbi
     x.d01 xor_eq 1;             //toggle d01
 
-printf("service(%d) %d %d %08x\r\n",ustat,m_epnum,x.stat.pid,x.stat.val32);
+printf("UsbEP::service   ustat: %d  ep: %d  pid: %d  bdt: %08x\r\n",ustat,m_epnum,x.stat.pid,x.stat.val32);
 
     //in (tx), out (rx)
-    switch(x.stat.pid){
-        case UsbCh9::OUT:
-            service_out();
-            break;
-        case UsbCh9::IN:
-            service_in();
-            break;
-        default:
-            return false;
-    }
+    if(x.stat.pid == UsbCh9::OUT)       service_out();
+    else if(x.stat.pid == UsbCh9::IN)   service_in();
+    else                                return false;
+
     return true;
 }
 
 //=============================================================================
-    bool    UsbEP::takeback             (TXRX tr)
+    void    UsbEP::takeback             (TXRX tr)
 //=============================================================================
 {
     info_t& x = tr ? m_tx : m_rx;
@@ -198,7 +192,6 @@ printf("service(%d) %d %d %08x\r\n",ustat,m_epnum,x.stat.pid,x.stat.val32);
         x.ppbi xor_eq 1;
     }
     reset(tr, true); //reset, but save ppbi
-    return true;
 }
 
 //=============================================================================
@@ -418,7 +411,7 @@ info_t& x = ustat bitand 2 ? m_tx : m_rx; //tx or rx
     //check for in/out first, if returned false, check for setup here
     if(UsbEP::service(ustat)) return true;
 
-printf("EP0 service(%d) %d %d %08x\r\n",ustat,m_epnum,x.stat.pid,x.stat.val32);
+printf("UsbEP0::service   ustat: %d  ep: %d  pid: %d  bdt: %08x\r\n",ustat,m_epnum,x.stat.pid,x.stat.val32);
     //ep0 setup packet
     if(x.stat.pid == UsbCh9::SETUP and x.stat.count == 8){
         //make copy of setup packet

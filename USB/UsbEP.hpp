@@ -13,32 +13,29 @@ struct UsbEP {
     enum TXRX : bool { RX, TX };
     enum EVEODD : bool { EVEN, ODD };
 
-    void reset      (TXRX, bool = false); //bool = save ppbi?
-    void init       (uint8_t);
+    void    reset       (TXRX, bool = false); //bool = save ppbi?
+    void    init        (uint8_t);
 
-    bool service    (uint8_t);
-    void service_in ();
-    void service_out();
+    bool    service     (uint8_t);
+    void    service_in  ();
+    void    service_out ();
 
-    bool send       (uint8_t*, uint16_t, notify_t = 0);
-    bool send       (uint8_t*, uint16_t, bool, notify_t = 0); //specify data01
-    bool recv       (uint8_t*, uint16_t, notify_t = 0);
-    bool recv       (uint8_t*, uint16_t, bool, notify_t = 0); //specify data01
+    bool    send        (uint8_t*, uint16_t, notify_t = 0);
+    bool    send        (uint8_t*, uint16_t, bool, notify_t = 0); //specify data01
+    bool    recv        (uint8_t*, uint16_t, notify_t = 0);
+    bool    recv        (uint8_t*, uint16_t, bool, notify_t = 0); //specify data01
 
-    bool send_busy  ();
-    bool recv_busy  ();
+    bool    send_busy   ();
+    bool    recv_busy   ();
 
-    void send_stall ();
-    void recv_stall ();
-    void send_zlp   ();
+    void    send_stall  ();
+    void    recv_stall  ();
+    void    send_zlp    ();
 
-    void send_notify(notify_t);
-    void recv_notify(notify_t);
+    void    send_notify (notify_t);
+    void    recv_notify (notify_t);
 
-
-
-
-    bool takeback   (TXRX);
+    void    takeback    (TXRX);
 
 
     using info_t = struct {
@@ -57,27 +54,26 @@ struct UsbEP {
 
     private:
 
-    bool setup      (info_t&);
+    bool    setup       (info_t&);
 
-    bool xfer       (info_t&, uint8_t*, uint16_t, notify_t);
+    bool    xfer        (info_t&, uint8_t*, uint16_t, notify_t);
 
-protected:
+    protected:
 
     uint8_t     m_epnum{0};         //endpoint number
 
-
-    info_t m_rx{0};
-    info_t m_tx{0};
+    info_t      m_rx{0};
+    info_t      m_tx{0};
 
 };
 
 struct UsbEP0 : public UsbEP {
 
-    void init       ();
+    void    init        ();
 
-    bool service    (uint8_t);
+    bool    service     (uint8_t);
 
-    void service_in ();
+    void    service_in  ();
 
     UsbCh9::SetupPkt_t setup_pkt;
 

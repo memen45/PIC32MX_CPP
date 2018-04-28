@@ -4,6 +4,51 @@
 
 #include <cstdio> //debug printf
 
+// //=============================================================================
+//     ISR(USB)
+// //=============================================================================
+// {
+//     Usb usb; Irq irq;
+//
+//     do { //until no more usb irq flag
+//
+//         uint32_t flags = usb.flags();       //get all flags
+//         uint8_t ustat = usb.stat();         //and stat (in case TRN set)
+//         //sie advances if TRN cleared, so grab stat before we clear any flags
+//
+// //ignore t1msec,sof flag for debug printf
+// if(flags bitand (compl (usb.T1MSEC bitor usb.SOF))){
+// printf("\r\nISR flags: %08x  ustat: %02x", flags, ustat);
+// }
+//         usb.flags_clr(flags);               //clear all flags we found
+//         irq.flag_clr(irq.USB);              //clear usb irq flag
+//         flags and_eq usb.irqs();            //need only flags with irq enabled
+//
+// //now show masked flags
+// if(flags bitand (compl (usb.T1MSEC bitor usb.SOF))){
+// printf("  flags: %08x\r\n",flags);
+// }
+//
+//         //first do all TRN
+//         while(flags bitand usb.TRN){
+//             usb.irq(usb.URST, true);        //enable reset irq when any trn's
+//             UsbCentral::service(0, ustat);  //flags=0, ustat != 0xFF
+//             flags and_eq (compl usb.TRN);   //to break this while loop
+//
+//             if(usb.flag(usb.TRN)){          //any more?
+//                 ustat = usb.stat();         //yes, get ustat again
+//                 usb.flags_clr(usb.TRN);     //clear usb flag
+//                 flags or_eq usb.TRN;        //to keep inside this while loop
+//             }
+//         }
+//
+//         UsbCentral::service(flags, 0xFF);   //now do other flags, ustat=0xFF
+//
+//
+//     } while(irq.flag(irq.USB)); //check if irq set again before leaving isr
+//
+// }
+
 //=============================================================================
     ISR(USB)
 //=============================================================================
@@ -12,38 +57,26 @@
 
     do { //until no more usb irq flag
 
-        uint32_t flags = usb.flags();
-        uint8_t ustat = usb.stat();
+        uint32_t flags = usb.flags();       //get all flags
+        flags and_eq (compl usb.TRN);       //mask trn, will handle below
 
 //ignore t1msec,sof flag for debug printf
 if(flags bitand (compl (usb.T1MSEC bitor usb.SOF))){
-printf("\r\nISR flags: %08x  ustat: %02x", flags, ustat);
+printf("\r\nISR  all flags: %08x", flags);
 }
-
-        //clear all flags we found
-        usb.flags_clr(flags);
-        //clear usb irq flag
-        irq.flag_clr(irq.USB);
-        //need only flags with irq enabled
-        flags and_eq usb.irqs();
+        usb.flags_clr(flags);               //clear all flags we found
+        irq.flag_clr(irq.USB);              //clear usb irq flag
+        flags and_eq usb.irqs();            //need only flags with irq enabled
 
 //now show masked flags
 if(flags bitand (compl (usb.T1MSEC bitor usb.SOF))){
 printf("  flags: %08x\r\n",flags);
 }
 
-
-        //first do all TRN
-        while(flags bitand usb.TRN){
+        while(usb.flag(usb.TRN)){           //first do all TRN
             usb.irq(usb.URST, true);        //enable reset irq when any trn's
-            UsbCentral::service(0, ustat);  //flags=0, ustat != 0xFF
-            flags and_eq (compl usb.TRN);   //to break this while loop
-
-            if(usb.flag(usb.TRN)){          //any more?
-                ustat = usb.stat();         //yes, get ustat again
-                usb.flags_clr(usb.TRN);     //clear usb flag
-                flags or_eq usb.TRN;        //to keep inside this while loop
-            }
+            UsbCentral::service(0, usb.stat());  //flags=0, ustat != 0xFF
+            usb.flags_clr(usb.TRN);         //clear trn flag after getting stat
         }
 
         UsbCentral::service(flags, 0xFF);   //now do other flags, ustat=0xFF
@@ -52,4 +85,3 @@ printf("  flags: %08x\r\n",flags);
     } while(irq.flag(irq.USB)); //check if irq set again before leaving isr
 
 }
-

@@ -3,7 +3,6 @@
 #include "UsbBuf.hpp"
 #include "Irq.hpp"
 #include "UsbEP.hpp"
-#include "Delay.hpp"
 
 
 #include <cstdio> //debug printf
@@ -49,15 +48,15 @@ uint8_t                     UsbCentral::current_config = 1; //config 1
     //no writes to usb regs until powered on
     usb.power(usb.USBPWR, true);        //power on (also inits bdt table)
 
-    //init all ep (can only do now,since need usb power first)
+    //init ep0 (can only do now,since need usb power first)
     ep0.init();                         //endpoint 0 handled here
 
     //others, call registered service with ustat set to 0xFF- which will
     //reset any other endpoints
     UsbCentral::service(0xFF);
 
-    //start irq's
-    usb.irqs(usb.SOF|usb.T1MSEC|usb.TRN|usb.IDLE);   //enable some irqs
+    //start irq's-
+    usb.irqs(usb.SOF|usb.T1MSEC|usb.TRN|usb.IDLE);
     irq.init(irq.USB, Usb::usb_irq_pri, Usb::usb_irq_subpri, true); //usb irq on
 
     usb.control(usb.USBEN, true);       //enable usb module
@@ -86,39 +85,30 @@ printf("false\r\n");
 
 
 //called from UsbISR with irq flags which were set (and had irq enabled)
-//and ustat array from up to 4 TRN's, 0xFF marks end of array
-
-
+//or ustat- if ustat == 0xFF, no TRN
+//TRN's are done first before flags, mainly so debugging will print trn info
+//before something like a reset is handled
 //=============================================================================
     void        UsbCentral::service     (uint32_t flags, uint8_t ustat)
 //=============================================================================
 {
     Usb usb;
 
-//if(flags bitand compl (usb.T1MSEC bitor usb.SOF)){
-//    printf("\r\nISR> frame: %d  flags: %08x\r\n",usb.frame(),flags);
-//}
-if(ustat != 0xFF)
-    printf("\r\nUsbCentral::service  frame: %d  flags: %08x  ustat: %d\r\n",usb.frame(),flags,ustat);
-
-    if(flags bitand usb.T1MSEC) timer1ms++;
-    if(flags bitand usb.SOF) sof_count++;
-    if(flags bitand usb.RESUME) usb.irq(usb.RESUME, false);
-    if(flags bitand usb.IDLE) usb.irq(usb.RESUME, true); //idle (>3ms)
-
-
-    //if for ep0, and ep0 serviced request ok, continue
     if(ustat != 0xFF){
+printf("\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",usb.frame(),ustat);
         if(ustat < 4){
             if(not ep0.service(ustat)) //if not std request
                 UsbCentral::service(ustat, &ep0); //try others
         }
         else UsbCentral::service(ustat);
+        return; //no flags passed in when ustat is passed in, so done here
     }
 
-    //do last (when debugging, can see trn's before a reset)
-    if(flags bitand usb.URST) init(true);
-
+    if(flags bitand usb.T1MSEC)     timer1ms++;
+    if(flags bitand usb.SOF)        sof_count++;
+    if(flags bitand usb.RESUME)     usb.irq(usb.RESUME, false);
+    if(flags bitand usb.IDLE)       usb.irq(usb.RESUME, true); //idle (>3ms)
+    if(flags bitand usb.URST)       init(true);
 }
 
 
@@ -128,14 +118,11 @@ if(ustat != 0xFF)
 
 
 //=============================================================================
-    bool            UsbCentral::service (uint8_t ustat, UsbEP0* ep)
+    bool            UsbCentral::service     (uint8_t ustat, UsbEP0* ep)
 //=============================================================================
 {
-    bool ret = false;
-    if(m_service){
-        ret = m_service(ustat, ep);
-    }
-    return ret;
+    if(m_service) return m_service(ustat, ep);
+    return false;
 }
 
 
@@ -143,7 +130,7 @@ if(ustat != 0xFF)
 //pkt.wValue high=descriptor type, low=index
 //device=1, config=2, string=3
 //=============================================================================
-    const uint8_t*  UsbCentral::get_desc (uint16_t wValue, uint16_t* siz)
+    const uint8_t*  UsbCentral::get_desc    (uint16_t wValue, uint16_t* siz)
 //=============================================================================
 {
     if(not m_descriptor){ *siz = 0; return 0; }
