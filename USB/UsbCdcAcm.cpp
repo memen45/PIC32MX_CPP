@@ -98,7 +98,7 @@ static line_coding_t        m_line_coding = {115200, 0, 0, 8};
 
 //private
 //=============================================================================
-    bool    ep0_request                 (UsbEP0* ep0)
+    static bool    ep0_request                 (UsbEP0* ep0)
 //=============================================================================
 {
     switch(ep0->setup_pkt.wRequest){
@@ -118,17 +118,8 @@ static line_coding_t        m_line_coding = {115200, 0, 0, 8};
     return false; //unhandled
 }
 
-
 //=============================================================================
-    bool        UsbCdcAcm::init         (bool tf)
-//=============================================================================
-{
-printf("UsbCdcAcm init(%d)\r\n", tf);
-    return UsbCentral::set_device(m_descriptor, tf ? service : 0);
-}
-
-//=============================================================================
-    bool        UsbCdcAcm::service      (uint8_t ustat, UsbEP0* ep0)
+    static bool        service      (uint8_t ustat, UsbEP0* ep0)
 //=============================================================================
 {
     //check for reset
@@ -151,6 +142,14 @@ printf("UsbCdcAcm init(%d)\r\n", tf);
 
 
     return true;
+}
+
+//=============================================================================
+    bool        UsbCdcAcm::init         (bool tf)
+//=============================================================================
+{
+printf("UsbCdcAcm init(%d)\r\n", tf);
+    return UsbCentral::set_device(m_descriptor, tf ? &service : 0);
 }
 
 //=============================================================================
