@@ -183,7 +183,7 @@ int main()
     osc.tun_auto(true);                     //let sosc tune frc
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 18, 4, 27, 0, 23, 40, 0} );
+    if(dt.year == 0) Rtcc::datetime( { 18, 4, 27, 0, 23, 57, 0} );
 
     Rtcc::on(true);
 
@@ -223,7 +223,7 @@ for(;;){
                 dt.pm ? "PM" : "AM");
         if(xmit) cdc.send((uint8_t*)buf, strlen(buf));
     }
-    //Wdt::reset(), led12.update(), rgb.update();
+    Wdt::reset(), led12.update(), rgb.update();
 }
 
 }
