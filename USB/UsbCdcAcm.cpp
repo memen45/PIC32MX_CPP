@@ -125,7 +125,7 @@ static line_coding_t        m_line_coding = {115200, 0, 0, 8};
     //check for reset
     if(ustat == 0xFF){              //called by UsbDevice::attach
         m_ep_state.init(1);         //via UsbCentral::service
-        m_ep_txrx.init(2);          //init our endpoints
+        m_ep_txrx.init(2);          //init our endpoints when ustat = 0xFF
         return true;
     }
 
@@ -135,13 +135,12 @@ static line_coding_t        m_line_coding = {115200, 0, 0, 8};
         //handle serial state
         return true;
     }
-    if(ustat>>2 == 2){
-        return m_ep_txrx.service(ustat); //handle tx/rx
-    }
+
+    if(ustat>>2 == 2) return m_ep_txrx.service(ustat); //handle tx/rx
+
     if(ep0) return ep0_request(ep0);
 
-
-    return true;
+    return false;
 }
 
 //=============================================================================
@@ -149,7 +148,7 @@ static line_coding_t        m_line_coding = {115200, 0, 0, 8};
 //=============================================================================
 {
 printf("UsbCdcAcm init(%d)\r\n", tf);
-    return UsbCentral::set_device(m_descriptor, tf ? &service : 0);
+    return UsbCentral::set_device(m_descriptor, tf ? service : 0);
 }
 
 //=============================================================================

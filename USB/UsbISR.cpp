@@ -17,8 +17,7 @@
 
 //ignore t1msec,sof flag for debug printf
 if(flags bitand (compl (usb.T1MSEC bitor usb.SOF))){
-printf("\r\nISR flags: %08x", flags);
-printf("  ustat: %02x",ustat);
+printf("\r\nISR flags: %08x  ustat: %02x", flags, ustat);
 }
 
         //clear all flags we found
@@ -28,6 +27,7 @@ printf("  ustat: %02x",ustat);
         //need only flags with irq enabled
         flags and_eq usb.irqs();
 
+//now show masked flags
 if(flags bitand (compl (usb.T1MSEC bitor usb.SOF))){
 printf("  flags: %08x\r\n",flags);
 }
