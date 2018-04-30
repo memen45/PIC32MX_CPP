@@ -30,15 +30,21 @@ uint8_t                     UsbCentral::current_config = 1; //config 1
     Usb usb; UsbBuf buf; Irq irq;
 
     irq.on(irq.USB, false);             //usb irq off
-    usb.control(usb.USBEN, false);      //release D line
-    usb.power(usb.USBPWR, false);       //power off
+    usb.control(0);                     //(usben=0) release pullup on D
+    usb.power(usb.USBPWR, false);       //usb module power off
+    while(usb.power(usb.USBBUSY));      //wait before writing to usb regs
+
+    usb.irqs(0);                        //all irqs off
+    usb.flags_clr(0xFFFFFF);            //all flags cleared
+    usb.otg(0);                         //not using, clear anyway
+    usb.dev_addr(0);                    //default address
+    for(auto i = 0; i < 16; i++) usb.epcontrol(i, 0); //clear all ep control
     buf.init();                         //reclaim/clear buffers
 
-//testing
-//reset all endpoints in case in the middle of something
-ep0.reset(ep0.TX);
-ep0.reset(ep0.RX);
-UsbCentral::service(0xFF);
+    //reset all endpoints in case was in the middle of something
+    ep0.reset(ep0.TX);
+    ep0.reset(ep0.RX);
+    UsbCentral::service(0xFF);          //0xFF=reset
 }
 
 //private
@@ -50,7 +56,6 @@ UsbCentral::service(0xFF);
 
     timer1ms = 0;                       //reset 1ms timer
     sof_count = 0;                      //and sof count
-    while(usb.power(usb.USBBUSY));      //wait for busy
 
     //no writes to usb regs until powered on
     usb.power(usb.USBPWR, true);        //power on (also inits bdt table)

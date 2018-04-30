@@ -183,7 +183,7 @@ int main()
     osc.tun_auto(true);                     //let sosc tune frc
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 18, 4, 27, 0, 23, 57, 0} );
+    if(dt.year == 0) Rtcc::datetime( { 18, 4, 29, 0, 20, 20, 0} );
 
     Rtcc::on(true);
 
@@ -211,9 +211,18 @@ bool xmit = false;
 UsbCdcAcm cdc;
 
 for(;;){
-    if(sw3.ison()){ ison = cdc.init(true); Delay::wait_ms(500); }
-    if(sw1.ison()){ ison = cdc.init(false); Delay::wait_ms(500); }
-    if(sw2.ison()){ xmit = not xmit; Delay::wait_ms(200); }
+    if(sw3.ison()){
+        ison = cdc.init(true);
+        Delay::wait_ms(500);
+    }
+    if(sw1.ison()){
+        ison = cdc.init(false);
+        Delay::wait_ms(500);
+    }
+    if(sw2.ison()){
+        xmit = not xmit;
+        Delay::wait_ms(200);
+    }
     if(ison and dly.expired()){
         dly.restart();
 
@@ -223,7 +232,7 @@ for(;;){
                 dt.pm ? "PM" : "AM");
         if(xmit) cdc.send((uint8_t*)buf, strlen(buf));
     }
-    //Wdt::reset(), led12.update(), rgb.update();
+    Wdt::reset(), led12.update(), rgb.update();
 }
 
 }

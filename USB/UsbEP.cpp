@@ -16,9 +16,7 @@
 {
     info_t& x = tr ? m_tx : m_rx;
     bool ppbi = saveppbi ? x.ppbi : 0;
-//release any ep0 tx buffer
-//(harmless if not)
-UsbBuf::release(x.buf);
+    UsbBuf::release(x.buf); //release any ep0 tx buffer (harmless if not)
     x = {0};
     x.ppbi = ppbi;
     x.bdt = Usb::bdt_addr(m_epnum, tr, 0);//&Usb::bdt_table[m_epnum][tr][EVEN];
