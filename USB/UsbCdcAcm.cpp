@@ -157,9 +157,17 @@ printf("UsbCdcAcm init(%d)\r\n", tf);
 }
 
 //=============================================================================
-    bool    UsbCdcAcm::send             (uint8_t* buf, uint16_t siz)
+    bool    UsbCdcAcm::send  (uint8_t* buf, uint16_t siz, UsbEP::notify_t f)
 //=============================================================================
 {
     if(m_ep_txrx.send_busy()) return false;
-    return m_ep_txrx.send(buf, siz);
+    return m_ep_txrx.send(buf, siz, f);
+}
+
+//=============================================================================
+    bool    UsbCdcAcm::recv  (uint8_t* buf, uint16_t siz, UsbEP::notify_t f)
+//=============================================================================
+{
+    if(m_ep_txrx.recv_busy()) return false;
+    return m_ep_txrx.recv(buf, siz, f);
 }
