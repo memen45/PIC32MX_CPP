@@ -327,3 +327,23 @@ Pins vbus_pin(Usb::vbus_pin_n, Pins::INPD);
     return Reg::val8(U1EP0+(n * U1EP_SPACING));
 }
 
+//regs to reset state
+//=============================================================================
+    void        Usb::reset              ()
+//=============================================================================
+{
+    irqs(0);
+    Reg::val(U1CON, 0);     //usben
+    Reg::val(U1PWRC, 0);    //usbpwr
+    while(power(USBBUSY));
+    flags_clr(0xFFFFFF);
+    Reg::val(U1ADDR, 0);
+    Reg::val(U1TOK, 0);
+    Reg::val(U1SOF, 0);
+    Reg::val(U1OTGCON, 0);
+    Reg::val(U1CNFG1, 0);
+    for(auto i = 0; i < 16; i++) epcontrol(i, 0);
+    Reg::val(U1BDTP1, 0);
+    Reg::val(U1BDTP2, 0);
+    Reg::val(U1BDTP3, 0);
+}

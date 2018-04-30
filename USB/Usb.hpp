@@ -217,6 +217,8 @@ struct Usb {
     static void         epcontrol   (uint8_t, uint8_t);         //set byte
     static uint8_t      epcontrol   (uint8_t);                  //get byte
 
+    //misc
+    static void         reset       ();     //all writable regs to reset val
 };
 
 

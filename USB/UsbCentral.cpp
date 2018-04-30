@@ -30,15 +30,7 @@ uint8_t                     UsbCentral::current_config = 1; //config 1
     Usb usb; UsbBuf buf; Irq irq;
 
     irq.on(irq.USB, false);             //usb irq off
-    usb.control(0);                     //(usben=0) release pullup on D
-    usb.power(usb.USBPWR, false);       //usb module power off
-    while(usb.power(usb.USBBUSY));      //wait before writing to usb regs
-
-    usb.irqs(0);                        //all irqs off
-    usb.flags_clr(0xFFFFFF);            //all flags cleared
-    usb.otg(0);                         //not using, clear anyway
-    usb.dev_addr(0);                    //default address
-    for(auto i = 0; i < 16; i++) usb.epcontrol(i, 0); //clear all ep control
+    usb.reset();                        //usb regs to reset state
     buf.init();                         //reclaim/clear buffers
 
     //reset all endpoints in case was in the middle of something
@@ -57,10 +49,9 @@ uint8_t                     UsbCentral::current_config = 1; //config 1
     timer1ms = 0;                       //reset 1ms timer
     sof_count = 0;                      //and sof count
 
-    //no writes to usb regs until powered on
     usb.power(usb.USBPWR, true);        //power on (also inits bdt table)
 
-    //init ep0 (can only do now,since need usb power first)
+    //init ep0
     ep0.init();                         //endpoint 0 handled here
 
     //others, call registered service with ustat set to 0xFF- which will
@@ -78,7 +69,7 @@ uint8_t                     UsbCentral::current_config = 1; //config 1
 
 //init usb (or reinit, or detach) true=init/reinit, false=detach
 //return true if attached, false if detached
-//global irq's enabled if attached
+//global irq's enabled if attached, unchanged if detached
 //=============================================================================
     bool        UsbCentral::init         (bool tf)
 //=============================================================================
@@ -86,10 +77,7 @@ uint8_t                     UsbCentral::current_config = 1; //config 1
 printf("\r\n\r\nUsbCentral::init(%d)\r\n",tf);
     detach();
     //if no vbus pin voltage or tf=false (wanted only detach)
-    if(not Usb::vbus_ison() or not tf){
-printf("false\r\n");
-        return false;
-    }
+    if(not Usb::vbus_ison() or not tf) return false;
     attach();
     return true;                        //true=attached
 }
@@ -174,7 +162,6 @@ printf("\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",usb.frame(),ustat);
     bool    UsbCentral::set_device      (const uint8_t* d, service_t f)
 //=============================================================================
 {
-printf("UsbCentral::set_device(%08x, %08x)\r\n",(uint32_t)d,(uint32_t)f);
     m_descriptor = d;
     m_service = f;
     return init(d and f);
