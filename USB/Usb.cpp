@@ -341,7 +341,7 @@ Pins vbus_pin(Usb::vbus_pin_n, Pins::INPD);
     Reg::val(U1TOK, 0);
     Reg::val(U1SOF, 0);
     Reg::val(U1OTGCON, 0);
-    Reg::val(U1CNFG1, 0);
+    Reg::val(U1CNFG1, 1);
     for(auto i = 0; i < 16; i++) epcontrol(i, 0);
     Reg::val(U1BDTP1, 0);
     Reg::val(U1BDTP2, 0);
