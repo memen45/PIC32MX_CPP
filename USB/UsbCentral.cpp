@@ -51,7 +51,6 @@ uint8_t                     UsbCentral::current_config = 1; //config 1
 
     usb.power(usb.USBPWR, true);        //power on (also inits bdt table)
 
-    //init ep0
     ep0.init();                         //endpoint 0 handled here
 
     //others, call registered service with ustat set to 0xFF- which will
