@@ -62,11 +62,12 @@ UsbCentral::service(0xFF);
     //reset any other endpoints
     UsbCentral::service(0xFF);
 
+    usb.control(usb.USBEN, true);       //enable usb module
+
     //start irq's-
     usb.irqs(usb.SOF|usb.T1MSEC|usb.TRN|usb.IDLE);
     irq.init(irq.USB, Usb::usb_irq_pri, Usb::usb_irq_subpri, true); //usb irq on
 
-    usb.control(usb.USBEN, true);       //enable usb module
     irq.global(true);                   //global irq's on if not already
 }
 
