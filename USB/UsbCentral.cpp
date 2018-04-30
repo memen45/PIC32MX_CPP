@@ -30,8 +30,15 @@ uint8_t                     UsbCentral::current_config = 1; //config 1
     Usb usb; UsbBuf buf; Irq irq;
 
     irq.on(irq.USB, false);             //usb irq off
+    usb.control(usb.USBEN, false);      //release D line
     usb.power(usb.USBPWR, false);       //power off
     buf.init();                         //reclaim/clear buffers
+
+//testing
+//reset all endpoints in case in the middle of something
+ep0.reset(ep0.TX);
+ep0.reset(ep0.RX);
+UsbCentral::service(0xFF);
 }
 
 //private
@@ -73,7 +80,7 @@ uint8_t                     UsbCentral::current_config = 1; //config 1
 printf("\r\n\r\nUsbCentral::init(%d)\r\n",tf);
     detach();
     //if no vbus pin voltage or tf=false (wanted only detach)
-    if(not Usb::vbus_ison() || not tf){
+    if(not Usb::vbus_ison() or not tf){
 printf("false\r\n");
         return false;
     }

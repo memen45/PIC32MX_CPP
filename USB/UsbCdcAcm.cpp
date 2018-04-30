@@ -104,16 +104,16 @@ static line_coding_t        m_line_coding = {115200, 0, 0, 8};
 //=============================================================================
 {
     switch(ep0->setup_pkt.wRequest){
-        case UsbCh9::CDC_SET_LINE_CODING: //rx tlen bytes, tx status
-            ep0->recv((uint8_t*)&m_line_coding, 7, true);
-            ep0->send((uint8_t*)&m_line_coding, 0, true);
+        case UsbCh9::CDC_SET_LINE_CODING:
+            ep0->recv((uint8_t*)&m_line_coding, 7, true); //rx 7 bytes,
+            ep0->send((uint8_t*)&m_line_coding, 0, true); //tx status
             return true;
-        case UsbCh9::CDC_GET_LINE_CODING: //tx line coding, rx status
-            ep0->send((uint8_t*)&m_line_coding, 7, true);
-            ep0->recv((uint8_t*)&m_line_coding, 0, true);
+        case UsbCh9::CDC_GET_LINE_CODING:
+            ep0->send((uint8_t*)&m_line_coding, 7, true); //tx line coding,
+            ep0->recv((uint8_t*)&m_line_coding, 0, true); //rx status
             return true;
-        case UsbCh9::CDC_SET_CONTROL_LINE_STATE: //no data, tx status
-             ep0->send((uint8_t*)&m_line_coding, 0, true);
+        case UsbCh9::CDC_SET_CONTROL_LINE_STATE:
+            ep0->send((uint8_t*)&m_line_coding, 0, true);//no data, tx status
             return true;
             break;
     }
@@ -132,13 +132,18 @@ static line_coding_t        m_line_coding = {115200, 0, 0, 8};
     }
 
     //ustat = ep<5:2>|dir<1>|even/odd<0>
+    uint8_t n = ustat>>2;
 
-    //handle serial state
-    if(ustat>>2 == m_ep_state_num) return true;
     //handle tx/rx
-    if(ustat>>2 == m_ep_txrx_num) return m_ep_txrx.service(ustat);
+    if(n == m_ep_txrx_num) return m_ep_txrx.service(ustat);
+
+    //handle serial state (unused for now)
+    if(n == m_ep_state_num) return true;
+
+    //not our endpoint, check if setup request on ep0
     //handle any endpoint 0 setup requests
     if(ep0) return ep0_request(ep0);
+
     //not for us
     return false;
 }

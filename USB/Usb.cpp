@@ -157,7 +157,7 @@ Pins vbus_pin(Usb::vbus_pin_n, Pins::INPD);
 //=============================================================================
 {
     Reg::setbit(U1PWRC, e, tf);
-    if(e == USBPWR) bdt_init();
+    if(e == USBPWR and tf) bdt_init();
 }
 
 

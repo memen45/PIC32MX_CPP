@@ -223,7 +223,7 @@ for(;;){
                 dt.pm ? "PM" : "AM");
         if(xmit) cdc.send((uint8_t*)buf, strlen(buf));
     }
-    Wdt::reset(), led12.update(), rgb.update();
+    //Wdt::reset(), led12.update(), rgb.update();
 }
 
 }

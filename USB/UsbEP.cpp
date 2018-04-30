@@ -16,6 +16,9 @@
 {
     info_t& x = tr ? m_tx : m_rx;
     bool ppbi = saveppbi ? x.ppbi : 0;
+//release any ep0 tx buffer
+//(harmless if not)
+UsbBuf::release(x.buf);
     x = {0};
     x.ppbi = ppbi;
     x.bdt = Usb::bdt_addr(m_epnum, tr, 0);//&Usb::bdt_table[m_epnum][tr][EVEN];
@@ -399,7 +402,7 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",
 //=============================================================================
 {
     UsbEP::init(0);
-    recv(ep0rxbuf, 64, false);
+    recv(ep0rxbuf, 64, false);      //first setup packet recv
 }
 
 //=============================================================================
@@ -409,6 +412,8 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",
 info_t& x = ustat bitand 2 ? m_tx : m_rx; //tx or rx
 
     //check for in/out first, if returned false, check for setup here
+    //(need to do first, as UsbEP::service also takes care of toggle ppbi
+    // and data01, also gets bdt stat)
     if(UsbEP::service(ustat)) return true;
 
 printf("UsbEP0::service   ustat: %d  ep: %d  pid: %d  bdt: %08x\r\n",ustat,m_epnum,x.stat.pid,x.stat.val32);
