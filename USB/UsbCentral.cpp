@@ -3,6 +3,7 @@
 #include "UsbBuf.hpp"
 #include "Irq.hpp"
 #include "UsbEP.hpp"
+#include "Delay.hpp"
 
 
 #include <cstdio> //debug printf
@@ -32,7 +33,6 @@ uint8_t                     UsbCentral::current_config = 1; //config 1
     irq.on(irq.USB, false);             //usb irq off
     usb.reset();                        //usb regs to reset state
     buf.init();                         //reclaim/clear buffers
-
     //reset all endpoints in case was in the middle of something
     ep0.reset(ep0.TX);
     ep0.reset(ep0.RX);
@@ -48,46 +48,38 @@ uint8_t                     UsbCentral::current_config = 1; //config 1
 
     timer1ms = 0;                       //reset 1ms timer
     sof_count = 0;                      //and sof count
-
     usb.power(usb.USBPWR, true);        //power on (also inits bdt table)
-
-    ep0.init();                         //endpoint 0 handled here
-
-    //others, call registered service with ustat set to 0xFF- which will
-    //reset any other endpoints
-    UsbCentral::service(0xFF);
-
+    ep0.init();                         //endpoint 0 init here
+    UsbCentral::service(0xFF);          //others, 0xFF=reset endpoint
     usb.control(usb.USBEN, true);       //enable usb module
-
-    //start irq's-
-    usb.irqs(usb.SOF|usb.T1MSEC|usb.TRN|usb.IDLE);
-    irq.init(irq.USB, Usb::usb_irq_pri, Usb::usb_irq_subpri, true); //usb irq on
-
+    usb.irqs(usb.SOF|usb.T1MSEC|usb.TRN|usb.IDLE); //start irq's
+    irq.init(irq.USB, Usb::usb_irq_pri, Usb::usb_irq_subpri, true);
     irq.global(true);                   //global irq's on if not already
 }
 
-//init usb (or reinit, or detach) true=init/reinit, false=detach
-//return true if attached, false if detached
-//global irq's enabled if attached, unchanged if detached
+//=============================================================================
+// init usb (or reinit, or detach) true=init/reinit, false=detach
+// return true if attached, false if detached
+// global irq's enabled if attached, unchanged if detached
 //=============================================================================
     bool        UsbCentral::init         (bool tf)
 //=============================================================================
 {
 printf("\r\n\r\nUsbCentral::init(%d)\r\n",tf);
+    bool wason = Usb::power(Usb::USBPWR);
     detach();
+    if(wason) Delay::wait_ms(200);      //if was already on, wait a bit
     //if no vbus pin voltage or tf=false (wanted only detach)
     if(not Usb::vbus_ison() or not tf) return false;
     attach();
     return true;                        //true=attached
 }
 
-
-
-
-//called from UsbISR with irq flags which were set (and had irq enabled)
-//or ustat- if ustat == 0xFF, no TRN
-//TRN's are done first before flags, mainly so debugging will print trn info
-//before something like a reset is handled
+//=============================================================================
+// called from UsbISR with irq flags which were set (and had irq enabled)
+// or ustat- if ustat == 0xFF, no TRN
+// TRN's are done first before flags, mainly so debugging will print trn info
+// before something like a reset is handled
 //=============================================================================
     void        UsbCentral::service     (uint32_t flags, uint8_t ustat)
 //=============================================================================
@@ -96,9 +88,9 @@ printf("\r\n\r\nUsbCentral::init(%d)\r\n",tf);
 
     if(ustat != 0xFF){
 printf("\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",usb.frame(),ustat);
-        if(ustat < 4){
-            if(not ep0.service(ustat)) //if not std request
-                UsbCentral::service(ustat, &ep0); //try others
+        if(ustat < 4){                  //endpoint 0
+            if(not ep0.service(ustat))  //if not std request
+                UsbCentral::service(ustat, &ep0); //let others try
         }
         else UsbCentral::service(ustat);
         return; //no flags passed in when ustat is passed in, so done here
@@ -111,12 +103,9 @@ printf("\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",usb.frame(),ustat);
     if(flags bitand usb.URST)       init(true);
 }
 
-
-
-
-
-
-
+//=============================================================================
+// called by UsbCentral::service, then pass on to registered service
+// (like cdcacm)
 //=============================================================================
     bool            UsbCentral::service     (uint8_t ustat, UsbEP0* ep)
 //=============================================================================
@@ -125,10 +114,10 @@ printf("\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",usb.frame(),ustat);
     return false;
 }
 
-
-
-//pkt.wValue high=descriptor type, low=index
-//device=1, config=2, string=3
+//=============================================================================
+// get desired descriptor from descriptor info
+// pkt.wValue high=descriptor type, low=index
+// device=1, config=2, string=3
 //=============================================================================
     const uint8_t*  UsbCentral::get_desc    (uint16_t wValue, uint16_t* siz)
 //=============================================================================
@@ -140,8 +129,8 @@ printf("\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",usb.frame(),ustat);
     //find header type, if idx > 0, also find header[idx]
     for(;;){
          if(m_descriptor[i+1] == typ){
-             if(not idx) break; //found it
-             idx--; //wrong index, dec until 0
+             if(not idx) break;     //found it
+             idx--;                 //wrong index, dec until 0
          }
          i += m_descriptor[i];
          if(not i){ *siz = 0; return 0; } //at end of descriptor (0 marker)
@@ -156,7 +145,10 @@ printf("\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",usb.frame(),ustat);
     return &m_descriptor[i];
 }
 
-//set to descriptor wanted (set before usb init)
+//=============================================================================
+// set descriptor wanted (set before usb init), and service function
+// this will set the interface from user created device like cdcacm to
+// UsbCentral
 //=============================================================================
     bool    UsbCentral::set_device      (const uint8_t* d, service_t f)
 //=============================================================================
@@ -166,7 +158,9 @@ printf("\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",usb.frame(),ustat);
     return init(d and f);
 }
 
-//do nothing, return descriptor ptr for config if found, 0 if not
+//=============================================================================
+// do nothing, return descriptor ptr for config if found, 0 if not
+// also used to find location of current config in descriptor
 //=============================================================================
     const uint8_t*  UsbCentral::set_config  (uint16_t wValue)
 //=============================================================================
@@ -187,6 +181,9 @@ printf("\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",usb.frame(),ustat);
 }
 
 //=============================================================================
+// get endpoint n tx or rx size from descriptor
+// endpoint 0 size is in first descriptor (both tx,rx are same size)
+//=============================================================================
     uint16_t    UsbCentral::get_epsiz       (uint8_t n, bool tr)
 //=============================================================================
 {
@@ -201,6 +198,10 @@ printf("\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",usb.frame(),ustat);
     return 0;                                       //not found
 }
 
+//=============================================================================
+// get endpoint n control info from descriptor
+// endpoint 0 always tx/rx/handshake
+// others get from descriptor info
 //=============================================================================
     uint8_t     UsbCentral::get_epctrl      (uint8_t n)
 //=============================================================================
@@ -219,6 +220,9 @@ printf("\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",usb.frame(),ustat);
     return ret;
 }
 
+//=============================================================================
+// get self-powered, remote wakeup info from descriptor
+// return bits in postitions as needed by DEV_GET_STATUS
 //=============================================================================
     uint8_t     UsbCentral::get_status      ()
 //=============================================================================

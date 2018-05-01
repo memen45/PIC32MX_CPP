@@ -5,6 +5,13 @@
 #include <cstdio> //debug printf
 
 //=============================================================================
+// get all usb module irq flags except for TRN
+// clear all flags that were set, clear usb irq flag
+// mask off flags not needed (irq not enabled)
+// check TRN flag and process if set (UsbCentral::service), until sie empty
+// process all other flags (UsbCentral::service)
+// repeat until no more usb irq's
+//=============================================================================
     ISR(USB)
 //=============================================================================
 {

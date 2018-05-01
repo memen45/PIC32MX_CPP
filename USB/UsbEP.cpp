@@ -84,7 +84,7 @@
 
 //private
 //=============================================================================
-    static bool    m_busy               (UsbEP::info_t& x)
+    static bool    busy                (UsbEP::info_t& x)
 //=============================================================================
 {
     return x.bdt[UsbEP::EVEN].stat.uown or
@@ -96,14 +96,14 @@
     bool    UsbEP::send_busy            ()
 //=============================================================================
 {
-    return m_busy(m_tx);
+    return busy(m_tx);
 }
 
 //=============================================================================
     bool    UsbEP::recv_busy            ()
 //=============================================================================
 {
-    return m_busy(m_rx);
+    return busy(m_rx);
 }
 
 //=============================================================================
@@ -269,40 +269,33 @@ printf("set_address: %d\r\n",ep0->setup_pkt.wValue);
 }
 
 
-//this file only- for ep0 only
+//this file only- for ep0 only - standard requests
 //=============================================================================
 static bool control (UsbEP0* ep0)
 //=============================================================================
 {
     Usb usb;
-    static uint8_t* ep0txbuf;
 
     //setup packet is now in pkt
     //take back any pending tx on ep0
     ep0->takeback(ep0->TX);
 
-    //release any previous tx (should already be released, just make sure)
-    UsbBuf::release(ep0txbuf);
-    ep0txbuf = 0;
-
-    //get a tx buffer
-    ep0txbuf = UsbBuf::get64();
-    if(not ep0txbuf){
-        return false; //could not get a buffer (unlikely)
-    }
-
-    //preset first 2 bytes
-    ep0txbuf[0] = 0;
-    ep0txbuf[1] = 0;
+    //tx, only need a couple bytes for our use
+    //preset first 2 bytes to 0
+    static uint8_t txbuf[2] = {0};
+    //pointer to either buf above, or changed to something else (descriptor)
+    uint8_t* ep0txbuf = txbuf;
 
     //data length of tx
     uint16_t tlen = 0;
 
-    //if data stage, device->host (IN, TX)
+    //if data stage (wLength > 0), and device->host (IN, TX)
+    //set tlen
     if((ep0->setup_pkt.bmRequestType bitand (1<<7)) and ep0->setup_pkt.wLength){
         tlen = ep0->setup_pkt.wLength;
     }
 
+    //stall flag
     bool stall = false;
 
 
@@ -315,13 +308,13 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",
     switch(ep0->setup_pkt.wRequest){
 
         case UsbCh9::DEV_GET_STATUS: //tx 2bytes, rx status
-            ep0txbuf[0] = UsbCentral::get_status();
+            txbuf[0] = UsbCentral::get_status();
             break;
         case UsbCh9::IF_GET_STATUS: //tx 2bytes, rx status
             //bytes already already setup
             break;
         case UsbCh9::EP_GET_STATUS: //tx 2bytes, rx status
-            ep0txbuf[0] = usb.epcontrol(ep0->setup_pkt.wIndex, usb.EPSTALL);
+            txbuf[0] = usb.epcontrol(ep0->setup_pkt.wIndex, usb.EPSTALL);
             break;
         case UsbCh9::DEV_CLEAR_FEATURE: //no data, tx status
             //remote wakup, test mode, do nothing
@@ -346,7 +339,7 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",
             ep0->send_notify(set_address); //set address after status
             break;
         case UsbCh9::DEV_GET_DESCRIPTOR: //tx tlen bytes, rx status
-            UsbBuf::release(ep0txbuf); //buffer not needed
+//            UsbBuf::release(ep0txbuf); //buffer not needed
             ep0txbuf = (uint8_t*)UsbCentral::get_desc(ep0->setup_pkt.wValue, &tlen);
             //if error, tlen=0 and ep0txbuf=0
             if((tlen == 0) or (ep0txbuf == 0)) stall = true;
@@ -356,7 +349,7 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",
 //             break;
         case UsbCh9::DEV_GET_CONFIGURATION: //tx tlen bytes, rx status
             //send 0=not configured, anything else=configured
-            ep0txbuf[0] = usb.dev_addr() ? 1 : 0; //show configured if address set
+            txbuf[0] = usb.dev_addr() ? 1 : 0; //show configured if address set
             break;
         case UsbCh9::DEV_SET_CONFIGURATION: //no data, tx status
             if(usb.dev_addr() and not ep0->setup_pkt.wValue) usb.dev_addr(0);
@@ -370,7 +363,7 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",
 //         case UsbCh9::EP_SYNC_HFRAME:
 //             break;
         default:
-            UsbBuf::release(ep0txbuf); //buffer not needed
+//            UsbBuf::release(ep0txbuf); //buffer not needed
             //check other requests
             if(UsbCentral::service(0, ep0)){ //true=all handled, except
                 ep0->recv(ep0rxbuf, 64, false); //we take care of next setup
@@ -437,14 +430,5 @@ printf("UsbEP0::service   ustat: %d  ep: %d  pid: %d  bdt: %08x\r\n",ustat,m_epn
 
 printf("EP0 unknown x.stat.pid: %d\r\n",x.stat.pid);
     return false;
-}
-
-//=============================================================================
-    void    UsbEP0::service_in              ()
-//=============================================================================
-{
-    UsbEP::service_in();
-    //release ep0 tx buffer here
-    if(m_tx.btogo == 0) UsbBuf::release(m_tx.buf);
 }
 

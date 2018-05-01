@@ -36,7 +36,7 @@ struct UsbCentral {
     //self-powered, remote wakeup
     static uint8_t          get_status      ();
 
-    //store current descriptor config
+    //store current descriptor config number
     static uint8_t          current_config;
 
     //service- called from isr

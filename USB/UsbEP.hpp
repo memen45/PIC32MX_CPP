@@ -73,8 +73,6 @@ struct UsbEP0 : public UsbEP {
 
     bool    service     (uint8_t);
 
-    void    service_in  ();
-
     UsbCh9::SetupPkt_t setup_pkt;
 
 };
