@@ -6,8 +6,8 @@
 #include "UsbCentral.hpp"
 
 #include <cstdint>
-#include <cstring> //memset, memcpy
-#include <cstdio>
+#include <cstring>  //memset, memcpy
+#include <cstdio>   //debug printf
 
 
 //=============================================================================
@@ -15,11 +15,14 @@
 //=============================================================================
 {
     info_t& x = tr ? m_tx : m_rx;
-    bool ppbi = saveppbi ? x.ppbi : 0;
-    UsbBuf::release(x.buf); //release any ep0 tx buffer (harmless if not)
-    x = {0};
-    x.ppbi = ppbi;
-    x.bdt = Usb::bdt_addr(m_epnum, tr, 0);//&Usb::bdt_table[m_epnum][tr][EVEN];
+    x.buf = 0;
+    x.bdone = 0;
+    x.btogo = 0;
+    x.zlp = 0;
+    x.d01 = 0;
+    x.stall = 0;
+    x.notify = 0;
+    if(not saveppbi) x.ppbi = 0;
 }
 
 //=============================================================================
@@ -29,8 +32,10 @@
     m_epnum = n;
     reset(TX);
     reset(RX);
-    m_rx.epsiz = UsbCentral::get_epsiz(n, 0);
-    m_tx.epsiz = UsbCentral::get_epsiz(n, 1);
+    m_rx.epsiz = UsbCentral::get_epsiz(m_epnum, 0);
+    m_tx.epsiz = UsbCentral::get_epsiz(m_epnum, 1);
+    m_rx.bdt = Usb::bdt_addr(m_epnum, 0, 0); //0=rx, 0=even
+    m_tx.bdt = Usb::bdt_addr(m_epnum, 1, 0); //1=tx, 0=even
     Usb::epcontrol(n, UsbCentral::get_epctrl(n)); //set endpoint control
 }
 
@@ -77,24 +82,28 @@
     return xfer(m_rx, buf, siz, f);
 }
 
+//private
+//=============================================================================
+    static bool    m_busy               (UsbEP::info_t& x)
+//=============================================================================
+{
+    return x.bdt[UsbEP::EVEN].stat.uown or
+        x.bdt[UsbEP::ODD].stat.uown or
+        x.btogo or
+        x.zlp;
+}
 //=============================================================================
     bool    UsbEP::send_busy            ()
 //=============================================================================
 {
-    return m_tx.bdt[EVEN].stat.uown or
-           m_tx.bdt[ODD].stat.uown or
-           m_tx.btogo or
-           m_tx.zlp;
+    return m_busy(m_tx);
 }
 
 //=============================================================================
     bool    UsbEP::recv_busy            ()
 //=============================================================================
 {
-    return m_rx.bdt[EVEN].stat.uown or
-           m_rx.bdt[ODD].stat.uown or
-           m_rx.btogo or
-           m_rx.zlp;
+    return m_busy(m_rx);
 }
 
 //=============================================================================
@@ -138,21 +147,22 @@
     bool    UsbEP::setup                (info_t& x)
 //=============================================================================
 {
-    if(not x.buf) return false;//no buffer set
+    if(not x.buf) return false;             //no buffer set
 
     bool i = x.ppbi;
     if(x.bdt[i].stat.uown) i xor_eq 1;      //in use, try next
     if(x.bdt[i].stat.uown) return false;    //both in use
 
-printf("%s %s %d\r\n",&x == &m_tx ? "TX" : "RX",i ? "ODD" : "EVEN",x.btogo);
+printf("%s %s %d (%d)\r\n",&x == &m_tx ? "TX" : "RX",i ? "ODD" : "EVEN",x.btogo,x.epsiz);
 
     volatile Usb::ctrl_t ctrl = {0};
-    ctrl.bstall = x.stall; x.stall = false;
+    ctrl.bstall = x.stall;
+    x.stall = false;                        //is set, now clear flag
     ctrl.data01 = x.d01;
     ctrl.dts = 1;
     ctrl.uown = 1;
 
-    ctrl.count = x.btogo < 64 ? x.btogo : 64;
+    ctrl.count = x.btogo < x.epsiz ? x.btogo : x.epsiz;
     x.bdt[i].bufaddr = Reg::k2phys((uint32_t)x.buf);
     x.bdt[i].ctrl.val32 = ctrl.val32;
 

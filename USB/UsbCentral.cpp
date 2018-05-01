@@ -191,11 +191,11 @@ printf("\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",usb.frame(),ustat);
 //=============================================================================
 {
     if(not m_descriptor) return 0;
-    if(n == 0) return m_descriptor[7];                //tx/rx same for ep0
+    if(n == 0) return m_descriptor[7];              //tx/rx same for ep0
     if(tr) n += 128;                                //if tx, set bit7
     const uint8_t* p = set_config(current_config);  //get config offset
     for(; p[1] != UsbCh9::STRING; p += p[0]){       //until into STRINGs
-        if(p[1] != UsbCh9::ENDPOINT or m_descriptor[2] != n) continue;
+        if(p[1] != UsbCh9::ENDPOINT or p[2] != n) continue;
         return p[4] bitor (p[5]<<8);                //found ep, return size
     }
     return 0;                                       //not found
