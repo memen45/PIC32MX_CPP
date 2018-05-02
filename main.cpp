@@ -243,11 +243,11 @@ int main()
     Rgb rgb;
     Led12 led12;
 
-printf("starting...\r\n");
+    printf("starting...\r\n");
 
-for(;;){
-    Wdt::reset(), led12.update(), rgb.update(), utest.update();
-}
+    for(;;){
+        Wdt::reset(), led12.update(), rgb.update(), utest.update();
+    }
 
 }
 
