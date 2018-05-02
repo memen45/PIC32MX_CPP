@@ -14,9 +14,11 @@ struct UsbCentral {
     static bool             init            (bool);
 
     //set device before any usb init- called from Usb<device>.cpp
-    //d=descriptor array, len=descriptor length
+    //const uint8_t*=descriptor array
+    //service_t=device service function
     //also calls Usb::init(true) if both args are not 0
-    //else calls Usb::init(false), return result of init
+    //else calls Usb::init(false),
+    //returns result of init
     static bool             set_device      (const uint8_t*, service_t);
 
     //wValue=descriptor type,index (directly from setup packet)

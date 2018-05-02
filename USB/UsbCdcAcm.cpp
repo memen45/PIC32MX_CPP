@@ -15,7 +15,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-// USER CREATED DATA STARTS HERE
+// USER CREATED DESCRIPTOR DATA STARTS HERE
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -77,9 +77,12 @@ static const uint8_t m_descriptor[] = {
     0 //end of descriptor marker - NEED to know where descriptor ends
 };
 
+
+
+
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-// USER CREATED DATA ENDS HERE
+// USER CREATED DEVICE FUNCTIONS START HERE
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -98,21 +101,34 @@ using line_coding_t = struct {
 };
 static line_coding_t        m_line_coding = {115200, 0, 0, 8};
 
+//SetupPkt_t.wRequest  (bRequest<<8|bmRequestType)
+enum SETUP_WREQUEST_CDC {
+    CDC_SEND_ENCAP_COMMAND = 0x0021,
+    CDC_GET_ENCAP_RESPONSE = 0x0121,
+    CDC_SET_COMM_FEATURE = 0x0221,
+    CDC_GET_COMM_FEATURE = 0x0321,
+    CDC_CLEAR_COMM_FEATURE = 0x0421,
+    CDC_SET_LINE_CODING = 0x2021,
+    CDC_GET_LINE_CODING = 0x2121,
+    CDC_SET_CONTROL_LINE_STATE = 0x2221,
+    CDC_SEND_BREAK = 0x2321
+};
+
 //private
 //=============================================================================
     static bool    ep0_request          (UsbEP0* ep0)
 //=============================================================================
 {
     switch(ep0->setup_pkt.wRequest){
-        case UsbCh9::CDC_SET_LINE_CODING:
+        case CDC_SET_LINE_CODING:
             ep0->recv((uint8_t*)&m_line_coding, 7, true); //rx 7 bytes,
             ep0->send((uint8_t*)&m_line_coding, 0, true); //tx status
             return true;
-        case UsbCh9::CDC_GET_LINE_CODING:
+        case CDC_GET_LINE_CODING:
             ep0->send((uint8_t*)&m_line_coding, 7, true); //tx line coding,
             ep0->recv((uint8_t*)&m_line_coding, 0, true); //rx status
             return true;
-        case UsbCh9::CDC_SET_CONTROL_LINE_STATE:
+        case CDC_SET_CONTROL_LINE_STATE:
             ep0->send((uint8_t*)&m_line_coding, 0, true);//no data, tx status
             return true;
     }

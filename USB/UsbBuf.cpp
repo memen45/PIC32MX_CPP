@@ -1,9 +1,9 @@
 #include <cstdint>
 #include "UsbBuf.hpp"
+#include <cstring>  //memset
 
 uint32_t UsbBuf::m_status = 0;
 uint8_t UsbBuf::m_buffer64[m_buffer64_n][64] = {0};
-uint8_t UsbBuf::m_buffer512[512] = {0};
 
 //=============================================================================
     uint8_t*        UsbBuf::get64           ()
@@ -19,15 +19,6 @@ uint8_t UsbBuf::m_buffer512[512] = {0};
 }
 
 //=============================================================================
-    uint8_t*        UsbBuf::get512          ()
-//=============================================================================
-{
-    if(m_status bitand (1<<31)) return 0;
-    m_status or_eq (1<<31);
-    return m_buffer512;
-}
-
-//=============================================================================
     void        UsbBuf::release             (uint8_t* p)
 //=============================================================================
 {
@@ -37,9 +28,6 @@ uint8_t UsbBuf::m_buffer512[512] = {0};
         m_status and_eq compl i;                //match, set to not inuse
         return;
     }
-    if(p >= &m_buffer512[0] and p <= &m_buffer512[511]){
-        m_status and_eq compl (1<<31);
-    }
 }
 
 //=============================================================================
@@ -47,10 +35,7 @@ uint8_t UsbBuf::m_buffer512[512] = {0};
 //=============================================================================
 {
     m_status = 0;
-    //clear everything (really only need to clear .status)
+    //clear everything (really only need to clear m_status)
     //takes <20us/kb @24MHz
-    for(auto& i : m_buffer512) i = 0;
-    for(auto& i : m_buffer64){
-        for(auto& ii : i) ii = 0;
-    }
+    memset(m_buffer64, 0, sizeof(m_buffer64));
 }
