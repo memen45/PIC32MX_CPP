@@ -170,6 +170,55 @@ struct Led12 {
 
 };
 
+bool cdc_notify(UsbEP* ep);
+
+struct UsbTest {
+
+    Pins sw3{ Pins::C4, Pins::INPU }; //turn on usb
+    Pins sw1{ Pins::B9, Pins::INPU }; //turn off usb
+    Pins sw2{ Pins::C10, Pins::INPU }; //xmit data
+
+    UsbCdcAcm cdc;
+
+    Delay sw_debounce;
+    Delay dly;
+
+    char buf[64];
+    bool ison = false;
+    bool xmit = false;
+
+    bool notify(UsbEP* ep){
+        static uint8_t count = 0;
+        if(count >= 50){
+            count = 0;
+            dly.set_ms(5000);
+            return true;
+        }
+        Rtcc::datetime_t dt = Rtcc::datetime();
+        snprintf(buf, 64, "[%02d] %02d-%02d-%04d %02d:%02d:%02d %s  ",count,
+                dt.month, dt.day, dt.year+2000, dt.hour12, dt.minute, dt.second,
+                dt.pm ? "PM" : "AM");
+        if(cdc.send((uint8_t*)buf, strlen(buf), cdc_notify)) count++;
+        return true;
+    }
+
+    void update(){
+        if(sw3.ison()){
+            if(not ison) ison = cdc.init(true);
+        }
+        if(sw1.ison()){
+            if(ison) ison = cdc.init(false);
+        }
+        if(sw2.ison() and sw_debounce.expired()){
+            xmit = not xmit;
+            sw_debounce.set_ms(1000);
+        }
+        if(ison and xmit and dly.expired()) notify(0);
+    }
+};
+UsbTest utest;
+//helper- need 'plain' function for callback
+bool cdc_notify(UsbEP* ep){ return utest.notify(ep); }
 
 int main()
 {
@@ -195,44 +244,9 @@ int main()
     Led12 led12;
 
 printf("starting...\r\n");
-//trying my usb code
-Delay::wait_s(2);
-Pins sw3{ Pins::C4, Pins::INPU }; //turn on usb
-Pins sw1{ Pins::B9, Pins::INPU }; //turn off usb
-Pins sw2{ Pins::C10, Pins::INPU }; //xmit data
-
-Delay dly;
-dly.set_ms(1000);
-
-char buf[64];
-
-bool ison = false;
-bool xmit = false;
-UsbCdcAcm cdc;
 
 for(;;){
-    if(sw3.ison()){
-        ison = cdc.init(true);
-        Delay::wait_ms(500);
-    }
-    if(sw1.ison()){
-        ison = cdc.init(false);
-        Delay::wait_ms(500);
-    }
-    if(sw2.ison()){
-        xmit = not xmit;
-        Delay::wait_ms(200);
-    }
-    if(ison and dly.expired()){
-        dly.restart();
-
-        dt = Rtcc::datetime();
-        snprintf(buf, 64, "%02d-%02d-%04d %02d:%02d:%02d %s  ",
-                dt.month, dt.day, dt.year+2000, dt.hour12, dt.minute, dt.second,
-                dt.pm ? "PM" : "AM");
-        if(xmit) cdc.send((uint8_t*)buf, strlen(buf));
-    }
-    Wdt::reset(), led12.update(), rgb.update();
+    Wdt::reset(), led12.update(), rgb.update(), utest.update();
 }
 
 }

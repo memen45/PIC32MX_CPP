@@ -1,0 +1,24 @@
+NOTES
+
+
+files used-
+    (in same folder as all other hardware driver files)
+    Usb.hpp/cpp         usb hardware driver, bdt table
+
+    (in USB folder)
+    UsbCh9.hpp          mostly usb ch9 enums, also SetupPkt_t
+    UsbBuf.hpp/cpp      a number of 64byte memory buffers
+                        can use to get memory instead of heap
+    UsbISR.cpp          usb ISR routine
+    UsbEP.hpp/cpp       endpoint class, handles endpoint data
+                        (also UsbEP0 derived class, with a few changes)
+    UsbCentral.hpp/cpp  central usb file where ISR calls, and where
+                        calls made to endpoints via the current registered
+                        configuration, also gets descriptor info from the
+                        same registered configuration
+
+    UsbCdcAcm.hpp/cpp   device file for cdc- includes cdc descriptor and cdc
+                        specific functions
+                        the app only needs to communicate with this file
+
+
