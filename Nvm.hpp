@@ -6,7 +6,7 @@
 
 /*
     all done from flash, so check of wr for completion is not made
-    (cpu is halted until done, no need)
+    (cpu is halted until done, so no need)
 
     return values
     0= no error, 1= low voltage error, 2= write error
