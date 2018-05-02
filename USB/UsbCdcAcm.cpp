@@ -92,15 +92,15 @@ static const uint8_t        m_ep_txrx_num = 2;
 //line coding- just store what pc wants, also return if wanted
 using line_coding_t = struct {
     uint32_t baud;
-    uint8_t stop_bits; //0-1,1=1.5,2=2
-    uint8_t parity; //none=0,even, odd, mark, space
-    uint8_t data_bits; //5,6,7,8,16
+    uint8_t stop_bits;  //0-1,1=1.5,2=2
+    uint8_t parity;     //none=0,even, odd, mark, space
+    uint8_t data_bits;  //5,6,7,8,16
 };
 static line_coding_t        m_line_coding = {115200, 0, 0, 8};
 
 //private
 //=============================================================================
-    static bool    ep0_request                 (UsbEP0* ep0)
+    static bool    ep0_request          (UsbEP0* ep0)
 //=============================================================================
 {
     switch(ep0->setup_pkt.wRequest){
@@ -115,13 +115,12 @@ static line_coding_t        m_line_coding = {115200, 0, 0, 8};
         case UsbCh9::CDC_SET_CONTROL_LINE_STATE:
             ep0->send((uint8_t*)&m_line_coding, 0, true);//no data, tx status
             return true;
-            break;
     }
     return false; //unhandled
 }
 
 //=============================================================================
-    static bool        service      (uint8_t ustat, UsbEP0* ep0)
+    static bool    service              (uint8_t ustat, UsbEP0* ep0)
 //=============================================================================
 {
     //check for reset
@@ -131,7 +130,7 @@ static line_coding_t        m_line_coding = {115200, 0, 0, 8};
         return true;
     }
 
-    //ustat = ep<5:2>|dir<1>|even/odd<0>
+    //ustat = ep<5:2> dir<1> even/odd<0>
     uint8_t n = ustat>>2;
 
     //handle tx/rx
@@ -160,14 +159,12 @@ printf("UsbCdcAcm init(%d)\r\n", tf);
     bool    UsbCdcAcm::send  (uint8_t* buf, uint16_t siz, UsbEP::notify_t f)
 //=============================================================================
 {
-    if(m_ep_txrx.send_busy()) return false;
-    return m_ep_txrx.send(buf, siz, f);
+    return m_ep_txrx.send_busy() ? false : m_ep_txrx.send(buf, siz, f);
 }
 
 //=============================================================================
     bool    UsbCdcAcm::recv  (uint8_t* buf, uint16_t siz, UsbEP::notify_t f)
 //=============================================================================
 {
-    if(m_ep_txrx.recv_busy()) return false;
-    return m_ep_txrx.recv(buf, siz, f);
+    return m_ep_txrx.recv_busy() ? false : m_ep_txrx.recv(buf, siz, f);
 }
