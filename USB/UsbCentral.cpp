@@ -28,11 +28,12 @@ uint8_t                     UsbCentral::current_config = 1; //config 1
     void detach()
 //=============================================================================
 {
-    Usb usb; UsbBuf buf; Irq irq;
+    Usb usb; Irq irq; UsbBuf ubuf;
 
     irq.on(irq.USB, false);             //usb irq off
     usb.reset();                        //usb regs to reset state
-    buf.init();                         //reclaim/clear buffers
+    ubuf.init();                        //reclaim/clear buffers
+
     //reset all endpoints in case was in the middle of something
     ep0.reset(ep0.TX);
     ep0.reset(ep0.RX);
