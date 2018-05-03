@@ -189,26 +189,25 @@ struct UsbTest {
 
     bool notify(UsbEP* ep){
         static uint8_t count = 0;
+        dly.set_ms(5000); //set when called
+        if(not ep) count = 0;
         if(count >= 50){
             count = 0;
-            dly.set_ms(5000);
-            return true;
+            return true; //stop, let delay start us again (update)
         }
+
         Rtcc::datetime_t dt = Rtcc::datetime();
         snprintf(buf, 64, "[%02d] %02d-%02d-%04d %02d:%02d:%02d %s  ",count,
                 dt.month, dt.day, dt.year+2000, dt.hour12, dt.minute, dt.second,
                 dt.pm ? "PM" : "AM");
-        if(cdc.send((uint8_t*)buf, strlen(buf), cdc_notify)) count++;
+        while(not cdc.send((uint8_t*)buf, strlen(buf), cdc_notify));
+        count++;
         return true;
     }
 
     void update(){
-        if(sw3.ison()){
-            if(not ison) ison = cdc.init(true);
-        }
-        if(sw1.ison()){
-            if(ison) ison = cdc.init(false);
-        }
+        if(sw3.ison() and not ison) ison = cdc.init(true);
+        if(sw1.ison() and ison) ison = cdc.init(false);
         if(sw2.ison() and sw_debounce.expired()){
             xmit = not xmit;
             sw_debounce.set_ms(1000);
@@ -217,7 +216,7 @@ struct UsbTest {
     }
 };
 UsbTest utest;
-//helper- need 'plain' function for callback
+//helper- need static function for callback
 bool cdc_notify(UsbEP* ep){ return utest.notify(ep); }
 
 int main()
@@ -232,7 +231,7 @@ int main()
     osc.tun_auto(true);                     //let sosc tune frc
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 18, 4, 30, 0, 16, 48, 0} );
+    if(dt.year == 0) Rtcc::datetime( { 18, 5, 2, 0, 22, 33, 0} );
 
     Rtcc::on(true);
 

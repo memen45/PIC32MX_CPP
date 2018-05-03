@@ -220,8 +220,11 @@ printf("UsbEP::service   ustat: %d  ep: %d  pid: %d  bdt: %08x\r\n",
         m_tx.zlp = 0;                   //clear zlp flag
         setup(m_tx);                    //and setup for tx (btogo is 0)
     } else if(m_tx.notify){             //no more, check if notify set
-        m_tx.notify(this);              //call notify callback
-        m_tx.notify = 0;                //was called, so clear it
+        notify_t f = m_tx.notify;       //need to copy
+        m_tx.notify = 0;                //then clear it
+        f(this);                        //call notify callback
+        //clear notify before called, as callback may setup new xfer with
+        //another callback (else we will clear the new callback)
     }
 }
 
@@ -243,8 +246,11 @@ printf("UsbEP::service   ustat: %d  ep: %d  pid: %d  bdt: %08x\r\n",
         m_rx.buf += m_rx.stat.count;    //adjust buffer address
         setup(m_rx);                    //and setup for next rx
     } else if(m_rx.notify){             //no more to do, check if notify set
-        m_rx.notify(this);              //call notify callback
-        m_rx.notify = 0;                //was called, so clear it
+        notify_t f = m_rx.notify;       //need to copy
+        m_rx.notify = 0;                //then clear it
+        f(this);                        //call notify callback
+        //clear notify before called, as callback may setup new xfer with
+        //another callback (else we will clear the new callback)
     }
 }
 
