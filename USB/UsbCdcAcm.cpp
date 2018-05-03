@@ -91,6 +91,7 @@ static UsbEP                m_ep_state;  //ep1 = serial state
 static const uint8_t        m_ep_state_num = 1;
 static UsbEP                m_ep_txrx;   //ep2 = tx/rx
 static const uint8_t        m_ep_txrx_num = 2;
+static bool                 m_is_active = false;
 
 //line coding- just store what pc wants, also return if wanted
 using line_coding_t = struct {
@@ -168,7 +169,8 @@ enum SETUP_WREQUEST_CDC {
 //=============================================================================
 {
 printf("UsbCdcAcm init(%d)\r\n", tf);
-    return UsbCentral::set_device(m_descriptor, tf ? service : 0);
+    m_is_active = UsbCentral::set_device(m_descriptor, tf ? service : 0);
+    return m_is_active;
 }
 
 //=============================================================================
@@ -183,4 +185,11 @@ printf("UsbCdcAcm init(%d)\r\n", tf);
 //=============================================================================
 {
     return m_ep_txrx.recv_busy() ? false : m_ep_txrx.recv(buf, siz, f);
+}
+
+//=============================================================================
+    bool    UsbCdcAcm::is_active        ()
+//=============================================================================
+{
+    return m_is_active;
 }
