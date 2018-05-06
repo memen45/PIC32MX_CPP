@@ -189,19 +189,18 @@ struct UsbTest {
 
     bool notify(UsbEP* ep){
         static uint8_t count = 0;
-        dly.set_ms(5000); //set when called
-        if(not ep) count = 0;
-        if(count >= 50){
+        if(count >= 10){
+            dly.set_ms(5000); //set when called
             count = 0;
-            return true; //stop, let delay start us again (update)
+            return true;
         }
-
+        dly.set_ms(2);
         Rtcc::datetime_t dt = Rtcc::datetime();
-        snprintf(buf, 64, "[%02d] %02d-%02d-%04d %02d:%02d:%02d %s  ",count,
+        snprintf(buf, 64, "%s[%02d] %02d-%02d-%04d %02d:%02d:%02d %s\r\n",
+                count ? "" : "\r\n", count,
                 dt.month, dt.day, dt.year+2000, dt.hour12, dt.minute, dt.second,
                 dt.pm ? "PM" : "AM");
-        while(not cdc.send((uint8_t*)buf, strlen(buf), cdc_notify));
-        count++;
+        if(cdc.send((uint8_t*)buf, strlen(buf))) count++;
         return true;
     }
 
@@ -219,6 +218,7 @@ UsbTest utest;
 //helper- need static function for callback
 bool cdc_notify(UsbEP* ep){ return utest.notify(ep); }
 
+
 int main()
 {
     //just get/store resets cause (not used here,though)
@@ -231,7 +231,7 @@ int main()
     osc.tun_auto(true);                     //let sosc tune frc
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 18, 5, 2, 0, 22, 33, 0} );
+    if(dt.year == 0) Rtcc::datetime( { 18, 5, 5, 0, 19, 12, 0} );
 
     Rtcc::on(true);
 
