@@ -45,13 +45,4 @@ struct Nvm {
     enum BOOTP : uint16_t { PAGE0 = 1<<8, PAGE1 = 1<<9, PAGE2 = 1<<10 };
     static void     boot_protect    (BOOTP, bool); //true=lock until reset
 
-    private:
-
-    static uint8_t  unlock          ();
-    static void     lock            (uint8_t);
-    static void     do_wr           ();
-    static void     do_op           (uint8_t);
-    static void     address         (uint32_t);
-    static uint8_t  error           ();
-
 };

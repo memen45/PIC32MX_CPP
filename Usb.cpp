@@ -260,7 +260,7 @@ Pins vbus_pin(Usb::vbus_pin_n, Pins::INPD);
 }
 
 //=============================================================================
-    volatile Usb::bdt_t*    Usb::bdt_addr           (uint8_t n, bool trx, bool eveodd)
+    volatile Usb::bdt_t*    Usb::bdt_addr  (uint8_t n, bool trx, bool eveodd)
 //=============================================================================
 {
     if(n > max_endpoint) return 0;          //invalid endpoint

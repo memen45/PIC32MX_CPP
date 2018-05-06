@@ -97,11 +97,17 @@ printf("\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",usb.frame(),ustat);
         return; //no flags passed in when ustat is passed in, so done here
     }
 
-    if(flags bitand usb.T1MSEC)     timer1ms++;
+    if(flags bitand usb.T1MSEC){
+        timer1ms++;
+        //check if physically detached (every ms), if so detach
+        //no auto reattach, so app will need to take care of reattach
+        if(not Usb::vbus_ison()) init(false);
+    }
     if(flags bitand usb.SOF)        sof_count++;
     if(flags bitand usb.RESUME)     usb.irq(usb.RESUME, false);
     if(flags bitand usb.IDLE)       usb.irq(usb.RESUME, true); //idle (>3ms)
     if(flags bitand usb.URST)       init(true);
+
 }
 
 //=============================================================================
