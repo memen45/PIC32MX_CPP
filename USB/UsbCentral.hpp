@@ -46,11 +46,19 @@ struct UsbCentral {
     //service- call registered service (m_service)
     static bool             service         (uint8_t ustat, UsbEP0* = 0);
 
+    //get 1ms timer count, sof count
+    static uint32_t         timer1ms        ();
+    static uint32_t         sofcount        ();
+
 
     private:
 
     //specific device info
     static const uint8_t*   m_descriptor;
     static service_t        m_service;
+
+    //counters
+    static uint32_t         m_timer1ms;
+    static uint32_t         m_sofcount;
 
 };

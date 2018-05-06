@@ -10,8 +10,6 @@
 
 //private vars
 //-----------------------------------------------------------------------------
-uint32_t                    timer1ms = 0;
-uint32_t                    sof_count = 0;
 UsbEP0                      ep0;
 //-----------------------------------------------------------------------------
 
@@ -20,6 +18,8 @@ UsbEP0                      ep0;
 const uint8_t*              UsbCentral::m_descriptor = 0;
 UsbCentral::service_t       UsbCentral::m_service = 0;
 uint8_t                     UsbCentral::current_config = 1; //config 1
+uint32_t                    UsbCentral::m_timer1ms = 0;
+uint32_t                    UsbCentral::m_sofcount = 0;
 //=============================================================================
 
 
@@ -45,8 +45,6 @@ uint8_t                     UsbCentral::current_config = 1; //config 1
 {
     Usb usb; Irq irq;
 
-    timer1ms = 0;                       //reset 1ms timer
-    sof_count = 0;                      //and sof count
     usb.power(usb.USBPWR, true);        //power on (also inits bdt table)
     ep0.init();                         //endpoint 0 init here
     UsbCentral::service(0xFF);          //others, 0xFF=reset endpoint
@@ -70,6 +68,8 @@ printf("\r\n\r\nUsbCentral::init(%d)\r\n",tf);
     if(wason) Delay::wait_ms(200);      //if was already on, wait a bit
     //if no vbus pin voltage or tf=false (wanted only detach)
     if(not Usb::vbus_ison() or not tf) return false;
+    m_timer1ms = 0;                     //reset 1ms timer
+    m_sofcount = 0;                     //and sof count
     attach();
     return true;                        //true=attached
 }
@@ -96,12 +96,12 @@ printf("\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",usb.frame(),ustat);
     }
 
     if(flags bitand usb.T1MSEC){
-        timer1ms++;
+        m_timer1ms++;
         //check if physically detached (every ms), if so detach
         //no auto reattach, so app will need to take care of reattach
         if(not Usb::vbus_ison()) init(false);
     }
-    if(flags bitand usb.SOF)        sof_count++;
+    if(flags bitand usb.SOF)        m_sofcount++;
     if(flags bitand usb.RESUME)     usb.irq(usb.RESUME, false);
     if(flags bitand usb.IDLE)       usb.irq(usb.RESUME, true); //idle (>3ms)
     if(flags bitand usb.URST)       init(true);
@@ -240,3 +240,20 @@ printf("\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",usb.frame(),ustat);
     return ret;
 }
 
+//=============================================================================
+// get 1ms timer count
+//=============================================================================
+    uint32_t    UsbCentral::timer1ms        ()
+//=============================================================================
+{
+    return m_timer1ms;
+}
+
+//=============================================================================
+// get sof count
+//=============================================================================
+    uint32_t    UsbCentral::sofcount        ()
+//=============================================================================
+{
+    return m_sofcount;
+}
