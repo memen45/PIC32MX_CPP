@@ -98,35 +98,35 @@ struct Pins {
     Pins(RPN, IOMODE = AIN);
 
     //r/w pins
-    bool        pinval          () const;
-    bool        latval          () const;
-    void        latval          (bool) const;
-    uint16_t    adcval          () const;
-    void        low             () const;
-    void        high            () const;
-    void        invert          () const;
-    void        on              () const;
-    void        off             () const;
-    bool        ison            () const;
+    bool        pinval          ();
+    bool        latval          ();
+    void        latval          (bool);
+    uint16_t    adcval          ();
+    void        low             ();
+    void        high            ();
+    void        invert          ();
+    void        on              ();
+    void        off             ();
+    bool        ison            ();
 
     //pin modes
     void        lowison         (bool);
-    void        digital_in      () const;
-    void        analog_in       () const;
-    void        digital_out     () const;
-    void        odrain          (bool) const;
-    void        pullup          (bool) const;
-    void        pulldn          (bool) const;
+    void        digital_in      ();
+    void        analog_in       ();
+    void        digital_out     ();
+    void        odrain          (bool);
+    void        pullup          (bool);
+    void        pulldn          (bool);
 
     //icn
-    void        icn             (bool) const;
-    void        icn_rising      () const;
-    void        icn_falling     () const;
-    void        icn_risefall    () const;
-    void        icn_mismatch    () const;
-    bool        icn_flag        () const;
-    bool        icn_stat        () const;
-    void        icn_flagclr     () const;
+    void        icn             (bool);
+    void        icn_rising      ();
+    void        icn_falling     ();
+    void        icn_risefall    ();
+    void        icn_mismatch    ();
+    bool        icn_flag        ();
+    bool        icn_stat        ();
+    void        icn_flagclr     ();
 
     //pps
     enum PPSIN : uint8_t {
