@@ -41,7 +41,7 @@ if(flags bitand (compl (usb.T1MSEC bitor usb.SOF))){
             usb.flags_clr(usb.TRN);         //clear trn flag after getting stat
         }
 
-        //do after trn, because if more than 1 trn in sie, sub irq will set
+        //do after trn, because if more than 1 trn in sie, usb irq will set
         //again after previous trn flag cleared
         irq.flag_clr(irq.USB);              //clear usb irq flag
 
