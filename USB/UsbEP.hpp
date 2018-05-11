@@ -67,6 +67,7 @@ struct UsbEP {
 
 };
 
+//endpoint 0 specific
 struct UsbEP0 : public UsbEP {
 
     void    init        ();

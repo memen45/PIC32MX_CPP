@@ -5,10 +5,22 @@
 /*
     general buffers for usb - can get/release as needed
     fixed size - 64bytes
-    given as a uint8_t* (returns 0 is none available)
+    given as a uint8_t* (returns 0 if none available)
 
     send pointer back to release() to give up the buffer
-    (any pointer address inside the buffer)
+    (any pointer address inside the buffer will work)
+
+    UsbBuf::init() will be called when usb attached/detached
+    which clears buffers and status
+
+
+    examples-
+
+    uint8_t* mybuffer = UsbBuf::get64();
+    if(mybuffer){ is good  } else { none available }
+
+    UsbBuf::release(mybuffer);
+    mybuffer = 0;
 
 */
 
