@@ -18,21 +18,21 @@
     Usb usb; Irq irq;
 
     do { //until no more usb irq flag
-
         uint32_t flags = usb.flags();       //get all flags
-        flags and_eq (compl usb.TRN);       //mask trn, will handle below
+        flags and_eq (compl usb.TRN);       //mask out trn, will handle below
 
+//debug
 //ignore t1msec,sof flag for debug printf
 if(flags bitand (compl (usb.T1MSEC bitor usb.SOF))){
-printf("\r\nISR  all flags: %08x", flags);
+    printf("\r\nISR  all flags: %08x", flags);
 }
         usb.flags_clr(flags);               //clear all flags we found
-        irq.flag_clr(irq.USB);              //clear usb irq flag
         flags and_eq usb.irqs();            //need only flags with irq enabled
 
+//debug
 //now show masked flags
 if(flags bitand (compl (usb.T1MSEC bitor usb.SOF))){
-printf("  flags: %08x\r\n",flags);
+    printf("  flags: %08x\r\n",flags);
 }
 
         while(usb.flag(usb.TRN)){           //first do all TRN
@@ -41,9 +41,13 @@ printf("  flags: %08x\r\n",flags);
             usb.flags_clr(usb.TRN);         //clear trn flag after getting stat
         }
 
-        UsbCentral::service(flags, 0xFF);   //now do other flags, ustat=0xFF
+        //do after trn, because if more than 1 trn in sie, sub irq will set
+        //again after previous trn flag cleared
+        irq.flag_clr(irq.USB);              //clear usb irq flag
 
+        UsbCentral::service(flags, 0xFF);   //now do other flags, ustat=0xFF
 
     } while(irq.flag(irq.USB)); //check if irq set again before leaving isr
 
 }
+
