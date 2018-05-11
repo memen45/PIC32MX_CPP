@@ -76,23 +76,22 @@ printf("\r\n\r\nUsbCentral::init(%d)\r\n",tf);
 
 //=============================================================================
 // called from UsbISR with irq flags which were set (and had irq enabled)
-// or ustat- if ustat == 0xFF, no TRN
-// TRN's are done first before flags, mainly so debugging will print trn info
-// before something like a reset is handled
 //=============================================================================
     void        UsbCentral::service     (uint32_t flags, uint8_t ustat)
 //=============================================================================
 {
     Usb usb;
 
-    if(ustat != 0xFF){
+    if(flags bitand usb.TRN){
+        //enable reset irq when any trn flags start arriving
+        //so we only worry about reset irq when needed
+        usb.irq(usb.URST, true);
 printf("\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",usb.frame(),ustat);
-        if(ustat < 4){                  //endpoint 0
-            if(not ep0.service(ustat))  //if not std request
+        if(ustat < 4){                  //endpoint 0 (ustat 0-3)
+            if(not ep0.service(ustat))  //if std request not handled
                 UsbCentral::service(ustat, &ep0); //let others try
         }
-        else UsbCentral::service(ustat);
-        return; //no flags passed in when ustat is passed in, so done here
+        else UsbCentral::service(ustat);//not endpoint 0
     }
 
     if(flags bitand usb.T1MSEC){
