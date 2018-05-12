@@ -5,7 +5,7 @@
 #include "Usb.hpp"
 
 #include <cstring> //strlen
-#include <cstdio> //debug printf
+//#include <cstdio> //debug printf
 
 //uint16_t-> byte, byte
 #define BB(v) v bitand 0xFF, v >> 8
@@ -52,7 +52,7 @@ static const uint8_t m_descriptor[] = {
     5, 36, 6, 0, 1,         //union comm id=0, data id=1
     5, 36, 1, 0, 1,         //call management
 
-    //endpoint  //8,0 = 0x0008
+    //endpoint
     7, UsbCh9::ENDPOINT, UsbCh9::IN1, UsbCh9::INTERRUPT, BB(8), 2,
 
     //interface1
@@ -95,10 +95,10 @@ static bool                 m_is_active = false;
 
 //line coding- just store what pc wants, also return if wanted
 using line_coding_t = struct {
-    uint32_t baud;
-    uint8_t stop_bits;  //0-1,1=1.5,2=2
-    uint8_t parity;     //none=0,even, odd, mark, space
-    uint8_t data_bits;  //5,6,7,8,16
+    uint32_t    baud;
+    uint8_t     stop_bits;  //0-1,1=1.5,2=2
+    uint8_t     parity;     //none=0,even, odd, mark, space
+    uint8_t     data_bits;  //5,6,7,8,16
 };
 static line_coding_t        m_line_coding = {115200, 0, 0, 8};
 
@@ -168,7 +168,6 @@ enum SETUP_WREQUEST_CDC {
     bool        UsbCdcAcm::init         (bool tf)
 //=============================================================================
 {
-printf("UsbCdcAcm init(%d)\r\n", tf);
     m_is_active = UsbCentral::set_device(m_descriptor, tf ? service : 0);
     return m_is_active;
 }
