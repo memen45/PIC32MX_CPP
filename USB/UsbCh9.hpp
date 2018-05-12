@@ -6,7 +6,8 @@
 
 struct UsbCh9 {
 
-    //DeviceDescriptor_t.bDescriptorType
+    //DeviceDescriptor
+    //bDescriptorType
     enum DESCRIPTOR_TYPE {
         DEVICE = 1,
         CONFIGURATION,
@@ -19,27 +20,29 @@ struct UsbCh9 {
         OTG //9
     };
 
-    //ConfigurationDescriptor_t.bmAttributes
+    //ConfigurationDescriptor
+    //bmAttributes
     enum CONFIGURATION_ATTRIBUTES {
         REQUIRED = 0x80,
         SELFPOWER = REQUIRED|0x40,
         REMOTEWAKE = REQUIRED|0x20
     };
 
-    //EndpointDescriptor_t.bEndpointAddress
+    //EndpointDescriptor
+    //bEndpointAddress
     enum ENDPOINT_ADDRESS {
         OUT0 = 0, OUT1, OUT2, OUT3, OUT4, OUT5, OUT6, OUT7,
         OUT8, OUT9, OUT10, OUT11, OUT12, OUT13, OUT14, OUT15,
         IN0 = 128, IN1, IN2, IN3, IN4, IN5, IN6, IN7,
         IN8, IN9, IN10, IN11, IN12, IN13, IN14, IN15,
     };
-    //EndpointDescriptor_t.bmAttributes
+    //bmAttributes
     enum ENDPOINT_ATTRIBUTES {
         CONTROL = 0, ISOCHRONOUS, BULK, INTERRUPT,
         ISONOSYNC = 0, ISOASYNC = 1<<2, ISOADAPT = 2<<2, ISOSYNC = 3<<2,
         ISODATA = 0, ISOFEEDBACK = 1<<4, ISOIMPFEEDBACK = 2<<4
     };
-    //EndpointDescriptor_t.wMaxPacketSize
+    //wMaxPacketSize
     enum ENDPOINT_PACKETSIZE {
         INT_LSMAX = 8, INT_FSMAX = 64,
         ISO_FSMAX = 1023,
