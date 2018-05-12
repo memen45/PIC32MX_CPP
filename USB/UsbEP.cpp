@@ -1,7 +1,6 @@
 #include "UsbEP.hpp"
 #include "UsbCh9.hpp"
 #include "Usb.hpp"
-#include "UsbBuf.hpp"
 #include "Reg.hpp"
 #include "UsbCentral.hpp"
 

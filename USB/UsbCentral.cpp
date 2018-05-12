@@ -1,6 +1,5 @@
 #include "UsbCentral.hpp"
 #include "Usb.hpp"
-#include "UsbBuf.hpp"
 #include "Irq.hpp"
 #include "UsbEP.hpp"
 #include "Delay.hpp"
@@ -27,11 +26,10 @@ uint32_t                    UsbCentral::m_sofcount = 0;
     void detach()
 //-----------------------------------------------------------------------------
 {
-    Usb usb; Irq irq; UsbBuf ubuf;
+    Usb usb; Irq irq;
 
     irq.on(irq.USB, false);             //usb irq off
     usb.reset();                        //usb regs to reset state
-    ubuf.init();                        //reclaim/clear buffers
 
     //reset all endpoints in case was in the middle of something
     ep0.reset(ep0.TX);
