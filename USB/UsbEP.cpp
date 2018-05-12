@@ -149,7 +149,8 @@
     if(x.bdt[i].stat.uown) i xor_eq 1;      //already in use, try next
     if(x.bdt[i].stat.uown) return false;    //both in use, cannot do
 
-printf("%s %s %d (%d)\r\n",
+    //DEBUG
+    printf("%s %s %d (%d)\r\n",
        &x == &m_tx ? "TX" : "RX",i ? "ODD" : "EVEN",x.btogo,x.epsiz);
 
     volatile Usb::ctrl_t ctrl = {0};
@@ -176,7 +177,8 @@ printf("%s %s %d (%d)\r\n",
     x.ppbi xor_eq 1;                                    //toggle ppbi
     x.d01 xor_eq 1;                                     //toggle d01
 
-printf("UsbEP::service   ustat: %d  ep: %d  pid: %d  bdt: %08x\r\n",
+    //DEBUG
+    printf("UsbEP::service   ustat: %d  ep: %d  pid: %d  bdt: %08x\r\n",
        ustat,m_epnum,x.stat.pid,x.stat.val32);
 
     if(x.stat.pid == UsbCh9::OUT)       service_out();  //out (rx)
@@ -270,7 +272,6 @@ static uint8_t              ep0rxbuf[64] = {0};
     //callbacks are UsbEP, cast to UsbEP0 in this case
     UsbEP0* ep0 = (UsbEP0*)ep;
     Usb::dev_addr(ep0->setup_pkt.wValue);  //set usb address
-printf("set_address: %d\r\n",ep0->setup_pkt.wValue);
     return true;
 }
 
@@ -300,9 +301,10 @@ printf("set_address: %d\r\n",ep0->setup_pkt.wValue);
     //stall flag
     bool stall = false;
 
-
-printf("pkt: $1%04x %04x %04x %04x$7\r\n",
-       ep0->setup_pkt.wRequest,ep0->setup_pkt.wValue,ep0->setup_pkt.wIndex,ep0->setup_pkt.wLength);
+    //DEBUG
+    printf("pkt: $1%04x %04x %04x %04x$7\r\n",
+       ep0->setup_pkt.wRequest,ep0->setup_pkt.wValue,
+       ep0->setup_pkt.wIndex,ep0->setup_pkt.wLength);
 
     //process std req
     //pkt.wRequest, wValue, wIndex, wLength
@@ -414,8 +416,9 @@ printf("pkt: $1%04x %04x %04x %04x$7\r\n",
     // and data01, and gets bdt stat)
     if(UsbEP::service(ustat)) return true;
 
-info_t& x = ustat bitand 2 ? m_tx : m_rx; //tx or rx
-printf("UsbEP0::service   ustat: %d  ep: %d  pid: %d  bdt: %08x\r\n",
+    //DEBUG
+    info_t& x = ustat bitand 2 ? m_tx : m_rx; //tx or rx
+    printf("UsbEP0::service   ustat: %d  ep: %d  pid: %d  bdt: %08x\r\n",
        ustat,m_epnum,x.stat.pid,x.stat.val32);
 
     //ep0 setup packet

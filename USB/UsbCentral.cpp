@@ -60,7 +60,9 @@ uint32_t                    UsbCentral::m_sofcount = 0;
     bool        UsbCentral::init         (bool tf)
 //=============================================================================
 {
-printf("\r\n\r\nUsbCentral::init(%d)\r\n",tf);
+    //DEBUG
+    printf("\r\n\r\nUsbCentral::init(%d)\r\n",tf);
+
     bool wason = Usb::power(Usb::USBPWR);
     detach();
     if(wason) Delay::wait_ms(200);      //if was already on, wait a bit
@@ -84,7 +86,10 @@ printf("\r\n\r\nUsbCentral::init(%d)\r\n",tf);
         //enable reset irq when any trn flags start arriving
         //so we only worry about reset irq when needed
         usb.irq(usb.URST, true);
-printf("\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",usb.frame(),ustat);
+
+        //DEBUG
+        printf("\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",usb.frame(),ustat);
+
         if(ustat < 4){                  //endpoint 0 (ustat 0-3)
             if(not ep0.service(ustat))  //if std request not handled
                 UsbCentral::service(ustat, &ep0); //let others try

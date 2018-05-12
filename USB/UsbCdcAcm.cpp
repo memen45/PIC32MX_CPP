@@ -7,10 +7,12 @@
 #include <cstring> //strlen
 //#include <cstdio> //debug printf
 
+//sorry, 2 defines here
 //uint16_t-> byte, byte
 #define BB(v) v bitand 0xFF, v >> 8
 //string header (size, type)
 #define SHDR(v) (strlen(v)*2+2), UsbCh9::STRING
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
