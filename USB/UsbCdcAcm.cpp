@@ -10,7 +10,7 @@
 //constexpr function to get first char of stringified macro arg
 constexpr char char0(const char* str){ return str[0]; }
 //uint16_t-> byte, byte - any word (2bytes) in descriptor, use W(word)
-#define W(v) v bitand 0xFF, v >> 8
+#define W(v) (uint8_t)v, v >> 8
 //wide char, use char0 function to get first char of stringified arg
 #define _(x) char0(#x), 0
 //for strings descriptor type, use SD(_(s),_(t),_(r),_(i),_(n),_(g))
@@ -116,18 +116,21 @@ static line_coding_t        m_line_coding = {115200, 0, 0, 8};
 
 //SetupPkt_t.wRequest  (bRequest<<8|bmRequestType)
 enum SETUP_WREQUEST_CDC {
-    CDC_SEND_ENCAP_COMMAND = 0x0021,
-    CDC_GET_ENCAP_RESPONSE = 0x0121,
-    CDC_SET_COMM_FEATURE = 0x0221,
-    CDC_GET_COMM_FEATURE = 0x0321,
-    CDC_CLEAR_COMM_FEATURE = 0x0421,
-    CDC_SET_LINE_CODING = 0x2021,
-    CDC_GET_LINE_CODING = 0x2121,
-    CDC_SET_CONTROL_LINE_STATE = 0x2221,
-    CDC_SEND_BREAK = 0x2321
+    CDC_SEND_ENCAP_COMMAND =        0x0021,
+    CDC_GET_ENCAP_RESPONSE =        0x0121,
+    CDC_SET_COMM_FEATURE =          0x0221,
+    CDC_GET_COMM_FEATURE =          0x0321,
+    CDC_CLEAR_COMM_FEATURE =        0x0421,
+    CDC_SET_LINE_CODING =           0x2021,
+    CDC_GET_LINE_CODING =           0x2121,
+    CDC_SET_CONTROL_LINE_STATE =    0x2221,
+    CDC_SEND_BREAK =                0x2321
 };
 //-----------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
+// we take care of endpoint 0 rx/tx here (if for us), but endpoint 0 will
+// take care of next setup rx
 //-----------------------------------------------------------------private-----
     static bool ep0_request (UsbEP0* ep0)
 //-----------------------------------------------------------------------------
