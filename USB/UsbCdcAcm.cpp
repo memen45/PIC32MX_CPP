@@ -19,6 +19,7 @@ constexpr char char0(const char* str){ return str[0]; }
                     UsbCh9::STRING,                     /*type*/            \
                     __VA_ARGS__                         /*wide char data*/
 
+
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 // USER CREATED DESCRIPTOR DATA STARTS HERE
@@ -31,7 +32,7 @@ static const uint8_t m_descriptor[] = {
 
     //==== device descriptor ====
 
-    18,                 //length(always)
+    18,                 //length(always 18)
     UsbCh9::DEVICE,     //1
     W(0x0101),          //0x0200 //(bcd) usb 1.1 (prevent unneeded inquiries)
     2,                  //class (CDC device)
