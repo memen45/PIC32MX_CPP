@@ -4,16 +4,20 @@
 #include "UsbCentral.hpp"
 #include "Usb.hpp"
 
-#include <cstring> //strlen
 //#include <cstdio> //debug printf
 
-//sorry, 2 defines here
-//uint16_t-> byte, byte
-#define BB(v) v bitand 0xFF, v >> 8
-//string header (size, type)
-#define SHDR(v) (strlen(v)*2+2), UsbCh9::STRING
-
-
+//sorry, a few defines here to make descriptor construction a little easier
+//constexpr function to get first char of stringified macro arg
+constexpr char char0(const char* str){ return str[0]; }
+//uint16_t-> byte, byte - any word (2bytes) in descriptor, use W(word)
+#define W(v) v bitand 0xFF, v >> 8
+//wide char, use char0 function to get first char of stringified arg
+#define _(x) char0(#x), 0
+//for strings descriptor type, use SD(_(s),_(t),_(r),_(i),_(n),_(g))
+//_(x) will expand to a single char, 0 (so no single quotes needed)
+#define SD(...)     (sizeof((char[]){__VA_ARGS__}))+2,  /*total length*/    \
+                    UsbCh9::STRING,                     /*type*/            \
+                    __VA_ARGS__                         /*wide char data*/
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -24,59 +28,65 @@
 
 //CDC-ACM
 static const uint8_t m_descriptor[] = {
+
+    //==== device descriptor ====
+
     18,                 //length(always)
     UsbCh9::DEVICE,     //1
-    BB(0x0101),         //0x0200 //(bcd) usb 1.1 (prevent unneeded inquiries)
+    W(0x0101),          //0x0200 //(bcd) usb 1.1 (prevent unneeded inquiries)
     2,                  //class (CDC device)
     0,                  //subclass
     0,                  //protocol
     64,                 //max ep0 packet size (IN/OUT same)
-    BB(0x04D8),         //VID
-    BB(0x000A),         //PID
-    BB(0x0100),         //(bcd) release number
+    W(0x04D8),          //VID
+    W(0x000A),          //PID
+    W(0x0100),          //(bcd) release number
     1,                  //string index- manufacturer
     2,                  // -product
     0,                  // -serial number
     1,                  //#of configurations
 
+
     //==== config 1 ====
 
-    //total size of this configuration (2 bytes) after CONFIGURATION
-    9, UsbCh9::CONFIGURATION, BB((9+9+5+4+5+5+7+9+7+7)), 2, 1, 0,
+    //total size of this configuration is after ::CONFIGURATION-
+    //just add up the descripter header lengths (first column
+    //number, up to start of strings section)
+    9, UsbCh9::CONFIGURATION, W((9+9+5+4+5+5+7+9+7+7)), 2, 1, 0,
         UsbCh9::SELFPOWER, 50,
 
     //interface0
     9, UsbCh9::INTERFACE, 0, 0, 1, 2, 2, 1, 0,
 
     //cdc descriptors
-    5, 36, 0, BB(0x110),    //cdc header
+    5, 36, 0, W(0x110),    //cdc header
     4, 36, 2, 0,            //acm, the last is D0|D1|D2|D3- don't need
     5, 36, 6, 0, 1,         //union comm id=0, data id=1
     5, 36, 1, 0, 1,         //call management
 
     //endpoint
-    7, UsbCh9::ENDPOINT, UsbCh9::IN1, UsbCh9::INTERRUPT, BB(8), 2,
+    7, UsbCh9::ENDPOINT, UsbCh9::IN1, UsbCh9::INTERRUPT, W(8), 2,
 
     //interface1
     9, UsbCh9::INTERFACE, 1, 0, 2, 10, 0, 0, 0,
 
     //endpoint
-    7, UsbCh9::ENDPOINT, UsbCh9::OUT2, UsbCh9::BULK, BB(64), 0,
+    7, UsbCh9::ENDPOINT, UsbCh9::OUT2, UsbCh9::BULK, W(64), 0,
 
     //endpoint
-    7, UsbCh9::ENDPOINT, UsbCh9::IN2, UsbCh9::BULK, BB(64), 0,
+    7, UsbCh9::ENDPOINT, UsbCh9::IN2, UsbCh9::BULK, W(64), 0,
+
 
     //==== strings ====
 
-    4, UsbCh9::STRING, 9, 4, //language 0x0409
+    SD(W(0x0409)),                              //language 0x0409
 
-    SHDR("PIC32MM"),
-        'P',0,'I',0,'C',0,'3',0,'2',0,'M',0,'M',0, //manufacturer
+    SD(_(P),_(I),_(C),_(3),_(2),_(M),_(M)),     //manufacturer (idx 1)
 
-    SHDR("CDC-ACM"),
-        'C',0,'D',0,'C',0,'-',0,'A',0,'C',0,'M',0,  //product
+    SD(_(C),_(D),_(C),_(-),_(A),_(C),_(M)),     //product (idx 2)
 
     0 //end of descriptor marker - NEED to know where descriptor ends
+      //since we iterrate over descriptor in our desciptor functions
 };
 
 
