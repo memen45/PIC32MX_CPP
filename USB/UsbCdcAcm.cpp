@@ -15,11 +15,10 @@ constexpr char char0(const char* str){ return str[0]; }
 #define W(v) (uint8_t)(v), (v) >> 8
 
 // to wide char (uses char0 function to get first char of stringified arg)
-// _(Z) -> 'Z', 0
+// _(Z) -> 'Z', 0  (so no single quotes needed)
 #define _(x) char0(#x), 0
 
 // for string descriptor type, use SD(_(s),_(t),_(r),_(i),_(n),_(g))
-// _(A) will expand to 'A', 0  (so no single quotes needed)
 #define SD(...) (sizeof((char[]){__VA_ARGS__}))+2,      /*total length*/    \
                 UsbCh9::STRING,                         /*type*/            \
                 __VA_ARGS__                             /*wide char data*/
@@ -33,7 +32,7 @@ constexpr char char0(const char* str){ return str[0]; }
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-// USER CREATED DESCRIPTOR DATA STARTS HERE
+// USER CREATED DESCRIPTOR STARTS HERE
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -62,12 +61,13 @@ static const uint8_t m_descriptor[] = {
     //==== config 1 ====
 
     CD(
-        //configuration (9, UsbCh9::CONFIGURATION, total size done by macro)
+        //(9, UsbCh9::CONFIGURATION, total size -> done by macro)
+        //configuration
         2,                      //number of interfaces
         1,                      //this configuration number
         0,                      //string index for this config
         UsbCh9::SELFPOWER,      //self-powered and remote-wakup
-        50,                     //bus power required in 2ma units
+        50,                     //bus power required, in 2ma units
 
         //interface0
         9, UsbCh9::INTERFACE, 0, 0, 1, 2, 2, 1, 0,
@@ -142,6 +142,7 @@ enum SETUP_WREQUEST_CDC {
     CDC_SEND_BREAK =                0x2321
 };
 //-----------------------------------------------------------------------------
+
 
 //-----------------------------------------------------------------------------
 // we take care of endpoint 0 rx/tx here (if for us), but endpoint 0 will
