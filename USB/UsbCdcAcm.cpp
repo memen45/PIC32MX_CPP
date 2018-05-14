@@ -62,6 +62,7 @@ static const uint8_t m_descriptor[] = {
     //==== config 1 ====
 
     CD(
+        //configuration (9, UsbCh9::CONFIGURATION, total size done by macro)
         2,                      //number of interfaces
         1,                      //this configuration number
         0,                      //string index for this config
