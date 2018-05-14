@@ -6,18 +6,29 @@
 
 //#include <cstdio> //debug printf
 
-//sorry, a few defines here to make descriptor construction a little easier
-//constexpr function to get first char of stringified macro arg
+// sorry, a few defines here to make descriptor construction a little easier
+
+// constexpr function to get first char of stringified macro arg
 constexpr char char0(const char* str){ return str[0]; }
-//uint16_t-> byte, byte - any word (2bytes) in descriptor, use W(word)
-#define W(v) (uint8_t)v, v >> 8
-//wide char, use char0 function to get first char of stringified arg
+
+// word -> byte, byte - any word (2bytes) in descriptor, use W(word)
+#define W(v) (uint8_t)(v), (v) >> 8
+
+// to wide char (uses char0 function to get first char of stringified arg)
+// _(Z) -> 'Z', 0
 #define _(x) char0(#x), 0
-//for strings descriptor type, use SD(_(s),_(t),_(r),_(i),_(n),_(g))
-//_(x) will expand to a single char, 0 (so no single quotes needed)
-#define SD(...)     (sizeof((char[]){__VA_ARGS__}))+2,  /*total length*/    \
-                    UsbCh9::STRING,                     /*type*/            \
-                    __VA_ARGS__                         /*wide char data*/
+
+// for string descriptor type, use SD(_(s),_(t),_(r),_(i),_(n),_(g))
+// _(A) will expand to 'A', 0  (so no single quotes needed)
+#define SD(...) (sizeof((char[]){__VA_ARGS__}))+2,      /*total length*/    \
+                UsbCh9::STRING,                         /*type*/            \
+                __VA_ARGS__                             /*wide char data*/
+
+// for configuration descriptor type
+#define CD(...) 9,                                      /*size of config*/  \
+                UsbCh9::CONFIGURATION,                  /*type*/            \
+                W((sizeof((uint8_t[]){__VA_ARGS__}))+4),/*total length*/    \
+                __VA_ARGS__                             /*data*/
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -50,33 +61,35 @@ static const uint8_t m_descriptor[] = {
 
     //==== config 1 ====
 
-    //total size of this configuration is after ::CONFIGURATION-
-    //just add up the descripter header lengths (first column
-    //number, up to start of strings section)
-    9, UsbCh9::CONFIGURATION, W((9+9+5+4+5+5+7+9+7+7)), 2, 1, 0,
-        UsbCh9::SELFPOWER, 50,
+    CD(
+        2,                      //number of interfaces
+        1,                      //this configuration number
+        0,                      //string index for this config
+        UsbCh9::SELFPOWER,      //self-powered and remote-wakup
+        50,                     //bus power required in 2ma units
 
-    //interface0
-    9, UsbCh9::INTERFACE, 0, 0, 1, 2, 2, 1, 0,
+        //interface0
+        9, UsbCh9::INTERFACE, 0, 0, 1, 2, 2, 1, 0,
 
-    //cdc descriptors
-    5, 36, 0, W(0x110),    //cdc header
-    4, 36, 2, 0,            //acm, the last is D0|D1|D2|D3- don't need
-    5, 36, 6, 0, 1,         //union comm id=0, data id=1
-    5, 36, 1, 0, 1,         //call management
+        //cdc descriptors
+        5, 36, 0, W(0x110),     //cdc header
+        4, 36, 2, 0,            //acm, the last is D0|D1|D2|D3- don't need
+        5, 36, 6, 0, 1,         //union comm id=0, data id=1
+        5, 36, 1, 0, 1,         //call management
 
-    //endpoint
-    7, UsbCh9::ENDPOINT, UsbCh9::IN1, UsbCh9::INTERRUPT, W(8), 2,
+        //endpoint
+        7, UsbCh9::ENDPOINT, UsbCh9::IN1, UsbCh9::INTERRUPT, W(8), 2,
 
-    //interface1
-    9, UsbCh9::INTERFACE, 1, 0, 2, 10, 0, 0, 0,
+        //interface1
+        9, UsbCh9::INTERFACE, 1, 0, 2, 10, 0, 0, 0,
 
-    //endpoint
-    7, UsbCh9::ENDPOINT, UsbCh9::OUT2, UsbCh9::BULK, W(64), 0,
+        //endpoint
+        7, UsbCh9::ENDPOINT, UsbCh9::OUT2, UsbCh9::BULK, W(64), 0,
 
-    //endpoint
-    7, UsbCh9::ENDPOINT, UsbCh9::IN2, UsbCh9::BULK, W(64), 0,
+        //endpoint
+        7, UsbCh9::ENDPOINT, UsbCh9::IN2, UsbCh9::BULK, W(64), 0
 
+    ), //end CD (configuration descriptor)
 
     //==== strings ====
 
