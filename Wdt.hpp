@@ -6,13 +6,13 @@
 
 struct Wdt {
 
-    static auto
+        static auto
     reset () -> void;
 
-    static auto
+        static auto
     on (bool) -> void;
 
-    static auto
+        static auto
     window_on (bool) -> void;
 
 };

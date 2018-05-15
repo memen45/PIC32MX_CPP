@@ -8,7 +8,8 @@ struct UsbCh9 {
 
     //DeviceDescriptor
     //bDescriptorType
-    enum DESCRIPTOR_TYPE {
+        enum
+    DESCRIPTOR_TYPE {
         DEVICE = 1,
         CONFIGURATION,
         STRING,
@@ -22,7 +23,8 @@ struct UsbCh9 {
 
     //ConfigurationDescriptor
     //bmAttributes
-    enum CONFIGURATION_ATTRIBUTES {
+        enum
+    CONFIGURATION_ATTRIBUTES {
         REQUIRED = 0x80,
         SELFPOWER = REQUIRED|0x40,
         REMOTEWAKE = REQUIRED|0x20
@@ -30,20 +32,23 @@ struct UsbCh9 {
 
     //EndpointDescriptor
     //bEndpointAddress
-    enum ENDPOINT_ADDRESS {
+        enum
+    ENDPOINT_ADDRESS {
         OUT0 = 0, OUT1, OUT2, OUT3, OUT4, OUT5, OUT6, OUT7,
         OUT8, OUT9, OUT10, OUT11, OUT12, OUT13, OUT14, OUT15,
         IN0 = 128, IN1, IN2, IN3, IN4, IN5, IN6, IN7,
         IN8, IN9, IN10, IN11, IN12, IN13, IN14, IN15,
     };
     //bmAttributes
-    enum ENDPOINT_ATTRIBUTES {
+        enum
+    ENDPOINT_ATTRIBUTES {
         CONTROL = 0, ISOCHRONOUS, BULK, INTERRUPT,
         ISONOSYNC = 0, ISOASYNC = 1<<2, ISOADAPT = 2<<2, ISOSYNC = 3<<2,
         ISODATA = 0, ISOFEEDBACK = 1<<4, ISOIMPFEEDBACK = 2<<4
     };
     //wMaxPacketSize
-    enum ENDPOINT_PACKETSIZE {
+        enum
+    ENDPOINT_PACKETSIZE {
         INT_LSMAX = 8, INT_FSMAX = 64,
         ISO_FSMAX = 1023,
         BULK_FSMAX = 64, BULK_FSLARGE = 32,
@@ -64,7 +69,8 @@ struct UsbCh9 {
     };
 
     //SetupPkt_t.wRequest  (bRequest<<8|bmRequestType)
-    enum SETUP_WREQUEST {
+        enum
+    SETUP_WREQUEST {
         DEV_GET_STATUS = 0x0080, DEV_CLEAR_FEATURE = 0x0100,
         DEV_SET_FEATURE = 0x0300, DEV_SET_ADDRESS = 0x0500,
         DEV_GET_DESCRIPTOR = 0x0680, DEV_SET_DESCRIPTOR = 0x0700,
@@ -78,7 +84,8 @@ struct UsbCh9 {
         EP_SET_FEATURE = 0x0302, EP_SYNC_HFRAME = 0x1202,
     };
     //SetupPkt_t.bRequest
-    enum SETUP_BREQUEST {
+        enum
+    SETUP_BREQUEST {
         GET_STATUS = 0x00, CLEAR_FEATURE = 0x01,
         SET_FEATURE = 0x03, SET_ADDRESS = 0x05,
         GET_DESCRIPTOR = 0x06, SET_DESCRIPTOR = 0x07,
@@ -90,7 +97,8 @@ struct UsbCh9 {
         SYNC_HFRAME = 0x12
     };
 
-    enum TOKEN_TYPE {
+        enum
+    TOKEN_TYPE {
         OUT = 1, IN = 9, SETUP = 13
     };
 

@@ -18,7 +18,8 @@
 
 struct Nvm {
 
-    enum MEM : uint32_t {
+        enum
+    MEM : uint32_t {
         BASEMEM = 0x9D000000,
         PAGESIZE = 512*4, //512words, 2048bytes
         ROWSIZE = 64*4, //64words, 256bytes
@@ -37,20 +38,21 @@ struct Nvm {
 
     };
 
-    static auto
+        static auto
     write_2word (uint32_t, uint32_t, uint32_t) -> uint8_t;
 
-    static auto
+        static auto
     write_row (uint32_t, uint32_t) -> uint8_t; //src,dst
 
-    static auto
+        static auto
     page_erase (uint32_t) -> uint8_t;
 
-    static auto
+        static auto
     write_protect (uint32_t, bool) -> void; //true=lock until reset
 
-    enum BOOTP : uint16_t { PAGE0 = 1<<8, PAGE1 = 1<<9, PAGE2 = 1<<10 };
-    static auto
+        enum
+    BOOTP : uint16_t { PAGE0 = 1<<8, PAGE1 = 1<<9, PAGE2 = 1<<10 };
+        static auto
     boot_protect (BOOTP, bool) -> void; //true=lock until reset
 
 };

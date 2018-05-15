@@ -7,39 +7,42 @@
 struct Timer23 {
 
     //instantiate with timer number
-    enum TMR23 { TMR2, TMR3 };
+        enum
+    TMR23 { TMR2, TMR3 };
     Timer23(TMR23);
 
-    auto
+        auto
     count (uint32_t) -> void;
 
-    auto
+        auto
     count () -> uint32_t;
 
-    auto
+        auto
     period (uint32_t) -> void;
 
-    auto
+        auto
     period () -> uint32_t;
 
-    auto
+        auto
     on (bool) -> void;
 
-    auto
+        auto
     stop_idle (bool) -> void;
 
-    auto
+        auto
     gate (bool) -> void;
 
-    enum PRESCALE { PS1, PS2, PS4, PS8, PS16, PS32, PS64, PS256 };
-    auto
+        enum
+    PRESCALE { PS1, PS2, PS4, PS8, PS16, PS32, PS64, PS256 };
+        auto
     prescale (PRESCALE) -> void;
 
-    auto
+        auto
     mode32 (bool) -> void; //T2 only (harmless for T3)
 
-    enum CLK { PBCLK, T2CK };
-    auto
+        enum
+    CLK { PBCLK, T2CK };
+        auto
     clk_src (CLK) -> void;
 
 

@@ -7,69 +7,75 @@
 struct Ccp  {
 
     //instantiate Ccp with CCPn
-    enum CCPX {
+        enum
+    CCPX {
         CCP1, CCP2, CCP3, CCP4, CCP5, CCP6, CCP7, CCP8, CCP9
     };
     Ccp(CCPX);
 
     //CCPxCON1
 
-    enum OPOSTSRC : bool { TMRIRQ, EVTTRG };
-    auto
+        enum
+    OPOSTSRC : bool { TMRIRQ, EVTTRG };
+        auto
     outscale_src (OPOSTSRC) -> void;
 
-    auto
+        auto
     retrigger (bool) -> void;
 
-    auto
+        auto
     outscale (uint8_t) -> void;
 
-    auto
+        auto
     trig_mode () -> void;
 
-    auto
+        auto
     sync_mode () -> void;
 
-    auto
+        auto
     oneshot (bool) -> void;
 
-    auto
+        auto
     sync_altout (bool) -> void;
 
-    enum SYNC : uint8_t {
+        enum
+    SYNC : uint8_t {
         PR = 0, MCCPME, MCCP1, SCCP2, SCCP3, INT0 = 9, INT1, INT2, INT3, INT4,
         SCCP8, SCCP9, CLC1, CLC2, CLC3, CLC4, COMP1 = 24, COMP2, COMP3, ADC,
         TMR = 31, TRIGSOFT = 31
     };
-    auto
+        auto
     sync_src (SYNC) -> void;
 
-    auto
+        auto
     on (bool) -> void;
 
-    auto
+        auto
     stop_idle (bool) -> void;
 
-    auto
+        auto
     run_sleep (bool) -> void;
 
-    auto
+        auto
     sync_tmr (bool) -> void;
 
-    enum CLKSEL : uint8_t {
+        enum
+    CLKSEL : uint8_t {
         SYSCLK = 0, REFO1, SOSC,
         CLC1MCCP1 = 3, CLC2MCCP2 = 3, CLC3MCCP3 = 3, CLC1SCCP4 = 3,
         CLC2SCCP5 = 3, CLC3SCCP6 = 3, CLC4SCCP7 = 3, CLC1SCCP8 = 3,
         CLC1SCCP9 = 3, TCKIB = 6, TCKIA = 7
     };
-    auto
+        auto
     clk_src (CLKSEL) -> void;
 
-    enum TMRPS : uint8_t { PS1, PS4, PS16, PS64 };
-    auto
+        enum
+    TMRPS : uint8_t { PS1, PS4, PS16, PS64 };
+        auto
     tmr_prescale (TMRPS) -> void;
 
-    enum MODE : uint8_t {
+        enum
+    MODE : uint8_t {
         //mode          <5>     <4>        <3:0>
         //name          t32     ccsel       mod
         //timer modes
@@ -100,45 +106,50 @@ struct Ccp  {
         CAP16RISE16 =   0<<5|   1<<4|       5,
         CAP16RISE32 =   1<<5|   1<<4|       5
     };
-    auto
+        auto
     mode (MODE) -> void;
 
     //CCPxCON2
 
-    auto
+        auto
     out_sync (bool) -> void;
 
-    enum OUTPINS : uint8_t {
+        enum
+    OUTPINS : uint8_t {
         OCF = 1<<5, OCE = 1<<4, OCD = 1<<3,
         OCC = 1<<2, OCB = 1<<1, OCA = 1<<0
     };
-    auto
+        auto
     out_pins (OUTPINS) -> void;
 
-    enum ICGSM : uint8_t { LEVEL, RISEON, FALLOFF  };
-    auto
+        enum
+    ICGSM : uint8_t { LEVEL, RISEON, FALLOFF  };
+        auto
     gate_mode (ICGSM) -> void;
 
-    enum AUXOUT : uint8_t { OFF, ROLLOVER, SIGNALOUT, CAPCOMPEVT };
-    auto
+        enum
+    AUXOUT : uint8_t { OFF, ROLLOVER, SIGNALOUT, CAPCOMPEVT };
+        auto
     out_aux (AUXOUT) -> void;
 
-    enum ICS : uint8_t {
+        enum
+    ICS : uint8_t {
         ICMX, ICOMP1, ICOMP2, ICOMP3, ICLC1, ICLC2, ICLC3, ICLC4
     };
-    auto
+        auto
     cap_src (ICS) -> void;
 
-    auto
+        auto
     pwm_restart (bool) -> void;
 
-    auto
+        auto
     gate_auto (bool) -> void;
 
-    auto
+        auto
     gate_now (bool) -> void;
 
-    enum GATEAUTOSRC : uint8_t {
+        enum
+    GATEAUTOSRC : uint8_t {
         OCFB = 1<<7, OCFA = 1<<6,
         CLC1_MCCP1 = 1<<5, CLC2_MCCP2 = 1<<5, CLC3_MCCP3 = 1<<5,
         CLC1_SCCP4 = 1<<5, CLC2_SCCP5 = 1<<5, CLC3_SCCP6 = 1<<5,
@@ -147,155 +158,158 @@ struct Ccp  {
         SCCP5_MCCP123 = 1<<3, MCCP2_SCCP4TO9 = 1<<4,
         COMP_3 = 1<<2, COMP_2 = 1<<1, COMP_1 = 1<<0
     };
-    auto
+        auto
     gate_autosrc (GATEAUTOSRC) -> void;
 
     //CCPxCON3
 
-    auto
+        auto
     out_trigwait (bool) -> void;
 
-    auto
+        auto
     oneshot_extend (uint8_t) -> void;
 
-    enum OUTM : uint8_t {
+        enum
+    OUTM : uint8_t {
         STEERABLE = 0, PUSHPULL, HALFBRIDGE, BRUSHREV = 4, BRUSHFWD, SCAN
     };
-    auto
+        auto
     out_mode (OUTM) -> void;
 
-    enum POLARITY : bool { ACTHIGH, ACTLOW };
-    auto
+        enum
+    POLARITY : bool { ACTHIGH, ACTLOW };
+        auto
     polarity_ace (POLARITY) -> void;
 
-    auto
+        auto
     polarity_bdf (POLARITY) -> void;
 
-    enum SHUTDOWN : uint8_t { HIGHIMP, INACTIVE, ACTIVE };
-    auto
+        enum
+    SHUTDOWN : uint8_t { HIGHIMP, INACTIVE, ACTIVE };
+        auto
     shutdown_ace (SHUTDOWN) -> void;
 
-    auto
+        auto
     shutdown_bdf (SHUTDOWN) -> void;
 
-    auto
+        auto
     dead_time (uint8_t) -> void;
 
     //CCPxSTAT
 
-    auto
+        auto
     pr16_busy () -> bool;
 
-    auto
+        auto
     tmr32_busy () -> bool;
 
-    auto
+        auto
     tmr16_busy () -> bool;
 
-    auto
+        auto
     compb_busy () -> bool;
 
-    auto
+        auto
     compa_busy () -> bool;
 
-    auto
+        auto
     gate_arm () -> void;
 
-    auto
+        auto
     stat_trig () -> bool;
 
-    auto
+        auto
     trig_set () -> void;
 
-    auto
+        auto
     trig_clr () -> void;
 
-    auto
+        auto
     stat_shutdown () -> bool;
 
-    auto
+        auto
     stat_secomp () -> bool;
 
-    auto
+        auto
     stat_capdis () -> bool;
 
-    auto
+        auto
     stat_oflow () -> bool;
 
-    auto
+        auto
     stat_bufany () -> bool;
 
     //CCPxTMR
 
-    auto
+        auto
     tmr16 (uint16_t) -> void;
 
-    auto
+        auto
     tmr16h (uint16_t) -> void;
 
-    auto
+        auto
     tmr32 (uint32_t) -> void;
 
-    auto
+        auto
     tmr16 () -> uint16_t;
 
-    auto
+        auto
     tmr16h () -> uint16_t;
 
-    auto
+        auto
     tmr32 () -> uint32_t;
 
     //CCPxPR
 
-    auto
+        auto
     pr16 (uint16_t) -> void;
 
-    auto
+        auto
     pr16h (uint16_t) -> void;
 
-    auto
+        auto
     pr32 (uint32_t) -> void;
 
-    auto
+        auto
     pr16 () -> uint16_t;
 
-    auto
+        auto
     pr16h () -> uint16_t;
 
-    auto
+        auto
     pr32 () -> uint32_t;
 
     //CCPxRA, CCPxRB
 
-    auto
+        auto
     compa (uint16_t) -> void;
 
-    auto
+        auto
     compb (uint16_t) -> void;
 
-    auto
+        auto
     comp32 (uint32_t) -> void;
 
-    auto
+        auto
     compa () -> uint16_t;
 
-    auto
+        auto
     compb () -> uint16_t;
 
-    auto
+        auto
     comp32 () -> uint32_t;
 
     //CCPxBUF
 
-    auto
+        auto
     buf16 () -> uint16_t;
 
-    auto
+        auto
     buf32 () -> uint32_t;
 
     //misc
 
-    auto
+        auto
     ccp_num () -> uint8_t;  //which ccp number am I
 
     private:

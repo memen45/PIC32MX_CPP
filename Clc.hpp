@@ -7,48 +7,51 @@
 struct Clc {
 
     //instantiate Clc with CLCn
-    enum CLCX { CLC1, CLC2, CLC3, CLC4 };
+        enum
+    CLCX { CLC1, CLC2, CLC3, CLC4 };
     Clc(CLCX);
 
-    enum GXPOL { G4 = 1<<19, G3 = 1<<18, G2 = 1<<17, G1 = 1<<16 };
-    auto
+        enum
+    GXPOL { G4 = 1<<19, G3 = 1<<18, G2 = 1<<17, G1 = 1<<16 };
+        auto
     gate_inv (GXPOL, bool) -> void;
 
-    auto
+        auto
     on (bool) -> void;
 
-    auto
+        auto
     stop_idle (bool) -> void;
 
-    auto
+        auto
     intp (bool) -> void;
 
-    auto
+        auto
     intn (bool) -> void;
 
-    auto
+        auto
     out (bool) -> void;
 
-    auto
+        auto
     out () -> bool;
 
-    auto
+        auto
     out_inv (bool) -> void;
 
-    enum MODE : uint8_t { ANDOR, ORXOR, AND, SR, DSR, DR, JKR, LSR };
-    auto
+        enum
+    MODE : uint8_t { ANDOR, ORXOR, AND, SR, DSR, DR, JKR, LSR };
+        auto
     mode (MODE e) -> void;
 
-    auto
+        auto
     in_sel (uint8_t, uint8_t) -> void;
 
-    auto
+        auto
     in_sel (uint32_t) -> void;
 
-    auto
+        auto
     gate_sel (uint8_t, uint8_t) -> void;
 
-    auto
+        auto
     gate_sel (uint32_t) -> void;
 
 

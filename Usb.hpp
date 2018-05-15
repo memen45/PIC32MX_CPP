@@ -55,13 +55,13 @@ struct Usb {
     static volatile bdt_t bdt_table[max_endpoint+1][2][2]
         __attribute__ ((aligned (512)));
 
-    static auto
+        static auto
     bdt_init() -> void;
 
     //vbus pin
     static const Pins::RPN vbus_pin_n = Pins::B6;
 
-    static auto
+        static auto
     vbus_ison() -> bool;
 
     //irq priority
@@ -88,7 +88,8 @@ struct Usb {
         eflag, eirq functions mirror above but are for error flags
     */
 
-    enum FLAGS : uint32_t {
+        enum
+    FLAGS : uint32_t {
         //U1OTGIR, U1OTGIE, U1OTGSTAT
         ID = 1<<23,
         T1MSEC = 1<<22,     /*no STAT*/
@@ -125,152 +126,169 @@ struct Usb {
         ALLIF = (STALL|ATTACH|RESUME|IDLE|TRN|SOF|UERR|URST)
     };
 
-    static auto
+        static auto
     flags () -> uint32_t;               //get all
 
-    static auto
+        static auto
     flag (FLAGS) -> bool;               //get one
 
-    static auto
+        static auto
     flags_clr (uint32_t) -> void;       //clear one or more
 
-    static auto
+        static auto
     irqs () -> uint32_t;                //get all
 
-    static auto
+        static auto
     irq (FLAGS) -> bool;                //get one
 
-    static auto
+        static auto
     irqs (uint32_t) -> void;            //set value (all)
 
-    static auto
+        static auto
     irq (FLAGS, bool) -> void;          //irq on/off
 
     //U1OTGSTAT
-    static auto
+
+        static auto
     otg_stat () -> uint32_t;            //get all
 
-    static auto
+        static auto
     otg_stat (FLAGS) -> bool;           //get one
 
     //U1OTGCON
-    enum OTG : uint8_t {
+
+        enum
+    OTG : uint8_t {
         DPPULUP = 1<<7, DMPULUP = 1<<6, DPPULWN = 1<<5, DMPULDWN = 1<<4,
         VBUSON = 1<<3, OTGEN = 1<<2, VBUSCHG = 1<<1, VBUSDIS = 1<<0
     };
-    static auto
+        static auto
     otg (OTG, bool) -> void;            //set one
 
-    static auto
+        static auto
     otg (uint8_t) -> void;              //set one or more
 
     //U1PWRC
-    //power(POWER);           -return POWER bit is set
-    //power(POWER, bool);     -set/clr specified POWER bit (true=on)
-    enum POWER : uint8_t {
+
+        enum
+    POWER : uint8_t {
         //U1PWRC
         UACTPND = 1<<7, USLPGRD = 1<<4, USBBUSY = 1<<3, USUSPEND = 1<<1,
         USBPWR = 1<<0
     };
-    static auto
+        static auto
     power (POWER) -> bool;              //get
 
-    static auto
-    power (POWER, bool) -> void;        //set
+        static auto
+    power (POWER, bool) -> void;        //set/clr
 
     //U1STAT
+
     //only valid when TOKEN flag set
     //value return is shifted right 2 bits, so can be used as bdt index
-    static auto
+        static auto
     stat () -> uint8_t;                 //U1STAT>>2
 
     //U1CON
-    enum CONTROL : uint8_t {
+
+        enum
+    CONTROL : uint8_t {
         JSTATE = 1<<7, SE0 = 1<<6, PKTDIS = 1<<5, TOKBUSY = 1<<5,
         USBRST = 1<<4, HOSTEN = 1<<3, RESUM = 1<<2, PPBRST = 1<<1,
         USBEN = 1<<0, SOFEN = 1<<0
     };
-    static auto
+        static auto
     control (CONTROL) -> bool;          //get one
 
-    static auto
+        static auto
     control (CONTROL, bool) -> void;    //set one
 
-    static auto
+        static auto
     control (uint8_t) -> void;          //set one or more
 
     //U1ADDR
-    static auto
+
+        static auto
     low_speed (bool) -> void;           //low speed
 
-    static auto
+        static auto
     dev_addr () -> uint8_t;             //get (0-127)
 
-    static auto
+        static auto
     dev_addr (uint8_t) -> void;         //set
 
     //U1FRML/U1FRMH
-    static auto
+
+        static auto
     frame () -> uint16_t;               //get frame number
 
     //U1TOK (host)
-    enum TOKPID : uint8_t { SETUP = 13<<4, IN = 9<<4, OUT = 1<<4 };
-    static auto
+
+        enum
+    TOKPID : uint8_t { SETUP = 13<<4, IN = 9<<4, OUT = 1<<4 };
+        static auto
     tok_pid (TOKPID) -> void;
 
-    static auto
+        static auto
     tok_ep (uint8_t) -> void;
 
     //U1SOF (host)
-    enum SOFVALS : uint8_t {
+
+        enum
+    SOFVALS : uint8_t {
         SOF64 = 74, SOF32 = 42, SOF16 = 26, SOF8 = 18
     };
-    static auto
+        static auto
     sof_cnt (SOFVALS) -> void;
 
     //U1BDTP1,2,3
-    static auto
+
+        static auto
     bdt_addr (uint32_t) -> void;        //set bdt table address
 
-    static auto
+        static auto
     bdt_addr (uint8_t = 0, bool = 0, bool = 0) -> volatile bdt_t*;
                                         //bdt table address (ep#,tx/rx,even/odd)
     //U1CNFG1
-    enum CONFIG : uint8_t {
+
+        enum
+    CONFIG : uint8_t {
         EYETEST = 1<<7, OEMON = 1<<6, SIDLE = 1<<4,
         LSDEV = 1<<3, AUTOSUSP = 1<<0
     };
-    static auto
+        static auto
     config (CONFIG, bool) -> void;      //set 1bit
 
-    static auto
+        static auto
     config (CONFIG) -> bool;            //get 1bit
 
-    static auto
+        static auto
     config (uint8_t) -> void;           //set reg val
 
     //U1EP0-15
-    //endpoint control register bits
-    enum EPCTRL {
+
+        enum
+    EPCTRL {
         LSPD = 1<<7,            /*HOST mode and U1EP0 only*/
         RETRYDIS = 1<<6,        /*HOST mode and U1EP0 only*/
         EPCONDIS = 1<<4,        /*only when TXEN=1 and RXEN=1*/
         EPRXEN = 1<<3, EPTXEN = 1<<2, EPSTALL = 1<<1, EPHSHK = 1<<0
     };
-    static auto
+        static auto
     epcontrol (uint8_t, EPCTRL, bool) -> void;  //set/clr 1bit
 
-    static auto
+        static auto
     epcontrol (uint8_t, EPCTRL) -> bool;        //get 1bit
 
-    static auto
+        static auto
     epcontrol (uint8_t, uint8_t) -> void;       //set byte
 
-    static auto
+        static auto
     epcontrol (uint8_t) -> uint8_t;             //get byte
 
     //misc
-    static auto
+
+        static auto
     reset () -> void;     //all writable regs to reset val
 
 };

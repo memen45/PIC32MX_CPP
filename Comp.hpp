@@ -7,41 +7,45 @@
 struct Comp {
 
     //instantiate Comp with comparator number
-    enum CMX { CMP1, CMP2, CMP3 };
+        enum
+    CMX { CMP1, CMP2, CMP3 };
     Comp(CMX);
 
-    auto
+        auto
     on (bool) -> void;
 
-    auto
+        auto
     out (bool) -> void;
 
-    auto
+        auto
     out_inv (bool) -> void;
 
-    auto
+        auto
     evt_bit () -> bool;
 
-    auto
+        auto
     out_bit (void) -> bool;
 
-    enum EVPOL { OFF, LH, HL, ANY };
-    auto
+        enum
+    EVPOL { OFF, LH, HL, ANY };
+        auto
     evt_sel (EVPOL) -> void;
 
-    auto
+        auto
     cref_cxina (bool) -> void;
 
-    enum CCH { CXINB, CXINC, CXIND, BGAP };
-    auto
+        enum
+    CCH { CXINB, CXINC, CXIND, BGAP };
+        auto
     ch_sel (CCH) -> void;
 
     //common for all instances
-    static auto
+        static auto
     stop_idle (bool) -> void;
 
-    enum CVREF { INT_BGAP, EXT_CVREF };
-    static auto
+        enum
+    CVREF { INT_BGAP, EXT_CVREF };
+        static auto
     cref_sel (CVREF) -> void;
 
 

@@ -7,7 +7,8 @@
 struct Pmd {
 
     //bit shift amount into 7 registers (PMD1-PMD7, 224 possible values)
-    enum PMD {
+        enum
+    PMD {
         ADC = 0, VREF = 12, HLVD = 20,                          //PMD1
         CMP1 = 32, CMP2 = 33, CMP3= 34,                         //PMD2
         CLC1 = 56, CLC2 = 57, CLC3 = 58, CLC4 = 59,
@@ -21,16 +22,16 @@ struct Pmd {
         DMA = 196                                               //PDM7
     };
 
-    static auto
+        static auto
     off (PMD) -> void;                  //single
 
-    static auto
+        static auto
     on (PMD) -> void;                   //single
 
-    static auto
+        static auto
     off (PMD*, uint8_t) -> void;        //array, size
 
-    static auto
+        static auto
     on (PMD*, uint8_t) -> void;         //array, size
 
 };

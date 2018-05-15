@@ -6,33 +6,35 @@
 
 struct Irq {
 
-    static auto
+        static auto
     global (bool) -> void;
 
-    static auto
+        static auto
     global () -> bool;
 
-    static auto
+        static auto
     proxtimer (uint8_t, uint32_t = 0) -> void;
 
-    enum EINTXPOL : bool { FALLING, RISING };
-    static auto
+        enum
+    EINTXPOL : bool { FALLING, RISING };
+        static auto
     eint4_pol (EINTXPOL) -> void;
 
-    static auto
+        static auto
     eint3_pol (EINTXPOL) -> void;
 
-    static auto
+        static auto
     eint2_pol (EINTXPOL) -> void;
 
-    static auto
+        static auto
     eint1_pol (EINTXPOL) -> void;
 
-    static auto
+        static auto
     eint0_pol (EINTXPOL) -> void;
 
     //irq vector numbers
-    enum IRQ_VN : uint8_t {
+        enum
+    IRQ_VN : uint8_t {
         CORE_TIMER = 0, CORE_SOFTWARE_0, CORE_SOFTWARE_1,
         EXTERNAL_0 = 3, EXTERNAL_1, EXTERNAL_2, EXTERNAL_3, EXTERNAL_4,
         CHANGE_NOTICE_A = 8, CHANGE_NOTICE_B, CHANGE_NOTICE_C, CHANGE_NOTICE_D,
@@ -74,16 +76,16 @@ struct Irq {
         ECCSB_ERR = 97,
         DMA0 = 98, DMA1, DMA2, DMA3 = 101
     };
-    static auto
+        static auto
     flag_clr (IRQ_VN) -> void;
 
-    static auto
+        static auto
     flag (IRQ_VN) -> bool;
 
-    static auto
+        static auto
     on (IRQ_VN, bool) -> void;
 
-    static auto
+        static auto
     init (IRQ_VN, uint8_t, uint8_t, bool) -> void;
 
     //to create a list (array) of irq's to init/enable
@@ -93,10 +95,10 @@ struct Irq {
         uint8_t s;      //sub-priority
         bool en;        //enable
     };
-    static auto
+        static auto
     init (irq_list_t*, uint8_t) -> void;
 
-    static auto
+        static auto
     shadow_set (uint8_t) -> void;
 
 };

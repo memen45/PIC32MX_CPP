@@ -10,58 +10,60 @@ struct UsbEP {
 
     using notify_t = bool(*)(UsbEP*);
 
-    enum TXRX : bool { RX, TX };
-    enum EVEODD : bool { EVEN, ODD };
+        enum
+    TXRX : bool { RX, TX };
+        enum
+    EVEODD : bool { EVEN, ODD };
 
-    auto
+        auto
     reset (TXRX, bool = false) -> void; //bool = save ppbi?
 
-    auto
+        auto
     init (uint8_t) -> void;
 
-    auto
+        auto
     service (uint8_t) -> bool;
 
-    auto
+        auto
     service_in () -> void;
 
-    auto
+        auto
     service_out () -> void;
 
-    auto
+        auto
     send (uint8_t*, uint16_t, notify_t = 0) -> bool;
 
-    auto
+        auto
     send (uint8_t*, uint16_t, bool, notify_t = 0) -> bool; //specify data01
 
-    auto
+        auto
     recv (uint8_t*, uint16_t, notify_t = 0) -> bool;
 
-    auto
+        auto
     recv (uint8_t*, uint16_t, bool, notify_t = 0) -> bool; //specify data01
 
-    auto
+        auto
     send_busy () -> bool;
 
-    auto
+        auto
     recv_busy () -> bool;
 
-    auto
+        auto
     send_stall () -> void;
 
-    auto
+        auto
     recv_stall () -> void;
 
-    auto
+        auto
     send_zlp () -> void;
 
-    auto
+        auto
     send_notify (notify_t) -> void;
 
-    auto
+        auto
     recv_notify (notify_t) -> void;
 
-    auto
+        auto
     takeback (TXRX) -> void;
 
 
@@ -81,27 +83,27 @@ struct UsbEP {
 
     private:
 
-    auto
+        auto
     setup (info_t&) -> bool;
 
-    auto
+        auto
     xfer (info_t&, uint8_t*, uint16_t, notify_t) -> bool;
 
     protected:
 
-    uint8_t m_epnum{0};         //endpoint number
-    info_t m_rx{0};
-    info_t m_tx{0};
+    uint8_t m_epnum{0};             //endpoint number
+    info_t  m_rx{0};
+    info_t  m_tx{0};
 
 };
 
 //endpoint 0 specific
 struct UsbEP0 : public UsbEP {
 
-    auto
+        auto
     init () -> void;
 
-    auto
+        auto
     service (uint8_t) -> bool;
 
     UsbCh9::SetupPkt_t setup_pkt;

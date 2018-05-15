@@ -21,69 +21,73 @@ struct Rtcc {
         bool pm;            //false=am, true=pm
     };
 
-    static auto
+        static auto
     alarm (bool) -> void;
 
-    static auto
+        static auto
     chime (bool) -> void;
 
-    enum AMASK : uint8_t {
+        enum
+    AMASK : uint8_t {
         HALFSEC, SECOND1, SECOND10, MINUTE1, MINUTE10,
         HOUR, DAY, WEEK, MONTH, YEAR
     };
-    static auto
+        static auto
     alarm_interval (AMASK) -> void;
 
-    static auto
+        static auto
     alarm_repeat (uint8_t) -> void;
 
-    static auto
+        static auto
     on (bool) -> void;
 
-    enum OUTSEL : uint8_t { ALMEVT, CLKSEC, CLKSRC, OFF };
-    static auto
+        enum
+    OUTSEL : uint8_t { ALMEVT, CLKSEC, CLKSRC, OFF };
+        static auto
     out_pin (OUTSEL) -> void;
 
-    static auto
+        static auto
     clk_div (uint16_t) -> void;
 
-    static auto
+        static auto
     clk_frdiv (uint8_t) -> void;
 
-    enum PS : uint8_t { PRE1, PRE16, PRE64, PRE256 };
-    static auto
+        enum
+    PS : uint8_t { PRE1, PRE16, PRE64, PRE256 };
+        static auto
     clk_pre (PS) -> void;
 
 
-    enum CLKSEL : uint8_t { SOSC, LPRC, PWRLPIN, FCY };
-    static auto
+        enum
+    CLKSEL : uint8_t { SOSC, LPRC, PWRLPIN, FCY };
+        static auto
     clk_src (CLKSEL) -> void;
 
-    static auto
+        static auto
     alarm_evt () -> bool;
 
-    static auto
+        static auto
     time_busy () -> bool;
 
-    static auto
+        static auto
     alarm_busy () -> bool;
 
-    static auto
+        static auto
     half_sec () -> bool;
 
-    static auto
+        static auto
     datetime () -> datetime_t;
 
-    static auto
+        static auto
     alarm_datetime () -> datetime_t;
 
-    static auto
+        static auto
     datetime (datetime_t) -> void;
 
-    static auto
+        static auto
     alarm_datetime (datetime_t) -> void;
 
-    static auto
+        static auto
     boot_datetime () -> datetime_t;
 
 
@@ -122,46 +126,46 @@ struct Rtcc {
         uint32_t w          :32;
     };
 
-    static auto
+        static auto
     time () -> time_t;
 
-    static auto
+        static auto
     date () -> date_t;
 
-    static auto
+        static auto
     alarm_time () -> time_t;
 
-    static auto
+        static auto
     alarm_date () -> date_t;
 
-    static auto
+        static auto
     time (time_t) -> void;
 
-    static auto
+        static auto
     date (date_t) -> void;
 
-    static auto
+        static auto
     alarm_time (time_t) -> void;
 
-    static auto
+        static auto
     alarm_date (date_t) -> void;
 
-    static auto
+        static auto
     unlock () -> void;
 
-    static auto
+        static auto
     lock () -> void;
 
-    static auto
+        static auto
     calc_weekday (date_t) -> uint8_t;
 
-    static auto
+        static auto
     dt_to_time (datetime_t) -> time_t;
 
-    static auto
+        static auto
     dt_to_date (datetime_t) -> date_t;
 
-    static auto
+        static auto
     dt_to_dt (date_t, time_t) -> datetime_t;
 
 

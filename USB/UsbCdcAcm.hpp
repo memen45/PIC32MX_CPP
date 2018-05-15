@@ -5,16 +5,16 @@
 
 struct UsbCdcAcm {
 
-    static auto
+        static auto
     init (bool) -> bool;
 
-    static auto
+        static auto
     send (uint8_t*, uint16_t, UsbEP::notify_t = 0) -> bool;
 
-    static auto
+        static auto
     recv (uint8_t*, uint16_t, UsbEP::notify_t = 0) -> bool;
 
-    static auto
+        static auto
     is_active () -> bool;
 
 };

@@ -6,26 +6,27 @@
 
 struct Vdetect {
 
-    static auto
+        static auto
     on (bool) -> void;
 
-    static auto
+        static auto
     stop_idle (bool) -> void;
 
-    static auto
+        static auto
     trip_above (bool) -> void;
 
-    static auto
+        static auto
     bgap_stable () -> bool;
 
-    static auto
+        static auto
     iref_stable () -> bool;
 
-    static auto
+        static auto
     tripped () -> bool;
 
     //voltage level limits
-    enum HLVDL {
+        enum
+    HLVDL {
         V325_363 = 5,
         V295_330,
         V275_309,
@@ -38,7 +39,7 @@ struct Vdetect {
         V200_222,
         VEXT
     };
-    static auto
+        static auto
     limit (HLVDL) -> void;
 
 };

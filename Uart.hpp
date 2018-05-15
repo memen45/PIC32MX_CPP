@@ -34,147 +34,153 @@ struct Uart  {
 
     //uxmode
 
-    auto
+        auto
     stop_sleep (bool) -> void;          //stop in sleep
 
-    auto
+        auto
     active () -> bool;                  //uart is active
 
-    enum CLKSEL { PBCLK, SYSCLK, FRC, REFO1 };
-    auto
+        enum
+    CLKSEL { PBCLK, SYSCLK, FRC, REFO1 };
+        auto
     clk_sel (CLKSEL) -> void;           //clock select
 
-    auto
+        auto
     oflow_stop (bool) -> void;          //stop on OERR
 
-    auto
+        auto
     on (bool) -> void;                  //uart on/off
 
-    auto
+        auto
     stop_idle (bool) -> void;           //uart stop in idle
 
-    auto
+        auto
     irda (bool) -> void;                //irda on/off
 
-    enum RTSMODE { FLOW, SIMPLEX };
-    auto
+        enum
+    RTSMODE { FLOW, SIMPLEX };
+        auto
     rts_mode (RTSMODE) -> void;         //rts mode
 
-    auto
+        auto
     wake (bool) -> void;                //wake on start bit
 
-    auto
+        auto
     loopback (bool) -> void;            //loopback on/off
 
-    auto
+        auto
     autobaud (bool) -> void;            //autobaud on/off
 
-    enum RXPOL { IDLEHIGH, IDLELOW };
-    auto
+        enum
+    RXPOL { IDLEHIGH, IDLELOW };
+        auto
     rx_pol (RXPOL) -> void;             //rx polarity
 
-    enum MODESEL {
+        enum
+    MODESEL {
          MODE8N1 = 0, MODE8E1 = 2, MODE8O1 = 4, MODE9N1 = 6,
          MODE8N2 = 1, MODE8E2 = 3, MODE8O2 = 5, MODE9N2 = 7
     };
-    auto
+        auto
     mode (MODESEL) -> void;             //parity, data, stop
 
     //uxsta
 
-    auto
+        auto
     rx_mask (uint8_t) -> void;          //address mask
 
-    auto
+        auto
     rx_addr (uint8_t) -> void;          //address
 
-    enum UTXISEL : uint8_t { TFREE, TDONE, TEMPTY };
-    auto
+        enum
+    UTXISEL : uint8_t { TFREE, TDONE, TEMPTY };
+        auto
     tx_irq (UTXISEL) -> void;           //tx irq select
 
-    auto
+        auto
     tx_pol (RXPOL) -> void;             //tx polarity
 
-    auto
+        auto
     rx_on (bool) -> void;               //rx enable
 
-    auto
+        auto
     tx_break () -> void;                //send break
 
-    auto
+        auto
     tx_on (bool) -> void;               //tx enable
 
-    auto
+        auto
     tx_full () -> bool;                 //tx buf is full
 
-    auto
+        auto
     tx_done () -> bool;                 //all tx bits are out
 
-    enum URXISEL : uint8_t { RANY, RHALF, RMOST };
-    auto
+        enum
+    URXISEL : uint8_t { RANY, RHALF, RMOST };
+        auto
     rx_irq (URXISEL) -> void;           //rx irq select
 
-    auto
+        auto
     rx_addren (bool) -> void;           //rx addr detect on
 
-    auto
+        auto
     rx_busy () -> bool;                 //rx busy (not idle)
 
-    auto
+        auto
     rx_perr () -> bool;                 //rx parity err
 
-    auto
+        auto
     rx_ferr () -> bool;                 //rx framing err
 
-    auto
+        auto
     rx_oerr () -> bool;                 //rx overrun err
 
-    auto
+        auto
     rx_empty () -> bool;                //rx is empty
 
     //uxtxreg
 
-    auto
+        auto
     write (uint16_t) -> void;           //put in tx register
 
     //uxrxreg
 
-    auto
+        auto
     read () -> uint16_t;                //get from rx register
 
     //uxbrg
 
-    auto
+        auto
     baud_set (uint32_t) -> void;        //set baud to value
 
-    auto
+        auto
     baud_set () -> void;                //recalc, or default
 
-    auto
+        auto
     baud_clk () -> uint32_t;            //get uart clock freq
 
     //misc
 
-    auto
+        auto
     putchar (const char) -> void;       //blocking functions
 
-    auto
+        auto
     puts (const char*) -> void;         //(no '\n', like fputs)
 
-    auto
+        auto
     getchar () -> int;                  // -1 = none
 
 
     private:
 
     //baud_set will take care of- if normal speed error >2%, then hispeed
-    auto
+        auto
     hispeed (bool) -> void;             //(true)4x or 16x
 
 
-    volatile uint32_t* m_uartx_base;
-    volatile uint32_t& m_uartx_tx;                  //use reference
-    volatile uint32_t& m_uartx_rx;                  //use reference
-    uint32_t m_uartx_baud;                          //desired baud
+    volatile uint32_t*  m_uartx_base;
+    volatile uint32_t&  m_uartx_tx;     //use reference
+    volatile uint32_t&  m_uartx_rx;     //use reference
+    uint32_t            m_uartx_baud;   //desired baud
 
 };

@@ -7,72 +7,75 @@
 struct I2c  {
 
     //instantiate I2c with i2c number
-    enum I2CX { I2C1, I2C2, I2C3 };
+        enum
+    I2CX { I2C1, I2C2, I2C3 };
     I2c(I2CX);
 
     //I2C1CON
 
-    auto
+        auto
     irq_stop (bool) -> void;             //irq enable on stop
 
-    auto
+        auto
     irq_start (bool) -> void;             //irq enable on start
 
-    auto
+        auto
     overwrite (bool) -> void;
 
-    enum HOLDTIM : bool { NS100, NS300 };
-    auto
+        enum
+    HOLDTIM : bool { NS100, NS300 };
+        auto
     hold_time (HOLDTIM) -> void;
 
-    auto
+        auto
     irq_collision (bool) -> void;
 
-    auto
+        auto
     on (bool) -> void;
 
-    auto
+        auto
     stop_idle (bool) -> void;
 
-    auto
+        auto
     clk_release (bool) -> void;
 
-    auto
+        auto
     strict (bool) -> void;
 
-    auto
+        auto
     addr_10bit (bool) -> void;
 
-    auto
+        auto
     slew_rate (bool) -> void; //0=true
 
-    auto
+        auto
     smb_levels (bool) -> void;
 
-    auto
+        auto
     irq_gencall (bool) -> void;
 
-    auto
+        auto
     clk_stretch (bool) -> void;
 
-    auto
+        auto
     ack (bool) -> void;
 
-    auto
+        auto
     rx (bool) -> void;
 
-    auto
+        auto
     stop (bool) -> void;
 
-    auto
+        auto
     repstart (bool) -> void;
 
-    auto
+        auto
     start (bool) -> void;
 
     //I2CXSTAT
 
-    enum STAT : uint16_t {
+        enum
+    STAT : uint16_t {
         ACK = 1<<15,
         TXBUSY = 1<<14,
         ACKTIM = 1<<13,
@@ -88,53 +91,54 @@ struct I2c  {
         RXFULL = 1<<1,
         TXFULL = 1<<0,
     };
-    auto
+        auto
     stat (STAT) -> bool;
 
-    auto
+        auto
     buscol_clr () -> void;
 
-    auto
+        auto
     txcol_clr () -> void;
 
-    auto
+        auto
     rxoflow_clr () -> void;
 
     //I2CXADDR
 
-    auto
+        auto
     addr (uint16_t) -> void;
 
     //I2CXMSK
 
-    auto
+        auto
     addr_mask (uint16_t) -> void;
 
     //I2CXBRG
 
-    enum I2CSPEED : uint32_t {
+        enum
+    I2CSPEED : uint32_t {
         KHZ100 = 100000, KHZ400 = 400000, MHZ1 = 1000000
     };
-    auto
+        auto
     speed (I2CSPEED) -> void;
 
-    auto
+        auto
     brg (uint16_t) -> void;
 
     //I2CXTRN
 
-    auto
+        auto
     write (uint8_t) -> void;
 
     //I2CXRCV
 
-    auto
+        auto
     read () -> uint8_t;
 
 
     private:
 
-    volatile uint32_t* m_i2cx_con;
-    I2CSPEED m_speed;
+    volatile uint32_t*  m_i2cx_con;
+    I2CSPEED            m_speed;
 
 };

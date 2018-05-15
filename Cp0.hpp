@@ -6,28 +6,28 @@
 
 struct Cp0 {
 
-    static auto
+        static auto
     count () -> uint32_t;
 
-    static auto
+        static auto
     compare () -> uint32_t;
 
-    static auto
+        static auto
     count (uint32_t) -> void;
 
-    static auto
+        static auto
     compare (uint32_t) -> void;
 
-    static auto
+        static auto
     compare_reload () -> void;
 
-    static auto
+        static auto
     compare_irq (bool) -> void;
 
-    static auto
+        static auto
     compare_us (uint32_t) -> void;
 
-    static auto
+        static auto
     compare_ms (uint16_t) -> void;
 
 };

@@ -148,7 +148,7 @@ enum SETUP_WREQUEST_CDC {
 // we take care of endpoint 0 rx/tx here (if for us), but endpoint 0 will
 // take care of next setup rx
 //-----------------------------------------------------------------private-----
-    static auto
+        static auto
     ep0_request (UsbEP0* ep0) -> bool
 //-----------------------------------------------------------------------------
 {
@@ -169,7 +169,7 @@ enum SETUP_WREQUEST_CDC {
 }
 
 //-----------------------------------------------------------------private-----
-    static auto
+        static auto
     service (uint8_t ustat, UsbEP0* ep0) -> bool
 //-----------------------------------------------------------------------------
 {
@@ -198,7 +198,7 @@ enum SETUP_WREQUEST_CDC {
 }
 
 //=============================================================================
-    auto UsbCdcAcm::
+        auto UsbCdcAcm::
     init (bool tf) -> bool
 //=============================================================================
 {
@@ -207,7 +207,7 @@ enum SETUP_WREQUEST_CDC {
 }
 
 //=============================================================================
-    auto UsbCdcAcm::
+        auto UsbCdcAcm::
     send (uint8_t* buf, uint16_t siz, UsbEP::notify_t f) -> bool
 //=============================================================================
 {
@@ -215,7 +215,7 @@ enum SETUP_WREQUEST_CDC {
 }
 
 //=============================================================================
-    auto UsbCdcAcm::
+        auto UsbCdcAcm::
     recv (uint8_t* buf, uint16_t siz, UsbEP::notify_t f) -> bool
 //=============================================================================
 {
@@ -223,7 +223,7 @@ enum SETUP_WREQUEST_CDC {
 }
 
 //=============================================================================
-    auto UsbCdcAcm::
+        auto UsbCdcAcm::
     is_active () -> bool
 //=============================================================================
 {
