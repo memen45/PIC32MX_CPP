@@ -34,7 +34,8 @@ enum : uint32_t {
 };
 
 //-----------------------------------------------------------------private-----
-    static uint8_t unlock ()
+    static auto
+    unlock () -> uint8_t
 //-----------------------------------------------------------------------------
 {
     uint8_t idstat = Sys::unlock_wait();
@@ -44,7 +45,8 @@ enum : uint32_t {
 }
 
 //-----------------------------------------------------------------private-----
-    static void lock (uint8_t v)
+    static auto
+    lock (uint8_t v) -> void
 //-----------------------------------------------------------------------------
 {
     Reg::val(NVMKEY, 0);
@@ -52,7 +54,8 @@ enum : uint32_t {
 }
 
 //-----------------------------------------------------------------private-----
-    static void do_wr ()
+    static auto
+    do_wr () -> void
 //-----------------------------------------------------------------------------
 {
     uint8_t stat = unlock();
@@ -62,7 +65,8 @@ enum : uint32_t {
 }
 
 //-----------------------------------------------------------------private-----
-    static void do_op (uint8_t v)
+    static auto
+    do_op (uint8_t v) -> void
 //-----------------------------------------------------------------------------
 {
     Reg::clrbit(NVMCON, NVMOP_CLR bitor (1<<WREN));
@@ -72,7 +76,8 @@ enum : uint32_t {
 }
 
 //-----------------------------------------------------------------private-----
-    static void address (uint32_t v)
+    static auto
+    address (uint32_t v) -> void
 //-----------------------------------------------------------------------------
 {
     //all addr to physical (and 0 based to kseg based)
@@ -81,7 +86,8 @@ enum : uint32_t {
 }
 
 //-----------------------------------------------------------------private-----
-    static uint8_t error ()
+    static auto
+    error () -> uint8_t
 //-----------------------------------------------------------------------------
 {
     uint8_t err = (Reg::val16(NVMCON)>>12) bitand 3;
@@ -90,7 +96,8 @@ enum : uint32_t {
 }
 
 //=============================================================================
-    uint8_t     Nvm::write_2word    (uint32_t addr, uint32_t hw, uint32_t lw)
+    auto Nvm::
+    write_2word (uint32_t addr, uint32_t hw, uint32_t lw) -> uint8_t
 //=============================================================================
 {
     address(addr);
@@ -101,7 +108,8 @@ enum : uint32_t {
 }
 
 //=============================================================================
-    uint8_t     Nvm::write_row      (uint32_t src, uint32_t dst)
+    auto Nvm::
+    write_row (uint32_t src, uint32_t dst) -> uint8_t
 //=============================================================================
 {
     //flash (dst may be 0 based, OR kseg0 flash addr)
@@ -112,7 +120,8 @@ enum : uint32_t {
 }
 
 //=============================================================================
-    uint8_t     Nvm::page_erase     (uint32_t v)
+    auto Nvm::
+    page_erase (uint32_t v) -> uint8_t
 //=============================================================================
 {
     //flash (v may be 0 based, OR kseg0 flash addr)
@@ -123,7 +132,8 @@ enum : uint32_t {
 
 //address | 0x1Dxxxxxx, true=lock until reset
 //=============================================================================
-    void        Nvm::write_protect  (uint32_t v, bool tf)
+    auto Nvm::
+    write_protect (uint32_t v, bool tf) -> void
 //=============================================================================
 {
     uint8_t stat = unlock();
@@ -132,7 +142,8 @@ enum : uint32_t {
 }
 
 //=============================================================================
-    void        Nvm::boot_protect   (BOOTP e, bool tf)
+    auto Nvm::
+    boot_protect (BOOTP e, bool tf) -> void
 //=============================================================================
 {
     uint8_t stat = unlock();

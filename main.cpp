@@ -231,7 +231,7 @@ int main()
     osc.tun_auto(true);                     //let sosc tune frc
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 18, 5, 14, 0, 12, 44, 0} );
+    if(dt.year == 0) Rtcc::datetime( { 18, 5, 15, 0, 15, 6, 0} );
 
     Rtcc::on(true);
 

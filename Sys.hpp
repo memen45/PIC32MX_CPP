@@ -5,34 +5,54 @@
 struct Sys {
 
     //cfgcon
-    static void     bus_err     (bool);
+
+    static auto
+    bus_err (bool) -> void;
 
     enum BMXARB : uint8_t { CPUHIGH, CPULOW, RROBIN };
-    static void     bus_mode    (BMXARB);
+    static auto
+    bus_mode (BMXARB) -> void;
 
-    static void     ram_exec    (uint8_t);
-    static void     jtag        (bool);
+    static auto
+    ram_exec (uint8_t) -> void;
+
+    static auto
+    jtag (bool) -> void;
 
     //devid
-    static uint32_t devid       ();
-    static uint8_t  ver         ();
+
+    static auto
+    devid () -> uint32_t;
+
+    static auto
+    ver () -> uint8_t;
 
     //syskey
-    static void     lock        ();
-    static void     lock        (uint8_t);
-    static void     unlock      ();
-    static uint8_t  unlock_wait ();
+
+    static auto
+    lock () -> void;
+
+    static auto
+    lock (uint8_t) -> void;
+
+    static auto
+    unlock () -> void;
+
+    static auto
+    unlock_wait () -> uint8_t;
 
     //ancfg
-    static void     bgap_adc    (bool);
-    static void     bgap_comp   (bool);
+
+    static auto
+    bgap_adc (bool) -> void;
+
+    static auto
+    bgap_comp (bool) -> void;
 
     //udid
-    static uint32_t udid        (uint8_t); //0-4 ->UDID1-5
 
-    //misc
-    //static uint32_t flash_size  ();
-    //static uint32_t ram_size    ();
+    static auto
+    udid (uint8_t) -> uint32_t; //0-4 ->UDID1-5
 
 };
 

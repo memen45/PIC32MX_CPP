@@ -11,30 +11,67 @@ struct I2c  {
     I2c(I2CX);
 
     //I2C1CON
-    void            irq_stop        (bool);             //irq enable on stop
-    void            irq_start       (bool);             //irq enable on start
-    void            overwrite       (bool);
+
+    auto
+    irq_stop (bool) -> void;             //irq enable on stop
+
+    auto
+    irq_start (bool) -> void;             //irq enable on start
+
+    auto
+    overwrite (bool) -> void;
 
     enum HOLDTIM : bool { NS100, NS300 };
-    void            hold_time       (HOLDTIM);
+    auto
+    hold_time (HOLDTIM) -> void;
 
-    void            irq_collision   (bool);
-    void            on              (bool);
-    void            stop_idle       (bool);
-    void            clk_release     (bool);
-    void            strict          (bool);
-    void            addr_10bit      (bool);
-    void            slew_rate       (bool); //0=true
-    void            smb_levels      (bool);
-    void            irq_gencall     (bool);
-    void            clk_stretch     (bool);
-    void            ack             (bool);
-    void            rx              (bool);
-    void            stop            (bool);
-    void            repstart        (bool);
-    void            start           (bool);
+    auto
+    irq_collision (bool) -> void;
+
+    auto
+    on (bool) -> void;
+
+    auto
+    stop_idle (bool) -> void;
+
+    auto
+    clk_release (bool) -> void;
+
+    auto
+    strict (bool) -> void;
+
+    auto
+    addr_10bit (bool) -> void;
+
+    auto
+    slew_rate (bool) -> void; //0=true
+
+    auto
+    smb_levels (bool) -> void;
+
+    auto
+    irq_gencall (bool) -> void;
+
+    auto
+    clk_stretch (bool) -> void;
+
+    auto
+    ack (bool) -> void;
+
+    auto
+    rx (bool) -> void;
+
+    auto
+    stop (bool) -> void;
+
+    auto
+    repstart (bool) -> void;
+
+    auto
+    start (bool) -> void;
 
     //I2CXSTAT
+
     enum STAT : uint16_t {
         ACK = 1<<15,
         TXBUSY = 1<<14,
@@ -51,30 +88,49 @@ struct I2c  {
         RXFULL = 1<<1,
         TXFULL = 1<<0,
     };
-    bool            stat            (STAT);
+    auto
+    stat (STAT) -> bool;
 
-    void            buscol_clr      ();
-    void            txcol_clr       ();
-    void            rxoflow_clr     ();
+    auto
+    buscol_clr () -> void;
+
+    auto
+    txcol_clr () -> void;
+
+    auto
+    rxoflow_clr () -> void;
 
     //I2CXADDR
-    void            addr            (uint16_t);
+
+    auto
+    addr (uint16_t) -> void;
 
     //I2CXMSK
-    void            addr_mask       (uint16_t);
+
+    auto
+    addr_mask (uint16_t) -> void;
 
     //I2CXBRG
+
     enum I2CSPEED : uint32_t {
         KHZ100 = 100000, KHZ400 = 400000, MHZ1 = 1000000
     };
-    void            speed           (I2CSPEED);
-    void            brg             (uint16_t);
+    auto
+    speed (I2CSPEED) -> void;
+
+    auto
+    brg (uint16_t) -> void;
 
     //I2CXTRN
-    void            write           (uint8_t);
+
+    auto
+    write (uint8_t) -> void;
 
     //I2CXRCV
-    uint8_t         read            ();
+
+    auto
+    read () -> uint8_t;
+
 
     private:
 

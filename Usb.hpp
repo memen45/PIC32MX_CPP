@@ -55,13 +55,14 @@ struct Usb {
     static volatile bdt_t bdt_table[max_endpoint+1][2][2]
         __attribute__ ((aligned (512)));
 
-    static void bdt_init();
-
+    static auto
+    bdt_init() -> void;
 
     //vbus pin
     static const Pins::RPN vbus_pin_n = Pins::B6;
-    static bool vbus_ison();
 
+    static auto
+    vbus_ison() -> bool;
 
     //irq priority
     static const uint8_t usb_irq_pri = 1;       //usb interrupt priority
@@ -124,26 +125,44 @@ struct Usb {
         ALLIF = (STALL|ATTACH|RESUME|IDLE|TRN|SOF|UERR|URST)
     };
 
-    static uint32_t     flags       ();             //get all
-    static bool         flag        (FLAGS);        //get one
-    static void         flags_clr   (uint32_t);     //clear one or more
+    static auto
+    flags () -> uint32_t;               //get all
 
-    static uint32_t     irqs        ();             //get all
-    static bool         irq         (FLAGS);        //get one
-    static void         irqs        (uint32_t);     //set value (all)
-    static void         irq         (FLAGS, bool);  //irq on/off
+    static auto
+    flag (FLAGS) -> bool;               //get one
+
+    static auto
+    flags_clr (uint32_t) -> void;       //clear one or more
+
+    static auto
+    irqs () -> uint32_t;                //get all
+
+    static auto
+    irq (FLAGS) -> bool;                //get one
+
+    static auto
+    irqs (uint32_t) -> void;            //set value (all)
+
+    static auto
+    irq (FLAGS, bool) -> void;          //irq on/off
 
     //U1OTGSTAT
-    static uint32_t     otg_stat    ();             //get all
-    static bool         otg_stat    (FLAGS);        //get one
+    static auto
+    otg_stat () -> uint32_t;            //get all
+
+    static auto
+    otg_stat (FLAGS) -> bool;           //get one
 
     //U1OTGCON
     enum OTG : uint8_t {
         DPPULUP = 1<<7, DMPULUP = 1<<6, DPPULWN = 1<<5, DMPULDWN = 1<<4,
         VBUSON = 1<<3, OTGEN = 1<<2, VBUSCHG = 1<<1, VBUSDIS = 1<<0
     };
-    static void         otg         (OTG, bool);    //set one
-    static void         otg         (uint8_t);      //set one or more
+    static auto
+    otg (OTG, bool) -> void;            //set one
+
+    static auto
+    otg (uint8_t) -> void;              //set one or more
 
     //U1PWRC
     //power(POWER);           -return POWER bit is set
@@ -153,13 +172,17 @@ struct Usb {
         UACTPND = 1<<7, USLPGRD = 1<<4, USBBUSY = 1<<3, USUSPEND = 1<<1,
         USBPWR = 1<<0
     };
-    static bool         power       (POWER);        //get
-    static void         power       (POWER, bool);  //set
+    static auto
+    power (POWER) -> bool;              //get
+
+    static auto
+    power (POWER, bool) -> void;        //set
 
     //U1STAT
     //only valid when TOKEN flag set
     //value return is shifted right 2 bits, so can be used as bdt index
-    static uint8_t      stat        ();             //U1STAT>>2
+    static auto
+    stat () -> uint8_t;                 //U1STAT>>2
 
     //U1CON
     enum CONTROL : uint8_t {
@@ -167,42 +190,64 @@ struct Usb {
         USBRST = 1<<4, HOSTEN = 1<<3, RESUM = 1<<2, PPBRST = 1<<1,
         USBEN = 1<<0, SOFEN = 1<<0
     };
-    static bool         control     (CONTROL);      //get one
-    static void         control     (CONTROL, bool);//set one
-    static void         control     (uint8_t);      //set one or more
+    static auto
+    control (CONTROL) -> bool;          //get one
+
+    static auto
+    control (CONTROL, bool) -> void;    //set one
+
+    static auto
+    control (uint8_t) -> void;          //set one or more
 
     //U1ADDR
-    static void         low_speed   (bool);         //low speed
-    static uint8_t      dev_addr    ();             //get (0-127)
-    static void         dev_addr    (uint8_t);      //set
+    static auto
+    low_speed (bool) -> void;           //low speed
+
+    static auto
+    dev_addr () -> uint8_t;             //get (0-127)
+
+    static auto
+    dev_addr (uint8_t) -> void;         //set
 
     //U1FRML/U1FRMH
-    static uint16_t     frame       ();             //get frame number
+    static auto
+    frame () -> uint16_t;               //get frame number
 
     //U1TOK (host)
     enum TOKPID : uint8_t { SETUP = 13<<4, IN = 9<<4, OUT = 1<<4 };
-    static void         tok_pid     (TOKPID);
-    static void         tok_ep      (uint8_t);
+    static auto
+    tok_pid (TOKPID) -> void;
+
+    static auto
+    tok_ep (uint8_t) -> void;
 
     //U1SOF (host)
     enum SOFVALS : uint8_t {
         SOF64 = 74, SOF32 = 42, SOF16 = 26, SOF8 = 18
     };
-    static void         sof_cnt     (SOFVALS);
+    static auto
+    sof_cnt (SOFVALS) -> void;
 
     //U1BDTP1,2,3
-    static void         bdt_addr    (uint32_t);     //set bdt table address
-    static volatile bdt_t* bdt_addr (uint8_t = 0, bool = 0, bool = 0);
-                                    //get bdt table address (n,tx/rx,even/odd)
+    static auto
+    bdt_addr (uint32_t) -> void;        //set bdt table address
 
+    static auto
+    bdt_addr (uint8_t = 0, bool = 0, bool = 0) -> volatile bdt_t*;
+                                        //bdt table address (ep#,tx/rx,even/odd)
     //U1CNFG1
     enum CONFIG : uint8_t {
         EYETEST = 1<<7, OEMON = 1<<6, SIDLE = 1<<4,
         LSDEV = 1<<3, AUTOSUSP = 1<<0
     };
-    static void         config      (CONFIG, bool); //set 1bit
-    static bool         config      (CONFIG);       //get 1bit
-    static void         config      (uint8_t);      //set reg val
+    static auto
+    config (CONFIG, bool) -> void;      //set 1bit
+
+    static auto
+    config (CONFIG) -> bool;            //get 1bit
+
+    static auto
+    config (uint8_t) -> void;           //set reg val
 
     //U1EP0-15
     //endpoint control register bits
@@ -212,17 +257,20 @@ struct Usb {
         EPCONDIS = 1<<4,        /*only when TXEN=1 and RXEN=1*/
         EPRXEN = 1<<3, EPTXEN = 1<<2, EPSTALL = 1<<1, EPHSHK = 1<<0
     };
-    static void         epcontrol   (uint8_t, EPCTRL, bool);    //set/clr 1bit
-    static bool         epcontrol   (uint8_t, EPCTRL);          //get 1bit
-    static void         epcontrol   (uint8_t, uint8_t);         //set byte
-    static uint8_t      epcontrol   (uint8_t);                  //get byte
+    static auto
+    epcontrol (uint8_t, EPCTRL, bool) -> void;  //set/clr 1bit
+
+    static auto
+    epcontrol (uint8_t, EPCTRL) -> bool;        //get 1bit
+
+    static auto
+    epcontrol (uint8_t, uint8_t) -> void;       //set byte
+
+    static auto
+    epcontrol (uint8_t) -> uint8_t;             //get byte
 
     //misc
-    static void         reset       ();     //all writable regs to reset val
+    static auto
+    reset () -> void;     //all writable regs to reset val
+
 };
-
-
-
-
-
-

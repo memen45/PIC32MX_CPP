@@ -23,7 +23,8 @@ uint32_t                    UsbCentral::m_sofcount = 0;
 
 
 //-----------------------------------------------------------------private-----
-    void detach()
+    static auto
+    detach() -> void
 //-----------------------------------------------------------------------------
 {
     Usb usb; Irq irq;
@@ -38,7 +39,8 @@ uint32_t                    UsbCentral::m_sofcount = 0;
 }
 
 //-----------------------------------------------------------------private-----
-    void attach()
+    static auto
+    attach() -> void
 //-----------------------------------------------------------------------------
 {
     Usb usb; Irq irq;
@@ -57,7 +59,8 @@ uint32_t                    UsbCentral::m_sofcount = 0;
 // return true if attached, false if detached
 // global irq's enabled if attached, unchanged if detached
 //=============================================================================
-    bool        UsbCentral::init         (bool tf)
+    auto UsbCentral::
+    init (bool tf) -> bool
 //=============================================================================
 {
     //DEBUG
@@ -77,7 +80,8 @@ uint32_t                    UsbCentral::m_sofcount = 0;
 //=============================================================================
 // called from UsbISR with irq flags which were set (and had irq enabled)
 //=============================================================================
-    void        UsbCentral::service     (uint32_t flags, uint8_t ustat)
+    auto UsbCentral::
+    service (uint32_t flags, uint8_t ustat) -> void
 //=============================================================================
 {
     Usb usb;
@@ -114,7 +118,8 @@ uint32_t                    UsbCentral::m_sofcount = 0;
 // called by UsbCentral::service, then pass on to registered service
 // (like cdcacm)
 //=============================================================================
-    bool        UsbCentral::service     (uint8_t ustat, UsbEP0* ep)
+    auto UsbCentral::
+    service (uint8_t ustat, UsbEP0* ep) -> bool
 //=============================================================================
 {
     if(m_service) return m_service(ustat, ep);
@@ -126,7 +131,8 @@ uint32_t                    UsbCentral::m_sofcount = 0;
 // pkt.wValue high=descriptor type, low=index
 // device=1, config=2, string=3
 //=============================================================================
-    const uint8_t*  UsbCentral::get_desc    (uint16_t wValue, uint16_t* siz)
+    auto UsbCentral::
+    get_desc (uint16_t wValue, uint16_t* siz) -> const uint8_t*
 //=============================================================================
 {
     if(not m_descriptor){ *siz = 0; return 0; }
@@ -157,7 +163,8 @@ uint32_t                    UsbCentral::m_sofcount = 0;
 // this will set the interface from user created device like cdcacm to
 // UsbCentral
 //=============================================================================
-    bool    UsbCentral::set_device      (const uint8_t* d, service_t f)
+    auto UsbCentral::
+    set_device (const uint8_t* d, service_t f) -> bool
 //=============================================================================
 {
     m_descriptor = d;
@@ -166,22 +173,22 @@ uint32_t                    UsbCentral::m_sofcount = 0;
 }
 
 //=============================================================================
-// do nothing, return descriptor ptr for config if found, 0 if not
-// also used to find location of current config in descriptor
+// return configuration descriptor pointer if found, 0 if not
+// also used to find location of current configuration in descriptor
 //=============================================================================
-    const uint8_t*  UsbCentral::set_config  (uint16_t wValue)
+    auto UsbCentral::
+    set_config  (uint16_t wValue) -> const uint8_t*
 //=============================================================================
 {
     wValue and_eq 0xFF;                             //low byte only
-    if(not wValue) return 0;                        //no 0 config#
-    uint16_t wv = UsbCh9::CONFIGURATION<<8;         //get first config
+    uint16_t wv = UsbCh9::CONFIGURATION<<8;         //get first config (idx 0)
     uint16_t siz;                                   //needed, not used
     for(;; wv++){                                   //until config# match
         const uint8_t* p = get_desc(wv, &siz);      //get pointer to config
         if(not p) break;                            //no more configs left
         if(p[5] == wValue){                         //matching number?
             current_config = wValue;                //save it
-            return p;                               //return pinter to config
+            return p;                               //return pointer to config
         }
     }
     return 0;                                       //bad config#
@@ -191,14 +198,15 @@ uint32_t                    UsbCentral::m_sofcount = 0;
 // get endpoint n tx or rx size from descriptor
 // endpoint 0 size is in first descriptor (both tx,rx are same size)
 //=============================================================================
-    uint16_t    UsbCentral::get_epsiz       (uint8_t n, bool tr)
+    auto UsbCentral::
+    get_epsiz (uint8_t n, bool tr) -> uint16_t
 //=============================================================================
 {
     if(not m_descriptor) return 0;
     if(n == 0) return m_descriptor[7];              //tx/rx same for ep0
     if(tr) n += 128;                                //if tx, set bit7
     const uint8_t* p = set_config(current_config);  //get config offset
-    for(; p[1] != UsbCh9::STRING; p += p[0]){       //until into STRINGs
+    for(; p and p[1] != UsbCh9::STRING; p += p[0]){ //until into STRINGs
         if(p[1] != UsbCh9::ENDPOINT or p[2] != n) continue;
         return p[4] bitor (p[5]<<8);                //found ep, return size
     }
@@ -210,14 +218,15 @@ uint32_t                    UsbCentral::m_sofcount = 0;
 // endpoint 0 always tx/rx/handshake
 // others get from descriptor info
 //=============================================================================
-    uint8_t     UsbCentral::get_epctrl      (uint8_t n)
+    auto UsbCentral::
+    get_epctrl (uint8_t n) -> uint8_t
 //=============================================================================
 {
     if(not m_descriptor) return 0;
     if(n == 0) return Usb::EPTXEN|Usb::EPRXEN|Usb::EPHSHK; //ep0 always this
     uint8_t ret = Usb::EPCONDIS; //assume no control pkts on all others
     const uint8_t* p = set_config(current_config);  //get config offset
-    for(; p[1] != UsbCh9::STRING; p += p[0]){       //until into STRINGs
+    for(; p and p[1] != UsbCh9::STRING; p += p[0]){ //until into STRINGs
         if(p[1] != UsbCh9::ENDPOINT) continue;      //not an endpoint, continue
         if(p[2] == n) ret or_eq Usb::EPRXEN;        //if rx, enable rx
         if(p[2] == n+128) ret or_eq Usb::EPTXEN;    //if tx, enbale tx
@@ -231,11 +240,13 @@ uint32_t                    UsbCentral::m_sofcount = 0;
 // get self-powered, remote wakeup info from descriptor
 // return bits in postitions as needed by DEV_GET_STATUS
 //=============================================================================
-    uint8_t     UsbCentral::get_status      ()
+    auto UsbCentral::
+    get_status () -> uint8_t
 //=============================================================================
 {
     if(not m_descriptor) return 0;
     const uint8_t* p = set_config(current_config);  //get config offset
+    if(not p) return 0;
     uint8_t ret = 0;
     if(p[7] bitand 0x40) ret = 1;                   //self-powered
     if(p[7] bitand 0x20) ret or_eq 2;               //remote wakeup
@@ -245,7 +256,8 @@ uint32_t                    UsbCentral::m_sofcount = 0;
 //=============================================================================
 // get 1ms timer count
 //=============================================================================
-    uint32_t    UsbCentral::timer1ms        ()
+    auto UsbCentral::
+    timer1ms () -> uint32_t
 //=============================================================================
 {
     return m_timer1ms;
@@ -254,7 +266,8 @@ uint32_t                    UsbCentral::m_sofcount = 0;
 //=============================================================================
 // get sof count
 //=============================================================================
-    uint32_t    UsbCentral::sofcount        ()
+    auto UsbCentral::
+    sofcount () -> uint32_t
 //=============================================================================
 {
     return m_sofcount;

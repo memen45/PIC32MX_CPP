@@ -25,16 +25,18 @@ enum {
     UDID5 = 0xBF801880
 };
 
-
+//-----------------------------------------------------------------private-----
 //syskey lock/unlock
 //keep track of unlock count-
 //inc unlock_count on lock(), dec unlock_count on unlock()
 //unlock done when unlock_count is 0
 //lock done when unlock_count is 0
 static volatile uint8_t unlock_count;
+//-----------------------------------------------------------------------------
 
 //=============================================================================
-    void        Sys::lock           ()
+    auto Sys::
+    lock () -> void
 //=============================================================================
 {
     bool irqstate = Irq::global();                  //get STATUS.IE
@@ -47,7 +49,8 @@ static volatile uint8_t unlock_count;
 }
 
 //=============================================================================
-    void        Sys::unlock         ()
+    auto Sys::
+    unlock () -> void
 //=============================================================================
 {
     bool irqstate = Irq::global();                  //get STATUS.IE
@@ -67,7 +70,8 @@ static volatile uint8_t unlock_count;
 
 //provide previous irq/dma status
 //=============================================================================
-    void        Sys::lock           (uint8_t v)
+    auto Sys::
+    lock (uint8_t v) -> void
 //=============================================================================
 {
     lock();
@@ -77,7 +81,8 @@ static volatile uint8_t unlock_count;
 
 //blocking, return irq/dma status for use in next call to lock()
 //=============================================================================
-    uint8_t     Sys::unlock_wait    ()
+    auto Sys::
+    unlock_wait () -> uint8_t
 //=============================================================================
 {
     bool irqstate = Irq::global();                  //get STATUS.IE
@@ -96,14 +101,16 @@ static volatile uint8_t unlock_count;
 
 //cfgcon
 //=============================================================================
-    void        Sys::bus_err            (bool tf)
+    auto Sys::
+    bus_err (bool tf) -> void
 //=============================================================================
 {
     Reg::setbit(CFGCON, 1<<BMXERRDIS, !tf);
 }
 
 //=============================================================================
-    void        Sys::bus_mode           (BMXARB e)
+    auto Sys::
+    bus_mode (BMXARB e) -> void
 //=============================================================================
 {
     Reg::clrbit(CFGCON, BMXARB_MASK<<BMXARB_SHIFT);
@@ -111,14 +118,16 @@ static volatile uint8_t unlock_count;
 }
 
 //=============================================================================
-    void        Sys::ram_exec           (uint8_t v)
+    auto Sys::
+    ram_exec (uint8_t v) -> void
 //=============================================================================
 {
     Reg::val(CFGCON+2, v);
 }
 
 //=============================================================================
-    void        Sys::jtag               (bool tf)
+    auto Sys::
+    jtag (bool tf) -> void
 //=============================================================================
 {
     Reg::setbit(CFGCON, 1<<JTAGEN, tf);
@@ -126,14 +135,16 @@ static volatile uint8_t unlock_count;
 
 //devid
 //=============================================================================
-    uint32_t    Sys::devid              ()
+    auto Sys::
+    devid () -> uint32_t
 //=============================================================================
 {
     return Reg::val(DEVID) bitand ID_MASK;
 }
 
 //=============================================================================
-    uint8_t     Sys::ver                ()
+    auto Sys::
+    ver () -> uint8_t
 //=============================================================================
 {
     return Reg::val(DEVID)>>VER_SHIFT;
@@ -141,14 +152,16 @@ static volatile uint8_t unlock_count;
 
 //ancfg
 //=============================================================================
-    void        Sys::bgap_adc           (bool tf)
+    auto Sys::
+    bgap_adc (bool tf) -> void
 //=============================================================================
 {
     Reg::setbit(ANCFG, 1<<VBGADC, tf);
 }
 
 //=============================================================================
-    void        Sys::bgap_comp          (bool tf)
+    auto Sys::
+    bgap_comp (bool tf) -> void
 //=============================================================================
 {
     Reg::setbit(ANCFG, 1<<VBGCMP, tf);
@@ -156,7 +169,8 @@ static volatile uint8_t unlock_count;
 
 //udid
 //=============================================================================
-    uint32_t    Sys::udid               (uint8_t v)
+    auto Sys::
+    udid (uint8_t v) -> uint32_t
 //=============================================================================
 {
     if(v > 4) v = 4;

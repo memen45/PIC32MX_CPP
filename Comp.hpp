@@ -10,25 +10,40 @@ struct Comp {
     enum CMX { CMP1, CMP2, CMP3 };
     Comp(CMX);
 
-    void            on              (bool);
-    void            out             (bool);
-    void            out_inv         (bool);
-    bool            evt_bit         ();
-    bool            out_bit         (void);
+    auto
+    on (bool) -> void;
+
+    auto
+    out (bool) -> void;
+
+    auto
+    out_inv (bool) -> void;
+
+    auto
+    evt_bit () -> bool;
+
+    auto
+    out_bit (void) -> bool;
 
     enum EVPOL { OFF, LH, HL, ANY };
-    void            evt_sel         (EVPOL);
+    auto
+    evt_sel (EVPOL) -> void;
 
-    void            cref_cxina      (bool);
+    auto
+    cref_cxina (bool) -> void;
 
     enum CCH { CXINB, CXINC, CXIND, BGAP };
-    void            ch_sel          (CCH);
+    auto
+    ch_sel (CCH) -> void;
 
     //common for all instances
-    static void     stop_idle       (bool);
+    static auto
+    stop_idle (bool) -> void;
 
     enum CVREF { INT_BGAP, EXT_CVREF };
-    static void     cref_sel        (CVREF);
+    static auto
+    cref_sel (CVREF) -> void;
+
 
     private:
 

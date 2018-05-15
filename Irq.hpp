@@ -6,16 +6,30 @@
 
 struct Irq {
 
-    static void     global          (bool);
-    static bool     global          ();
-    static void     proxtimer       (uint8_t, uint32_t = 0);
+    static auto
+    global (bool) -> void;
+
+    static auto
+    global () -> bool;
+
+    static auto
+    proxtimer (uint8_t, uint32_t = 0) -> void;
 
     enum EINTXPOL : bool { FALLING, RISING };
-    static void     eint4_pol       (EINTXPOL);
-    static void     eint3_pol       (EINTXPOL);
-    static void     eint2_pol       (EINTXPOL);
-    static void     eint1_pol       (EINTXPOL);
-    static void     eint0_pol       (EINTXPOL);
+    static auto
+    eint4_pol (EINTXPOL) -> void;
+
+    static auto
+    eint3_pol (EINTXPOL) -> void;
+
+    static auto
+    eint2_pol (EINTXPOL) -> void;
+
+    static auto
+    eint1_pol (EINTXPOL) -> void;
+
+    static auto
+    eint0_pol (EINTXPOL) -> void;
 
     //irq vector numbers
     enum IRQ_VN : uint8_t {
@@ -60,10 +74,17 @@ struct Irq {
         ECCSB_ERR = 97,
         DMA0 = 98, DMA1, DMA2, DMA3 = 101
     };
-    static void     flag_clr        (IRQ_VN);
-    static bool     flag            (IRQ_VN);
-    static void     on              (IRQ_VN, bool);
-    static void     init            (IRQ_VN, uint8_t, uint8_t, bool);
+    static auto
+    flag_clr (IRQ_VN) -> void;
+
+    static auto
+    flag (IRQ_VN) -> bool;
+
+    static auto
+    on (IRQ_VN, bool) -> void;
+
+    static auto
+    init (IRQ_VN, uint8_t, uint8_t, bool) -> void;
 
     //to create a list (array) of irq's to init/enable
     using irq_list_t = struct {
@@ -72,9 +93,11 @@ struct Irq {
         uint8_t s;      //sub-priority
         bool en;        //enable
     };
-    static void     init            (irq_list_t*, uint8_t);
+    static auto
+    init (irq_list_t*, uint8_t) -> void;
 
-    static void     shadow_set      (uint8_t);
+    static auto
+    shadow_set (uint8_t) -> void;
 
 };
 

@@ -37,12 +37,20 @@ struct Nvm {
 
     };
 
-    static uint8_t  write_2word     (uint32_t, uint32_t, uint32_t);
-    static uint8_t  write_row       (uint32_t, uint32_t); //src,dst
-    static uint8_t  page_erase      (uint32_t);
-    static void     write_protect   (uint32_t, bool); //true=lock until reset
+    static auto
+    write_2word (uint32_t, uint32_t, uint32_t) -> uint8_t;
+
+    static auto
+    write_row (uint32_t, uint32_t) -> uint8_t; //src,dst
+
+    static auto
+    page_erase (uint32_t) -> uint8_t;
+
+    static auto
+    write_protect (uint32_t, bool) -> void; //true=lock until reset
 
     enum BOOTP : uint16_t { PAGE0 = 1<<8, PAGE1 = 1<<9, PAGE2 = 1<<10 };
-    static void     boot_protect    (BOOTP, bool); //true=lock until reset
+    static auto
+    boot_protect (BOOTP, bool) -> void; //true=lock until reset
 
 };

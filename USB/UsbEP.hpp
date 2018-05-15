@@ -13,29 +13,56 @@ struct UsbEP {
     enum TXRX : bool { RX, TX };
     enum EVEODD : bool { EVEN, ODD };
 
-    void    reset       (TXRX, bool = false); //bool = save ppbi?
-    void    init        (uint8_t);
+    auto
+    reset (TXRX, bool = false) -> void; //bool = save ppbi?
 
-    bool    service     (uint8_t);
-    void    service_in  ();
-    void    service_out ();
+    auto
+    init (uint8_t) -> void;
 
-    bool    send        (uint8_t*, uint16_t, notify_t = 0);
-    bool    send        (uint8_t*, uint16_t, bool, notify_t = 0); //specify data01
-    bool    recv        (uint8_t*, uint16_t, notify_t = 0);
-    bool    recv        (uint8_t*, uint16_t, bool, notify_t = 0); //specify data01
+    auto
+    service (uint8_t) -> bool;
 
-    bool    send_busy   ();
-    bool    recv_busy   ();
+    auto
+    service_in () -> void;
 
-    void    send_stall  ();
-    void    recv_stall  ();
-    void    send_zlp    ();
+    auto
+    service_out () -> void;
 
-    void    send_notify (notify_t);
-    void    recv_notify (notify_t);
+    auto
+    send (uint8_t*, uint16_t, notify_t = 0) -> bool;
 
-    void    takeback    (TXRX);
+    auto
+    send (uint8_t*, uint16_t, bool, notify_t = 0) -> bool; //specify data01
+
+    auto
+    recv (uint8_t*, uint16_t, notify_t = 0) -> bool;
+
+    auto
+    recv (uint8_t*, uint16_t, bool, notify_t = 0) -> bool; //specify data01
+
+    auto
+    send_busy () -> bool;
+
+    auto
+    recv_busy () -> bool;
+
+    auto
+    send_stall () -> void;
+
+    auto
+    recv_stall () -> void;
+
+    auto
+    send_zlp () -> void;
+
+    auto
+    send_notify (notify_t) -> void;
+
+    auto
+    recv_notify (notify_t) -> void;
+
+    auto
+    takeback (TXRX) -> void;
 
 
     using info_t = struct {
@@ -54,25 +81,28 @@ struct UsbEP {
 
     private:
 
-    bool    setup       (info_t&);
+    auto
+    setup (info_t&) -> bool;
 
-    bool    xfer        (info_t&, uint8_t*, uint16_t, notify_t);
+    auto
+    xfer (info_t&, uint8_t*, uint16_t, notify_t) -> bool;
 
     protected:
 
-    uint8_t     m_epnum{0};         //endpoint number
-
-    info_t      m_rx{0};
-    info_t      m_tx{0};
+    uint8_t m_epnum{0};         //endpoint number
+    info_t m_rx{0};
+    info_t m_tx{0};
 
 };
 
 //endpoint 0 specific
 struct UsbEP0 : public UsbEP {
 
-    void    init        ();
+    auto
+    init () -> void;
 
-    bool    service     (uint8_t);
+    auto
+    service (uint8_t) -> bool;
 
     UsbCh9::SetupPkt_t setup_pkt;
 

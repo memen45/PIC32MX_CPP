@@ -18,7 +18,8 @@ enum {
 };
 
 //=============================================================================
-    void        Irq::global             (bool tf)
+    auto Irq::
+    global (bool tf) -> void
 //=============================================================================
 {
     if(tf) __builtin_enable_interrupts();
@@ -26,7 +27,8 @@ enum {
 }
 
 //=============================================================================
-    bool        Irq::global             ()
+    auto Irq::
+    global () -> bool
 //=============================================================================
 {
     return (__builtin_mfc0(12, 0) bitand 1);
@@ -34,7 +36,8 @@ enum {
 
 //proxtimer(0) to turn off
 //=============================================================================
-    void        Irq::proxtimer          (uint8_t n, uint32_t v)
+    auto Irq::
+    proxtimer (uint8_t n, uint32_t v) -> void
 //=============================================================================
 { //n = priority 1-7 (and lower) starts prox timer, 0 = prox timer off
     Reg::clrbit(INTCON, TPC_CLR<<TPC_SHIFT);
@@ -42,37 +45,41 @@ enum {
     Reg::val(IPTMR, v); //timer value
 }
 
-
 //=============================================================================
-    void        Irq::eint4_pol          (EINTXPOL e)
+    auto Irq::
+    eint4_pol (EINTXPOL e) -> void
 //=============================================================================
 {
     Reg::setbit(INTCON, 1<<INT4EP, e);
 }
 
 //=============================================================================
-    void        Irq::eint3_pol          (EINTXPOL e)
+    auto Irq::
+    eint3_pol (EINTXPOL e) -> void
 //=============================================================================
 {
     Reg::setbit(INTCON, 1<<INT3EP, e);
 }
 
 //=============================================================================
-    void        Irq::eint2_pol          (EINTXPOL e)
+    auto Irq::
+    eint2_pol (EINTXPOL e) -> void
 //=============================================================================
 {
     Reg::setbit(INTCON, 1<<INT2EP, e);
 }
 
 //=============================================================================
-    void        Irq::eint1_pol          (EINTXPOL e)
+    auto Irq::
+    eint1_pol (EINTXPOL e) -> void
 //=============================================================================
 {
     Reg::setbit(INTCON, 1<<INT1EP, e);
 }
 
 //=============================================================================
-    void        Irq::eint0_pol          (EINTXPOL e)
+    auto Irq::
+    eint0_pol (EINTXPOL e) -> void
 //=============================================================================
 {
     Reg::setbit(INTCON, 1<<INT0EP, e);
@@ -87,21 +94,24 @@ enum {
 //bit offset = 1<<(40%32) = 1<<8
 //bit offset 8 in IFS1
 //=============================================================================
-    void        Irq::flag_clr           (IRQ_VN e)
+    auto Irq::
+    flag_clr (IRQ_VN e) -> void
 //=============================================================================
 {
     Reg::clrbit(IFS_BASE + ((e / 32) * 16), 1u<<(e % 32));
 }
 
 //=============================================================================
-    bool        Irq::flag               (IRQ_VN e)
+    auto Irq::
+    flag (IRQ_VN e) -> bool
 //=============================================================================
 {
     return Reg::anybit(IFS_BASE + ((e / 32) * 16), 1u<<(e % 32));
 }
 
 //=============================================================================
-    void        Irq::on                 (IRQ_VN e, bool tf)
+    auto Irq::
+    on (IRQ_VN e, bool tf) -> void
 //=============================================================================
 {
     Reg::setbit(IEC_BASE + ((e / 32) * 16), 1u<<(e % 32), tf);
@@ -116,7 +126,8 @@ enum {
 //pri is masked to 0-7, sub is masked to 0-3
 //pri of 0 disables irq
 //=============================================================================
-    void        Irq::init       (IRQ_VN e, uint8_t pri, uint8_t sub, bool tf)
+    auto Irq::
+    init (IRQ_VN e, uint8_t pri, uint8_t sub, bool tf) -> void
 //=============================================================================
 {
     uint32_t priority_shift = 8 * (e % 4);
@@ -129,7 +140,8 @@ enum {
 
 //init list (array) of irq's
 //=============================================================================
-    void        Irq::init               (irq_list_t* arr, uint8_t sz)
+    auto Irq::
+    init (irq_list_t* arr, uint8_t sz) -> void
 //=============================================================================
 {
     for(; sz; arr++, sz--) init(arr->irqvn, arr->p, arr->s, arr->en);
@@ -139,7 +151,8 @@ enum {
 //set specified priority (1-7) to use shadow register set
 //priority values of 0 will disable shadow register set
 //=============================================================================
-    void        Irq::shadow_set         (uint8_t pri)
+    auto Irq::
+    shadow_set (uint8_t pri) -> void
 //=============================================================================
 {
     uint32_t p = (pri and_eq 7)*4; //p makes sure Reg::val uses 32bit version

@@ -21,14 +21,16 @@ struct Pmd {
         DMA = 196                                               //PDM7
     };
 
-    static void     off     (PMD);              //single
-    static void     on      (PMD);              //single
-    static void     off     (PMD*, uint8_t);    //array, size
-    static void     on      (PMD*, uint8_t);    //array, size
+    static auto
+    off (PMD) -> void;                  //single
 
-    private:
+    static auto
+    on (PMD) -> void;                   //single
 
-    static void     unlock  ();
-    static void     lock    ();
+    static auto
+    off (PMD*, uint8_t) -> void;        //array, size
+
+    static auto
+    on (PMD*, uint8_t) -> void;         //array, size
 
 };

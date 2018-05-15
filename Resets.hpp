@@ -7,29 +7,54 @@
 struct Resets {
 
     //RCON
+
     enum CAUSE : uint8_t {
         EXTR = 1<<7, SWR = 1<<6, //1<<5 none- reads 0
         WDTO = 1<<4, SLEEP = 1<<3, IDLE = 1<<2, BOR = 1<<1, POR = 1<<0
     };
-    static CAUSE    cause           ();
+    static auto
+    cause () -> CAUSE;
 
-    static bool     config_err      ();
+    static auto
+    config_err () -> bool;
 
     //RSWRST
-    static void     swreset         ();
+
+    static auto
+    swreset () -> void;
 
     //RNMICON
-    static bool     nmi_wdt         ();
-    static bool     nmi_sw          ();
-    static bool     nmi_gen         ();
-    static bool     nmi_clkf        ();
-    static bool     nmi_wdts        ();
-    static void     nmi_wdtcount    (uint16_t);
-    static void     nmi_wdtclr      ();
+
+    static auto
+    nmi_wdt () -> bool;
+
+    static auto
+    nmi_sw () -> bool;
+
+    static auto
+    nmi_gen () -> bool;
+
+    static auto
+    nmi_clkf () -> bool;
+
+    static auto
+    nmi_wdts () -> bool;
+
+    static auto
+    nmi_wdtcount (uint16_t) -> void;
+
+    static auto
+    nmi_wdtclr () -> void;
 
     //PWRCON
-    static void     bor             (bool);
-    static void     reten           (bool); //used by Osc for reten sleep mode
-    static void     vregs           (bool);
+
+    static auto
+    bor (bool) -> void;
+
+    static auto
+    reten (bool) -> void; //used by Osc for reten sleep mode
+
+    static auto
+    vregs (bool) -> void;
 
 };

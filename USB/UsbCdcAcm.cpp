@@ -148,7 +148,8 @@ enum SETUP_WREQUEST_CDC {
 // we take care of endpoint 0 rx/tx here (if for us), but endpoint 0 will
 // take care of next setup rx
 //-----------------------------------------------------------------private-----
-    static bool ep0_request (UsbEP0* ep0)
+    static auto
+    ep0_request (UsbEP0* ep0) -> bool
 //-----------------------------------------------------------------------------
 {
     switch(ep0->setup_pkt.wRequest){
@@ -168,7 +169,8 @@ enum SETUP_WREQUEST_CDC {
 }
 
 //-----------------------------------------------------------------private-----
-    static bool service (uint8_t ustat, UsbEP0* ep0)
+    static auto
+    service (uint8_t ustat, UsbEP0* ep0) -> bool
 //-----------------------------------------------------------------------------
 {
     //check for reset
@@ -196,7 +198,8 @@ enum SETUP_WREQUEST_CDC {
 }
 
 //=============================================================================
-    bool        UsbCdcAcm::init         (bool tf)
+    auto UsbCdcAcm::
+    init (bool tf) -> bool
 //=============================================================================
 {
     m_is_active = UsbCentral::set_device(m_descriptor, tf ? service : 0);
@@ -204,21 +207,24 @@ enum SETUP_WREQUEST_CDC {
 }
 
 //=============================================================================
-    bool    UsbCdcAcm::send  (uint8_t* buf, uint16_t siz, UsbEP::notify_t f)
+    auto UsbCdcAcm::
+    send (uint8_t* buf, uint16_t siz, UsbEP::notify_t f) -> bool
 //=============================================================================
 {
     return m_ep_txrx.send_busy() ? false : m_ep_txrx.send(buf, siz, f);
 }
 
 //=============================================================================
-    bool    UsbCdcAcm::recv  (uint8_t* buf, uint16_t siz, UsbEP::notify_t f)
+    auto UsbCdcAcm::
+    recv (uint8_t* buf, uint16_t siz, UsbEP::notify_t f) -> bool
 //=============================================================================
 {
     return m_ep_txrx.recv_busy() ? false : m_ep_txrx.recv(buf, siz, f);
 }
 
 //=============================================================================
-    bool    UsbCdcAcm::is_active        ()
+    auto UsbCdcAcm::
+    is_active () -> bool
 //=============================================================================
 {
     return m_is_active;

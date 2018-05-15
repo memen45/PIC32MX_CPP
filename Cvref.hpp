@@ -6,12 +6,17 @@
 
 struct Cvref {
 
-    static void     on              (bool);
-    static void     out             (bool);
+    static auto
+    on (bool) -> void;
+
+    static auto
+    out (bool) -> void;
 
     enum REFSEL { NONE, CVREF, AVDD };
-    static void     refsel          (REFSEL);
+    static auto
+    refsel (REFSEL) -> void;
 
-    static void     dacdat          (uint8_t);
+    static auto
+    dacdat (uint8_t) -> void;
 
 };

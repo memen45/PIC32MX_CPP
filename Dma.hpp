@@ -11,100 +11,175 @@ struct Dma {
     Dma(DMAX);
 
     //DCHXCON
-    bool            busy            ();
+
+    auto
+    busy () -> bool;
 
     enum CHCHAIN : uint8_t { TOHIGHER, TOLOWER, CHAINOFF };
-    void            chain           (CHCHAIN);
+    auto
+    chain (CHCHAIN) -> void;
 
-    void            on              (bool);
-    void            evt_always      (bool);
-    void            auto_en         (bool);
-    bool            evt             ();
+    auto
+    on (bool) -> void;
+
+    auto
+    evt_always (bool) -> void;
+
+    auto
+    auto_en (bool) -> void;
+
+    auto
+    evt () -> bool;
 
     enum CHPRI : uint8_t { PRI0, PRI1, PRI2, PRI3 };
-    void            priority        (CHPRI);
+    auto
+    priority (CHPRI) -> void;
 
     //DCHXECON
+
     enum IRQ : uint8_t { IRQOFF = 255 };
-    void            irq_abort       (uint8_t);
-    void            irq_start       (uint8_t);
-    void            start           ();
-    void            abort           ();
-    void            abort_match     (bool);
+    auto
+    irq_abort (uint8_t) -> void;
+
+    auto
+    irq_start (uint8_t) -> void;
+
+    auto
+    start () -> void;
+
+    auto
+    abort () -> void;
+
+    auto
+    abort_match (bool) -> void;
 
     //DCHXINT
+
     enum IRQENF : uint8_t { //byte positions, use reg byte acccess
         SRCDONE = 1<<7, SRCHALF = 1<<6, DSTDONE = 1<<5, DSTHALF = 1<<4,
         BLKDONE = 1<<3, CELLDONE = 1<<2, XFERABORT = 1<<1, ADDRERR = 1<<0
     };
-    void            irq             (IRQENF, bool);
-    bool            flag            (IRQENF);
-    void            flag_clr        (IRQENF);
+    auto
+    irq (IRQENF, bool) -> void;
+
+    auto
+    flag (IRQENF) -> bool;
+
+    auto
+    flag_clr (IRQENF) -> void;
 
     //DCHXSSA
-    void            sstart_addr     (uint32_t);
+
+    auto
+    sstart_addr (uint32_t) -> void;
 
     //DCHXDSA
-    void            dstart_addr     (uint32_t);
+
+    auto
+    dstart_addr (uint32_t) -> void;
 
     //DCHXSSIZ
-    void            ssize           (uint16_t);
+
+    auto
+    ssize (uint16_t) -> void;
 
     //DCHXDSIZ
-    void            dsize           (uint16_t);
+
+    auto
+    dsize (uint16_t) -> void;
 
     //DCHXSPTR
-    void            spointer        (uint16_t);
+
+    auto
+    spointer (uint16_t) -> void;
 
     //DCHXDPTR
-    void            dpointer        (uint16_t);
+
+    auto
+    dpointer (uint16_t) -> void;
 
     //DCHXCSIZ
-    void            csize           (uint16_t);
+
+    auto
+    csize (uint16_t) -> void;
 
     //DCHXCPTR
-    uint16_t        cpointer        ();
+
+    auto
+    cpointer () -> uint16_t;
 
     //DCHXDAT
-    void            pattern         (uint8_t);
+
+    auto
+    pattern (uint8_t) -> void;
 
     //common for all instances
     //DMACON
-    static void     all_on          (bool);             //dma on/off
-    static void     all_suspend     (bool);             //dma suspend
-    static bool     all_suspend     ();                 //dma suspended?
-    static bool     any_busy        ();                 //dma busy
+
+    static auto
+    all_on (bool) -> void;          //dma on/off
+
+    static auto
+    all_suspend (bool) -> void;     //dma suspend
+
+    static auto
+    all_suspend () -> bool;         //dma suspended?
+
+    static auto
+    any_busy () -> bool;            //dma busy
 
     //DMASTAT
-    static bool     last_rd         ();                 //last dma was read
-                                                        //(else was write)
-    static uint8_t  last_ch         ();                 //last dma channel
+
+    static auto
+    last_rd () -> bool;             //last dma was read
+                                    //(else was write)
+    static auto
+    last_ch () -> uint8_t;          //last dma channel
 
     //DMAADDR
-    static uint32_t last_addr       ();                 //last dma address
+
+    static auto
+    last_addr () -> uint32_t;       //last dma address
 
     //DCRCCON
+
     enum CRCBYTO : uint8_t { SAME, REVERSE, SWAPH, SWAPB };
-    static void     crc_byto        (CRCBYTO);
+    static auto
+    crc_byto (CRCBYTO) -> void;
 
     enum CRCBITO : bool { MSB, LSB };
-    static void     crc_bito        (CRCBITO);
+    static auto
+    crc_bito (CRCBITO) -> void;
 
-    static void     crc_polyn       (uint8_t);
-    static void     crc_on          (bool);
-    static void     crc_append      (bool);
+    static auto
+    crc_polyn (uint8_t) -> void;
+
+    static auto
+    crc_on (bool) -> void;
+
+    static auto
+    crc_append (bool) -> void;
 
     enum CRCTYPE : bool { LFSR, IP };
-    static void     crc_type        (CRCTYPE);
+    static auto
+    crc_type (CRCTYPE) -> void;
 
-    static void     crc_ch          (uint8_t);
+    static auto
+    crc_ch (uint8_t) -> void;
 
     //DCRCDATA
-    static void     crc_seed        (uint32_t);
-    static uint32_t crc_data        ();
+
+    static auto
+    crc_seed (uint32_t) -> void;
+
+    static auto
+    crc_data () -> uint32_t;
 
     //DCRCXOR
-    static void     crc_xor         (uint32_t);
+
+    static auto
+    crc_xor (uint32_t) -> void;
+
 
     private:
 

@@ -11,7 +11,8 @@ struct UsbCentral {
     //function call to service irq for non-endpoint0 (current device)
     using service_t = bool(*)(uint8_t, UsbEP0*);
 
-    static bool             init            (bool);
+    static auto
+    init (bool) -> bool;
 
     //set device before any usb init- called from Usb<device>.cpp
     //const uint8_t*=descriptor array
@@ -19,46 +20,65 @@ struct UsbCentral {
     //also calls Usb::init(true) if both args are not 0
     //else calls Usb::init(false),
     //returns result of init
-    static bool             set_device      (const uint8_t*, service_t);
+    static auto
+    set_device (const uint8_t*, service_t) -> bool;
 
     //wValue=descriptor type,index (directly from setup packet)
     //siz = requested size, change to actual size in function if smaller
     //return pointer to wanted bytes
-    static const uint8_t*   get_desc        (uint16_t wValue, uint16_t* siz);
+    static auto
+    get_desc (uint16_t wValue, uint16_t* siz) -> const uint8_t*;
 
     //set configuration (return pointer to config or 0 if bad index)
-    static const uint8_t*   set_config      (uint16_t wValue);
+    static auto
+    set_config (uint16_t wValue) -> const uint8_t*;
 
     //get ep size from descriptor/config
-    static uint16_t         get_epsiz       (uint8_t n, bool tr);
+    static auto
+    get_epsiz (uint8_t n, bool tr) -> uint16_t;
 
     //get endpoint control info based on descriptor info
-    static uint8_t          get_epctrl      (uint8_t n);
+    static auto
+    get_epctrl (uint8_t n) -> uint8_t;
 
     //self-powered, remote wakeup
-    static uint8_t          get_status      ();
+    static auto
+    get_status () -> uint8_t;
 
     //store current descriptor config number
-    static uint8_t          current_config;
+    static uint8_t
+    current_config;
 
     //service- called from isr
-    static void             service         (uint32_t, uint8_t);
+    static auto
+    service (uint32_t, uint8_t) -> void;
+
     //service- call registered service (m_service)
-    static bool             service         (uint8_t ustat, UsbEP0* = 0);
+    static auto
+    service (uint8_t ustat, UsbEP0* = 0) -> bool;
 
     //get 1ms timer count, sof count
-    static uint32_t         timer1ms        ();
-    static uint32_t         sofcount        ();
+    static auto
+    timer1ms () -> uint32_t;
+
+    static auto
+    sofcount () -> uint32_t;
 
 
     private:
 
     //specific device info
-    static const uint8_t*   m_descriptor;
-    static service_t        m_service;
+    static const uint8_t*
+    m_descriptor;
+
+    static service_t
+    m_service;
 
     //counters
-    static uint32_t         m_timer1ms;
-    static uint32_t         m_sofcount;
+    static uint32_t
+    m_timer1ms;
+
+    static uint32_t
+    m_sofcount;
 
 };

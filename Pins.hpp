@@ -98,35 +98,82 @@ struct Pins {
     Pins(RPN, IOMODE = AIN);
 
     //r/w pins
-    bool        pinval          ();
-    bool        latval          ();
-    void        latval          (bool);
-    uint16_t    adcval          ();
-    void        low             ();
-    void        high            ();
-    void        invert          ();
-    void        on              ();
-    void        off             ();
-    bool        ison            ();
+    auto
+    pinval () -> bool;
+
+    auto
+    latval () -> bool;
+
+    auto
+    latval (bool) -> void;
+
+    auto
+    adcval () -> uint16_t;
+
+    auto
+    low () -> void;
+
+    auto
+    high () -> void;
+
+    auto
+    invert () -> void;
+
+    auto
+    on () -> void;
+
+    auto
+    off () -> void;
+
+    auto
+    ison () -> bool;
 
     //pin modes
-    void        lowison         (bool);
-    void        digital_in      ();
-    void        analog_in       ();
-    void        digital_out     ();
-    void        odrain          (bool);
-    void        pullup          (bool);
-    void        pulldn          (bool);
+    auto
+    lowison (bool) -> void;
+
+    auto
+    digital_in () -> void;
+
+    auto
+    analog_in () -> void;
+
+    auto
+    digital_out () -> void;
+
+    auto
+    odrain (bool) -> void;
+
+    auto
+    pullup (bool) -> void;
+
+    auto
+    pulldn (bool) -> void;
 
     //icn
-    void        icn             (bool);
-    void        icn_rising      ();
-    void        icn_falling     ();
-    void        icn_risefall    ();
-    void        icn_mismatch    ();
-    bool        icn_flag        ();
-    bool        icn_stat        ();
-    void        icn_flagclr     ();
+    auto
+    icn (bool) -> void;
+
+    auto
+    icn_rising () -> void;
+
+    auto
+    icn_falling () -> void;
+
+    auto
+    icn_risefall () -> void;
+
+    auto
+    icn_mismatch () -> void;
+
+    auto
+    icn_flag () -> bool;
+
+    auto
+    icn_stat () -> bool;
+
+    auto
+    icn_flagclr () -> void;
 
     //pps
     enum PPSIN : uint8_t {
@@ -147,7 +194,8 @@ struct Pins {
         CLCINA = 11*16|2, CLCINB = 11*16|3,     //R12
         PPSINOFF = 255
     };
-    void        pps_in          (PPSIN);
+    auto
+    pps_in (PPSIN) -> void;
 
     enum PPSOUT : uint8_t {
         PPSLAT,
@@ -157,14 +205,18 @@ struct Pins {
         OCM4, OCM5, OCM6, OCM7, OCM8, OCM9,
         CLC1OUT, CLC2OUT, CLC3OUT, CLC4OUT,
     };
-    void        pps_out         (PPSOUT);
+    auto
+    pps_out (PPSOUT) -> void;
 
     //get adc #
-    uint8_t     an_num          ();
+    auto
+    an_num () -> uint8_t;
+
 
     private:
 
-    static void     pps_do      (uint32_t, uint8_t);
+    static auto
+    pps_do (uint32_t, uint8_t) -> void;
 
     volatile uint32_t*  m_pt;       //base address
     const uint16_t      m_pn;       //pin mask
