@@ -32,10 +32,201 @@ enum : uint32_t {
 //need 2Hz
 enum : uint16_t { CLK_DIV_32KHZ = 0x3FFF };
 
+//time registers
+using time_t = union {
+    struct {
+    uint8_t             :8;
+    uint8_t seconds1    :4;
+    uint8_t seconds10   :4;
+    uint8_t minutes1    :4;
+    uint8_t minutes10   :3;
+    uint8_t             :1;
+    uint8_t hours1      :4;
+    uint8_t hours10     :3;
+    uint8_t             :1;
+    };
+    uint32_t w          :32;
+};
+
+//date registers
+using date_t = union {
+    struct {
+    uint8_t weekday     :3;
+    uint8_t             :5;
+    uint8_t day1        :4;
+    uint8_t day10       :2;
+    uint8_t             :2;
+    uint8_t month1      :4;
+    uint8_t month10     :1;
+    uint8_t             :3;
+    uint8_t year1       :4;
+    uint8_t year10      :4;
+    };
+    uint32_t w          :32;
+};
+
 //-----------------------------------------------------------------private-----
 //store boot time
 Rtcc::datetime_t Rtcc::m_boot_time;
 //-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------private-----
+        static auto
+    time () -> time_t
+//-----------------------------------------------------------------------------
+{
+    time_t t;
+    t.w = Reg::val(RTCTIME);
+    return t;
+}
+
+//-----------------------------------------------------------------private-----
+        static auto
+    date () -> date_t
+//-----------------------------------------------------------------------------
+{
+    date_t d;
+    d.w = Reg::val(RTCDATE);
+    return d;
+}
+
+//-----------------------------------------------------------------private-----
+        static auto
+    alarm_time () -> time_t
+//-----------------------------------------------------------------------------
+{
+    time_t t;
+    t.w = Reg::val(ALMTIME);
+    return t;
+}
+
+//-----------------------------------------------------------------private-----
+        static auto
+    alarm_date () -> date_t
+//-----------------------------------------------------------------------------
+{
+    date_t d;
+    d.w = Reg::val(ALMDATE);
+    return d;
+}
+
+//RTCCON1.ON, RTCCON2, DATE/TIME registers need WRLOCK=0
+//-----------------------------------------------------------------private-----
+        static auto
+    unlock () -> void
+//-----------------------------------------------------------------------------
+{
+    Sys::unlock();
+    Reg::clrbit(RTCCON1, 1<<WRLOCK);
+}
+
+//-----------------------------------------------------------------private-----
+        static auto
+    lock () -> void
+//-----------------------------------------------------------------------------
+{
+    Reg::setbit(RTCCON1, 1<<WRLOCK);
+    Sys::lock();
+}
+
+//calc weekday from date
+//(date_t) month 1-12, day 1-31, year 0-99
+//return weekday, 0 (sunday) - 6(saturday)
+//-----------------------------------------------------------------private-----
+        static auto
+    calc_weekday (date_t v) -> uint8_t
+//-----------------------------------------------------------------------------
+{
+    uint8_t m = v.month10*10 + v.month1;
+    uint8_t d = v.day10*10 + v.day1;
+    uint16_t y = 2000 + v.year10*10 + v.year1;
+
+    static uint8_t t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
+    y -= m < 3;
+    return (y + y/4 - y/100 + y/400 + t[m-1] + d) % 7;
+}
+
+//wrlock
+//-----------------------------------------------------------------private-----
+        static auto
+    time (time_t v) -> void
+//-----------------------------------------------------------------------------
+{
+    unlock();
+    Reg::val(RTCTIME, v.w);
+    lock();
+}
+
+//wrlock
+//-----------------------------------------------------------------private-----
+        static auto
+    date (date_t v) -> void
+//-----------------------------------------------------------------------------
+{
+    v.weekday = calc_weekday(v); //get correct weekday
+    unlock();
+    Reg::val(RTCDATE, v.w);
+    lock();
+}
+
+//-----------------------------------------------------------------private-----
+        static auto
+    alarm_time (time_t v) -> void
+//-----------------------------------------------------------------------------
+{
+    Reg::val(ALMTIME, v.w);
+}
+
+//-----------------------------------------------------------------private-----
+        static auto
+    alarm_date (date_t v) -> void
+//-----------------------------------------------------------------------------
+{
+    v.weekday = calc_weekday(v); //get correct weekday
+    Reg::val(ALMTIME, v.w);
+}
+
+//-----------------------------------------------------------------private-----
+        static auto
+    dt_to_date (Rtcc::datetime_t v) -> date_t
+//-----------------------------------------------------------------------------
+{
+    date_t d;
+    d.year10 = v.year/10; d.year1 = v.year%10;
+    d.month10 = v.month/10; d.month1 = v.month%10;
+    d.day10 = v.day/10; d.day1 = v.day %10;
+    return d;
+}
+
+//-----------------------------------------------------------------private-----
+        static auto
+    dt_to_time (Rtcc::datetime_t v) -> time_t
+//-----------------------------------------------------------------------------
+{
+    time_t t;
+    t.hours10 = v.hour/10; t.hours1 = v.hour%10;
+    t.minutes10 = v.minute/10; t.minutes1 = v.minute%10;
+    t.seconds10 = v.second/10; t.seconds1 = v.second%10;
+    return t;
+}
+
+//-----------------------------------------------------------------private-----
+        static auto
+    dt_to_dt (date_t d, time_t t) -> Rtcc::datetime_t
+//-----------------------------------------------------------------------------
+{
+    Rtcc::datetime_t dt;
+    dt.year = d.year10*10 + d.year1;
+    dt.month = d.month10*10 + d.month1;
+    dt.day = d.day10*10 + d.day1;
+    dt.weekday = d.weekday;
+    dt.hour = t.hours10*10 + t.hours1;
+    dt.minute = t.minutes10*10 + t.minutes1;
+    dt.second = t.seconds10*10 + t.seconds1;
+    dt.hour12 = dt.hour % 12 ? dt.hour % 12 : 12;
+    dt.pm = dt.hour >= 12;
+    return dt;
+}
 
 //=============================================================================
         auto Rtcc::
@@ -231,160 +422,3 @@ Rtcc::datetime_t Rtcc::m_boot_time;
     return m_boot_time;
 }
 
-//-----------------------------------------------------------------private-----
-        auto Rtcc::
-    time () -> time_t
-//-----------------------------------------------------------------------------
-{
-    time_t t;
-    t.w = Reg::val(RTCTIME);
-    return t;
-}
-
-//-----------------------------------------------------------------private-----
-        auto Rtcc::
-    date () -> date_t
-//-----------------------------------------------------------------------------
-{
-    date_t d;
-    d.w = Reg::val(RTCDATE);
-    return d;
-}
-
-//-----------------------------------------------------------------private-----
-        auto Rtcc::
-    alarm_time () -> time_t
-//-----------------------------------------------------------------------------
-{
-    time_t t;
-    t.w = Reg::val(ALMTIME);
-    return t;
-}
-
-//-----------------------------------------------------------------private-----
-        auto Rtcc::
-    alarm_date () -> date_t
-//-----------------------------------------------------------------------------
-{
-    date_t d;
-    d.w = Reg::val(ALMDATE);
-    return d;
-}
-
-//wrlock
-//-----------------------------------------------------------------private-----
-        auto Rtcc::
-    time (time_t v) -> void
-//-----------------------------------------------------------------------------
-{
-    unlock();
-    Reg::val(RTCTIME, v.w);
-    lock();
-}
-
-//wrlock
-//-----------------------------------------------------------------private-----
-        auto Rtcc::
-    date (date_t v) -> void
-//-----------------------------------------------------------------------------
-{
-    v.weekday = calc_weekday(v); //get correct weekday
-    unlock();
-    Reg::val(RTCDATE, v.w);
-    lock();
-}
-
-//-----------------------------------------------------------------private-----
-        auto Rtcc::
-    alarm_time (time_t v) -> void
-//-----------------------------------------------------------------------------
-{
-    Reg::val(ALMTIME, v.w);
-}
-
-//-----------------------------------------------------------------private-----
-        auto Rtcc::
-    alarm_date (date_t v) -> void
-//-----------------------------------------------------------------------------
-{
-    v.weekday = calc_weekday(v); //get correct weekday
-    Reg::val(ALMTIME, v.w);
-}
-
-//RTCCON1.ON, RTCCON2, DATE/TIME registers need WRLOCK=0
-//-----------------------------------------------------------------private-----
-        auto Rtcc::
-    unlock () -> void
-//-----------------------------------------------------------------------------
-{
-    Sys::unlock();
-    Reg::clrbit(RTCCON1, 1<<WRLOCK);
-}
-
-//-----------------------------------------------------------------private-----
-        auto Rtcc::
-    lock () -> void
-//-----------------------------------------------------------------------------
-{
-    Reg::setbit(RTCCON1, 1<<WRLOCK);
-    Sys::lock();
-}
-
-//calc weekday from date
-//(date_t) month 1-12, day 1-31, year 0-99
-//return weekday, 0 (sunday) - 6(saturday)
-//-----------------------------------------------------------------private-----
-        auto Rtcc::
-    calc_weekday (date_t v) -> uint8_t
-//-----------------------------------------------------------------------------
-{
-    uint8_t m = v.month10*10 + v.month1;
-    uint8_t d = v.day10*10 + v.day1;
-    uint16_t y = 2000 + v.year10*10 + v.year1;
-
-    static uint8_t t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
-    y -= m < 3;
-    return (y + y/4 - y/100 + y/400 + t[m-1] + d) % 7;
-}
-
-//-----------------------------------------------------------------private-----
-        auto Rtcc::
-    dt_to_date (datetime_t v) -> date_t
-//-----------------------------------------------------------------------------
-{
-    date_t d;
-    d.year10 = v.year/10; d.year1 = v.year%10;
-    d.month10 = v.month/10; d.month1 = v.month%10;
-    d.day10 = v.day/10; d.day1 = v.day %10;
-    return d;
-}
-
-//-----------------------------------------------------------------private-----
-        auto Rtcc::
-    dt_to_time (datetime_t v) -> time_t
-//-----------------------------------------------------------------------------
-{
-    time_t t;
-    t.hours10 = v.hour/10; t.hours1 = v.hour%10;
-    t.minutes10 = v.minute/10; t.minutes1 = v.minute%10;
-    t.seconds10 = v.second/10; t.seconds1 = v.second%10;
-    return t;
-}
-
-//-----------------------------------------------------------------private-----
-        auto Rtcc::
-    dt_to_dt (date_t d, time_t t) -> datetime_t
-//-----------------------------------------------------------------------------
-{
-    datetime_t dt;
-    dt.year = d.year10*10 + d.year1;
-    dt.month = d.month10*10 + d.month1;
-    dt.day = d.day10*10 + d.day1;
-    dt.weekday = d.weekday;
-    dt.hour = t.hours10*10 + t.hours1;
-    dt.minute = t.minutes10*10 + t.minutes1;
-    dt.second = t.seconds10*10 + t.seconds1;
-    dt.hour12 = dt.hour % 12 ? dt.hour % 12 : 12;
-    dt.pm = dt.hour >= 12;
-    return dt;
-}

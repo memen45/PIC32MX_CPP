@@ -19,7 +19,7 @@ struct UsbCh9 {
         OTHER_SPEED,
         INTERFACE_POWER,
         OTG //9
-    };
+        };
 
     //ConfigurationDescriptor
     //bmAttributes
@@ -28,7 +28,7 @@ struct UsbCh9 {
         REQUIRED = 0x80,
         SELFPOWER = REQUIRED|0x40,
         REMOTEWAKE = REQUIRED|0x20
-    };
+        };
 
     //EndpointDescriptor
     //bEndpointAddress
@@ -38,14 +38,14 @@ struct UsbCh9 {
         OUT8, OUT9, OUT10, OUT11, OUT12, OUT13, OUT14, OUT15,
         IN0 = 128, IN1, IN2, IN3, IN4, IN5, IN6, IN7,
         IN8, IN9, IN10, IN11, IN12, IN13, IN14, IN15,
-    };
+        };
     //bmAttributes
         enum
     ENDPOINT_ATTRIBUTES {
         CONTROL = 0, ISOCHRONOUS, BULK, INTERRUPT,
         ISONOSYNC = 0, ISOASYNC = 1<<2, ISOADAPT = 2<<2, ISOSYNC = 3<<2,
         ISODATA = 0, ISOFEEDBACK = 1<<4, ISOIMPFEEDBACK = 2<<4
-    };
+        };
     //wMaxPacketSize
         enum
     ENDPOINT_PACKETSIZE {
@@ -53,10 +53,11 @@ struct UsbCh9 {
         ISO_FSMAX = 1023,
         BULK_FSMAX = 64, BULK_FSLARGE = 32,
         BULK_FSMEDIUM = 16, BULK_FSSMALL = 8
-    };
+        };
 
     //setup packet
-    using SetupPkt_t = union {
+        using
+    SetupPkt_t = union {
         uint8_t     packet[8];
         uint16_t    wRequest;
         struct {
@@ -66,7 +67,7 @@ struct UsbCh9 {
             uint16_t    wIndex;
             uint16_t    wLength;
         };
-    };
+        };
 
     //SetupPkt_t.wRequest  (bRequest<<8|bmRequestType)
         enum
@@ -82,7 +83,7 @@ struct UsbCh9 {
 
         EP_GET_STATUS = 0x0082, EP_CLEAR_FEATURE = 0x0102,
         EP_SET_FEATURE = 0x0302, EP_SYNC_HFRAME = 0x1202,
-    };
+        };
     //SetupPkt_t.bRequest
         enum
     SETUP_BREQUEST {
@@ -95,12 +96,12 @@ struct UsbCh9 {
         SET_IFACE = 0x11,
 
         SYNC_HFRAME = 0x12
-    };
+        };
 
         enum
     TOKEN_TYPE {
         OUT = 1, IN = 9, SETUP = 13
-    };
+        };
 
 };
 

@@ -6,10 +6,10 @@
 
 struct Dma {
 
-    //instantiate Dma with dma number
         enum
     DMAX { DMA0, DMA1, DMA2, DMA3 };
-    Dma(DMAX);
+
+    Dma(DMAX);      //instantiate Dma with dma number
 
     //DCHXCON
 
@@ -18,6 +18,7 @@ struct Dma {
 
         enum
     CHCHAIN : uint8_t { TOHIGHER, TOLOWER, CHAINOFF };
+
         auto
     chain (CHCHAIN) -> void;
 
@@ -35,6 +36,7 @@ struct Dma {
 
         enum
     CHPRI : uint8_t { PRI0, PRI1, PRI2, PRI3 };
+
         auto
     priority (CHPRI) -> void;
 
@@ -42,6 +44,7 @@ struct Dma {
 
         enum
     IRQ : uint8_t { IRQOFF = 255 };
+
         auto
     irq_abort (uint8_t) -> void;
 
@@ -63,7 +66,8 @@ struct Dma {
     IRQENF : uint8_t { //byte positions, use reg byte acccess
         SRCDONE = 1<<7, SRCHALF = 1<<6, DSTDONE = 1<<5, DSTHALF = 1<<4,
         BLKDONE = 1<<3, CELLDONE = 1<<2, XFERABORT = 1<<1, ADDRERR = 1<<0
-    };
+        };
+
         auto
     irq (IRQENF, bool) -> void;
 
@@ -150,11 +154,13 @@ struct Dma {
 
         enum
     CRCBYTO : uint8_t { SAME, REVERSE, SWAPH, SWAPB };
+
         static auto
     crc_byto (CRCBYTO) -> void;
 
         enum
     CRCBITO : bool { MSB, LSB };
+
         static auto
     crc_bito (CRCBITO) -> void;
 
@@ -169,6 +175,7 @@ struct Dma {
 
         enum
     CRCTYPE : bool { LFSR, IP };
+
         static auto
     crc_type (CRCTYPE) -> void;
 

@@ -6,10 +6,10 @@
 
 struct I2c  {
 
-    //instantiate I2c with i2c number
         enum
     I2CX { I2C1, I2C2, I2C3 };
-    I2c(I2CX);
+
+    I2c(I2CX);       //instantiate I2c with i2c number
 
     //I2C1CON
 
@@ -24,6 +24,7 @@ struct I2c  {
 
         enum
     HOLDTIM : bool { NS100, NS300 };
+
         auto
     hold_time (HOLDTIM) -> void;
 
@@ -90,7 +91,8 @@ struct I2c  {
         RW = 1<<2,
         RXFULL = 1<<1,
         TXFULL = 1<<0,
-    };
+        };
+
         auto
     stat (STAT) -> bool;
 
@@ -118,7 +120,8 @@ struct I2c  {
         enum
     I2CSPEED : uint32_t {
         KHZ100 = 100000, KHZ400 = 400000, MHZ1 = 1000000
-    };
+        };
+
         auto
     speed (I2CSPEED) -> void;
 

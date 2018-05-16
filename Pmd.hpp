@@ -20,7 +20,7 @@ struct Pmd {
         I2C1 = 144, I2C2 = 145, I2C3 = 146, USB = 152,
         RTCC = 160, REFO = 168,                                 //PMD6
         DMA = 196                                               //PDM7
-    };
+        };
 
         static auto
     off (PMD) -> void;                  //single

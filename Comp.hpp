@@ -6,10 +6,10 @@
 
 struct Comp {
 
-    //instantiate Comp with comparator number
         enum
     CMX { CMP1, CMP2, CMP3 };
-    Comp(CMX);
+
+    Comp(CMX);      //instantiate Comp with comparator number
 
         auto
     on (bool) -> void;
@@ -28,6 +28,7 @@ struct Comp {
 
         enum
     EVPOL { OFF, LH, HL, ANY };
+
         auto
     evt_sel (EVPOL) -> void;
 
@@ -36,6 +37,7 @@ struct Comp {
 
         enum
     CCH { CXINB, CXINC, CXIND, BGAP };
+
         auto
     ch_sel (CCH) -> void;
 
@@ -45,6 +47,7 @@ struct Comp {
 
         enum
     CVREF { INT_BGAP, EXT_CVREF };
+
         static auto
     cref_sel (CVREF) -> void;
 

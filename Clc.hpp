@@ -6,13 +6,14 @@
 
 struct Clc {
 
-    //instantiate Clc with CLCn
         enum
     CLCX { CLC1, CLC2, CLC3, CLC4 };
-    Clc(CLCX);
+
+    Clc(CLCX);      //instantiate Clc with CLCn
 
         enum
     GXPOL { G4 = 1<<19, G3 = 1<<18, G2 = 1<<17, G1 = 1<<16 };
+
         auto
     gate_inv (GXPOL, bool) -> void;
 
@@ -39,6 +40,7 @@ struct Clc {
 
         enum
     MODE : uint8_t { ANDOR, ORXOR, AND, SR, DSR, DR, JKR, LSR };
+
         auto
     mode (MODE e) -> void;
 

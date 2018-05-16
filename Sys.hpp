@@ -11,6 +11,7 @@ struct Sys {
 
         enum
     BMXARB : uint8_t { CPUHIGH, CPULOW, RROBIN };
+
         static auto
     bus_mode (BMXARB) -> void;
 

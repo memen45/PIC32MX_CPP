@@ -6,17 +6,18 @@
 
 struct Ccp  {
 
-    //instantiate Ccp with CCPn
         enum
     CCPX {
         CCP1, CCP2, CCP3, CCP4, CCP5, CCP6, CCP7, CCP8, CCP9
-    };
-    Ccp(CCPX);
+        };
+
+    Ccp(CCPX);          //instantiate Ccp with CCPn
 
     //CCPxCON1
 
         enum
     OPOSTSRC : bool { TMRIRQ, EVTTRG };
+
         auto
     outscale_src (OPOSTSRC) -> void;
 
@@ -43,7 +44,8 @@ struct Ccp  {
         PR = 0, MCCPME, MCCP1, SCCP2, SCCP3, INT0 = 9, INT1, INT2, INT3, INT4,
         SCCP8, SCCP9, CLC1, CLC2, CLC3, CLC4, COMP1 = 24, COMP2, COMP3, ADC,
         TMR = 31, TRIGSOFT = 31
-    };
+        };
+
         auto
     sync_src (SYNC) -> void;
 
@@ -65,12 +67,14 @@ struct Ccp  {
         CLC1MCCP1 = 3, CLC2MCCP2 = 3, CLC3MCCP3 = 3, CLC1SCCP4 = 3,
         CLC2SCCP5 = 3, CLC3SCCP6 = 3, CLC4SCCP7 = 3, CLC1SCCP8 = 3,
         CLC1SCCP9 = 3, TCKIB = 6, TCKIA = 7
-    };
+        };
+
         auto
     clk_src (CLKSEL) -> void;
 
         enum
     TMRPS : uint8_t { PS1, PS4, PS16, PS64 };
+
         auto
     tmr_prescale (TMRPS) -> void;
 
@@ -105,7 +109,8 @@ struct Ccp  {
         CAP4RISE32 =    1<<5|   1<<4|       4,
         CAP16RISE16 =   0<<5|   1<<4|       5,
         CAP16RISE32 =   1<<5|   1<<4|       5
-    };
+        };
+
         auto
     mode (MODE) -> void;
 
@@ -118,24 +123,27 @@ struct Ccp  {
     OUTPINS : uint8_t {
         OCF = 1<<5, OCE = 1<<4, OCD = 1<<3,
         OCC = 1<<2, OCB = 1<<1, OCA = 1<<0
-    };
+        };
+
         auto
     out_pins (OUTPINS) -> void;
 
         enum
     ICGSM : uint8_t { LEVEL, RISEON, FALLOFF  };
+
         auto
     gate_mode (ICGSM) -> void;
 
         enum
     AUXOUT : uint8_t { OFF, ROLLOVER, SIGNALOUT, CAPCOMPEVT };
+
         auto
     out_aux (AUXOUT) -> void;
 
         enum
     ICS : uint8_t {
         ICMX, ICOMP1, ICOMP2, ICOMP3, ICLC1, ICLC2, ICLC3, ICLC4
-    };
+        };
         auto
     cap_src (ICS) -> void;
 
@@ -157,7 +165,8 @@ struct Ccp  {
         SCCP4_MCCP123 = 1<<4, MCCP1_SCCP4TO9 = 1<<4,
         SCCP5_MCCP123 = 1<<3, MCCP2_SCCP4TO9 = 1<<4,
         COMP_3 = 1<<2, COMP_2 = 1<<1, COMP_1 = 1<<0
-    };
+        };
+
         auto
     gate_autosrc (GATEAUTOSRC) -> void;
 
@@ -172,12 +181,14 @@ struct Ccp  {
         enum
     OUTM : uint8_t {
         STEERABLE = 0, PUSHPULL, HALFBRIDGE, BRUSHREV = 4, BRUSHFWD, SCAN
-    };
+        };
+
         auto
     out_mode (OUTM) -> void;
 
         enum
     POLARITY : bool { ACTHIGH, ACTLOW };
+
         auto
     polarity_ace (POLARITY) -> void;
 
@@ -186,6 +197,7 @@ struct Ccp  {
 
         enum
     SHUTDOWN : uint8_t { HIGHIMP, INACTIVE, ACTIVE };
+
         auto
     shutdown_ace (SHUTDOWN) -> void;
 
@@ -311,6 +323,7 @@ struct Ccp  {
 
         auto
     ccp_num () -> uint8_t;  //which ccp number am I
+
 
     private:
 

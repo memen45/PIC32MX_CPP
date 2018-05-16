@@ -49,6 +49,7 @@ struct Delay {
         auto
     set_s (uint16_t) -> void;       //set s wait time
 
+
     //blocking
         static auto
     wait_us (uint32_t) -> void;

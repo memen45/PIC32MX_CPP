@@ -24,7 +24,6 @@ struct Vdetect {
         static auto
     tripped () -> bool;
 
-    //voltage level limits
         enum
     HLVDL {
         V325_363 = 5,
@@ -38,8 +37,9 @@ struct Vdetect {
         V208_233,
         V200_222,
         VEXT
-    };
+        };
+
         static auto
-    limit (HLVDL) -> void;
+    limit (HLVDL) -> void;      //set voltage level limit
 
 };

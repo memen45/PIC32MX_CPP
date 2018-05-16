@@ -88,18 +88,19 @@ struct Pins {
         PIN54 = A5, PIN55 = C9, /*PIN56 = Vcap, PIN57 = Vdd,*/ PIN58 = A15,
         PIN59 = A14, PIN60 = B10, PIN61 = B11, /*PIN62 = Vusb,*/ PIN63 = B13,
         PIN64 = A10
-    };
+        };
 
         enum
     IOMODE : uint8_t {
         AIN = 0,
         IN = 1, INPU = 1<<3|1<<2|IN, INPD = 1<<4|IN, INL = 1<<2|IN,
         OUT = 2, OUTL = 1<<2|OUT
-    };
-    //constructor
+        };
+
     Pins(RPN, IOMODE = AIN);
 
     //r/w pins
+
         auto
     pinval () -> bool;
 
@@ -131,6 +132,7 @@ struct Pins {
     ison () -> bool;
 
     //pin modes
+
         auto
     lowison (bool) -> void;
 
@@ -153,6 +155,7 @@ struct Pins {
     pulldn (bool) -> void;
 
     //icn
+
         auto
     icn (bool) -> void;
 
@@ -178,6 +181,7 @@ struct Pins {
     icn_flagclr () -> void;
 
     //pps
+
         enum
     PPSIN : uint8_t {
         //byte offset from RPINR1
@@ -196,7 +200,8 @@ struct Pins {
         SS2IN = 10*16|2,                        //R11
         CLCINA = 11*16|2, CLCINB = 11*16|3,     //R12
         PPSINOFF = 255
-    };
+        };
+
         auto
     pps_in (PPSIN) -> void;
 
@@ -208,13 +213,13 @@ struct Pins {
         SDO2, SCK2OUT, SS2OUT,
         OCM4, OCM5, OCM6, OCM7, OCM8, OCM9,
         CLC1OUT, CLC2OUT, CLC3OUT, CLC4OUT,
-    };
+        };
+
         auto
     pps_out (PPSOUT) -> void;
 
-    //get adc #
         auto
-    an_num () -> uint8_t;
+    an_num () -> uint8_t;           //get adc #
 
 
     private:

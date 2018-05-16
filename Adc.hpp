@@ -8,179 +8,154 @@ struct Adc {
 
     //ADC1BUFn
 
-    //read adc buffer N , N = 0 - ADC1BUF_LAST (21) , N default = 0
         static auto
-    read (uint8_t = 0) -> uint16_t;
-
+    read (uint8_t = 0) -> uint16_t; //read adc buffer N,
+                                    //N = 0 - ADC1BUF_LAST (21) , N default = 0
     //ADC1CON1
 
-    //enable adc
         static auto
-    on (bool) -> void;
+    on (bool) -> void;              //enable adc
 
-    //enable stop adc when in idle mode
         static auto
-    stop_idle (bool) -> void;
+    stop_idle (bool) -> void;       //enable stop adc when in idle mode
 
-    //adc data output format
         enum
     FORM : uint8_t {
         INT16, SINT16, FR16, SFR16, INT32, SINT32, FR32, SFR32
-    };
-        static auto
-    format (FORM) -> void;
+        };
 
-    //adc conversion trigger source select
+        static auto
+    format (FORM) -> void;          //adc data output format
+
         enum
     SSRC : uint8_t {
         SOFT = 0, INT0, TMR3, TMR1 = 5, TMR1SLEP, AUTO,
         MCCP1, MCCP2, MCCP3, SCCP4, SCCP5, SCCP6, CLC1, CLC2
-    };
-        static auto
-    trig_sel (SSRC) -> void;
+        };
 
-    //true = 12bit conversion, false = 10bit conversion
         static auto
-    mode_12bit (bool) -> void;
+    trig_sel (SSRC) -> void;        //adc conversion trigger source select
 
-    //adc sample auto start, false = wait for samp bit set
         static auto
-	samp_auto (bool) -> void;
+    mode_12bit (bool) -> void;      //true = 12bit, false = 10bit
 
-    //true = adc sample enable, false = end sample, start conversion
         static auto
-    samp (bool) -> void;
+	samp_auto (bool) -> void;       //true=auto start, false=wait for samp bit set
 
-    //get adc sample status
         static auto
-    samp () -> bool;
+    samp (bool) -> void;            //true = adc sample enable,
+                                    //false = end sample, start conversion
+        static auto
+    samp () -> bool;                //get adc sample status
 
-    //get adc conversion status, true = done
         static auto
-    done () -> bool;
+    done () -> bool;                //get adc conversion status, true = done
 
     //ADC1CON2
 
-    //set Vr+/Vr- adc voltage reference
         enum
     VCFG : uint8_t {
         VDD_VSS, VDD_EXTN, EXTP_VSS, EXTP_EXTN
-    };
-        static auto
-	vref_cfg (VCFG) -> void;
+        };
 
-    //connect SHA inputs to negative reference for offset calibration
         static auto
-    offset_cal (bool) -> void;
+	vref_cfg (VCFG) -> void;        //set Vr+/Vr- adc voltage reference
 
-    //true = store N channel adc into buffer N, false = FIFO
         static auto
-	buf_reg (bool) -> void;
+    offset_cal (bool) -> void;      //connect SHA inputs to negative reference
 
-    //enable channel scan
         static auto
-	scan (bool) -> void;
+	buf_reg (bool) -> void;         //true=N channel adc-> buffer N, false=FIFO
 
-    //true = second half of buffers busy, false = first half busy
         static auto
-    buf2nd_busy () -> bool;
+	scan (bool) -> void;            //enable channel scan
 
-    //number of samples per irq, 1-16
         static auto
-	samp_nirq (uint8_t) -> void;
+    buf2nd_busy () -> bool;         //true=second half busy, false=first half
 
-    //split buffer into two halves
         static auto
-	buf_split (bool) -> void;
+	samp_nirq (uint8_t) -> void;    //number of samples per irq, 1-16
+
+        static auto
+	buf_split (bool) -> void;       //split buffer into two halves
 
     //ADC1CON3
 
-    //set adc conversion clock source
         enum
     CLK { PBCLK, FRC };
-        static auto
-    clk_src (CLK) -> void;
 
-    //keep sampling even when samp=0
         static auto
-    samp_extend (bool) -> void;
+    clk_src (CLK) -> void;          //set adc conversion clock source
 
-    //auto sample time, 1-31 Tad
         static auto
-    samp_time (uint8_t) -> void;
+    samp_extend (bool) -> void;     //keep sampling even when samp=0
 
-    //set conversion clock time Tad, default = 4 (max needed)
         static auto
-	conv_time (uint8_t = 4) -> void;
+    samp_time (uint8_t) -> void;    //auto sample time, 1-31 Tad
 
+        static auto
+	conv_time (uint8_t = 4) -> void;//set conversion clock time Tad,
+                                    //default = 4 (max needed)
     //ADC1CON5
 
-    //auto scan enable
         static auto
-    scan_auto (bool) -> void;
+    scan_auto (bool) -> void;       //auto scan enable
 
-    //enable low power after scan
         static auto
-    low_power (bool) -> void;
+    low_power (bool) -> void;       //enable low power after scan
 
-    //enable bandgap when adc on
         static auto
-	bandgap (bool) -> void;
+	bandgap (bool) -> void;         //enable bandgap when adc on
 
-    //auto scan interrupt modes
         enum
     ASINT : uint8_t { NONE, DET, COMP, DETCOMP };
-        static auto
-	scan_autoirq (ASINT) -> void;
 
-    //auto scan write mode
+        static auto
+	scan_autoirq (ASINT) -> void;   //auto scan interrupt modes
+
         enum
     WM : uint8_t { LEGACY, CONVSAV, COMPONLY };
-        static auto
-	write_mode (WM) -> void;
 
-    //auto scan compare mode
+        static auto
+	write_mode (WM) -> void;        //auto scan write mode
+
         enum
     CM :uint8_t { LT, GT, INWIN, OUTWIN };
+
         static auto
-	compare_mode (CM) -> void;
+	compare_mode (CM) -> void;      //auto scan compare mode
 
     //ADC1CHS
 
-    //adc input channel select
         enum
     CH0SA : uint8_t {
         AN0 = 0, AN1, AN2, AN3, AN4, AN5, AN6, AN7,
         AN8, AN9, AN10, AN11, AN12,AN13, AN14, AN15,
         AN16, AN17, AN18, AN19,
         VDD = 27, VBG, AVSS, AVDD, END = 255
-    };
+        };
+
         static auto
-	ch_sel (CH0SA) -> void;
+	ch_sel (CH0SA) -> void;         //adc input channel select
 
     //ADC1SS
 
-    //enable adc channel scan input, one channel
         static auto
-    ch_scan (CH0SA, bool) -> void;
+    ch_scan (CH0SA, bool) -> void;  //enable adc channel scan input, 1 channel
 
-    //enable adc channel scan input, one or more channels (in array)
         static auto
-    ch_scan (CH0SA*) -> void;
+    ch_scan (CH0SA*) -> void;       //enable adc channel scan input, (1+, array)
 
-    //enable adc channel scan input, manually specify channels
         static auto
-	ch_scan (uint32_t) -> void;
+	ch_scan (uint32_t) -> void;     //enable adc channel scan input, (set ch bits)
 
     //ADC1CHIT
 
-    //get channel adc compare hit bit
         static auto
-    ch_hit (CH0SA) -> bool;
+    ch_hit (CH0SA) -> bool;         //get channel adc compare hit bit
 
-    //get all channels adc compare hit bit
         static auto
-	ch_hit () -> uint32_t;
+	ch_hit () -> uint32_t;          //get all channels adc compare hit bit
 
     //minimal conversion times for frc/pbclk(24MHz) for 10/12bits
         enum

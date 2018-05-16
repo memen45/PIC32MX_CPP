@@ -14,6 +14,7 @@ struct Cvref {
 
         enum
     REFSEL { NONE, CVREF, AVDD };
+
         static auto
     refsel (REFSEL) -> void;
 

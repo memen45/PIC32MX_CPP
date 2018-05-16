@@ -35,8 +35,7 @@ struct Nvm {
         MAXMEM256 = PAGESIZE*128-1,
         MAXPAGE256 = 127, //0-127
         MAXROW256 = 1023, //0-1023
-
-    };
+        };
 
         static auto
     write_2word (uint32_t, uint32_t, uint32_t) -> uint8_t;
@@ -52,6 +51,7 @@ struct Nvm {
 
         enum
     BOOTP : uint16_t { PAGE0 = 1<<8, PAGE1 = 1<<9, PAGE2 = 1<<10 };
+
         static auto
     boot_protect (BOOTP, bool) -> void; //true=lock until reset
 

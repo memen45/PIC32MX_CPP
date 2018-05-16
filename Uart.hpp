@@ -23,14 +23,16 @@ struct Uart  {
     //  Uart u(UART2, Pins::A0, Pins::B0);  //uart#, tx pin, rx pin, [baud]
     //  Uart u(UART2, Pins::A0, Pins::B0, 230400);
 
-    enum UARTX {
+        enum
+    UARTX {
         UART1 = 0, UART1TX = UART1|1<<2, UART1RX = UART1,
         UART2 = 1, UART2TX = UART2|1<<2, UART2RX = UART2,
         UART3 = 2, UART3TX = UART3|1<<2, UART3RX = UART3
-    };
-    Uart(UARTX);
-    Uart(UARTX, Pins::RPN, uint32_t = 0); //tx/rx only, bit2=1=tx bit2=0=rx
-    Uart(UARTX, Pins::RPN, Pins::RPN, uint32_t = 0);
+        };
+
+    Uart (UARTX);
+    Uart (UARTX, Pins::RPN, uint32_t = 0); //tx/rx only, bit2=1=tx bit2=0=rx
+    Uart (UARTX, Pins::RPN, Pins::RPN, uint32_t = 0);
 
     //uxmode
 
@@ -42,6 +44,7 @@ struct Uart  {
 
         enum
     CLKSEL { PBCLK, SYSCLK, FRC, REFO1 };
+
         auto
     clk_sel (CLKSEL) -> void;           //clock select
 
@@ -59,6 +62,7 @@ struct Uart  {
 
         enum
     RTSMODE { FLOW, SIMPLEX };
+
         auto
     rts_mode (RTSMODE) -> void;         //rts mode
 
@@ -73,6 +77,7 @@ struct Uart  {
 
         enum
     RXPOL { IDLEHIGH, IDLELOW };
+
         auto
     rx_pol (RXPOL) -> void;             //rx polarity
 
@@ -80,7 +85,8 @@ struct Uart  {
     MODESEL {
          MODE8N1 = 0, MODE8E1 = 2, MODE8O1 = 4, MODE9N1 = 6,
          MODE8N2 = 1, MODE8E2 = 3, MODE8O2 = 5, MODE9N2 = 7
-    };
+        };
+
         auto
     mode (MODESEL) -> void;             //parity, data, stop
 
@@ -94,6 +100,7 @@ struct Uart  {
 
         enum
     UTXISEL : uint8_t { TFREE, TDONE, TEMPTY };
+
         auto
     tx_irq (UTXISEL) -> void;           //tx irq select
 
@@ -117,6 +124,7 @@ struct Uart  {
 
         enum
     URXISEL : uint8_t { RANY, RHALF, RMOST };
+
         auto
     rx_irq (URXISEL) -> void;           //rx irq select
 

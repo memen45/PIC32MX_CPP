@@ -6,10 +6,10 @@
 
 struct Spi  {
 
-    //instantiate Comp123 with comparator number
         enum
     SPIX { SPI1, SPI2, SPI3 };
-    Spi(SPIX);
+
+    Spi(SPIX);      //instantiate Comp123 with comparator number
 
     //spixcon
 
@@ -18,11 +18,13 @@ struct Spi  {
 
         enum
     FRMDIR : bool { MASTER, SLAVE };
+
         auto
     frame_dir (FRMDIR) -> void;         //frame sync pulse dir
 
         enum
     FRMHL : bool { LOW, HIGH };
+
         auto
     frame_pol (FRMHL) -> void;          //frame sync polarity
 
@@ -31,16 +33,19 @@ struct Spi  {
 
         enum
     FRMPW : bool { CLKW, CHARW };
+
         auto
     frame_pwidth (FRMPW) -> void;       //1=1char, 0=1clk
 
         enum
     FRMCNT : uint8_t { CNT1, CNT2, CNT4, CNT8, CNT16, CNT32 };
+
         auto
     frame_count (FRMCNT) -> void;       //frame sync counter
 
         enum
     CLKSEL : bool { PBCLK, REFO1 };
+
         auto
     clk_sel (CLKSEL) -> void;           //set clock source
 
@@ -49,6 +54,7 @@ struct Spi  {
 
         enum
     FRMEDGE : bool { B4BCLK, ATBCLK };
+
         auto
     frame_edge (FRMEDGE) -> void;       //frame sync edge sel
 
@@ -62,17 +68,20 @@ struct Spi  {
     MODE : uint8_t {
         MODE8 = 0, MODE16, MODE32,
         AMODE1616 = 0, AMODE1632, AMODE3232, AMODE2432
-    };
+        };
+
         auto
     mode (MODE) -> void;                //set spi mode
 
         enum
     PHASE: bool { SMPMID, SMPEND };
+
         auto
     phase (PHASE) -> void;              //sample phase bit
 
         enum
     CLKEDGE : bool { LEAD, TRAIL };
+
         auto
     clk_edge (CLKEDGE) -> void;         //clk edge sel
 
@@ -81,6 +90,7 @@ struct Spi  {
 
         enum
     CLKPOL : bool { CLKH, CLKL };
+
         auto
     clk_pol (CLKPOL) -> void;           //clock polarity
 
@@ -89,11 +99,13 @@ struct Spi  {
 
         enum
     TXIRQ : uint8_t { TDONE, TEMPTY, THALF, TNOTFULL };
+
         auto
     tx_irq (TXIRQ) -> void;             //tx irq mode
 
         enum
     RXIRQ : uint8_t { REMPTY, RANY, RHALF, RFULL };
+
         auto
     rx_irq (RXIRQ) -> void;             //rx irq mode
 
@@ -185,6 +197,7 @@ struct Spi  {
 
         enum
     AUDMOD : uint8_t { I2S, LEFT, RIGHT, PCMDSP };
+
         auto
     audio_mode (AUDMOD) -> void;        //audio mode
 

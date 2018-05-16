@@ -36,10 +36,12 @@
 struct Osc {
 
     //osccon
+
         enum
     DIVS : uint8_t { //upper byte of osccon, spllcon
         DIV1, DIV2, DIV4, DIV8, DIV16, DIV32, DIV64, DIV256
-    };
+        };
+
         static auto
     frc_div (DIVS) -> void;         //set
 
@@ -49,7 +51,8 @@ struct Osc {
         enum
     CNOSC : uint8_t { //cosc/nosc in second byte of osccon
          FRCDIV = 0, SPLL, POSC, SOSC = 4, LPRC
-    };
+        };
+
         static auto
     clk_src () -> CNOSC;            //get current osc source
 
@@ -83,24 +86,29 @@ struct Osc {
         enum
     PLLMUL : uint8_t {
         MUL2, MUL3, MUL4, MUL6, MUL8, MUL12, MUL24
-    };
+        };
+
         static auto
     pll_mul () -> PLLMUL;           //get pll multiplier
 
         enum
     PLLSRC : bool { EXT, FRC };
+
         static auto
     pll_src () -> PLLSRC;           //get pll src
+
 
     private:
         static auto
     pll_src (PLLSRC) -> void;       //set pll src
+
 
     public:
         static auto
     pll_set (PLLMUL, DIVS, PLLSRC = FRC) -> void; //set pll mul/div, pll src
 
     //refo1con, refo1trim
+
         static auto
     refo_div (uint16_t) -> void;    //divisor value
 
@@ -113,7 +121,8 @@ struct Osc {
         enum
     ROSEL : uint8_t {
         RSYSCLK = 0, RPOSC = 2, RFRC, RLPRC, RSOSC, RPLLVCO = 7
-    };
+        };
+
         static auto
     refo_on (ROSEL) -> void;        //refo on, src sel
 
@@ -148,15 +157,18 @@ struct Osc {
     refo_freq () -> uint32_t;       //get refo frequency
 
     //clkstat
+
         enum
     CLKRDY : uint8_t {
         FRCRDY = 1<<0, SPLLDIVRDY = 1<<1, POSCRDY = 1<<2,
         SOSCRDY = 1<<4, LPRCRDY = 1<<5, USBRDY = 1<<6, SPLLRDY = 1<<7
-    };
+        };
+
         static auto
     ready (CLKRDY) -> bool;         //clock ready?
 
     //osctun
+
         static auto
     tun_auto (bool) -> void;        //osc tune on
 
@@ -165,6 +177,7 @@ struct Osc {
 
         enum
     TUNSRC : bool { TSOSC, TUSB };
+
         static auto
     tun_src (TUNSRC) -> void;       //src, 0=sosc 1=usb
 
@@ -187,6 +200,7 @@ struct Osc {
     tun_val () -> int8_t;           //get tune value
 
     //misc
+
         static auto
     sysclk () -> uint32_t;          //get cpu sysclk
 

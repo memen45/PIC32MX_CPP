@@ -8,10 +8,12 @@
 
 struct UsbEP {
 
-    using notify_t = bool(*)(UsbEP*);
+        using
+    notify_t = bool(*)(UsbEP*);
 
         enum
     TXRX : bool { RX, TX };
+
         enum
     EVEODD : bool { EVEN, ODD };
 
@@ -66,8 +68,8 @@ struct UsbEP {
         auto
     takeback (TXRX) -> void;
 
-
-    using info_t = struct {
+        using
+    info_t = struct {
         uint8_t*        buf;        //buffer address
         uint16_t        epsiz;      //endpoint size
         uint16_t        bdone;      //total bytes done
@@ -79,7 +81,8 @@ struct UsbEP {
         Usb::stat_t     stat;       //last bdt stat
         volatile Usb::bdt_t* bdt;   //bdt table ptr
         notify_t        notify;     //callback
-    };
+        };
+
 
     private:
 
@@ -88,6 +91,7 @@ struct UsbEP {
 
         auto
     xfer (info_t&, uint8_t*, uint16_t, notify_t) -> bool;
+
 
     protected:
 

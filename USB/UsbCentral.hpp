@@ -9,7 +9,8 @@
 struct UsbCentral {
 
     //function call to service irq for non-endpoint0 (current device)
-    using service_t = bool(*)(uint8_t, UsbEP0*);
+        using
+    service_t = bool(*)(uint8_t, UsbEP0*);
 
         static auto
     init (bool) -> bool;

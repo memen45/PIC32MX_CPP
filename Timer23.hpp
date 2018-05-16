@@ -6,10 +6,10 @@
 
 struct Timer23 {
 
-    //instantiate with timer number
         enum
     TMR23 { TMR2, TMR3 };
-    Timer23(TMR23);
+
+    Timer23(TMR23);     //instantiate with timer number
 
         auto
     count (uint32_t) -> void;
@@ -34,6 +34,7 @@ struct Timer23 {
 
         enum
     PRESCALE { PS1, PS2, PS4, PS8, PS16, PS32, PS64, PS256 };
+
         auto
     prescale (PRESCALE) -> void;
 
@@ -42,6 +43,7 @@ struct Timer23 {
 
         enum
     CLK { PBCLK, T2CK };
+
         auto
     clk_src (CLK) -> void;
 

@@ -16,7 +16,8 @@ struct Usb {
     static const uint8_t max_endpoint = 7;
 
     //USB Buffer Descriptor Control Format
-    using ctrl_t = union {
+        using
+    ctrl_t = union {
         struct {
         unsigned        :2;
         unsigned bstall :1;
@@ -31,9 +32,10 @@ struct Usb {
         };
         uint8_t val8;
         uint32_t val32;
-    };
+        };
     //USB Buffer Descriptor Status Format
-    using stat_t = union {
+        using
+    stat_t = union {
         struct {
         unsigned        :2;
         unsigned pid    :4;
@@ -45,12 +47,13 @@ struct Usb {
         };
         uint8_t val8;
         uint32_t val32;
-    };
+        };
 
-    using bdt_t = struct {
+        using
+    bdt_t = struct {
         union { ctrl_t ctrl; stat_t stat; };
         uint32_t bufaddr;
-    };
+        };
 
     static volatile bdt_t bdt_table[max_endpoint+1][2][2]
         __attribute__ ((aligned (512)));
@@ -124,7 +127,7 @@ struct Usb {
         URST = 1<<0,
         DETACH = 1<<0,      /*host only*/
         ALLIF = (STALL|ATTACH|RESUME|IDLE|TRN|SOF|UERR|URST)
-    };
+        };
 
         static auto
     flags () -> uint32_t;               //get all
@@ -161,7 +164,8 @@ struct Usb {
     OTG : uint8_t {
         DPPULUP = 1<<7, DMPULUP = 1<<6, DPPULWN = 1<<5, DMPULDWN = 1<<4,
         VBUSON = 1<<3, OTGEN = 1<<2, VBUSCHG = 1<<1, VBUSDIS = 1<<0
-    };
+        };
+
         static auto
     otg (OTG, bool) -> void;            //set one
 
@@ -175,7 +179,8 @@ struct Usb {
         //U1PWRC
         UACTPND = 1<<7, USLPGRD = 1<<4, USBBUSY = 1<<3, USUSPEND = 1<<1,
         USBPWR = 1<<0
-    };
+        };
+
         static auto
     power (POWER) -> bool;              //get
 
@@ -196,7 +201,8 @@ struct Usb {
         JSTATE = 1<<7, SE0 = 1<<6, PKTDIS = 1<<5, TOKBUSY = 1<<5,
         USBRST = 1<<4, HOSTEN = 1<<3, RESUM = 1<<2, PPBRST = 1<<1,
         USBEN = 1<<0, SOFEN = 1<<0
-    };
+        };
+
         static auto
     control (CONTROL) -> bool;          //get one
 
@@ -226,6 +232,7 @@ struct Usb {
 
         enum
     TOKPID : uint8_t { SETUP = 13<<4, IN = 9<<4, OUT = 1<<4 };
+
         static auto
     tok_pid (TOKPID) -> void;
 
@@ -237,7 +244,8 @@ struct Usb {
         enum
     SOFVALS : uint8_t {
         SOF64 = 74, SOF32 = 42, SOF16 = 26, SOF8 = 18
-    };
+        };
+
         static auto
     sof_cnt (SOFVALS) -> void;
 
@@ -255,7 +263,8 @@ struct Usb {
     CONFIG : uint8_t {
         EYETEST = 1<<7, OEMON = 1<<6, SIDLE = 1<<4,
         LSDEV = 1<<3, AUTOSUSP = 1<<0
-    };
+        };
+
         static auto
     config (CONFIG, bool) -> void;      //set 1bit
 
@@ -273,7 +282,8 @@ struct Usb {
         RETRYDIS = 1<<6,        /*HOST mode and U1EP0 only*/
         EPCONDIS = 1<<4,        /*only when TXEN=1 and RXEN=1*/
         EPRXEN = 1<<3, EPTXEN = 1<<2, EPSTALL = 1<<1, EPHSHK = 1<<0
-    };
+        };
+
         static auto
     epcontrol (uint8_t, EPCTRL, bool) -> void;  //set/clr 1bit
 

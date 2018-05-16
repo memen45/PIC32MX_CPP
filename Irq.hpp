@@ -17,6 +17,7 @@ struct Irq {
 
         enum
     EINTXPOL : bool { FALLING, RISING };
+
         static auto
     eint4_pol (EINTXPOL) -> void;
 
@@ -75,7 +76,8 @@ struct Irq {
         //96
         ECCSB_ERR = 97,
         DMA0 = 98, DMA1, DMA2, DMA3 = 101
-    };
+        };
+
         static auto
     flag_clr (IRQ_VN) -> void;
 
@@ -89,12 +91,14 @@ struct Irq {
     init (IRQ_VN, uint8_t, uint8_t, bool) -> void;
 
     //to create a list (array) of irq's to init/enable
-    using irq_list_t = struct {
+        using
+    irq_list_t = struct {
         IRQ_VN irqvn;   //vector number
         uint8_t p;      //priority
         uint8_t s;      //sub-priority
         bool en;        //enable
     };
+
         static auto
     init (irq_list_t*, uint8_t) -> void;
 
