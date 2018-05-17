@@ -4,21 +4,29 @@
 #include "Sys.hpp"
 
 enum { //offsets from base address, in words
-    TRIS = 4, PORT = 8, LAT = 12, ODC = 16,
-    CNPU = 20, CNPD = 24, CNCON = 28, CNEN0 = 32,
-    CNSTAT = 36, CNEN1 = 40, CNF = 44
+TRIS = 4,
+PORT = 8,
+LAT = 12,
+ODC = 16,
+CNPU = 20,
+CNPD = 24,
+CNCON = 28,
+CNEN0 = 32,
+CNSTAT = 36,
+CNEN1 = 40,
+CNF = 44
 };
 
 enum {
-    ANSELX_SPACING = 64, //spacing in words
-    ANSELA = 0xBF802BB0,
-    //CNCONx
-        ON = 15,
-        CNSTYLE = 11,
-    RPCON = 0xBF802A00,
-        IOLOCK = 11,
-    RPINR1 = 0xBF802A20,
-    RPOR0 = 0xBF802B10
+ANSELX_SPACING = 64, //spacing in words
+ANSELA = 0xBF802BB0,
+//CNCONx
+    ON = 15,
+    CNSTYLE = 11,
+RPCON = 0xBF802A00,
+    IOLOCK = 11,
+RPINR1 = 0xBF802A20,
+RPOR0 = 0xBF802B10
 };
 
 //IOMODE
@@ -41,285 +49,257 @@ enum : uint8_t { ACTL = 1<<2  }; //IOMODE ACTL bit (active low bit)
 // m = AIN,DIN,DINPU,DINPD,DINL,DOUT,DOUTL (default is AIN)
 // RPN enum encoded as 0xaaaaarrrrrppnnnn (a = ANn, r=RPn, pp=PORT, nnnn=PIN)
 //=============================================================================
-    Pins::Pins (RPN e, IOMODE m)
-//=============================================================================
-    : m_pt((vu32ptr)ANSELA + ((e>>PTSHIFT) bitand PTMASK) * ANSELX_SPACING),
-      m_pn(1<<(e bitand PNMASK)),
-      m_lowison(m bitand ACTL),
-      m_rpn((uint8_t)((e>>RPSHIFT) bitand RPMASK)),
-      m_ppsin(PPSINOFF),
-      m_an((e>>ANSHIFT) bitand ANMASK)
-{
-    if(m == AIN) analog_in();
-    else if(m bitand IN) digital_in();
-    else digital_out();
-    pullup(m == INPU);
-    pulldn(m == INPD);
-}
+            Pins::
+Pins        (RPN e, IOMODE m)
+            :
+            m_pt((vu32ptr)ANSELA+((e>>PTSHIFT) bitand PTMASK)*ANSELX_SPACING),
+            m_pn(1<<(e bitand PNMASK)),
+            m_lowison(m bitand ACTL),
+            m_rpn((uint8_t)((e>>RPSHIFT) bitand RPMASK)),
+            m_ppsin(PPSINOFF),
+            m_an((e>>ANSHIFT) bitand ANMASK)
+            {
+            if(m == AIN) analog_in();
+            else if(m bitand IN) digital_in();
+            else digital_out();
+            pullup(m == INPU);
+            pulldn(m == INPD);
+            }
 
 //=============================================================================
-        auto Pins::
-    pinval () -> bool
-//=============================================================================
-{
-    return Reg::anybit(m_pt + PORT, m_pn);
-}
+            auto Pins::
+pinval      () -> bool
+            {
+            return Reg::anybit(m_pt + PORT, m_pn);
+            }
 
 //=============================================================================
-        auto Pins::
-    latval () -> bool
-//=============================================================================
-{
-    return Reg::anybit(m_pt + LAT, m_pn);
-}
+            auto Pins::
+latval      () -> bool
+            {
+            return Reg::anybit(m_pt + LAT, m_pn);
+            }
 
 //=============================================================================
-        auto Pins::
-    latval (bool tf) -> void
-//=============================================================================
-{
-    return Reg::setbit(m_pt + LAT, m_pn, tf);
-}
+            auto Pins::
+latval      (bool tf) -> void
+            {
+            return Reg::setbit(m_pt + LAT, m_pn, tf);
+            }
 
 //=============================================================================
-        auto Pins::
-    adcval () -> uint16_t
-//=============================================================================
-{
-    Adc adc;
-    adc.mode_12bit(true);           //12bit mode
-    adc.trig_sel(adc.AUTO);         //adc starts conversion
-    adc.samp_time(31);              //max sampling time- 31Tad
-    adc.conv_time();                //if no arg,default is 4 (for 24MHz)
-    adc.ch_sel((Adc::CH0SA)m_an);   //ANn (AVss if no ANn for pin)
-    adc.on(true);
-    adc.samp(true);
-    while(not Adc::done());         //blocking
-    return Adc::read();             //buf[0]
-}
+            auto Pins::
+adcval      () -> uint16_t
+            {
+            Adc adc;
+            adc.mode_12bit(true);           //12bit mode
+            adc.trig_sel(adc.AUTO);         //adc starts conversion
+            adc.samp_time(31);              //max sampling time- 31Tad
+            adc.conv_time();                //if no arg,default is 4 (for 24MHz)
+            adc.ch_sel((Adc::CH0SA)m_an);   //ANn (AVss if no ANn for pin)
+            adc.on(true);
+            adc.samp(true);
+            while(not Adc::done());         //blocking
+            return Adc::read();             //buf[0]
+            }
 
 //=============================================================================
-        auto Pins::
-    low () -> void
-//=============================================================================
-{
-    Reg::clrbit(m_pt + LAT, m_pn);
-}
+            auto Pins::
+low         () -> void
+            {
+            Reg::clrbit(m_pt + LAT, m_pn);
+            }
 
 //=============================================================================
-        auto Pins::
-    high () -> void
-//=============================================================================
-{
-    Reg::setbit(m_pt + LAT, m_pn);
-}
+            auto Pins::
+high        () -> void
+            {
+            Reg::setbit(m_pt + LAT, m_pn);
+            }
 
 //=============================================================================
-        auto Pins::
-    invert () -> void
-//=============================================================================
-{
-    Reg::flipbit(m_pt + LAT, m_pn);
-}
+            auto Pins::
+invert      () -> void
+            {
+            Reg::flipbit(m_pt + LAT, m_pn);
+            }
 
 //=============================================================================
-        auto Pins::
-    on () -> void
-//=============================================================================
-{
-    Reg::setbit(m_pt + LAT, m_pn, not m_lowison);
-}
+            auto Pins::
+on          () -> void
+            {
+            Reg::setbit(m_pt + LAT, m_pn, not m_lowison);
+            }
 
 //=============================================================================
-        auto Pins::
-    off () -> void
-//=============================================================================
-{
-    Reg::setbit(m_pt + LAT, m_pn, m_lowison);
-}
+            auto Pins::
+off         () -> void
+            {
+            Reg::setbit(m_pt + LAT, m_pn, m_lowison);
+            }
 
 //=============================================================================
-        auto Pins::
-    ison () -> bool
-//=============================================================================
-{
-    return m_lowison ? not pinval() : pinval();
-}
+            auto Pins::
+ison        () -> bool
+            {
+            return m_lowison ? not pinval() : pinval();
+            }
 
 //=============================================================================
-        auto Pins::
+            auto Pins::
     icn_flagclr () -> void
-//=============================================================================
-{
+            {
     Reg::clrbit(m_pt + CNF, m_pn);
-}
+            }
 
 //=============================================================================
-        auto Pins::
-    lowison (bool tf) -> void
-//=============================================================================
-{
-    m_lowison = tf;
-}
+            auto Pins::
+lowison     (bool tf) -> void
+            {
+            m_lowison = tf;
+            }
 
 //=============================================================================
-        auto Pins::
-    digital_in () -> void
-//=============================================================================
-{
-    Reg::setbit(m_pt + TRIS, m_pn);
-    Reg::clrbit(m_pt, m_pn);
-}
+            auto Pins::
+digital_in  () -> void
+            {
+            Reg::setbit(m_pt + TRIS, m_pn);
+            Reg::clrbit(m_pt, m_pn);
+            }
 
 //=============================================================================
-        auto Pins::
-    analog_in () -> void
-//=============================================================================
-{
-    Reg::setbit(m_pt + TRIS, m_pn);
-    Reg::setbit(m_pt, m_pn);
-}
+            auto Pins::
+analog_in   () -> void
+            {
+            Reg::setbit(m_pt + TRIS, m_pn);
+            Reg::setbit(m_pt, m_pn);
+            }
 
 //=============================================================================
-        auto Pins::
-    digital_out () -> void
-//=============================================================================
-{
-    Reg::clrbit(m_pt + TRIS, m_pn);
-    Reg::clrbit(m_pt, m_pn);
-}
+            auto Pins::
+digital_out () -> void
+            {
+            Reg::clrbit(m_pt + TRIS, m_pn);
+            Reg::clrbit(m_pt, m_pn);
+            }
 
 //=============================================================================
-        auto Pins::
-    odrain (bool tf) -> void
-//=============================================================================
-{
-    Reg::setbit(m_pt + ODC, m_pn, tf);
-}
+            auto Pins::
+odrain      (bool tf) -> void
+            {
+            Reg::setbit(m_pt + ODC, m_pn, tf);
+            }
 
 //=============================================================================
-        auto Pins::
-    pullup (bool tf) -> void
-//=============================================================================
-{
-    Reg::setbit(m_pt + CNPU, m_pn, tf);
-}
+            auto Pins::
+pullup      (bool tf) -> void
+            {
+            Reg::setbit(m_pt + CNPU, m_pn, tf);
+            }
 
 //=============================================================================
-        auto Pins::
-    pulldn (bool tf) -> void
-//=============================================================================
-{
-    Reg::setbit(m_pt + CNPD, m_pn, tf);
-}
+            auto Pins::
+pulldn      (bool tf) -> void
+            {
+            Reg::setbit(m_pt + CNPD, m_pn, tf);
+            }
 
 //=============================================================================
-        auto Pins::
-    icn (bool tf) -> void
-//=============================================================================
-{
-    Reg::setbit(m_pt + CNCON, 1<<ON, tf);
-}
+            auto Pins::
+icn         (bool tf) -> void
+            {
+            Reg::setbit(m_pt + CNCON, 1<<ON, tf);
+            }
 
 //=============================================================================
-        auto Pins::
-    icn_rising () -> void
-//=============================================================================
-{
-    Reg::setbit(m_pt + CNCON, 1<<CNSTYLE);
-    Reg::setbit(m_pt + CNEN0, m_pn);
-    Reg::clrbit(m_pt + CNEN1, m_pn);
-}
+            auto Pins::
+icn_rising  () -> void
+            {
+            Reg::setbit(m_pt + CNCON, 1<<CNSTYLE);
+            Reg::setbit(m_pt + CNEN0, m_pn);
+            Reg::clrbit(m_pt + CNEN1, m_pn);
+            }
 
 //=============================================================================
-        auto Pins::
-    icn_risefall () -> void
-//=============================================================================
-{
-    Reg::setbit(m_pt + CNCON, 1<<CNSTYLE);
-    Reg::setbit(m_pt + CNEN0, m_pn);
-    Reg::clrbit(m_pt + CNEN1, m_pn);
-}
+            auto Pins::
+icn_risefall () -> void
+            {
+            Reg::setbit(m_pt + CNCON, 1<<CNSTYLE);
+            Reg::setbit(m_pt + CNEN0, m_pn);
+            Reg::clrbit(m_pt + CNEN1, m_pn);
+            }
 
 //=============================================================================
-        auto Pins::
-    icn_falling () -> void
-//=============================================================================
-{
-    Reg::setbit(m_pt + CNCON, 1<<CNSTYLE);
-    Reg::setbit(m_pt + CNEN1, m_pn);
-    Reg::clrbit(m_pt + CNEN0, m_pn);
-}
+            auto Pins::
+icn_falling () -> void
+            {
+            Reg::setbit(m_pt + CNCON, 1<<CNSTYLE);
+            Reg::setbit(m_pt + CNEN1, m_pn);
+            Reg::clrbit(m_pt + CNEN0, m_pn);
+            }
 
 //=============================================================================
-        auto Pins::
-    icn_mismatch () -> void
-//=============================================================================
-{
-    Reg::setbit(m_pt + CNEN0, m_pn);
-    Reg::clrbit(m_pt + CNCON, 1<<CNSTYLE);
-}
+            auto Pins::
+icn_mismatch () -> void
+            {
+            Reg::setbit(m_pt + CNEN0, m_pn);
+            Reg::clrbit(m_pt + CNCON, 1<<CNSTYLE);
+            }
 
 //=============================================================================
-        auto Pins::
-    icn_flag () -> bool
-//=============================================================================
-{
-    return Reg::anybit(m_pt + CNF, m_pn);
-}
+            auto Pins::
+icn_flag    () -> bool
+            {
+            return Reg::anybit(m_pt + CNF, m_pn);
+            }
 
 //=============================================================================
-        auto Pins::
-    icn_stat () -> bool
-//=============================================================================
-{
-    return Reg::anybit(m_pt + CNSTAT, m_pn);
-}
+            auto Pins::
+icn_stat    () -> bool
+            {
+            return Reg::anybit(m_pt + CNSTAT, m_pn);
+            }
 
 //static
 //unlock, write byte, lock
 //=============================================================================
-        auto Pins::
-    pps_do (uint32_t addr, uint8_t v) -> void
-//=============================================================================
-{
-    Sys::unlock();
-    Reg::clrbit(RPCON, 1<<IOLOCK);
-    Reg::val(addr, v);
-    Reg::setbit(RPCON, 1<<IOLOCK);
-    Sys::lock();
-}
+            auto Pins::
+pps_do      (uint32_t addr, uint8_t v) -> void
+            {
+            Sys::unlock();
+            Reg::clrbit(RPCON, 1<<IOLOCK);
+            Reg::val(addr, v);
+            Reg::setbit(RPCON, 1<<IOLOCK);
+            Sys::lock();
+            }
 
 //pin -> pps peripheral in, or turn off
 //=============================================================================
-        auto Pins::
-    pps_in (PPSIN e) -> void
-//=============================================================================
-{
-    if(m_rpn == 0) return;      //no pps for this pin
-    if(e not_eq PPSINOFF) m_ppsin = (uint8_t)e; //save peripheral number
-    if(m_ppsin == PPSINOFF) return; //not set previously, nothing to do
-    //set peripheral m_ppsin register to 0 if off, or RPn number
-    pps_do(RPINR1 + m_ppsin, e == PPSINOFF ? 0 : m_rpn);
-    digital_in();
-}
+            auto Pins::
+pps_in      (PPSIN e) -> void
+            {
+            if(m_rpn == 0) return;      //no pps for this pin
+            if(e not_eq PPSINOFF) m_ppsin = (uint8_t)e; //save peripheral number
+            if(m_ppsin == PPSINOFF) return; //not set previously, nothing to do
+            //set peripheral m_ppsin register to 0 if off, or RPn number
+            pps_do(RPINR1 + m_ppsin, e == PPSINOFF ? 0 : m_rpn);
+            digital_in();
+            }
 
 //pps peripheral out -> pin
 //=============================================================================
-        auto Pins::
-    pps_out (PPSOUT e) -> void
-//=============================================================================
-{
-    if(m_rpn == 0) return; //no pps for this pin
-    uint8_t n = m_rpn - 1; //1 based to 0 based to calc reg addresses
-    pps_do(RPOR0 + ((n / 4) * 16) + (n % 4), e);
-}
+            auto Pins::
+pps_out     (PPSOUT e) -> void
+            {
+            if(m_rpn == 0) return; //no pps for this pin
+            uint8_t n = m_rpn - 1; //1 based to 0 based to calc reg addresses
+            pps_do(RPOR0 + ((n / 4) * 16) + (n % 4), e);
+            }
 
 //return ANn number for ADC channel select
 //=============================================================================
-        auto Pins::
-    an_num () -> uint8_t
-//=============================================================================
-{
-    return m_an;
-}
+            auto Pins::
+an_num      () -> uint8_t
+            {
+            return m_an;
+            }

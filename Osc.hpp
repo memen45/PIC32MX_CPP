@@ -35,194 +35,245 @@
 
 struct Osc {
 
-    //osccon
+            //==== OSCCON ====
 
-        enum
-    DIVS : uint8_t { //upper byte of osccon, spllcon
-        DIV1, DIV2, DIV4, DIV8, DIV16, DIV32, DIV64, DIV256
-        };
+            enum
+DIVS        : uint8_t { //upper byte of osccon, spllcon
+            DIV1, DIV2, DIV4, DIV8, DIV16, DIV32, DIV64, DIV256
+            };
 
-        static auto
-    frc_div (DIVS) -> void;         //set
+            static auto
+frc_div     (DIVS) -> void;
 
-        static auto
-    frc_div () -> DIVS;             //get
+            static auto
+frc_div     () -> DIVS;
 
-        enum
-    CNOSC : uint8_t { //cosc/nosc in second byte of osccon
-         FRCDIV = 0, SPLL, POSC, SOSC = 4, LPRC
-        };
+            enum
+CNOSC       : uint8_t { //cosc/nosc in second byte of osccon
+            FRCDIV = 0, SPLL, POSC, SOSC = 4, LPRC
+            };
 
-        static auto
-    clk_src () -> CNOSC;            //get current osc source
+            //get current osc source
+            static auto
+clk_src     () -> CNOSC;
 
-        static auto
-    clk_src (CNOSC) -> void;        //start switch to nosc
+            //start switch to nosc
+            static auto
+clk_src     (CNOSC) -> void;
 
-        static auto
-    clk_lock () -> void;            //lock nosc/oswen until reset
+            //lock nosc/oswen until reset
+            static auto
+clk_lock    () -> void;
 
-        static auto
-    sleep () -> void;               //sleep, wait
+            //sleep, wait
+            static auto
+sleep       () -> void;
 
-        static auto
-    sleep_reten () -> void;         //retention sleep, wait
+            //retention sleep, wait
+            static auto
+sleep_reten () -> void;
 
-        static auto
-    idle () -> void;                //idle, wait
+            //idle, wait
+            static auto
+idle        () -> void;
 
-        static auto
-    clk_bad () -> bool;             //clock failed?
+            //clock failed?
+            static auto
+clk_bad     () -> bool;
 
-        static auto
-    sosc (bool) -> void;            //sosc enable
+            //sosc enable
+            static auto
+sosc        (bool) -> void;
 
-        static auto
-    sosc () -> bool;                //sosc enabled?
-                                    //if enabled, assume its there
-        static auto
-    pll_div () -> DIVS;             //get pll divider
+            //sosc enabled? (if enabled, assume its available for use)
+            static auto
+sosc        () -> bool;
 
-        enum
-    PLLMUL : uint8_t {
-        MUL2, MUL3, MUL4, MUL6, MUL8, MUL12, MUL24
-        };
+            //get pll divider
+            static auto
+pll_div     () -> DIVS;
 
-        static auto
-    pll_mul () -> PLLMUL;           //get pll multiplier
+            enum
+PLLMUL      : uint8_t {
+            MUL2, MUL3, MUL4, MUL6, MUL8, MUL12, MUL24
+            };
 
-        enum
-    PLLSRC : bool { EXT, FRC };
+            //get pll multiplier
+            static auto
+pll_mul     () -> PLLMUL;
 
-        static auto
-    pll_src () -> PLLSRC;           //get pll src
+            enum
+PLLSRC      : bool { EXT, FRC };
 
+            //get pll src
+            static auto
+pll_src     () -> PLLSRC;
 
-    private:
-        static auto
-    pll_src (PLLSRC) -> void;       //set pll src
+            private:
 
-
-    public:
-        static auto
-    pll_set (PLLMUL, DIVS, PLLSRC = FRC) -> void; //set pll mul/div, pll src
-
-    //refo1con, refo1trim
-
-        static auto
-    refo_div (uint16_t) -> void;    //divisor value
-
-        static auto
-    refo_trim (uint16_t) -> void;   //trim value
-
-        static auto
-    refo_on () -> void;             //refo on
-
-        enum
-    ROSEL : uint8_t {
-        RSYSCLK = 0, RPOSC = 2, RFRC, RLPRC, RSOSC, RPLLVCO = 7
-        };
-
-        static auto
-    refo_on (ROSEL) -> void;        //refo on, src sel
-
-        static auto
-    refo_off () -> void;            //refo off
-
-        static auto
-    refo_idle (bool) -> void;       //true = stop in idle mode
-
-        static auto
-    refo_out (bool) -> void;        //true = clk out to REFO1 pin
-
-        static auto
-    refo_sleep (bool) -> void;      //true = run in sleep
-
-        static auto
-    refo_divsw () -> void;          //do divider switch
-
-        static auto
-    refo_active () -> bool;         //true = active
-
-        static auto
-    refo_src (ROSEL) -> void;       //clk source select
-
-        static auto
-    refoclk () -> uint32_t;         //get refo in clk freq
-
-        static auto
-    refo_freq (uint32_t) -> void;   //set refo frequency
-
-        static auto
-    refo_freq () -> uint32_t;       //get refo frequency
-
-    //clkstat
-
-        enum
-    CLKRDY : uint8_t {
-        FRCRDY = 1<<0, SPLLDIVRDY = 1<<1, POSCRDY = 1<<2,
-        SOSCRDY = 1<<4, LPRCRDY = 1<<5, USBRDY = 1<<6, SPLLRDY = 1<<7
-        };
-
-        static auto
-    ready (CLKRDY) -> bool;         //clock ready?
-
-    //osctun
-
-        static auto
-    tun_auto (bool) -> void;        //osc tune on
-
-        static auto
-    tun_idle (bool) -> void;        //stop in idle
-
-        enum
-    TUNSRC : bool { TSOSC, TUSB };
-
-        static auto
-    tun_src (TUNSRC) -> void;       //src, 0=sosc 1=usb
-
-        static auto
-    tun_lock () -> bool;            //lock status
-
-        static auto
-    tun_lpol (bool) -> void;        //irq polarity, 1=0 0=1
-
-        static auto
-    tun_rng () -> bool;             //out of range status
-
-        static auto
-    tun_rpol (bool) -> void;        //range polarity, 1=0 0=1
-
-        static auto
-    tun_val (int8_t) -> void;       //tune value 6bits, -32 to 31
-
-        static auto
-    tun_val () -> int8_t;           //get tune value
-
-    //misc
-
-        static auto
-    sysclk () -> uint32_t;          //get cpu sysclk
-
-        static auto
-    vcoclk () -> uint32_t;          //get pll vco clock
-
-        static auto
-    extclk () -> uint32_t;          //get ext clock
-
-        static auto
-    frcclk () -> uint32_t;          //get frc clock
+            //set pll src
+            static auto
+pll_src     (PLLSRC) -> void;
 
 
-    private:
+            public:
 
-    static uint32_t         m_sysclk;       //store calculated cpu freq
-    static uint32_t         m_refoclk;      //store calculated refo in clk
-    static uint32_t         m_extclk;
-    static uint32_t         m_refo_freq;    //store current refo frequency
-    static const uint32_t   m_frcosc_freq = 8000000;
-    static const uint32_t   m_extosc_freq = 0; //set if want exact ext freq
-    static const uint8_t    m_mul_lookup[7];
+            //set pll mul/div, pll src
+            static auto
+pll_set     (PLLMUL, DIVS, PLLSRC = FRC) -> void;
+
+
+            //==== REFO1CON, REFO1TRIM ====
+
+            //divisor value
+            static auto
+refo_div    (uint16_t) -> void;
+
+            //trim value
+            static auto
+refo_trim   (uint16_t) -> void;
+
+            //refo on
+            static auto
+refo_on     () -> void;
+
+            enum
+ROSEL       : uint8_t {
+            RSYSCLK = 0, RPOSC = 2, RFRC, RLPRC, RSOSC, RPLLVCO = 7
+            };
+
+            //refo on, src sel
+            static auto
+refo_on     (ROSEL) -> void;
+
+            //refo off
+            static auto
+refo_off    () -> void;
+
+            //true = stop in idle mode
+            static auto
+refo_idle   (bool) -> void;
+
+            //true = clk out to REFO1 pin
+            static auto
+refo_out    (bool) -> void;
+
+            //true = run in sleep
+            static auto
+refo_sleep  (bool) -> void;
+
+            //do divider switch
+            static auto
+refo_divsw () -> void;
+
+            //true = active
+            static auto
+refo_active () -> bool;
+
+            //clk source select
+            static auto
+refo_src    (ROSEL) -> void;
+
+            //get refo in clk freq
+            static auto
+refoclk     () -> uint32_t;
+
+            //set refo frequency
+            static auto
+refo_freq   (uint32_t) -> void;
+
+            //get refo frequency
+            static auto
+refo_freq   () -> uint32_t;
+
+
+            //==== CLKSTAT ====
+
+            enum
+CLKRDY      : uint8_t {
+            FRCRDY = 1<<0, SPLLDIVRDY = 1<<1, POSCRDY = 1<<2,
+            SOSCRDY = 1<<4, LPRCRDY = 1<<5, USBRDY = 1<<6, SPLLRDY = 1<<7
+            };
+
+            //clock ready?
+            static auto
+ready       (CLKRDY) -> bool;
+
+
+            //==== OSCTUN ====
+
+            //osc tune on
+            static auto
+tun_auto    (bool) -> void;
+
+            //stop in idle
+            static auto
+tun_idle    (bool) -> void;
+
+            enum
+TUNSRC      : bool { TSOSC, TUSB };
+
+            //src, 0=sosc 1=usb
+            static auto
+tun_src     (TUNSRC) -> void;
+
+            //lock status
+            static auto
+tun_lock    () -> bool;
+
+            //irq polarity, 1=0 0=1
+            static auto
+tun_lpol    (bool) -> void;
+
+            //out of range status
+            static auto
+tun_rng     () -> bool;
+
+            //range polarity, 1=0 0=1
+            static auto
+tun_rpol    (bool) -> void;
+
+            //tune value 6bits, -32 to 31
+            static auto
+tun_val     (int8_t) -> void;
+
+            //get tune value
+            static auto
+tun_val     () -> int8_t;
+
+
+            //misc
+
+            //get cpu sysclk
+            static auto
+sysclk      () -> uint32_t;
+
+            //get pll vco clock
+            static auto
+vcoclk      () -> uint32_t;
+
+            //get ext clock
+            static auto
+extclk      () -> uint32_t;
+
+            //get frc clock
+            static auto
+frcclk      () -> uint32_t;
+
+
+            private:
+
+            //store calculated cpu freq
+            static uint32_t         m_sysclk;
+            //store calculated refo in clk
+            static uint32_t         m_refoclk;
+            static uint32_t         m_extclk;
+            //store current refo frequency
+            static uint32_t         m_refo_freq;
+            static const uint32_t   m_frcosc_freq = 8000000;
+            //manually set here if want exact ext freq
+            static const uint32_t   m_extosc_freq = 0;
+            static const uint8_t    m_mul_lookup[7];
 
 };
 

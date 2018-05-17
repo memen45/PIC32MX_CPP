@@ -4,57 +4,61 @@
 
 struct Sys {
 
-    //cfgcon
+            //==== CFGCON ====
 
-        static auto
-    bus_err (bool) -> void;
+            static auto
+bus_err     (bool) -> void;
 
-        enum
-    BMXARB : uint8_t { CPUHIGH, CPULOW, RROBIN };
+            enum
+BMXARB      : uint8_t { CPUHIGH, CPULOW, RROBIN };
 
-        static auto
-    bus_mode (BMXARB) -> void;
+            static auto
+bus_mode    (BMXARB) -> void;
 
-        static auto
-    ram_exec (uint8_t) -> void;
+            static auto
+ram_exec    (uint8_t) -> void;
 
-        static auto
-    jtag (bool) -> void;
+            static auto
+jtag        (bool) -> void;
 
-    //devid
 
-        static auto
-    devid () -> uint32_t;
+            //==== DEVID ====
 
-        static auto
-    ver () -> uint8_t;
+            static auto
+devid       () -> uint32_t;
 
-    //syskey
+            static auto
+ver         () -> uint8_t;
 
-        static auto
-    lock () -> void;
 
-        static auto
-    lock (uint8_t) -> void;
+            //==== SYSKEY ====
 
-        static auto
-    unlock () -> void;
+            static auto
+lock        () -> void;
 
-        static auto
-    unlock_wait () -> uint8_t;
+            static auto
+lock        (uint8_t) -> void;
 
-    //ancfg
+            static auto
+unlock      () -> void;
 
-        static auto
-    bgap_adc (bool) -> void;
+            static auto
+unlock_wait () -> uint8_t;
 
-        static auto
-    bgap_comp (bool) -> void;
 
-    //udid
+            //==== ANCFG ====
 
-        static auto
-    udid (uint8_t) -> uint32_t; //0-4 ->UDID1-5
+            static auto
+bgap_adc    (bool) -> void;
+
+            static auto
+bgap_comp   (bool) -> void;
+
+
+            //==== UDID ====
+
+            static auto
+udid        (uint8_t) -> uint32_t; //0-4 ->UDID1-5
 
 };
 

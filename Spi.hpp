@@ -6,206 +6,257 @@
 
 struct Spi  {
 
-        enum
-    SPIX { SPI1, SPI2, SPI3 };
+            enum
+SPIX        { SPI1, SPI2, SPI3 };
 
-    Spi(SPIX);      //instantiate Comp123 with comparator number
+            //instantiate Comp123 with comparator number
+Spi         (SPIX);
 
-    //spixcon
+            //==== SPIxCON ====
 
-        auto
-    frame (bool) -> void;               //framed support
+            //framed support
+            auto
+frame       (bool) -> void;
 
-        enum
-    FRMDIR : bool { MASTER, SLAVE };
+            enum
+FRMDIR      : bool { MASTER, SLAVE };
 
-        auto
-    frame_dir (FRMDIR) -> void;         //frame sync pulse dir
+            //frame sync pulse dir
+            auto
+frame_dir   (FRMDIR) -> void;
 
-        enum
-    FRMHL : bool { LOW, HIGH };
+            enum
+FRMHL       : bool { LOW, HIGH };
 
-        auto
-    frame_pol (FRMHL) -> void;          //frame sync polarity
+            //frame sync polarity
+            auto
+frame_pol   (FRMHL) -> void;
 
-        auto
-    slave_sel (bool) -> void;           //slave select enable
+            //slave select enable
+            auto
+slave_sel   (bool) -> void;
 
-        enum
-    FRMPW : bool { CLKW, CHARW };
+            enum
+FRMPW       : bool { CLKW, CHARW };
 
-        auto
-    frame_pwidth (FRMPW) -> void;       //1=1char, 0=1clk
+            //1=1char, 0=1clk
+            auto
+frame_pwidth (FRMPW) -> void;
 
-        enum
-    FRMCNT : uint8_t { CNT1, CNT2, CNT4, CNT8, CNT16, CNT32 };
+            enum
+FRMCNT      : uint8_t { CNT1, CNT2, CNT4, CNT8, CNT16, CNT32 };
 
-        auto
-    frame_count (FRMCNT) -> void;       //frame sync counter
+            //frame sync counter
+            auto
+frame_count (FRMCNT) -> void;
 
-        enum
-    CLKSEL : bool { PBCLK, REFO1 };
+            enum
+CLKSEL      : bool { PBCLK, REFO1 };
 
-        auto
-    clk_sel (CLKSEL) -> void;           //set clock source
+            //set clock source
+            auto
+clk_sel     (CLKSEL) -> void;
 
-        auto
-    clk_sel () -> CLKSEL;               //get clock source
+            //get clock source
+            auto
+clk_sel     () -> CLKSEL;
 
-        enum
-    FRMEDGE : bool { B4BCLK, ATBCLK };
+            enum
+FRMEDGE     : bool { B4BCLK, ATBCLK };
 
-        auto
-    frame_edge (FRMEDGE) -> void;       //frame sync edge sel
+            //frame sync edge sel
+            auto
+frame_edge  (FRMEDGE) -> void;
 
-        auto
-    enhanced (bool) -> void;            //enhanced buffer mode
+            //enhanced buffer mode
+            auto
+enhanced    (bool) -> void;
 
-        auto
-    on (bool) -> void;                  //spi on/off
+            //spi on/off
+            auto
+on          (bool) -> void;
 
-        enum
-    MODE : uint8_t {
-        MODE8 = 0, MODE16, MODE32,
-        AMODE1616 = 0, AMODE1632, AMODE3232, AMODE2432
-        };
+            enum
+MODE        : uint8_t {
+            MODE8 = 0, MODE16, MODE32,
+            AMODE1616 = 0, AMODE1632, AMODE3232, AMODE2432
+            };
 
-        auto
-    mode (MODE) -> void;                //set spi mode
+            //set spi mode
+            auto
+mode        (MODE) -> void;
 
-        enum
-    PHASE: bool { SMPMID, SMPEND };
+            enum
+PHASE       : bool { SMPMID, SMPEND };
 
-        auto
-    phase (PHASE) -> void;              //sample phase bit
+            //sample phase bit
+            auto
+phase       (PHASE) -> void;
 
-        enum
-    CLKEDGE : bool { LEAD, TRAIL };
+            enum
+CLKEDGE     : bool { LEAD, TRAIL };
 
-        auto
-    clk_edge (CLKEDGE) -> void;         //clk edge sel
+            //clk edge sel
+            auto
+clk_edge    (CLKEDGE) -> void;
 
-        auto
-    ss (bool) -> void;                  //slave select enable
+            //slave select enable
+            auto
+ss          (bool) -> void;
 
-        enum
-    CLKPOL : bool { CLKH, CLKL };
+            enum
+CLKPOL      : bool { CLKH, CLKL };
 
-        auto
-    clk_pol (CLKPOL) -> void;           //clock polarity
+            //clock polarity
+            auto
+clk_pol     (CLKPOL) -> void;
 
-        auto
-    master (bool) -> void;              //master mode
+            //master mode
+            auto
+master      (bool) -> void;
 
-        enum
-    TXIRQ : uint8_t { TDONE, TEMPTY, THALF, TNOTFULL };
+            enum
+TXIRQ       : uint8_t { TDONE, TEMPTY, THALF, TNOTFULL };
 
-        auto
-    tx_irq (TXIRQ) -> void;             //tx irq mode
+            //tx irq mode
+            auto
+tx_irq      (TXIRQ) -> void;
 
-        enum
-    RXIRQ : uint8_t { REMPTY, RANY, RHALF, RFULL };
+            enum
+RXIRQ       : uint8_t { REMPTY, RANY, RHALF, RFULL };
 
-        auto
-    rx_irq (RXIRQ) -> void;             //rx irq mode
+            //rx irq mode
+            auto
+rx_irq      (RXIRQ) -> void;
 
-    //spixstat
 
-        auto
-    stat_rxcount () -> uint8_t;         //enhanced rx buf count
+            //==== SPIxSTAT ====
 
-        auto
-    stat_txcount () -> uint8_t;         //enhanced tx buf count
+            //enhanced rx buf count
+            auto
+stat_rxcount () -> uint8_t;
 
-        auto
-    stat_ferr () -> bool;               //framing error
+            //enhanced tx buf count
+            auto
+stat_txcount () -> uint8_t;
 
-        auto
-    stat_ferrclr () -> void;            //framing error clear
+            //framing error?
+            auto
+stat_ferr   () -> bool;
 
-        auto
-    stat_busy () -> bool;               //spi busy
+            //framing error clear
+            auto
+stat_ferrclr () -> void;
 
-        auto
-    stat_txurun () -> bool;             //tx underrun error
+            //spi busy?
+            auto
+stat_busy   () -> bool;
 
-        auto
-    stat_sremty () -> bool;             //shift reg empty
+            //tx underrun error?
+            auto
+stat_txurun () -> bool;
 
-        auto
-    stat_oerr () -> bool;               //rx overflow
+            //shift reg empty?
+            auto
+stat_sremty () -> bool;
 
-        auto
-    stat_oerrclr () -> void;            //rx overflow clear
+            //rx overflow?
+            auto
+stat_oerr   () -> bool;
 
-        auto
-    stat_rxemty () -> bool;             //rx empty
+            //rx overflow clear
+            auto
+stat_oerrclr () -> void;
 
-        auto
-    stat_txemty () -> bool;             //tx empty
+            //rx empty?
+            auto
+stat_rxemty () -> bool;
 
-        auto
-    stat_txfull () -> bool;             //tx full
+            //tx empty?
+            auto
+stat_txemty () -> bool;
 
-        auto
-    stat_rxfull () -> bool;             //rx full
+            //tx full?
+            auto
+stat_txfull () -> bool;
 
-    //spixbuf
+            //rx full?
+            auto
+stat_rxfull () -> bool;
 
-        auto
-    write (uint32_t) -> void;           //set buf 8/16/32bit
 
-        auto
-    read () -> uint32_t;                //get buf 8/16/32bit
+            //==== SPIxBUF ====
 
-    //spixbrg
+            //write buf 8/16/32bit
+            auto
+write       (uint32_t) -> void;
 
-        auto
-    baud (uint16_t) -> void;            //set baud
+            //read buf 8/16/32bit
+            auto
+read        () -> uint32_t;
 
-        auto
-    freq (uint32_t) -> void;            //set frequency
 
-        auto
-    freq () -> uint32_t;                //get frequency
+            //==== SPIxBRG ====
 
-    //spixcon2
+            //set baud
+            auto
+baud        (uint16_t) -> void;
 
-        auto
-    sign_ext (bool) -> void;            //rx sign extend
+            //set frequency
+            auto
+freq        (uint32_t) -> void;
 
-        auto
-    irq_frmerr (bool) -> void;          //frame error irq
+            //get frequency
+            auto
+freq        () -> uint32_t;
 
-        auto
-    irq_oflow (bool) -> void;           //overflow error irq
 
-        auto
-    irq_urun (bool) -> void;            //underrun err irq
+            //==== SPIxCON2 ====
 
-        auto
-    ign_oflow (bool) -> void;           //ignore overflow
+            //rx sign extend
+            auto
+sign_ext    (bool) -> void;
 
-        auto
-    ign_urun (bool) -> void;            //ignore underrun
+            //frame error irq
+            auto
+irq_frmerr  (bool) -> void;
 
-        auto
-    audio (bool) -> void;               //audio mode
+            //overflow error irq
+            auto
+irq_oflow   (bool) -> void;
 
-        auto
-    mono (bool) -> void;                //audio mono
+            //underrun err irq
+            auto
+irq_urun    (bool) -> void;
 
-        enum
-    AUDMOD : uint8_t { I2S, LEFT, RIGHT, PCMDSP };
+            //ignore overflow
+            auto
+ign_oflow   (bool) -> void;
 
-        auto
-    audio_mode (AUDMOD) -> void;        //audio mode
+            //ignore underrun
+            auto
+ign_urun    (bool) -> void;
 
+            //audio mode
+            auto
+audio       (bool) -> void;
 
-    private:
+            //audio mono
+            auto
+mono        (bool) -> void;
 
-    volatile uint32_t*  m_spix_con;
-    volatile uint32_t&  m_spixbuf;      //use reference
-    uint32_t            m_spix_freq;    //set to actual spi freq
+            enum
+AUDMOD      : uint8_t { I2S, LEFT, RIGHT, PCMDSP };
+
+            //audio mode
+            auto
+audio_mode  (AUDMOD) -> void;
+
+
+            private:
+
+            volatile uint32_t*  m_spix_con;
+            volatile uint32_t&  m_spixbuf;      //use reference
+            uint32_t            m_spix_freq;    //set to actual spi freq
 
 };
