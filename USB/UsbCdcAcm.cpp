@@ -144,88 +144,82 @@ enum SETUP_WREQUEST_CDC {
 //-----------------------------------------------------------------------------
 
 
-//-----------------------------------------------------------------------------
 // we take care of endpoint 0 rx/tx here (if for us), but endpoint 0 will
 // take care of next setup rx
 //-----------------------------------------------------------------private-----
-        static auto
-    ep0_request (UsbEP0* ep0) -> bool
-//-----------------------------------------------------------------------------
-{
-    switch(ep0->setup_pkt.wRequest){
-        case CDC_SET_LINE_CODING:
-            ep0->recv((uint8_t*)&m_line_coding, 7, true); //rx 7 bytes,
-            ep0->send((uint8_t*)&m_line_coding, 0, true); //tx status
-            return true;
-        case CDC_GET_LINE_CODING:
-            ep0->send((uint8_t*)&m_line_coding, 7, true); //tx line coding,
-            ep0->recv((uint8_t*)&m_line_coding, 0, true); //rx status
-            return true;
-        case CDC_SET_CONTROL_LINE_STATE:
-            ep0->send((uint8_t*)&m_line_coding, 0, true);//no data, tx status
-            return true;
-    }
-    return false; //unhandled
-}
+            static auto
+ep0_request (UsbEP0* ep0) -> bool
+            {
+            switch(ep0->setup_pkt.wRequest){
+                case CDC_SET_LINE_CODING:
+                    ep0->recv((uint8_t*)&m_line_coding, 7, true); //rx data,
+                    ep0->send((uint8_t*)&m_line_coding, 0, true); //tx status
+                    return true;
+                case CDC_GET_LINE_CODING:
+                    ep0->send((uint8_t*)&m_line_coding, 7, true); //tx data,
+                    ep0->recv((uint8_t*)&m_line_coding, 0, true); //rx status
+                    return true;
+                case CDC_SET_CONTROL_LINE_STATE:
+                    ep0->send((uint8_t*)&m_line_coding, 0, true);//tx status
+                    return true;
+            }
+            return false; //unhandled
+            }
 
 //-----------------------------------------------------------------private-----
-        static auto
-    service (uint8_t ustat, UsbEP0* ep0) -> bool
-//-----------------------------------------------------------------------------
-{
-    //check for reset
-    if(ustat == 0xFF){                  //called by UsbDevice::attach
-        m_ep_state.init(m_ep_state_num);//via UsbCentral::service
-        m_ep_txrx.init(m_ep_txrx_num);  //init our endpoints when ustat = 0xFF
-        return true;
-    }
+            static auto
+service     (uint8_t ustat, UsbEP0* ep0) -> bool
+            {
+            //check for reset
+            if(ustat == 0xFF){                  //called by UsbDevice::attach
+                m_ep_state.init(m_ep_state_num);//via UsbCentral::service
+                m_ep_txrx.init(m_ep_txrx_num);  //init our endpoints
+                return true;
+            }
 
-    //ustat = ep<5:2> dir<1> even/odd<0>
-    uint8_t n = ustat>>2;
+            //ustat = ep<5:2> dir<1> even/odd<0>
+            uint8_t n = ustat>>2;
 
-    //handle tx/rx
-    if(n == m_ep_txrx_num) return m_ep_txrx.service(ustat);
+            //handle tx/rx
+            if(n == m_ep_txrx_num) return m_ep_txrx.service(ustat);
 
-    //handle serial state (unused for now)
-    if(n == m_ep_state_num) return true;
+            //handle serial state (unused for now)
+            if(n == m_ep_state_num) return true;
 
-    //not our endpoint, check if setup request on ep0
-    //handle any endpoint 0 setup requests
-    if(ep0) return ep0_request(ep0);
+            //not our endpoint, check if setup request on ep0
+            //handle any endpoint 0 setup requests
+            if(ep0) return ep0_request(ep0);
 
-    //not for us
-    return false;
-}
-
-//=============================================================================
-        auto UsbCdcAcm::
-    init (bool tf) -> bool
-//=============================================================================
-{
-    m_is_active = UsbCentral::set_device(m_descriptor, tf ? service : 0);
-    return m_is_active;
-}
+            //not for us
+            return false;
+            }
 
 //=============================================================================
-        auto UsbCdcAcm::
-    send (uint8_t* buf, uint16_t siz, UsbEP::notify_t f) -> bool
-//=============================================================================
-{
-    return m_ep_txrx.send_busy() ? false : m_ep_txrx.send(buf, siz, f);
-}
+            auto UsbCdcAcm::
+init        (bool tf) -> bool
+            {
+            m_is_active = UsbCentral::set_device(m_descriptor,
+                                                 tf ? service : 0);
+            return m_is_active;
+            }
 
 //=============================================================================
-        auto UsbCdcAcm::
-    recv (uint8_t* buf, uint16_t siz, UsbEP::notify_t f) -> bool
-//=============================================================================
-{
-    return m_ep_txrx.recv_busy() ? false : m_ep_txrx.recv(buf, siz, f);
-}
+            auto UsbCdcAcm::
+send        (uint8_t* buf, uint16_t siz, UsbEP::notify_t f) -> bool
+            {
+            return m_ep_txrx.send_busy() ? false : m_ep_txrx.send(buf, siz, f);
+            }
 
 //=============================================================================
-        auto UsbCdcAcm::
-    is_active () -> bool
+            auto UsbCdcAcm::
+recv        (uint8_t* buf, uint16_t siz, UsbEP::notify_t f) -> bool
+            {
+            return m_ep_txrx.recv_busy() ? false : m_ep_txrx.recv(buf, siz, f);
+            }
+
 //=============================================================================
-{
-    return m_is_active;
-}
+            auto UsbCdcAcm::
+is_active   () -> bool
+            {
+            return m_is_active;
+            }
