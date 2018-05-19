@@ -144,6 +144,7 @@ enum SETUP_WREQUEST_CDC {
 //-----------------------------------------------------------------------------
 
 
+// any endpoint 0 setup requests for us handles here
 // we take care of endpoint 0 rx/tx here (if for us), but endpoint 0 will
 // take care of next setup rx
 //-----------------------------------------------------------------private-----
@@ -166,14 +167,18 @@ ep0_request (UsbEP0* ep0) -> bool
             return false; //unhandled
             }
 
+// UsbCentral will call us with usb stat value
+// if 0xFF, is signalling a reset or detach
+// else handle endpoint transactions, or if ep0 set check setup request
 //-----------------------------------------------------------------private-----
             static auto
 service     (uint8_t ustat, UsbEP0* ep0) -> bool
             {
-            //check for reset
+            //check for reset (detach)
             if(ustat == 0xFF){                  //called by UsbDevice::attach
                 m_ep_state.init(m_ep_state_num);//via UsbCentral::service
                 m_ep_txrx.init(m_ep_txrx_num);  //init our endpoints
+                m_is_active = false;            //not active
                 return true;
             }
 
@@ -194,6 +199,8 @@ service     (uint8_t ustat, UsbEP0* ep0) -> bool
             return false;
             }
 
+// called by user app to init or deinit (turn off, detach)
+// returns result of usb init (is active = true)
 //=============================================================================
             auto UsbCdcAcm::
 init        (bool tf) -> bool
@@ -203,6 +210,8 @@ init        (bool tf) -> bool
             return m_is_active;
             }
 
+// called by user app to send data, optionally set callback when send complete
+// buf = buffer pointer, siz = bytes to send, optional notify func pointer
 //=============================================================================
             auto UsbCdcAcm::
 send        (uint8_t* buf, uint16_t siz, UsbEP::notify_t f) -> bool
@@ -210,6 +219,9 @@ send        (uint8_t* buf, uint16_t siz, UsbEP::notify_t f) -> bool
             return m_ep_txrx.send_busy() ? false : m_ep_txrx.send(buf, siz, f);
             }
 
+// called by user app to recv data, optionally set callback when recv complete
+// buf = buffer pointer, siz = bytes to recv, optional notify func pointer
+// if receive less than full packet, recv will be considered complete
 //=============================================================================
             auto UsbCdcAcm::
 recv        (uint8_t* buf, uint16_t siz, UsbEP::notify_t f) -> bool
@@ -217,6 +229,8 @@ recv        (uint8_t* buf, uint16_t siz, UsbEP::notify_t f) -> bool
             return m_ep_txrx.recv_busy() ? false : m_ep_txrx.recv(buf, siz, f);
             }
 
+// check if usb active (may have detached)
+// user app can check, try to init again if no longer active
 //=============================================================================
             auto UsbCdcAcm::
 is_active   () -> bool

@@ -153,7 +153,7 @@ get_desc    (uint16_t wValue, uint16_t* siz) -> const uint8_t*
 // UsbCentral
 //=============================================================================
             auto UsbCentral::
-set_device (const uint8_t* d, service_t f) -> bool
+set_device  (const uint8_t* d, service_t f) -> bool
             {
             m_descriptor = d;
             m_service = f;
