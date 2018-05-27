@@ -86,17 +86,18 @@ mode        (MODE e) -> void
             Reg::setbit(m_clcx_con, e);
             }
 
-//input select, n = 1-4, v = 0-7 (invalid args masked to good vals)
+//input select (no change if v invalid value)
 //=============================================================================
             auto Clc::
-in_sel      (uint8_t n, uint8_t v) -> void
+in_sel      (SELX e, uint8_t v) -> void
             {
-            n -= 1; n and_eq 3; n <<= 2; v and_eq 7;
+            if(v > 7) return;
+            uint8_t n = e << 2;
             Reg::clrbit(m_clcx_con + CLCXSEL, 7<<n);
             Reg::setbit(m_clcx_con + CLCXSEL, v<<n);
             }
 
-//or all in in shot with precomputed value
+//or precomputed value for all gates
 //=============================================================================
             auto Clc::
 in_sel      (uint32_t v) -> void
@@ -104,20 +105,20 @@ in_sel      (uint32_t v) -> void
             Reg::val(m_clcx_con + CLCXSEL, v);
             }
 
-//gate select, n = 1-4 (invalid gate masked to good gate)
+//gate select setting fo one gate
 //=============================================================================
             auto Clc::
-gate_sel    (uint8_t n, uint8_t v) -> void
+gate_sel    (GLSX e, uint8_t v) -> void
             {
-            n -= 1; n and_eq 3; n <<= 3;
+            uint8_t n = e << 3;
             Reg::clrbit(m_clcx_con + CLCXGLS, 15<<n);
             Reg::setbit(m_clcx_con + CLCXGLS, v<<n);
             }
 
-//or all in in shot with precomputed value
+//or precomputed register value for all gates
 //=============================================================================
             auto Clc::
 gate_sel    (uint32_t v) -> void
             {
-            Reg::val(m_clcx_con+CLCXGLS, v);
+            Reg::val(m_clcx_con + CLCXGLS, v);
             }

@@ -45,14 +45,20 @@ MODE        : uint8_t { ANDOR, ORXOR, AND, SR, DSR, DR, JKR, LSR };
             auto
 mode        (MODE e) -> void;
 
+            enum
+SELX        { DS1, DS2, DS3, DS4 };
+
             auto
-in_sel      (uint8_t, uint8_t) -> void;
+in_sel      (SELX, uint8_t) -> void;
 
             auto
 in_sel      (uint32_t) -> void;
 
+            enum
+GLSX        { GS1, GS2, GS3, GS4 };
+
             auto
-gate_sel    (uint8_t, uint8_t) -> void;
+gate_sel    (GLSX, uint8_t) -> void;
 
             auto
 gate_sel    (uint32_t) -> void;
