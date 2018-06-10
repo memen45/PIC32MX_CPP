@@ -33,24 +33,48 @@
 
 struct Delay {
 
-    //polled
-    bool            expired     ();             //time expired?
-    void            restart     ();             //restart, do again
-    void            set_us      (uint32_t);     //set us wait time
-    void            set_ms      (uint32_t);     //set ms wait time
-    void            set_s       (uint16_t);     //set s wait time
+            //polled
 
-    //blocking
-    static void     wait_us     (uint32_t);
-    static void     wait_ms     (uint32_t);
-    static void     wait_s      (uint16_t);
+            //time expired?
+            auto
+expired     () -> bool;
 
-    private:
+            //restart, do again
+            auto
+restart     () -> void;
 
-    void            set_count   (uint32_t);
+            //set us wait time
+            auto
+set_us      (uint32_t) -> void;
 
-    uint32_t    m_start{0};
-    uint32_t    m_countn{0};
-    bool        m_expired{true};
+            //set ms wait time
+            auto
+set_ms      (uint32_t) -> void;
+
+            //set s wait time
+            auto
+set_s       (uint16_t) -> void;
+
+
+            //blocking
+
+            static auto
+wait_us     (uint32_t) -> void;
+
+            static auto
+wait_ms     (uint32_t) -> void;
+
+            static auto
+wait_s      (uint16_t) -> void;
+
+
+            private:
+
+            auto
+set_count   (uint32_t) -> void;
+
+            uint32_t    m_start{0};
+            uint32_t    m_countn{0};
+            bool        m_expired{true};
 
 };

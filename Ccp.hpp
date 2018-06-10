@@ -6,193 +6,340 @@
 
 struct Ccp  {
 
-    //instantiate Ccp with CCPn
-    enum CCPX {
-        CCP1, CCP2, CCP3, CCP4, CCP5, CCP6, CCP7, CCP8, CCP9
-    };
-    Ccp(CCPX);
+            enum
+CCPX        {
+            CCP1, CCP2, CCP3, CCP4, CCP5, CCP6, CCP7, CCP8, CCP9
+            };
 
-//CCPxCON1
-
-    enum OPOSTSRC : bool { TMRIRQ, EVTTRG };
-    void            outscale_src    (OPOSTSRC);
-
-    void            retrigger       (bool);
-    void            outscale        (uint8_t);
-    void            trig_mode       ();
-    void            sync_mode       ();
-    void            oneshot         (bool);
-    void            sync_altout     (bool);
-
-    enum SYNC : uint8_t {
-        PR = 0, MCCPME, MCCP1, SCCP2, SCCP3, INT0 = 9, INT1, INT2, INT3, INT4,
-        SCCP8, SCCP9, CLC1, CLC2, CLC3, CLC4, COMP1 = 24, COMP2, COMP3, ADC,
-        TMR = 31, TRIGSOFT = 31
-    };
-    void            sync_src        (SYNC);
-
-    void            on              (bool);
-    void            stop_idle       (bool);
-    void            run_sleep       (bool);
-    void            sync_tmr        (bool);
-
-    enum CLKSEL : uint8_t {
-        SYSCLK = 0, REFO1, SOSC,
-        CLC1MCCP1 = 3, CLC2MCCP2 = 3, CLC3MCCP3 = 3, CLC1SCCP4 = 3,
-        CLC2SCCP5 = 3, CLC3SCCP6 = 3, CLC4SCCP7 = 3, CLC1SCCP8 = 3,
-        CLC1SCCP9 = 3, TCKIB = 6, TCKIA = 7
-    };
-    void            clk_src         (CLKSEL);
-
-    enum TMRPS : uint8_t { PS1, PS4, PS16, PS64 };
-    void            tmr_prescale    (TMRPS);
-
-    enum MODE : uint8_t {
-        //mode          <5>     <4>        <3:0>
-        //name          t32     ccsel       mod
-        //timer modes
-        TIMER16 =       0<<5|   0<<4|       0,
-        TIMER32 =       1<<5|   0<<4|       0,
-        //output compare/pwm modes
-        SEHIMATCH16 =   0<<5|   0<<4|       1,
-        SEHIMATCH32 =   1<<5|   0<<4|       1,
-        SELOMATCH16 =   0<<5|   0<<4|       2,
-        SELOMATCH32 =   1<<5|   0<<4|       2,
-        SETOGMATCH16 =  0<<5|   0<<4|       3,
-        SETOGMATCH32 =  1<<5|   0<<4|       3,
-        DEMATCH16 =     0<<5|   0<<4|       4,
-        DEPWM16 =       0<<5|   0<<4|       5,
-        CENTERPWM16 =   0<<5|   0<<4|       6,
-        VFPULSE16 =     0<<5|   0<<4|       7,
-        //input capture modes
-        CAPEDGE16 =     0<<5|   1<<4|       0,
-        CAPEDGE32 =     1<<5|   1<<4|       0,
-        CAPRISE16 =     0<<5|   1<<4|       1,
-        CAPRISE32 =     1<<5|   1<<4|       1,
-        CAPFALL16 =     0<<5|   1<<4|       2,
-        CAPFALL32 =     1<<5|   1<<4|       2,
-        CAPBOTH16 =     0<<5|   1<<4|       3,
-        CAPBOTH32 =     1<<5|   1<<4|       3,
-        CAP4RISE16 =    0<<5|   1<<4|       4,
-        CAP4RISE32 =    1<<5|   1<<4|       4,
-        CAP16RISE16 =   0<<5|   1<<4|       5,
-        CAP16RISE32 =   1<<5|   1<<4|       5
-    };
-    void            mode            (MODE);
-
-//CCPxCON2
-
-    void            out_sync        (bool);
-
-    enum OUTPINS : uint8_t {
-        OCF = 1<<5, OCE = 1<<4, OCD = 1<<3,
-        OCC = 1<<2, OCB = 1<<1, OCA = 1<<0
-    };
-    void            out_pins        (OUTPINS);
-
-    enum ICGSM : uint8_t { LEVEL, RISEON, FALLOFF  };
-    void            gate_mode       (ICGSM);
-
-    enum AUXOUT : uint8_t { OFF, ROLLOVER, SIGNALOUT, CAPCOMPEVT };
-    void            out_aux         (AUXOUT);
-
-    enum ICS : uint8_t {
-        ICMX, ICOMP1, ICOMP2, ICOMP3, ICLC1, ICLC2, ICLC3, ICLC4
-    };
-    void            cap_src         (ICS);
-
-    void            pwm_restart     (bool);
-    void            gate_auto       (bool);
-    void            gate_now        (bool);
-
-    enum GATEAUTOSRC : uint8_t {
-        OCFB = 1<<7, OCFA = 1<<6,
-        CLC1_MCCP1 = 1<<5, CLC2_MCCP2 = 1<<5, CLC3_MCCP3 = 1<<5,
-        CLC1_SCCP4 = 1<<5, CLC2_SCCP5 = 1<<5, CLC3_SCCP6 = 1<<5,
-        CLC4_SCCP7 = 1<<5, CLC1_SCCP8 = 1<<5, CLC2_SCCP9 = 1<<5,
-        SCCP4_MCCP123 = 1<<4, MCCP1_SCCP4TO9 = 1<<4,
-        SCCP5_MCCP123 = 1<<3, MCCP2_SCCP4TO9 = 1<<4,
-        COMP_3 = 1<<2, COMP_2 = 1<<1, COMP_1 = 1<<0
-    };
-    void            gate_autosrc    (GATEAUTOSRC);
+            //instantiate Ccp with CCPn
+Ccp         (CCPX);
 
 
-//CCPxCON3
+            //==== CCPxCON1 ====
 
-    void            out_trigwait    (bool);
-    void            oneshot_extend  (uint8_t);
+            enum
+OPOSTSRC    : bool { TMRIRQ, EVTTRG };
 
-    enum OUTM : uint8_t {
-        STEERABLE = 0, PUSHPULL, HALFBRIDGE, BRUSHREV = 4, BRUSHFWD, SCAN
-    };
-    void            out_mode        (OUTM);
+            auto
+outscale_src (OPOSTSRC) -> void;
 
-    enum POLARITY : bool { ACTHIGH, ACTLOW };
-    void            polarity_ace    (POLARITY);
-    void            polarity_bdf    (POLARITY);
+            auto
+retrigger   (bool) -> void;
 
-    enum SHUTDOWN : uint8_t { HIGHIMP, INACTIVE, ACTIVE };
-    void            shutdown_ace    (SHUTDOWN);
-    void            shutdown_bdf    (SHUTDOWN);
+            auto
+outscale    (uint8_t) -> void;
 
-    void            dead_time       (uint8_t);
+            auto
+trig_mode   () -> void;
 
-//CCPxSTAT
+            auto
+sync_mode   () -> void;
 
-    bool            pr16_busy       ();
-    bool            tmr32_busy      ();
-    bool            tmr16_busy      ();
-    bool            compb_busy      ();
-    bool            compa_busy      ();
-    void            gate_arm        ();
-    bool            stat_trig       ();
-    void            trig_set        ();
-    void            trig_clr        ();
-    bool            stat_shutdown   ();
-    bool            stat_secomp     ();
-    bool            stat_capdis     ();
-    bool            stat_oflow      ();
-    bool            stat_bufany     ();
+            auto
+oneshot     (bool) -> void;
 
-//CCPxTMR
+            auto
+sync_altout (bool) -> void;
 
-    void            tmr16           (uint16_t);
-    void            tmr16h          (uint16_t);
-    void            tmr32           (uint32_t);
-    uint16_t        tmr16           ();
-    uint16_t        tmr16h          ();
-    uint32_t        tmr32           ();
+            enum
+SYNC        : uint8_t {
+            PR = 0, MCCPME, MCCP1, SCCP2, SCCP3, INT0 = 9, INT1, INT2, INT3,
+            INT4, SCCP8, SCCP9, CLC1, CLC2, CLC3, CLC4, COMP1 = 24, COMP2,
+            COMP3, ADC, TMR = 31, TRIGSOFT = 31
+            };
 
-//CCPxPR
+            auto
+sync_src    (SYNC) -> void;
 
-    void            pr16            (uint16_t);
-    void            pr16h           (uint16_t);
-    void            pr32            (uint32_t);
-    uint16_t        pr16            ();
-    uint16_t        pr16h           ();
-    uint32_t        pr32            ();
+            auto
+on          (bool) -> void;
 
-//CCPxRA, CCPxRB
+            auto
+stop_idle   (bool) -> void;
 
-    void            compa           (uint16_t);
-    void            compb           (uint16_t);
-    void            comp32          (uint32_t);
-    uint16_t        compa           ();
-    uint16_t        compb           ();
-    uint32_t        comp32          ();
+            auto
+run_sleep   (bool) -> void;
 
-//CCPxBUF
+            auto
+sync_tmr    (bool) -> void;
 
-    uint16_t        buf16           ();
-    uint32_t        buf32           ();
+            enum
+CLKSEL      : uint8_t {
+            SYSCLK = 0, REFO1, SOSC,
+            CLC1MCCP1 = 3, CLC2MCCP2 = 3, CLC3MCCP3 = 3, CLC1SCCP4 = 3,
+            CLC2SCCP5 = 3, CLC3SCCP6 = 3, CLC4SCCP7 = 3, CLC1SCCP8 = 3,
+            CLC1SCCP9 = 3, TCKIB = 6, TCKIA = 7
+            };
 
-//misc
+            auto
+clk_src     (CLKSEL) -> void;
 
-    uint8_t         ccp_num         ();             //which ccp number am I
+            enum
+TMRPS       : uint8_t { PS1, PS4, PS16, PS64 };
 
-    private:
+            auto
+tmr_prescale (TMRPS) -> void;
 
-    volatile uint32_t* m_ccpx_con;
+            enum
+MODE        : uint8_t {
+            //mode          <5>     <4>        <3:0>
+            //name          t32     ccsel       mod
+            //timer modes
+            TIMER16 =       0<<5|   0<<4|       0,
+            TIMER32 =       1<<5|   0<<4|       0,
+            //output compare/pwm modes
+            SEHIMATCH16 =   0<<5|   0<<4|       1,
+            SEHIMATCH32 =   1<<5|   0<<4|       1,
+            SELOMATCH16 =   0<<5|   0<<4|       2,
+            SELOMATCH32 =   1<<5|   0<<4|       2,
+            SETOGMATCH16 =  0<<5|   0<<4|       3,
+            SETOGMATCH32 =  1<<5|   0<<4|       3,
+            DEMATCH16 =     0<<5|   0<<4|       4,
+            DEPWM16 =       0<<5|   0<<4|       5,
+            CENTERPWM16 =   0<<5|   0<<4|       6,
+            VFPULSE16 =     0<<5|   0<<4|       7,
+            //input capture modes
+            CAPEDGE16 =     0<<5|   1<<4|       0,
+            CAPEDGE32 =     1<<5|   1<<4|       0,
+            CAPRISE16 =     0<<5|   1<<4|       1,
+            CAPRISE32 =     1<<5|   1<<4|       1,
+            CAPFALL16 =     0<<5|   1<<4|       2,
+            CAPFALL32 =     1<<5|   1<<4|       2,
+            CAPBOTH16 =     0<<5|   1<<4|       3,
+            CAPBOTH32 =     1<<5|   1<<4|       3,
+            CAP4RISE16 =    0<<5|   1<<4|       4,
+            CAP4RISE32 =    1<<5|   1<<4|       4,
+            CAP16RISE16 =   0<<5|   1<<4|       5,
+            CAP16RISE32 =   1<<5|   1<<4|       5
+            };
+
+            auto
+mode        (MODE) -> void;
+
+
+            //==== CCPxCON2 ====
+
+            auto
+out_sync    (bool) -> void;
+
+            enum
+OUTPINS     : uint8_t {
+            OCF = 1<<5, OCE = 1<<4, OCD = 1<<3,
+            OCC = 1<<2, OCB = 1<<1, OCA = 1<<0
+            };
+
+            auto
+out_pins    (OUTPINS) -> void;
+
+            enum
+ICGSM       : uint8_t { LEVEL, RISEON, FALLOFF  };
+
+            auto
+gate_mode   (ICGSM) -> void;
+
+            enum
+AUXOUT      : uint8_t { OFF, ROLLOVER, SIGNALOUT, CAPCOMPEVT };
+
+            auto
+out_aux     (AUXOUT) -> void;
+
+            enum
+ICS         : uint8_t {
+            ICMX, ICOMP1, ICOMP2, ICOMP3, ICLC1, ICLC2, ICLC3, ICLC4
+            };
+
+            auto
+cap_src     (ICS) -> void;
+
+            auto
+pwm_restart (bool) -> void;
+
+            auto
+gate_auto   (bool) -> void;
+
+            auto
+gate_now    (bool) -> void;
+
+            enum
+GATEAUTOSRC : uint8_t {
+            OCFB = 1<<7, OCFA = 1<<6,
+            CLC1_MCCP1 = 1<<5, CLC2_MCCP2 = 1<<5, CLC3_MCCP3 = 1<<5,
+            CLC1_SCCP4 = 1<<5, CLC2_SCCP5 = 1<<5, CLC3_SCCP6 = 1<<5,
+            CLC4_SCCP7 = 1<<5, CLC1_SCCP8 = 1<<5, CLC2_SCCP9 = 1<<5,
+            SCCP4_MCCP123 = 1<<4, MCCP1_SCCP4TO9 = 1<<4,
+            SCCP5_MCCP123 = 1<<3, MCCP2_SCCP4TO9 = 1<<4,
+            COMP_3 = 1<<2, COMP_2 = 1<<1, COMP_1 = 1<<0
+            };
+
+            auto
+gate_autosrc (GATEAUTOSRC) -> void;
+
+
+        //==== CCPxCON3 ====
+
+            auto
+out_trigwait (bool) -> void;
+
+            auto
+oneshot_extend (uint8_t) -> void;
+
+            enum
+OUTM        : uint8_t {
+            STEERABLE = 0, PUSHPULL, HALFBRIDGE, BRUSHREV = 4, BRUSHFWD, SCAN
+            };
+
+            auto
+out_mode    (OUTM) -> void;
+
+            enum
+POLARITY    : bool { ACTHIGH, ACTLOW };
+
+            auto
+polarity_ace (POLARITY) -> void;
+
+            auto
+polarity_bdf (POLARITY) -> void;
+
+            enum
+SHUTDOWN    : uint8_t { HIGHIMP, INACTIVE, ACTIVE };
+
+            auto
+shutdown_ace (SHUTDOWN) -> void;
+
+            auto
+shutdown_bdf (SHUTDOWN) -> void;
+
+            auto
+dead_time   (uint8_t) -> void;
+
+
+            //==== CCPxSTAT ====
+
+            auto
+pr16_busy   () -> bool;
+
+            auto
+tmr32_busy  () -> bool;
+
+            auto
+tmr16_busy  () -> bool;
+
+            auto
+compb_busy  () -> bool;
+
+            auto
+compa_busy  () -> bool;
+
+            auto
+gate_arm    () -> void;
+
+            auto
+stat_trig   () -> bool;
+
+            auto
+trig_set    () -> void;
+
+            auto
+trig_clr    () -> void;
+
+            auto
+stat_shutdown () -> bool;
+
+            auto
+stat_secomp () -> bool;
+
+            auto
+stat_capdis () -> bool;
+
+            auto
+stat_oflow  () -> bool;
+
+            auto
+stat_bufany () -> bool;
+
+
+            //==== CCPxTMR ====
+
+            auto
+tmr16       (uint16_t) -> void;
+
+            auto
+tmr16h      (uint16_t) -> void;
+
+            auto
+tmr32       (uint32_t) -> void;
+
+            auto
+tmr16       () -> uint16_t;
+
+            auto
+tmr16h      () -> uint16_t;
+
+            auto
+tmr32       () -> uint32_t;
+
+
+            //==== CCPxPR ====
+
+            auto
+pr16        (uint16_t) -> void;
+
+            auto
+pr16h       (uint16_t) -> void;
+
+            auto
+pr32        (uint32_t) -> void;
+
+            auto
+pr16        () -> uint16_t;
+
+            auto
+pr16h       () -> uint16_t;
+
+            auto
+pr32        () -> uint32_t;
+
+
+            //==== CCPxRA, CCPxRB ====
+
+            auto
+compa       (uint16_t) -> void;
+
+            auto
+compb       (uint16_t) -> void;
+
+            auto
+comp32      (uint32_t) -> void;
+
+            auto
+compa       () -> uint16_t;
+
+            auto
+compb       () -> uint16_t;
+
+            auto
+comp32      () -> uint32_t;
+
+
+            //==== CCPxBUF ====
+
+            auto
+buf16       () -> uint16_t;
+
+            auto
+buf32       () -> uint32_t;
+
+
+            //misc
+
+            auto
+ccp_num     () -> uint8_t;  //which ccp number am I
+
+
+            private:
+
+            volatile uint32_t* m_ccpx_con;
+
 };
 
 /*

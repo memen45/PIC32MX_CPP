@@ -3,574 +3,575 @@
 #include "Reg.hpp"
 
 enum : uint32_t {
-    CCPX_SPACING = 0x40,  //spacing in words
-    CCP1CON1 = 0xBF800100,
-        OPSSRC = 31,
-        RTRGEN = 30,
-        OPS_SHIFT = 24, OPS_MASK = 15,
-        TRIGEN = 23,
-        ONESHOT = 22,
-        ALTSYNC = 21,
-        SYNC_SHIFT = 16, SYNC_MASK = 31,
-        ON = 15,
-        SIDL = 13,
-        CCPSLP = 12,
-        TMRSYNC = 11,
-        CLKSEL_SHIFT = 8, CLKSEL_MASK = 7,
-        TMRPS_SHIFT = 6, TMRPS_MASK = 3,
-        T32 = 5, //combined into MODE
-        CCSEL = 4, //combined into MODE
-        MOD_SHIFT = 0, MOD_MASK = 15,
-        MODE_SHIFT = 0, MODE_MASK = 63,
-    CCPXCON2 = 4, //offset in words from ccp1con1
-        OENSYNC = 31,
-        OCFEN = 29,
-        OCEEN = 28,
-        OCDEN = 27,
-        OCCEN = 26,
-        OCBEN = 25,
-        OCAEN = 24,
-        OCPINS_SHIFT = 24, OCPINS_MASK = 63,
-        ICGSM_SHIFT = 22, ICGSM_MASK = 3,
-        AUXOUT_SHIFT = 19, AUXOUT_MASK = 3,
-        ICS_SHIFT = 16, ICS_MASK = 7,
-        PWMRSEN = 15,
-        ASDGM = 14,
-        SSDG = 12,
-        ASDG_SHIFT = 0, ASDG_MASK = 255,
-    CCPXCON3 = 8, //offset in words from ccp1con1
-        OETRIG = 31,
-        OSCNT_SHIFT = 28, OSCNT_MASK = 7,
-        OUTM_SHIFT = 24, OUTM_MASK = 7,
-        POLACE = 21,
-        POLBDF = 20,
-        PSSACE_SHIFT = 18, PSSACE_MASK = 3,
-        PSSBDF_SHIFT = 16, PSSBDF_MASK = 3,
-        DT_SHIFT = 0, DT_MASK = 63,
-    CCPXSTAT = 12, //offset in words from ccp1con1
-        PRLWIP = 20,
-        TMRHWIP = 19,
-        TMRLWIP = 18,
-        RBWIP = 17,
-        RAWIP = 16,
-        ICGARM = 10,
-        CCPTRIG = 7,
-        TRSET = 6,
-        TRCLR = 5,
-        ASEVT = 4,
-        SCEVT = 3,
-        ICDIS = 2,
-        ICOV = 1,
-        ICBNE = 0,
-    CCPXTMR = 16, //offset in words from ccp1con1
-    CCPXPR = 20, //offset in words from ccp1con1
-    CCPXRA = 24, //offset in words from ccp1con1
-    CCPXRB = 28, //offset in words from ccp1con1
-    CCPXBUF = 32 //offset in words from ccp1con1
+CCPX_SPACING = 0x40,  //spacing in words
+CCP1CON1 = 0xBF800100,
+    OPSSRC = 31,
+    RTRGEN = 30,
+    OPS_SHIFT = 24, OPS_MASK = 15,
+    TRIGEN = 23,
+    ONESHOT = 22,
+    ALTSYNC = 21,
+    SYNC_SHIFT = 16, SYNC_MASK = 31,
+    ON = 15,
+    SIDL = 13,
+    CCPSLP = 12,
+    TMRSYNC = 11,
+    CLKSEL_SHIFT = 8, CLKSEL_MASK = 7,
+    TMRPS_SHIFT = 6, TMRPS_MASK = 3,
+    T32 = 5, //combined into MODE
+    CCSEL = 4, //combined into MODE
+    MOD_SHIFT = 0, MOD_MASK = 15,
+    MODE_SHIFT = 0, MODE_MASK = 63,
+CCPXCON2 = 4, //offset in words from ccp1con1
+    OENSYNC = 31,
+    OCFEN = 29,
+    OCEEN = 28,
+    OCDEN = 27,
+    OCCEN = 26,
+    OCBEN = 25,
+    OCAEN = 24,
+    OCPINS_SHIFT = 24, OCPINS_MASK = 63,
+    ICGSM_SHIFT = 22, ICGSM_MASK = 3,
+    AUXOUT_SHIFT = 19, AUXOUT_MASK = 3,
+    ICS_SHIFT = 16, ICS_MASK = 7,
+    PWMRSEN = 15,
+    ASDGM = 14,
+    SSDG = 12,
+    ASDG_SHIFT = 0, ASDG_MASK = 255,
+CCPXCON3 = 8, //offset in words from ccp1con1
+    OETRIG = 31,
+    OSCNT_SHIFT = 28, OSCNT_MASK = 7,
+    OUTM_SHIFT = 24, OUTM_MASK = 7,
+    POLACE = 21,
+    POLBDF = 20,
+    PSSACE_SHIFT = 18, PSSACE_MASK = 3,
+    PSSBDF_SHIFT = 16, PSSBDF_MASK = 3,
+    DT_SHIFT = 0, DT_MASK = 63,
+CCPXSTAT = 12, //offset in words from ccp1con1
+    PRLWIP = 20,
+    TMRHWIP = 19,
+    TMRLWIP = 18,
+    RBWIP = 17,
+    RAWIP = 16,
+    ICGARM = 10,
+    CCPTRIG = 7,
+    TRSET = 6,
+    TRCLR = 5,
+    ASEVT = 4,
+    SCEVT = 3,
+    ICDIS = 2,
+    ICOV = 1,
+    ICBNE = 0,
+CCPXTMR = 16, //offset in words from ccp1con1
+CCPXPR = 20, //offset in words from ccp1con1
+CCPXRA = 24, //offset in words from ccp1con1
+CCPXRB = 28, //offset in words from ccp1con1
+CCPXBUF = 32 //offset in words from ccp1con1
 };
 
 //MCCP/SCCP
 
 //=============================================================================
-                Ccp::Ccp        (CCPX e)
-//=============================================================================
-    : m_ccpx_con((vu32ptr)CCP1CON1 + (e * CCPX_SPACING))
-{
-}
+            Ccp::
+Ccp         (CCPX e)
+            : m_ccpx_con((vu32ptr)CCP1CON1 + (e * CCPX_SPACING))
+            {
+            }
 
 //ccpxcon1
 //=============================================================================
-    void        Ccp::outscale_src       (OPOSTSRC e)
-//=============================================================================
-{
-    Reg::setbit(m_ccpx_con, 1<<OPSSRC, e);
-}
+            auto Ccp::
+outscale_src (OPOSTSRC e) -> void
+            {
+            Reg::setbit(m_ccpx_con, 1<<OPSSRC, e);
+            }
 
 //=============================================================================
-    void        Ccp::retrigger          (bool tf)
-//=============================================================================
-{
-    Reg::setbit(m_ccpx_con, 1<<RTRGEN, tf);
-}
+            auto Ccp::
+retrigger   (bool tf) -> void
+            {
+            Reg::setbit(m_ccpx_con, 1<<RTRGEN, tf);
+            }
 
 //=============================================================================
-    void        Ccp::outscale           (uint8_t v)
-//=============================================================================
-{
-    Reg::clrbit(m_ccpx_con, OPS_MASK<<OPS_SHIFT);
-    Reg::setbit(m_ccpx_con, (v bitand OPS_MASK)<<OPS_SHIFT);
-}
+            auto Ccp::
+outscale    (uint8_t v) -> void
+            {
+            Reg::clrbit(m_ccpx_con, OPS_MASK<<OPS_SHIFT);
+            Reg::setbit(m_ccpx_con, (v bitand OPS_MASK)<<OPS_SHIFT);
+            }
 
 //=============================================================================
-    void        Ccp::trig_mode          ()
-//=============================================================================
-{
-    Reg::setbit(m_ccpx_con, 1<<TRIGEN);
-}
+            auto Ccp::
+trig_mode   () -> void
+            {
+            Reg::setbit(m_ccpx_con, 1<<TRIGEN);
+            }
 
 //=============================================================================
-    void        Ccp::sync_mode          ()
-//=============================================================================
-{
-    Reg::clrbit(m_ccpx_con, 1<<TRIGEN);
-}
+            auto Ccp::
+sync_mode   () -> void
+            {
+            Reg::clrbit(m_ccpx_con, 1<<TRIGEN);
+            }
 
 //=============================================================================
-    void        Ccp::oneshot            (bool tf)
-//=============================================================================
-{
-    Reg::setbit(m_ccpx_con, 1<<ONESHOT, tf);
-}
+            auto Ccp::
+oneshot     (bool tf) -> void
+            {
+            Reg::setbit(m_ccpx_con, 1<<ONESHOT, tf);
+            }
 
 //=============================================================================
-    void        Ccp::sync_altout        (bool tf)
-//=============================================================================
-{
-    Reg::setbit(m_ccpx_con, 1<<ALTSYNC, tf);
-}
+            auto Ccp::
+sync_altout (bool tf) -> void
+            {
+            Reg::setbit(m_ccpx_con, 1<<ALTSYNC, tf);
+            }
 
 //=============================================================================
-    void        Ccp::sync_src           (SYNC e)
-//=============================================================================
-{
-    Reg::clrbit(m_ccpx_con, SYNC_MASK<<SYNC_SHIFT);
-    Reg::setbit(m_ccpx_con, e<<SYNC_SHIFT);
-}
+            auto Ccp::
+sync_src    (SYNC e) -> void
+            {
+            Reg::clrbit(m_ccpx_con, SYNC_MASK<<SYNC_SHIFT);
+            Reg::setbit(m_ccpx_con, e<<SYNC_SHIFT);
+            }
 
 //=============================================================================
-    void        Ccp::on                 (bool tf)
-//=============================================================================
-{
-    Reg::setbit(m_ccpx_con, 1<<ON, tf);
-}
+            auto Ccp::
+on          (bool tf) -> void
+            {
+            Reg::setbit(m_ccpx_con, 1<<ON, tf);
+            }
 
 //=============================================================================
-    void        Ccp::stop_idle          (bool tf)
-//=============================================================================
-{
-    Reg::setbit(m_ccpx_con, 1<<SIDL, tf);
-}
+            auto Ccp::
+stop_idle   (bool tf) -> void
+            {
+            Reg::setbit(m_ccpx_con, 1<<SIDL, tf);
+            }
 
 //=============================================================================
-    void        Ccp::run_sleep          (bool tf)
-//=============================================================================
-{
-    Reg::setbit(m_ccpx_con, 1<<CCPSLP, tf);
-}
+            auto Ccp::
+run_sleep   (bool tf) -> void
+            {
+            Reg::setbit(m_ccpx_con, 1<<CCPSLP, tf);
+            }
 
 //=============================================================================
-    void        Ccp::sync_tmr           (bool tf)
-//=============================================================================
-{
-    Reg::setbit(m_ccpx_con, 1<<TMRSYNC, tf);
-}
+            auto Ccp::
+sync_tmr    (bool tf) -> void
+            {
+            Reg::setbit(m_ccpx_con, 1<<TMRSYNC, tf);
+            }
 
 //=============================================================================
-    void        Ccp::clk_src            (CLKSEL e)
-//=============================================================================
-{
-    Reg::clrbit(m_ccpx_con, CLKSEL_MASK<<CLKSEL_SHIFT);
-    Reg::setbit(m_ccpx_con, e<<CLKSEL_SHIFT);
-    if(e == SOSC) Osc::sosc(true);
-}
+            auto Ccp::
+clk_src     (CLKSEL e) -> void
+            {
+            Reg::clrbit(m_ccpx_con, CLKSEL_MASK<<CLKSEL_SHIFT);
+            Reg::setbit(m_ccpx_con, e<<CLKSEL_SHIFT);
+            if(e == SOSC) Osc::sosc(true);
+            }
 
 //=============================================================================
-    void        Ccp::tmr_prescale       (TMRPS e)
-//=============================================================================
-{
-    Reg::clrbit(m_ccpx_con, TMRPS_MASK<<TMRPS_SHIFT);
-    Reg::setbit(m_ccpx_con, e<<TMRPS_SHIFT);
-}
+            auto Ccp::
+tmr_prescale (TMRPS e) -> void
+            {
+            Reg::clrbit(m_ccpx_con, TMRPS_MASK<<TMRPS_SHIFT);
+            Reg::setbit(m_ccpx_con, e<<TMRPS_SHIFT);
+            }
 
 //=============================================================================
-    void        Ccp::mode               (MODE e)
-//=============================================================================
-{
-    bool ison = Reg::anybit(m_ccpx_con, 1<<ON);
-    on(false);
-    Reg::clrbit(m_ccpx_con, MODE_MASK<<MODE_SHIFT);
-    Reg::setbit(m_ccpx_con, e<<MODE_SHIFT);
-    if(ison) on(true);
-}
+            auto Ccp::
+mode        (MODE e) -> void
+            {
+            bool ison = Reg::anybit(m_ccpx_con, 1<<ON);
+            on(false);
+            Reg::clrbit(m_ccpx_con, MODE_MASK<<MODE_SHIFT);
+            Reg::setbit(m_ccpx_con, e<<MODE_SHIFT);
+            if(ison) on(true);
+            }
 
 //ccpxcon2
 //=============================================================================
-    void        Ccp::out_sync           (bool tf)
-//=============================================================================
-{
-   Reg::setbit(m_ccpx_con + CCPXCON2, 1<<OENSYNC, tf);
-}
+            auto Ccp::
+out_sync    (bool tf) -> void
+            {
+            Reg::setbit(m_ccpx_con + CCPXCON2, 1<<OENSYNC, tf);
+            }
 
 //=============================================================================
-    void        Ccp::out_pins           (OUTPINS e)
-//=============================================================================
-{
-   Reg::clrbit(m_ccpx_con + CCPXCON2, OCPINS_MASK<<OCPINS_SHIFT);
-   Reg::setbit(m_ccpx_con + CCPXCON2, e<<OCPINS_SHIFT);
-}
+            auto Ccp::
+out_pins    (OUTPINS e) -> void
+            {
+            Reg::clrbit(m_ccpx_con + CCPXCON2, OCPINS_MASK<<OCPINS_SHIFT);
+            Reg::setbit(m_ccpx_con + CCPXCON2, e<<OCPINS_SHIFT);
+            }
 
 //=============================================================================
-    void        Ccp::gate_mode          (ICGSM e)
-//=============================================================================
-{
-   Reg::clrbit(m_ccpx_con + CCPXCON2, ICGSM_MASK<<ICGSM_SHIFT);
-   Reg::setbit(m_ccpx_con + CCPXCON2, e<<ICGSM_SHIFT);
-}
+            auto Ccp::
+gate_mode   (ICGSM e) -> void
+            {
+            Reg::clrbit(m_ccpx_con + CCPXCON2, ICGSM_MASK<<ICGSM_SHIFT);
+            Reg::setbit(m_ccpx_con + CCPXCON2, e<<ICGSM_SHIFT);
+            }
 
 //=============================================================================
-    void        Ccp::out_aux            (AUXOUT e)
-//=============================================================================
-{
-   Reg::clrbit(m_ccpx_con + CCPXCON2, AUXOUT_MASK<<AUXOUT_SHIFT);
-   Reg::setbit(m_ccpx_con + CCPXCON2, e<<AUXOUT_SHIFT);
-}
+            auto Ccp::
+out_aux     (AUXOUT e) -> void
+            {
+            Reg::clrbit(m_ccpx_con + CCPXCON2, AUXOUT_MASK<<AUXOUT_SHIFT);
+            Reg::setbit(m_ccpx_con + CCPXCON2, e<<AUXOUT_SHIFT);
+            }
 
 //=============================================================================
-    void        Ccp::cap_src            (ICS e)
-//=============================================================================
-{
-   Reg::clrbit(m_ccpx_con + CCPXCON2, ICS_MASK<<ICS_SHIFT);
-   Reg::setbit(m_ccpx_con + CCPXCON2, e<<ICS_SHIFT);
-}
+            auto Ccp::
+cap_src     (ICS e) -> void
+            {
+            Reg::clrbit(m_ccpx_con + CCPXCON2, ICS_MASK<<ICS_SHIFT);
+            Reg::setbit(m_ccpx_con + CCPXCON2, e<<ICS_SHIFT);
+            }
 
 //=============================================================================
-    void        Ccp::pwm_restart        (bool tf)
-//=============================================================================
-{
-   Reg::setbit(m_ccpx_con + CCPXCON2, 1<<PWMRSEN, tf);
-}
+            auto Ccp::
+pwm_restart (bool tf) -> void
+            {
+            Reg::setbit(m_ccpx_con + CCPXCON2, 1<<PWMRSEN, tf);
+            }
 
 //=============================================================================
-    void        Ccp::gate_auto          (bool tf)
-//=============================================================================
-{
-   Reg::setbit(m_ccpx_con + CCPXCON2, 1<<ASDGM, tf);
-}
+            auto Ccp::
+gate_auto   (bool tf) -> void
+            {
+            Reg::setbit(m_ccpx_con + CCPXCON2, 1<<ASDGM, tf);
+            }
 
 //=============================================================================
-    void        Ccp::gate_now           (bool tf)
-//=============================================================================
-{
-   Reg::setbit(m_ccpx_con + CCPXCON2, 1<<SSDG, tf);
-}
+            auto Ccp::
+gate_now    (bool tf) -> void
+            {
+            Reg::setbit(m_ccpx_con + CCPXCON2, 1<<SSDG, tf);
+            }
 
 //=============================================================================
-    void        Ccp::gate_autosrc       (GATEAUTOSRC e)
-//=============================================================================
-{
-   Reg::val((vu8ptr)m_ccpx_con + (CCPXCON2 * 4), e);
-}
+            auto Ccp::
+gate_autosrc (GATEAUTOSRC e) -> void
+            {
+            Reg::val((vu8ptr)m_ccpx_con + (CCPXCON2 * 4), e);
+            }
 
 //ccpxcon3
 //=============================================================================
-    void        Ccp::out_trigwait       (bool tf)
-//=============================================================================
-{
-    Reg::setbit(m_ccpx_con + CCPXCON3, 1<<OETRIG, tf);
-}
+            auto Ccp::
+out_trigwait (bool tf) -> void
+            {
+            Reg::setbit(m_ccpx_con + CCPXCON3, 1<<OETRIG, tf);
+            }
 
 //=============================================================================
-    void        Ccp::oneshot_extend     (uint8_t v)
-//=============================================================================
-{
-    Reg::clrbit(m_ccpx_con + CCPXCON3, OSCNT_MASK<<OSCNT_SHIFT);
-    Reg::setbit(m_ccpx_con + CCPXCON3, (v bitand OSCNT_MASK)<<OSCNT_SHIFT);
-}
+            auto Ccp::
+oneshot_extend (uint8_t v) -> void
+            {
+            Reg::clrbit(m_ccpx_con + CCPXCON3, OSCNT_MASK<<OSCNT_SHIFT);
+            Reg::setbit(m_ccpx_con + CCPXCON3,
+                        (v bitand OSCNT_MASK)<<OSCNT_SHIFT);
+            }
 
 //=============================================================================
-    void        Ccp::out_mode           (OUTM e)
-//=============================================================================
-{
-    Reg::clrbit(m_ccpx_con + CCPXCON3, OUTM_MASK<<OUTM_SHIFT);
-    Reg::setbit(m_ccpx_con + CCPXCON3, e<<OUTM_SHIFT);
-}
+            auto Ccp::
+out_mode    (OUTM e) -> void
+            {
+            Reg::clrbit(m_ccpx_con + CCPXCON3, OUTM_MASK<<OUTM_SHIFT);
+            Reg::setbit(m_ccpx_con + CCPXCON3, e<<OUTM_SHIFT);
+            }
 
 //=============================================================================
-    void        Ccp::polarity_ace       (POLARITY e)
-//=============================================================================
-{
-    Reg::setbit(m_ccpx_con + CCPXCON3, 1<<POLACE, e);
-}
+            auto Ccp::
+polarity_ace (POLARITY e) -> void
+            {
+            Reg::setbit(m_ccpx_con + CCPXCON3, 1<<POLACE, e);
+            }
 
 //=============================================================================
-    void        Ccp::polarity_bdf       (POLARITY e)
-//=============================================================================
-{
-    Reg::setbit(m_ccpx_con + CCPXCON3, 1<<POLBDF, e);
-}
+            auto Ccp::
+polarity_bdf (POLARITY e) -> void
+            {
+            Reg::setbit(m_ccpx_con + CCPXCON3, 1<<POLBDF, e);
+            }
 
 //=============================================================================
-    void        Ccp::shutdown_ace       (SHUTDOWN e)
-//=============================================================================
-{
-    Reg::clrbit(m_ccpx_con + CCPXCON3, PSSACE_MASK<<PSSACE_SHIFT);
-    Reg::setbit(m_ccpx_con + CCPXCON3, e<<PSSACE_SHIFT);
-}
+            auto Ccp::
+shutdown_ace (SHUTDOWN e) -> void
+            {
+            Reg::clrbit(m_ccpx_con + CCPXCON3, PSSACE_MASK<<PSSACE_SHIFT);
+            Reg::setbit(m_ccpx_con + CCPXCON3, e<<PSSACE_SHIFT);
+            }
 
 //=============================================================================
-    void        Ccp::shutdown_bdf       (SHUTDOWN e)
-//=============================================================================
-{
-    Reg::clrbit(m_ccpx_con + CCPXCON3, PSSBDF_MASK<<PSSBDF_SHIFT);
-    Reg::setbit(m_ccpx_con + CCPXCON3, e<<PSSBDF_SHIFT);
-}
+            auto Ccp::
+shutdown_bdf (SHUTDOWN e) -> void
+            {
+            Reg::clrbit(m_ccpx_con + CCPXCON3, PSSBDF_MASK<<PSSBDF_SHIFT);
+            Reg::setbit(m_ccpx_con + CCPXCON3, e<<PSSBDF_SHIFT);
+            }
 
 //=============================================================================
-    void        Ccp::dead_time          (uint8_t v)
-//=============================================================================
-{
-    Reg::clrbit(m_ccpx_con + CCPXCON3, DT_MASK<<DT_SHIFT);
-    Reg::setbit(m_ccpx_con + CCPXCON3, (v bitand DT_MASK)<<DT_SHIFT);
-}
+            auto Ccp::
+dead_time   (uint8_t v) -> void
+            {
+            Reg::clrbit(m_ccpx_con + CCPXCON3, DT_MASK<<DT_SHIFT);
+            Reg::setbit(m_ccpx_con + CCPXCON3, (v bitand DT_MASK)<<DT_SHIFT);
+            }
 
 //ccpxstat
 //=============================================================================
-    bool        Ccp::pr16_busy          ()
-//=============================================================================
-{
-    return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<PRLWIP);
-}
+            auto Ccp::
+pr16_busy   () -> bool
+            {
+            return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<PRLWIP);
+            }
 
 //=============================================================================
-    bool        Ccp::tmr32_busy         ()
-//=============================================================================
-{
-    return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<TMRHWIP);
-}
+            auto Ccp::
+tmr32_busy  () -> bool
+            {
+            return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<TMRHWIP);
+            }
 
 //=============================================================================
-    bool        Ccp::tmr16_busy         ()
-//=============================================================================
-{
-    return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<TMRLWIP);
-}
+            auto Ccp::
+tmr16_busy  () -> bool
+            {
+            return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<TMRLWIP);
+            }
 
 //=============================================================================
-    bool        Ccp::compb_busy         ()
-//=============================================================================
-{
-    return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<RBWIP);
-}
+            auto Ccp::
+compb_busy  () -> bool
+            {
+            return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<RBWIP);
+            }
 
 //=============================================================================
-    bool        Ccp::compa_busy         ()
-//=============================================================================
-{
-    return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<RAWIP);
-}
+            auto Ccp::
+compa_busy  () -> bool
+            {
+            return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<RAWIP);
+            }
 
 //=============================================================================
-    void        Ccp::gate_arm           ()
-//=============================================================================
-{
-     Reg::setbit(m_ccpx_con + CCPXSTAT, 1<<ICGARM);
-}
+            auto Ccp::
+gate_arm    () -> void
+            {
+            Reg::setbit(m_ccpx_con + CCPXSTAT, 1<<ICGARM);
+            }
 
 //=============================================================================
-    bool        Ccp::stat_trig          ()
-//=============================================================================
-{
-    return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<CCPTRIG);
-}
+            auto Ccp::
+stat_trig   () -> bool
+            {
+            return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<CCPTRIG);
+            }
 
 //=============================================================================
-    void        Ccp::trig_set           ()
-//=============================================================================
-{
-     Reg::setbit(m_ccpx_con + CCPXSTAT, 1<<TRSET);
-}
+            auto Ccp::
+trig_set    () -> void
+            {
+            Reg::setbit(m_ccpx_con + CCPXSTAT, 1<<TRSET);
+            }
 
 //=============================================================================
-    void        Ccp::trig_clr           ()
-//=============================================================================
-{
-     Reg::setbit(m_ccpx_con + CCPXSTAT, 1<<TRCLR);
-}
+            auto Ccp::
+trig_clr    () -> void
+            {
+            Reg::setbit(m_ccpx_con + CCPXSTAT, 1<<TRCLR);
+            }
 
 //=============================================================================
-    bool        Ccp::stat_shutdown      ()
-//=============================================================================
-{
-    return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<ASEVT);
-}
+            auto Ccp::
+stat_shutdown () -> bool
+            {
+            return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<ASEVT);
+            }
 
 //=============================================================================
-    bool        Ccp::stat_secomp        ()
-//=============================================================================
-{
-    return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<SCEVT);
-}
+            auto Ccp::
+stat_secomp () -> bool
+            {
+            return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<SCEVT);
+            }
 
 //=============================================================================
-    bool        Ccp::stat_capdis        ()
-//=============================================================================
-{
-    return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<ICDIS);
-}
+            auto Ccp::
+stat_capdis () -> bool
+            {
+            return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<ICDIS);
+            }
 
 //=============================================================================
-    bool        Ccp::stat_oflow         ()
-//=============================================================================
-{
-    return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<ICOV);
-}
+            auto Ccp::
+stat_oflow  () -> bool
+            {
+            return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<ICOV);
+            }
 
 //=============================================================================
-    bool        Ccp::stat_bufany        ()
-//=============================================================================
-{
-    return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<ICBNE);
-}
+            auto Ccp::
+stat_bufany () -> bool
+            {
+            return Reg::anybit(m_ccpx_con + CCPXSTAT, 1<<ICBNE);
+            }
 
 //ccpxtmr
 //=============================================================================
-    void        Ccp::tmr16              (uint16_t v)
-//=============================================================================
-{
-    Reg::val(m_ccpx_con + CCPXTMR, v);
-}
+            auto Ccp::
+tmr16       (uint16_t v) -> void
+            {
+            Reg::val(m_ccpx_con + CCPXTMR, v);
+            }
 
 //=============================================================================
-    void        Ccp::tmr16h             (uint16_t v)
-//=============================================================================
-{
-    Reg::val((vu8ptr)m_ccpx_con + (CCPXTMR * 4) + 2, v);
-}
+            auto Ccp::
+tmr16h      (uint16_t v) -> void
+            {
+            Reg::val((vu8ptr)m_ccpx_con + (CCPXTMR * 4) + 2, v);
+            }
 
 //=============================================================================
-    void        Ccp::tmr32              (uint32_t v)
-//=============================================================================
-{
-    Reg::val(m_ccpx_con + CCPXTMR, v);
-}
+            auto Ccp::
+tmr32       (uint32_t v) -> void
+            {
+            Reg::val(m_ccpx_con + CCPXTMR, v);
+            }
 
 //=============================================================================
-    uint16_t    Ccp::tmr16              ()
-//=============================================================================
-{
-    return Reg::val16(m_ccpx_con + CCPXTMR);
-}
+            auto Ccp::
+tmr16       () -> uint16_t
+            {
+            return Reg::val16(m_ccpx_con + CCPXTMR);
+            }
 
 //=============================================================================
-    uint16_t    Ccp::tmr16h             ()
-//=============================================================================
-{
-    return Reg::val16((vu8ptr)m_ccpx_con + (CCPXTMR * 4) + 2);
-}
+            auto Ccp::
+tmr16h      () -> uint16_t
+            {
+            return Reg::val16((vu8ptr)m_ccpx_con + (CCPXTMR * 4) + 2);
+            }
 
 //=============================================================================
-    uint32_t    Ccp::tmr32              ()
-//=============================================================================
-{
-    return Reg::val(m_ccpx_con + CCPXTMR);
-}
+            auto Ccp::
+tmr32       () -> uint32_t
+            {
+            return Reg::val(m_ccpx_con + CCPXTMR);
+            }
 
 //ccpxpr
 //=============================================================================
-    void        Ccp::pr16               (uint16_t v)
-//=============================================================================
-{
-    Reg::val(m_ccpx_con + CCPXPR, v);
-}
+            auto Ccp::
+pr16        (uint16_t v) -> void
+            {
+            Reg::val(m_ccpx_con + CCPXPR, v);
+            }
 
 //=============================================================================
-    void        Ccp::pr16h              (uint16_t v)
-//=============================================================================
-{
-    Reg::val((vu8ptr)m_ccpx_con + (CCPXPR * 4) + 2, v);
-}
+            auto Ccp::
+pr16h       (uint16_t v) -> void
+            {
+            Reg::val((vu8ptr)m_ccpx_con + (CCPXPR * 4) + 2, v);
+            }
 
 //=============================================================================
-    void        Ccp::pr32               (uint32_t v)
-//=============================================================================
-{
-    Reg::val(m_ccpx_con + CCPXPR, v);
-}
+            auto Ccp::
+pr32        (uint32_t v) -> void
+            {
+            Reg::val(m_ccpx_con + CCPXPR, v);
+            }
 
 //=============================================================================
-    uint16_t    Ccp::pr16               ()
-//=============================================================================
-{
-    return Reg::val16(m_ccpx_con + CCPXPR);
-}
+            auto Ccp::
+pr16        () -> uint16_t
+            {
+            return Reg::val16(m_ccpx_con + CCPXPR);
+            }
 
 //=============================================================================
-    uint16_t    Ccp::pr16h              ()
-//=============================================================================
-{
-    return Reg::val16((vu8ptr)m_ccpx_con + (CCPXPR * 4) + 2);
-}
+            auto Ccp::
+pr16h       () -> uint16_t
+            {
+            return Reg::val16((vu8ptr)m_ccpx_con + (CCPXPR * 4) + 2);
+            }
 
 //=============================================================================
-    uint32_t    Ccp::pr32               ()
-//=============================================================================
-{
-    return Reg::val(m_ccpx_con + CCPXPR);
-}
+            auto Ccp::
+pr32        () -> uint32_t
+            {
+            return Reg::val(m_ccpx_con + CCPXPR);
+            }
 
 //ccpxra, ccpxrb
 //=============================================================================
-    void        Ccp::compa              (uint16_t v)
-//=============================================================================
-{
-    Reg::val(m_ccpx_con + CCPXRA, v);
-}
+            auto Ccp::
+compa       (uint16_t v) -> void
+            {
+            Reg::val(m_ccpx_con + CCPXRA, v);
+            }
 
 //=============================================================================
-    void        Ccp::compb              (uint16_t v)
-//=============================================================================
-{
-    Reg::val(m_ccpx_con + CCPXRB, v);
-}
+            auto Ccp::
+compb       (uint16_t v) -> void
+            {
+            Reg::val(m_ccpx_con + CCPXRB, v);
+            }
 
 //=============================================================================
-    void        Ccp::comp32             (uint32_t v)
-//=============================================================================
-{
-    compb(v >> 16);
-    compa(v);
-}
+            auto Ccp::
+comp32      (uint32_t v) -> void
+            {
+            compb(v >> 16);
+            compa(v);
+            }
 
 //=============================================================================
-    uint16_t    Ccp::compa              ()
-//=============================================================================
-{
-    return Reg::val16(m_ccpx_con + CCPXRA);
-}
+            auto Ccp::
+compa       () -> uint16_t
+            {
+            return Reg::val16(m_ccpx_con + CCPXRA);
+            }
 
 //=============================================================================
-    uint16_t    Ccp::compb              ()
-//=============================================================================
-{
-    return Reg::val16(m_ccpx_con + CCPXRB);
-}
+            auto Ccp::
+compb       () -> uint16_t
+            {
+            return Reg::val16(m_ccpx_con + CCPXRB);
+            }
 
 //=============================================================================
-    uint32_t    Ccp::comp32             ()
-//=============================================================================
-{
-    return compb()<<16 | compa();
-}
+            auto Ccp::
+comp32      () -> uint32_t
+            {
+            return compb()<<16 | compa();
+            }
 
 //ccpxbuf
 //=============================================================================
-    uint16_t    Ccp::buf16              ()
-//=============================================================================
-{
-    return Reg::val16(m_ccpx_con + CCPXBUF);
-}
+            auto Ccp::
+buf16       () -> uint16_t
+            {
+            return Reg::val16(m_ccpx_con + CCPXBUF);
+            }
 
 //=============================================================================
-    uint32_t    Ccp::buf32              ()
-//=============================================================================
-{
-    return Reg::val(m_ccpx_con + CCPXBUF);
-}
+            auto Ccp::
+buf32       () -> uint32_t
+            {
+            return Reg::val(m_ccpx_con + CCPXBUF);
+            }
 
 //misc
 //=============================================================================
-    uint8_t     Ccp::ccp_num            ()
-//=============================================================================
-{
-    return ((uint32_t)m_ccpx_con - CCP1CON1) / (CCPX_SPACING * 4)  +  1;
-}
+            auto Ccp::
+ccp_num     () -> uint8_t
+            {
+            return ((uint32_t)m_ccpx_con - CCP1CON1) / (CCPX_SPACING * 4)  + 1;
+            }

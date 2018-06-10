@@ -40,167 +40,167 @@ enum : uint8_t { ACTL = 1<<2  }; //IOMODE ACTL bit (active low bit)
 // m = AIN,DIN,DINPU,DINPD,DINL,DOUT,DOUTL (default is AIN)
 // RPN enum encoded as 0xaaaacccccpppnnnn (a = ANn, c = CNn, pp = PORT, nnnn = PIN
 //=============================================================================
-                    Pins::Pins          (RPN e, IOMODE m)
-//=============================================================================
-    : m_pt((vu32ptr)TRISA + ((e>>PTSHIFT) bitand PTMASK) * TRISX_SPACING),
-      m_pn(1<<(e bitand PNMASK)),
-      m_lowison(m bitand ACTL),
-      m_an((e>>ANSHIFT) bitand ANMASK),
-	  m_cn((e>>CNSHIFT) bitand CNMASK)
-{
-    if(m == AIN) analog_in(); 
-    else if(m bitand IN) digital_in();
-    else digital_out();
-	
-    if (m_cn != NO_CN)
-		pullup(m == INPU);
-}
+            Pins::
+Pins        (RPN e, IOMODE m)
+            : 
+            m_pt((vu32ptr)TRISA + ((e>>PTSHIFT) bitand PTMASK) * TRISX_SPACING),
+            m_pn(1<<(e bitand PNMASK)),
+            m_lowison(m bitand ACTL),
+            m_an((e>>ANSHIFT) bitand ANMASK),
+            m_cn((e>>CNSHIFT) bitand CNMASK)
+            {
+            if(m == AIN) analog_in(); 
+            else if(m bitand IN) digital_in();
+            else digital_out();
+
+            if (m_cn != NO_CN)
+                pullup(m == INPU);
+            }
 
 //=============================================================================
-    bool        Pins::pinval        () const
-//=============================================================================
-{
-    return Reg::anybit(m_pt + PORT, m_pn);
-}
+            auto Pins::
+pinval      () -> bool
+            {
+            return Reg::anybit(m_pt + PORT, m_pn);
+            }
 
 //=============================================================================
-    bool        Pins::latval        () const
-//=============================================================================
-{
-    return Reg::anybit(m_pt + LAT, m_pn);
-}
+            auto Pins::
+latval      () -> bool
+            {
+            return Reg::anybit(m_pt + LAT, m_pn);
+            }
 
 //=============================================================================
-    void        Pins::latval        (bool tf) const
-//=============================================================================
-{
-    return Reg::setbit(m_pt + LAT, m_pn, tf);
-}
+            auto Pins::
+latval      (bool tf) -> void
+            {
+            return Reg::setbit(m_pt + LAT, m_pn, tf);
+            }
 
 //=============================================================================
-    uint16_t    Pins::adcval         () const
-//=============================================================================
-{
-    Adc::trig_sel(Adc::AUTO);        //adc starts conversion
-    Adc::samp_time(31);              //max sampling time- 31Tad
-    Adc::conv_time(3);               //if no arg,default is 7 (for 80MHz)
-    Adc::ch_sel((Adc::CH0S)m_an);   //ANn
-    Adc::on(true);
-    Adc::samp(true);
-    while(not Adc::done());         //blocking
-    return Adc::read();             //buf[0]
-}
+            auto Pins::
+adcval      () -> uint16_t
+            {
+            Adc::trig_sel(Adc::AUTO);         //adc starts conversion
+            Adc::samp_time(31);              //max sampling time- 31Tad
+            Adc::conv_time();                //if no arg,default is 7 (for 80MHz)
+            Adc::ch_sel((Adc::CH0S)m_an);   //ANn (AVss if no ANn for pin)
+            Adc::on(true);
+            Adc::samp(true);
+            while(not Adc::done());         //blocking
+            return Adc::read();             //buf[0]
+            }
 
 //=============================================================================
-    void        Pins::low           () const
-//=============================================================================
-{
-    Reg::clrbit(m_pt + LAT, m_pn);
-}
+            auto Pins::
+low         () -> void
+            {
+            Reg::clrbit(m_pt + LAT, m_pn);
+            }
 
 //=============================================================================
-    void        Pins::high          () const
-//=============================================================================
-{
-    Reg::setbit(m_pt + LAT, m_pn);
-}
+            auto Pins::
+high        () -> void
+            {
+            Reg::setbit(m_pt + LAT, m_pn);
+            }
 
 //=============================================================================
-    void        Pins::invert        () const
-//=============================================================================
-{
-    Reg::flipbit(m_pt + LAT, m_pn);
-}
+            auto Pins::
+invert      () -> void
+            {
+            Reg::flipbit(m_pt + LAT, m_pn);
+            }
 
 //=============================================================================
-    void        Pins::on            () const
-//=============================================================================
-{
-    Reg::setbit(m_pt + LAT, m_pn, not m_lowison);
-}
+            auto Pins::
+on          () -> void
+            {
+            Reg::setbit(m_pt + LAT, m_pn, not m_lowison);
+            }
 
 //=============================================================================
-    void        Pins::off           () const
-//=============================================================================
-{
-    Reg::setbit(m_pt + LAT, m_pn, m_lowison);
-}
+            auto Pins::
+off         () -> void
+            {
+            Reg::setbit(m_pt + LAT, m_pn, m_lowison);
+            }
 
 //=============================================================================
-    bool        Pins::ison          () const
-//=============================================================================
-{
-    return m_lowison ? not pinval() : pinval();
-}
+            auto Pins::
+ison        () -> bool
+            {
+            return m_lowison ? not pinval() : pinval();
+            }
 
 //=============================================================================
-    void        Pins::lowison           (bool tf)
-//=============================================================================
-{
-    m_lowison = tf;
-}
+            auto Pins::
+lowison     (bool tf) -> void
+            {
+            m_lowison = tf;
+            }
 
 //=============================================================================
-    void        Pins::digital_in        () const
-//=============================================================================
-{
-    Reg::setbit(m_pt + TRIS, m_pn);
-    if (m_pt == ((vu32ptr)TRISA + TRISX_SPACING))
-        Reg::setbit(AD1PCFG, 1 << m_an);
-}
+            auto Pins::
+digital_in  () -> void
+            {
+            Reg::setbit(m_pt + TRIS, m_pn);
+            if (m_pt == ((vu32ptr)TRISA + TRISX_SPACING))
+                Reg::setbit(AD1PCFG, 1 << m_an);
+            }
 
 //=============================================================================
-    void        Pins::analog_in         () const
-//=============================================================================
-{
-    Reg::setbit(m_pt + TRIS, m_pn);
-    if (m_pt == ((vu32ptr)TRISA + TRISX_SPACING))
-        Reg::clrbit(AD1PCFG, 1 << m_an);
-}
+            auto Pins::
+analog_in   () -> void
+            {
+            Reg::setbit(m_pt + TRIS, m_pn);
+            if (m_pt == ((vu32ptr)TRISA + TRISX_SPACING))
+                Reg::clrbit(AD1PCFG, 1 << m_an);
+            }
 
 //=============================================================================
-    void        Pins::digital_out       () const
-//=============================================================================
-{
-    Reg::clrbit(m_pt + TRIS, m_pn);
-    if (m_pt == ((vu32ptr)TRISA + TRISX_SPACING))
-            Reg::setbit(AD1PCFG, 1 << m_an);
-}
+            auto Pins::
+digital_out () -> void
+            {
+            Reg::clrbit(m_pt + TRIS, m_pn);
+            if (m_pt == ((vu32ptr)TRISA + TRISX_SPACING))
+                Reg::setbit(AD1PCFG, 1 << m_an);
+            }
 
 //=============================================================================
-    void        Pins::odrain            (bool tf) const
-//=============================================================================
-{
-    Reg::setbit(m_pt + ODC, m_pn, tf);
-}
+            auto Pins::
+odrain      (bool tf) -> void
+            {
+            Reg::setbit(m_pt + ODC, m_pn, tf);
+            }
+
+            auto Pins::
+pullup      (bool tf) -> void
+            {
+            Reg::setbit(CNPUE, m_pn, tf);
+            }
 
 //=============================================================================
-    void        Pins::pullup            (bool tf) const
-//=============================================================================
-{
-    Reg::setbit(CNPUE, m_pn, tf);
-}
-
-//=============================================================================
-    void        Pins::icn               (bool tf) const
-//=============================================================================
-{
-    Reg::setbit(CNCON, 1<<ON, tf);
-}
+            auto Pins::
+icn         (bool tf) -> void
+            {
+            Reg::setbit(CNCON, 1<<ON, tf);
+            }
 
 //return ANn number for ADC channel select
 //=============================================================================
-    uint8_t     Pins::an_num            ()
-//=============================================================================
-{
-    return m_an;
-}
-
+            auto Pins::
+an_num      () -> uint8_t
+            {
+            return m_an;
+            }
+            
 //return CNn number for CN select
 //=============================================================================
-    uint8_t     Pins::cn_num            ()
-//=============================================================================
-{
-    return m_cn;
-}
-
+            auto Pins::
+cn_num      () -> uint8_t
+            {
+            return m_cn;
+            }
+            

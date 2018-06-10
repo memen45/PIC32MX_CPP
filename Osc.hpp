@@ -35,79 +35,150 @@
 
 struct Osc {
 
-    //osccon
-    enum DIVS : uint8_t { //upper byte of osccon, spllcon
-        DIV1, DIV2, DIV4, DIV8, DIV16, DIV32, DIV64, DIV256
-    };
-    static void         frc_div     (DIVS);     //set
-    static DIVS         frc_div     ();         //get
+            //==== OSCCON ====
 
-    enum CNOSC : uint8_t { //cosc/nosc in second byte of osccon
-         //FRCDIV = 0, SPLL, POSC, SOSC = 4, LPRC
-		 FRC = 0, FRCPLL, POSC, POSCPLL, SOSC, LPRC, FRC16, FRCDIV
-    };
-    static CNOSC        clk_src     ();         //get current osc source
+            enum
+DIVS        : uint8_t { //upper byte of osccon, spllcon
+            DIV1, DIV2, DIV4, DIV8, DIV16, DIV32, DIV64, DIV256
+            };
 
-    static void         clk_src     (CNOSC);    //start switch to nosc
-    
-    static void         clk_lock    ();         //lock nosc/oswen until reset
-    static void         sleep       ();         //sleep, wait
-    static void         sleep_reten ();         //retention sleep, wait
-    static void         idle        ();         //idle, wait
-    static bool         clk_bad     ();         //clock failed?
-    static void         sosc        (bool);     //sosc enable
-    static bool         sosc        ();         //sosc enabled?
-                                                //if enabled, assume its there
-    
-    static DIVS         pb_div      ();         //get current Peripheral Bus clock divider
-    static void         pb_div      (DIVS);     //set current peripheral bus clock divider
-    
-    //spllcon
-    enum IDIVS : uint8_t { //lower byte of devcfg2
-        IDIV1, IDIV2, IDIV3, IDIV4, IDIV5, IDIV6, IDIV10, IDIV12
-    };
-    static DIVS         pll_odiv    ();         //get pll divider
-	static IDIVS		pll_idiv	();			//get pll input divider
+            static auto
+frc_div     (DIVS) -> void;
 
-    enum PLLMUL : uint8_t {
-        MUL15, MUL16, MUL17, MUL18, MUL19, MUL20, MUL21, MUL24
-    };
-    static PLLMUL       pll_mul     ();         //get pll multiplier
+            static auto
+frc_div     () -> DIVS;
 
-    public:
-    static void         pll_set     (PLLMUL, DIVS, CNOSC = FRC);
-                                                //set pll mul/div, pll src
+            enum
+CNOSC       : uint8_t { //cosc/nosc in second byte of osccon
+            //FRCDIV = 0, SPLL, POSC, SOSC = 4, LPRC
+            FRC = 0, FRCPLL, POSC, POSCPLL, SOSC, LPRC, FRC16, FRCDIV
+            };
 
-    //clkstat
-    enum CLKRDY : uint32_t {
-//        FRCRDY = 1<<0, SPLLDIVRDY = 1<<1, POSCRDY = 1<<2,
-//        SOSCRDY = 1<<4, LPRCRDY = 1<<5, USBRDY = 1<<6, SPLLRDY = 1<<7
-		SOSCRDY = 1<<6, PBDIVRDY = 1<<5
-    };
-    static bool         ready       (CLKRDY);   //clock ready?
+            //get current osc source
+            static auto
+clk_src     () -> CNOSC;
 
-    //osctun
+            //start switch to nosc
+            static auto
+clk_src     (CNOSC) -> void;
 
-    static void         tun_val     (int8_t);   //tune value 6bits, -32 to 31
-    static int8_t       tun_val     ();         //get tune value
+            //lock nosc/oswen until reset
+            static auto
+clk_lock    () -> void;
 
-    //misc
-    static uint32_t     sysclk       ();        //get cpu sysclk
-    static uint32_t     extclk       ();        //get ext clock
-    static uint32_t     frcclk       ();        //get frc clock
-    static uint32_t     pbclk        ();
+            //sleep, wait
+            static auto
+sleep       () -> void;
 
-    private:
+            //retention sleep, wait
+            static auto
+sleep_reten () -> void;
 
-    static uint32_t m_sysclk;                    //store calculated cpu freq
-    static uint32_t m_extclk;
-    static uint32_t m_pbclk;
+            //idle, wait
+            static auto
+idle        () -> void;
 
-    static const uint32_t m_frcosc_freq = 8000000;
-    static const uint32_t m_extosc_freq = 0;    //set if want exact ext freq
-    static const uint8_t m_mul_lookup[8];
-	static const uint8_t m_idiv_lookup[8];
+            //clock failed?
+            static auto
+clk_bad     () -> bool;
 
+            //sosc enable
+            static auto
+sosc        (bool) -> void;
+
+            //sosc enabled? (if enabled, assume its available for use)
+            static auto
+sosc        () -> bool;
+            
+            // get peripheral bus divider
+            static auto
+pb_div      () -> DIVS;
+            
+            // set peripheral bus divider
+            static auto
+pb_div      (DIVS) -> void;
+            
+            //get pll divider
+            static auto
+pll_odiv    () -> DIVS;
+            
+            enum 
+IDIVS       : uint8_t { //lower byte of devcfg2
+            IDIV1, IDIV2, IDIV3, IDIV4, IDIV5, IDIV6, IDIV10, IDIV12
+            };
+            //get pll input divider
+            static auto 
+pll_idiv	() -> IDIVS;			
+
+            enum
+PLLMUL      : uint8_t {
+            MUL15, MUL16, MUL17, MUL18, MUL19, MUL20, MUL21, MUL24
+            };
+
+            //get pll multiplier
+            static auto
+pll_mul     () -> PLLMUL;
+
+            //set pll mul/div, pll src
+            static auto
+pll_set     (PLLMUL, DIVS, CNOSC = FRC) -> void;
+            
+            //==== CLKSTAT ====
+
+            enum
+CLKRDY      : uint32_t {
+            SOSCRDY = 1<<6, PBDIVRDY = 1<<5
+            };
+
+            //clock ready?
+            static auto
+ready       (CLKRDY) -> bool;
+
+
+            //==== OSCTUN ====
+
+            //tune value 6bits, -32 to 31
+            static auto
+tun_val     (int8_t) -> void;
+
+            //get tune value
+            static auto
+tun_val     () -> int8_t;
+
+
+            //misc
+
+            //get cpu sysclk
+            static auto
+sysclk      () -> uint32_t;
+
+            //get ext clock
+            static auto
+extclk      () -> uint32_t;
+
+            //get frc clock
+            static auto
+frcclk      () -> uint32_t;            
+            
+            //get peripheral clock
+            static auto
+pbclk      () -> uint32_t;
+
+
+            private:
+
+            //store calculated cpu freq
+            static uint32_t         m_sysclk;
+            //store calculated refo in clk
+            static uint32_t         m_extclk;
+            //store calculated pbclock in clk
+            static uint32_t m_pbclk;
+            //store current refo frequency
+            static const uint32_t   m_frcosc_freq = 8000000;
+            //manually set here if want exact ext freq
+            static const uint32_t   m_extosc_freq = 0;
+            static const uint8_t    m_mul_lookup[8];
+            static const uint8_t    m_idiv_lookup[8];
 };
 
 

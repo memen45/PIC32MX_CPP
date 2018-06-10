@@ -2,95 +2,95 @@
 #include "Reg.hpp"
 
 enum {
-    CMSTAT = 0xBF802300, //same for all
-        SIDL = 13,
-        CVREFSEL = 8,
-    CM1CON = 0xBF802310, CMXCON_SPACING = 8, //spacing in words
-        ON = 15,
-        COE = 14,
-        CPOL = 13,
-        CEVT = 9,
-        COUT = 8,
-        EVPOL_SHIFT = 6, EVPOL_CLR = 3,
-        CREF = 4
+CMSTAT = 0xBF802300, //same for all
+    SIDL = 13,
+    CVREFSEL = 8,
+CM1CON = 0xBF802310, CMXCON_SPACING = 8, //spacing in words
+    ON = 15,
+    COE = 14,
+    CPOL = 13,
+    CEVT = 9,
+    COUT = 8,
+    EVPOL_SHIFT = 6, EVPOL_CLR = 3,
+    CREF = 4
 };
 
 //=============================================================================
-                Comp::Comp              (CMX e)
-//=============================================================================
-    : m_cmpx_con((volatile uint32_t*)CM1CON + (e * CMXCON_SPACING))
-{
-}
+            Comp::
+Comp        (CMX e)
+            : m_cmpx_con((volatile uint32_t*)CM1CON + (e * CMXCON_SPACING))
+            {
+            }
 
 //=============================================================================
-    void        Comp::on                (bool tf)
-//=============================================================================
-{
-    Reg::setbit(m_cmpx_con, 1<<ON, tf);
-}
+            auto Comp::
+on          (bool tf) -> void
+            {
+            Reg::setbit(m_cmpx_con, 1<<ON, tf);
+            }
 
 //=============================================================================
-    void        Comp::out               (bool tf)
-//=============================================================================
-{
-    Reg::setbit(m_cmpx_con, 1<<COE, tf);
-}
+            auto Comp::
+out         (bool tf) -> void
+            {
+            Reg::setbit(m_cmpx_con, 1<<COE, tf);
+            }
 
 //=============================================================================
-    void        Comp::out_inv           (bool tf)
-//=============================================================================
-{
-    Reg::setbit(m_cmpx_con, 1<<CPOL, tf);
-}
+            auto Comp::
+out_inv     (bool tf) -> void
+            {
+            Reg::setbit(m_cmpx_con, 1<<CPOL, tf);
+            }
 
 //=============================================================================
-    bool        Comp::evt_bit           ()
-//=============================================================================
-{
-    return Reg::anybit(m_cmpx_con, 1<<CEVT);
-}
+            auto Comp::
+evt_bit     () -> bool
+            {
+            return Reg::anybit(m_cmpx_con, 1<<CEVT);
+            }
 
 //=============================================================================
-    bool        Comp::out_bit           ()
-//=============================================================================
-{
-    return Reg::anybit(m_cmpx_con, 1<<COUT);
-}
+            auto Comp::
+out_bit     () -> bool
+            {
+            return Reg::anybit(m_cmpx_con, 1<<COUT);
+            }
 
 //=============================================================================
-    void        Comp::evt_sel           (EVPOL e)
-//=============================================================================
-{
-    Reg::clrbit(m_cmpx_con, EVPOL_CLR<<EVPOL_SHIFT);
-    Reg::setbit(m_cmpx_con, e<<EVPOL_SHIFT);
-}
+            auto Comp::
+evt_sel     (EVPOL e) -> void
+            {
+            Reg::clrbit(m_cmpx_con, EVPOL_CLR<<EVPOL_SHIFT);
+            Reg::setbit(m_cmpx_con, e<<EVPOL_SHIFT);
+            }
 
 //=============================================================================
-    void        Comp::cref_cxina        (bool tf)
-//=============================================================================
-{
-    Reg::setbit(m_cmpx_con, 1<<CREF, not tf);
-}
+            auto Comp::
+cref_cxina  (bool tf) -> void
+            {
+            Reg::setbit(m_cmpx_con, 1<<CREF, not tf);
+            }
 
 //=============================================================================
-    void        Comp::ch_sel            (CCH e)
-//=============================================================================
-{
-    Reg::clrbit(m_cmpx_con, BGAP);
-    Reg::setbit(m_cmpx_con, e);
-}
+            auto Comp::
+ch_sel      (CCH e) -> void
+            {
+            Reg::clrbit(m_cmpx_con, BGAP);
+            Reg::setbit(m_cmpx_con, e);
+            }
 
 //common static functions
 //=============================================================================
-    void        Comp::stop_idle         (bool tf)
-//=============================================================================
-{
-    Reg::setbit(CMSTAT, 1<<SIDL, tf);
-}
+            auto Comp::
+stop_idle   (bool tf) -> void
+            {
+            Reg::setbit(CMSTAT, 1<<SIDL, tf);
+            }
 
 //=============================================================================
-    void        Comp::cref_sel          (CVREF e)
-//=============================================================================
-{
-    Reg::setbit(CMSTAT, 1<<CVREFSEL, e);
-}
+            auto Comp::
+cref_sel    (CVREF e) -> void
+            {
+            Reg::setbit(CMSTAT, 1<<CVREFSEL, e);
+            }

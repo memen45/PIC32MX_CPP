@@ -6,32 +6,66 @@
 
 struct Clc {
 
-    //instantiate Clc with CLCn
-    enum CLCX { CLC1, CLC2, CLC3, CLC4 };
-    Clc(CLCX);
+            enum
+CLCX        { CLC1, CLC2, CLC3, CLC4 };
 
-    enum GXPOL { G4 = 1<<19, G3 = 1<<18, G2 = 1<<17, G1 = 1<<16 };
-    void    gate_inv    (GXPOL, bool);
+            //instantiate Clc with CLCn
+Clc         (CLCX);
 
-    void    on          (bool);
-    void    stop_idle   (bool);
-    void    intp        (bool);
-    void    intn        (bool);
-    void    out         (bool);
-    bool    out         ();
-    void    out_inv     (bool);
+            enum
+GXPOL       { G4 = 1<<19, G3 = 1<<18, G2 = 1<<17, G1 = 1<<16 };
 
-    enum MODE : uint8_t { ANDOR, ORXOR, AND, SR, DSR, DR, JKR, LSR };
-    void    mode        (MODE e);
+            auto
+gate_inv    (GXPOL, bool) -> void;
 
-    void    in_sel      (uint8_t, uint8_t);
-    void    in_sel      (uint32_t);
-    void    gate_sel    (uint8_t, uint8_t);
-    void    gate_sel    (uint32_t);
+            auto
+on          (bool) -> void;
 
-    private:
+            auto
+stop_idle   (bool) -> void;
 
-    //private vars
-    volatile uint32_t* m_clcx_con;
+            auto
+intp        (bool) -> void;
+
+            auto
+intn        (bool) -> void;
+
+            auto
+out         (bool) -> void;
+
+            auto
+out         () -> bool;
+
+            auto
+out_inv     (bool) -> void;
+
+            enum
+MODE        : uint8_t { ANDOR, ORXOR, AND, SR, DSR, DR, JKR, LSR };
+
+            auto
+mode        (MODE e) -> void;
+
+            enum
+SELX        { DS1, DS2, DS3, DS4 };
+
+            auto
+in_sel      (SELX, uint8_t) -> void;
+
+            auto
+in_sel      (uint32_t) -> void;
+
+            enum
+GLSX        { GS1, GS2, GS3, GS4 };
+
+            auto
+gate_sel    (GLSX, uint8_t) -> void;
+
+            auto
+gate_sel    (uint32_t) -> void;
+
+
+            private:
+
+            volatile uint32_t* m_clcx_con;
 
 };
