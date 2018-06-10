@@ -130,57 +130,84 @@ struct Pins {
 		PIN96 = G12, PIN97 = G13, PIN98 = E2, PIN99 = E3, PIN100 = E4
     };
 
-    enum IOMODE : uint8_t {
-        AIN = 0,
-        IN = 1, INPU = 1<<3|1<<2|IN, INPD = 1<<4|IN, INL = 1<<2|IN,
-        OUT = 2, OUTL = 1<<2|OUT
-    };
-    //constructor
-    Pins(RPN, IOMODE = AIN);
+            enum 
+IOMODE      : uint8_t {
+            AIN = 0,
+            IN = 1, INPU = 1<<3|1<<2|IN, INPD = 1<<4|IN, INL = 1<<2|IN,
+            OUT = 2, OUTL = 1<<2|OUT
+            };
 
-    //r/w pins
-    bool        pinval          () const;
-    bool        latval          () const;
-    void        latval          (bool) const;
-    uint16_t    adcval          () const;
-    void        low             () const;
-    void        high            () const;
-    void        invert          () const;
-    void        on              () const;
-    void        off             () const;
-    bool        ison            () const;
+Pins        (RPN, IOMODE = AIN);
 
-    //pin modes
-    void        lowison         (bool);
-    void        digital_in      () const;
-    void        analog_in       () const;
-    void        digital_out     () const;
-    void        odrain          (bool) const;
-    void        pullup          (bool) const;
-    void        pulldn          (bool) const;
+            //r/w pins
 
-    //icn
-    void        icn             (bool) const;
-    void        icn_rising      () const;
-    void        icn_falling     () const;
-    void        icn_risefall    () const;
-    void        icn_mismatch    () const;
-    bool        icn_flag        () const;
-    bool        icn_stat        () const;
-    void        icn_flagclr     () const;
+            auto
+pinval      () -> bool;
+
+            auto
+latval      () -> bool;
+
+            auto
+latval      (bool) -> void;
+
+            auto
+adcval      () -> uint16_t;
+
+            auto
+low         () -> void;
+
+            auto
+high        () -> void;
+
+            auto
+invert      () -> void;
+
+            auto
+on          () -> void;
+
+            auto
+off         () -> void;
+
+            auto
+ison        () -> bool;
+
+            //pin modes
+
+            auto
+lowison     (bool) -> void;
+
+            auto
+digital_in  () -> void;
+
+            auto
+analog_in   () -> void;
+
+            auto
+digital_out () -> void;
+
+            auto
+odrain      (bool) -> void;
+
+            auto
+pullup      (bool) -> void;
 
 
-    //get adc #
-    uint8_t     an_num          ();
-	//get icn #
-	uint8_t		cn_num			();
+            //icn
+            auto
+icn         (bool) -> void;
 
-    private:
+            auto
+an_num      () -> uint8_t;           //get adc #
+            
+            auto
+cn_num      () -> uint8_t;           //get cn #
 
-    volatile uint32_t*  m_pt;       //base address
-    const uint16_t      m_pn;       //pin mask
-    bool                m_lowison;  //pin on val is low
-    const uint8_t       m_an;       //ANn value
-	const uint8_t		m_cn;		//CNn value
+            private:
+
+            volatile uint32_t*  m_pt;       //base address
+            const uint16_t      m_pn;       //pin mask
+            bool                m_lowison;  //pin on val is low
+            const uint8_t       m_an;       //ANn value
+            const uint8_t       m_cn;       //CNn value
 
 };

@@ -36,227 +36,231 @@ const uint8_t Osc::m_idiv_lookup[] = {1, 2, 3, 4, 5, 6, 10, 12};
 //  uint8_t v = Sys::unlock_wait(); ... ; Sys::lock(v);
 //else use Sys::unlock() and Sys::lock()
 
-
-//osccon
-//=============================================================================
-    void            Osc::frc_div        (DIVS e)
-//=============================================================================
-{
-    Sys::unlock();
-    Reg::val(OSCCON + 3, e);
-    Sys::lock();
-}
+            auto Osc::
+frc_div     (DIVS e) -> void
+            {
+            Sys::unlock();
+            Reg::val(OSCCON + 3, e);
+            Sys::lock();
+            }
 
 //=============================================================================
-    auto            Osc::frc_div        () -> DIVS
-//=============================================================================
-{
-    return (DIVS) (Reg::val8(OSCCON + 3) bitand FRCDIV_MASK);
-}
+            auto Osc::
+frc_div     () -> DIVS
+            {
+            return (DIVS) (Reg::val8(OSCCON + 3) bitand FRCDIV_MASK);
+            }
 
 //=============================================================================
-    auto            Osc::clk_src        () -> CNOSC
-//=============================================================================
-{
-    return (CNOSC)((Reg::val(OSCCON) >> COSC_SHIFT) bitand COSC_MASK);
-}
+            auto Osc::
+clk_src     () -> CNOSC
+            {
+            return (CNOSC)((Reg::val(OSCCON) >> COSC_SHIFT) bitand COSC_MASK);
+            }
 
 //=============================================================================
-    void            Osc::clk_src        (CNOSC e)
-//=============================================================================
-{
-    uint8_t irstat = Sys::unlock_wait();
-    Reg::clrbit(OSCCON, NOSC_MASK << NOSC_SHIFT);
-    Reg::setbit(OSCCON, e << NOSC_SHIFT);
-    Reg::setbit(OSCCON, 1<<OSWEN);
-    while(Reg::anybit(OSCCON, 1<<OSWEN));
-    Sys::lock(irstat);
-    m_sysclk = 0;
-    m_pbclk = 0;
-    sysclk();
-}
+            auto Osc::
+clk_src     (CNOSC e) -> void
+            {
+            uint8_t irstat = Sys::unlock_wait();
+            Reg::clrbit(OSCCON, NOSC_MASK << NOSC_SHIFT);
+            Reg::setbit(OSCCON, e << NOSC_SHIFT);
+            Reg::setbit(OSCCON, 1<<OSWEN);
+            while(Reg::anybit(OSCCON, 1<<OSWEN));
+            Sys::lock(irstat);
+            m_sysclk = 0;
+            m_pbclk = 0;
+            sysclk();
+            }
 
 //=============================================================================
-    void            Osc::clk_lock       ()
-//=============================================================================
-{
-    Reg::setbit(OSCCON, 1<<CLKLOCK);
-}
+            auto Osc::
+clk_lock    () -> void
+            {
+            Reg::setbit(OSCCON, 1<<CLKLOCK);
+            }
 
 //=============================================================================
-    void            Osc::sleep          ()
-//=============================================================================
-{
-    //sleep bit only enabled here, then disabled when wakes
-    Sys::unlock();
-    Reg::setbit(OSCCON, 1<<SLPEN);
-    Sys::lock();
-    Wdt::reset();
-    __asm__ __volatile__ ("wait");
-    Sys::unlock();
-    Reg::clrbit(OSCCON, 1<<SLPEN);
-    Sys::lock();
-}
+            auto Osc::
+sleep       () -> void
+            {
+            //sleep bit only enabled here, then disabled when wakes
+            Sys::unlock();
+            Reg::setbit(OSCCON, 1<<SLPEN);
+            Sys::lock();
+            Wdt::reset();
+            __asm__ __volatile__ ("wait");
+            Sys::unlock();
+            Reg::clrbit(OSCCON, 1<<SLPEN);
+            Sys::lock();
+            }
 
 //=============================================================================
-    void            Osc::idle           ()
-//=============================================================================
-{
-    Wdt::reset();
-    __asm__ __volatile__ ("wait");
-}
+            auto Osc::
+sleep_reten () -> void
+            {
+            //reten bit only enabled here, then disabled when wakes
+            Resets::reten(true);
+            sleep();
+            Resets::reten(false);
+            }
 
 //=============================================================================
-    bool            Osc::clk_bad        ()
-//=============================================================================
-{
-    return Reg::anybit(OSCCON, 1<<CF);
-}
+            auto Osc::
+idle        () -> void
+            {
+            Wdt::reset();
+            __asm__ __volatile__ ("wait");
+            }
 
 //=============================================================================
-    void            Osc::sosc           (bool tf)
-//=============================================================================
-{
-    Sys::unlock();
-    Reg::setbit(OSCCON, 1<<SOSCEN, tf);
-    Sys::lock();
-    while(tf and not ready(SOSCRDY));
-}
+            auto Osc::
+clk_bad     () -> bool
+            {
+            return Reg::anybit(OSCCON, 1<<CF);
+            }
 
 //=============================================================================
-    bool            Osc::sosc           ()
-//=============================================================================
-{
-    return Reg::anybit(OSCCON, 1<<SOSCEN);
-}
+            auto Osc::
+sosc        (bool tf) -> void
+            {
+            Sys::unlock();
+            Reg::setbit(OSCCON, 1<<SOSCEN, tf);
+            Sys::lock();
+            while(tf and not ready(SOSCRDY));
+            }
 
 //=============================================================================
-    void            Osc::pb_div        (DIVS e)
-//=============================================================================
-{
-    Sys::unlock();
-    Reg::setbit(OSCCON, PBDIV_MASK << PBDIV_SHIFT);
-    Reg::clrbit(OSCCON, (~(e bitand PBDIV_MASK)) << PBDIV_SHIFT);
-    Sys::lock();
-}
+            auto Osc::
+sosc        () -> bool
+            {
+            return Reg::anybit(OSCCON, 1<<SOSCEN);
+            }
 
 //=============================================================================
-    auto            Osc::pb_div        () -> DIVS
-//=============================================================================
-{
-    return (DIVS) ((Reg::val(OSCCON) >> PBDIV_SHIFT) bitand PBDIV_MASK);
-}
+            auto Osc::
+pb_div      (DIVS e) -> void
+            {
+            Sys::unlock();
+            Reg::setbit(OSCCON, PBDIV_MASK << PBDIV_SHIFT);
+            Reg::clrbit(OSCCON, (~(e bitand PBDIV_MASK)) << PBDIV_SHIFT);
+            Sys::lock();
+            }
 
-    
-    
-    
+//=============================================================================
+            auto Osc::
+pb_div      () -> DIVS
+            {
+            return (DIVS) ((Reg::val(OSCCON) >> PBDIV_SHIFT) bitand PBDIV_MASK);
+            }
+
 //spllcon
 //=============================================================================
-    auto            Osc::pll_odiv        () -> DIVS
-//=============================================================================
-{
-    return (DIVS)((Reg::val(OSCCON) >> PLLODIV_SHIFT) bitand PLLODIV_MASK);
-}
+            auto Osc::
+pll_odiv    () -> DIVS
+            {
+            return (DIVS)((Reg::val(OSCCON) >> PLLODIV_SHIFT) bitand PLLODIV_MASK);
+            }
 
 //=============================================================================
-    auto            Osc::pll_idiv        () -> IDIVS
-//=============================================================================
-{
-    return (IDIVS) (Reg::val8(DEVCFG2) bitand PLLIDIV_MASK);
-}
+            auto Osc::
+pll_idiv    () -> IDIVS
+            {
+            return (IDIVS) (Reg::val8(DEVCFG2) bitand PLLIDIV_MASK);
+            }
 
 //=============================================================================
-    auto            Osc::pll_mul        () -> PLLMUL
-//=============================================================================
-{
-    return (PLLMUL)(Reg::val8(OSCCON + 2) bitand PLLMUL_MASK);
-}
+            auto Osc::
+pll_mul     () -> PLLMUL
+            {
+            return (PLLMUL)(Reg::val8(OSCCON + 2) bitand PLLMUL_MASK);
+            }
 
 //set SPLL as clock source with specified mul/div
 //PLLSRC default is FRC
 //=============================================================================
-    void            Osc::pll_set        (PLLMUL m, DIVS d, CNOSC frc)
-//=============================================================================
-{
-    //IDSTAT irstat  = unlock_irq();
-    uint8_t irstat  = Sys::unlock_wait();
-    //need to switch from SPLL to something else
-    //switch to frc (hardware does nothing if already frc)
-    clk_src(FRCDIV);
-    //set new pll vals
-    Reg::val(OSCCON + 3, d<<3);
-    Reg::val(OSCCON + 2, m);
-    //pll select
-    clk_src(frc);
-    //lock_irq(irstat);
-    Sys::lock(irstat);
-}
+            auto Osc::
+pll_set     (PLLMUL m, DIVS d, CNOSC frc) -> void
+            {
+            //IDSTAT irstat  = unlock_irq();
+            uint8_t irstat  = Sys::unlock_wait();
+            //need to switch from SPLL to something else
+            //switch to frc (hardware does nothing if already frc)
+            clk_src(FRCDIV);
+            //set new pll vals
+            Reg::val(OSCCON + 3, d<<3);
+            Reg::val(OSCCON + 2, m);
+            //pll select
+            clk_src(frc);
+            //lock_irq(irstat);
+            Sys::lock(irstat);
+            }
 
 //clkstat
 //=============================================================================
-    bool            Osc::ready          (CLKRDY e)
-//=============================================================================
-{
-    return Reg::anybit(OSCCON + 2, e);
-}
+            auto Osc::
+ready       (CLKRDY e) -> bool
+            {
+            return Reg::anybit(OSCCON + 2, e);
+            }
 
 //osctun
 //=============================================================================
-    void            Osc::tun_val        (int8_t v )
-//=============================================================================
-{
-    //linit -32 to +31
-    if(v > 31) v = 31;
-    if(v < -32) v = -32;
-    Sys::unlock();
-    Reg::val(OSCTUN, v);
-    Sys::lock();
-}
+            auto Osc::
+tun_val     (int8_t v ) -> void
+            {
+            //linit -32 to +31
+            if(v > 31) v = 31;
+            if(v < -32) v = -32;
+            Sys::unlock();
+            Reg::val(OSCTUN, v);
+            Sys::lock();
+            }
 
 //=============================================================================
-    int8_t          Osc::tun_val        ()
-//=============================================================================
-{
-    int8_t v = Reg::val8(OSCTUN);
-    if(v > 31) v or_eq 0xc0; //is negative, sign extend to 8bits
-    return v;
-}
+            auto Osc::
+tun_val     () -> int8_t
+            {
+            int8_t v = Reg::val8(OSCTUN);
+            if(v > 31) v or_eq 0xc0; //is negative, sign extend to 8bits
+            return v;
+            }
 
 //misc
 //=============================================================================
-    uint32_t        Osc::sysclk         ()
-//=============================================================================
-{
-    if(m_sysclk) return m_sysclk;           //already have it 
-    CNOSC s = clk_src();       
-    switch(s){
-        case LPRC: m_sysclk = 31250; break; //+/-15% = 26562,5 - 35937,5
-        case SOSC: m_sysclk = 32768; break;
-        case POSC: m_sysclk = extclk(); break;
-		case FRCPLL:
-		case POSCPLL: {
-			uint32_t f = (s == FRCPLL) ? m_frcosc_freq : extclk();
-			uint8_t m = (uint8_t)pll_mul(); 		//15 16 17 18 19 20 21 24
-			m = m_mul_lookup[m];
-			uint8_t idiv = (uint8_t) pll_idiv();
-			idiv = m_idiv_lookup[idiv];
-			uint8_t odiv = (uint8_t)pll_odiv();
-			if (odiv == 7) odiv = 8;               //adjust DIV256
-			m_sysclk = ((f / idiv) * m) >> odiv;
-            break;
-		}
-        case FRCDIV: {
-            uint8_t n = (uint8_t)frc_div();
-            if(n == 7) n = 8;               //adjust DIV256
-            m_sysclk = m_frcosc_freq>>n;
-            break;
-        }
-        default:
-            m_sysclk = m_frcosc_freq;      //should not be able to get here
-            break;
-    }
-    return m_sysclk;
-}
+            auto Osc::
+sysclk      () -> uint32_t
+            {
+            if(m_sysclk) return m_sysclk;           //already have it 
+            CNOSC s = clk_src();       
+            switch(s){
+                case LPRC: m_sysclk = 31250; break; //+/-15% = 26562,5 - 35937,5
+                case SOSC: m_sysclk = 32768; break;
+                case POSC: m_sysclk = extclk(); break;
+                case FRCPLL:
+                case POSCPLL: {
+                    uint32_t f = (s == FRCPLL) ? m_frcosc_freq : extclk();
+                    uint8_t m = (uint8_t)pll_mul(); 		//15 16 17 18 19 20 21 24
+                    m = m_mul_lookup[m];
+                    uint8_t idiv = (uint8_t) pll_idiv();
+                    idiv = m_idiv_lookup[idiv];
+                    uint8_t odiv = (uint8_t)pll_odiv();
+                    if (odiv == 7) odiv = 8;               //adjust DIV256
+                    m_sysclk = ((f / idiv) * m) >> odiv;
+                    break;
+                }
+                case FRCDIV: {
+                    uint8_t n = (uint8_t)frc_div();
+                    if(n == 7) n = 8;               //adjust DIV256
+                    m_sysclk = m_frcosc_freq>>n;
+                    break;
+                }
+                default:
+                    m_sysclk = m_frcosc_freq;      //should not be able to get here
+                    break;
+            }
+            return m_sysclk;
+            }
 
 //get ext clock freq, using sosc if available, or lprc
 //and cp0 counter to calculate
@@ -264,61 +268,61 @@ const uint8_t Osc::m_idiv_lookup[] = {1, 2, 3, 4, 5, 6, 10, 12};
 //irq's disabled if calculation needed (re-using unlock_irq)
 //will only run once- will assume an ext clock will not change
 //=============================================================================
-    uint32_t        Osc::extclk         ()
-//=============================================================================
-{
-    if(m_extosc_freq) return m_extosc_freq;
-    if(m_extclk) return m_extclk;
-    Timer1 t1; Cp0 cp0;
-    //IDSTAT irstat  = unlock_irq();
-    uint8_t irstat  = Sys::unlock_wait();
-    //backup timer1 (we want it, but will give it back)
-    uint16_t t1conbak = t1.t1con();
-    t1.t1con(0); //stop
-    uint16_t pr1bak = t1.period();
-    uint32_t t1bak = t1.timer();
-    //reset
-    t1.period(0xFFFF);
-    t1.prescale(t1.PS1);
-    t1.timer(0);
-    //SOSC CLOCK SOURCE IS NOT AVAILABLE ON PIC32MX795F512L TIMER1
-    //if sosc enabled, assume it is there
-//    if(sosc()) t1.clk_src(t1.SOSC);
-//    else t1.clk_src(t1.LPRC);
-   //start timer1, get cp0 count
-    t1.on(true);
-    uint32_t c = cp0.count();
-    //wait for ~1/4sec, get cp0 total count
-    while(t1.timer() < 8192);
-    c = cp0.count() - c;
-    //cp0 runs at sysclk/2, so x2 x4 = x8 or <<3
-    c <<= 3;
-    //resolution only to 0.1Mhz
-    c /= 100000;
-    c *= 100000;
-    m_extclk = c;
-    //restore timer1
-    t1.on(false);
-    t1.timer(t1bak);
-    t1.period(pr1bak);
-    t1.t1con(t1conbak);
-    //lock_irq(irstat);
-    Sys::lock(irstat);
-    return m_extclk;
-}
+            auto Osc::
+extclk      () -> uint32_t
+            {
+            if(m_extosc_freq) return m_extosc_freq;
+            if(m_extclk) return m_extclk;
+            Timer1 t1; Cp0 cp0;
+            //IDSTAT irstat  = unlock_irq();
+            uint8_t irstat  = Sys::unlock_wait();
+            //backup timer1 (we want it, but will give it back)
+            uint16_t t1conbak = t1.t1con();
+            t1.t1con(0); //stop
+            uint16_t pr1bak = t1.period();
+            uint32_t t1bak = t1.timer();
+            //reset
+            t1.period(0xFFFF);
+            t1.prescale(t1.PS1);
+            t1.timer(0);
+            //SOSC CLOCK SOURCE IS NOT AVAILABLE ON PIC32MX795F512L TIMER1
+            //if sosc enabled, assume it is there
+        //    if(sosc()) t1.clk_src(t1.SOSC);
+        //    else t1.clk_src(t1.LPRC);
+           //start timer1, get cp0 count
+            t1.on(true);
+            uint32_t c = cp0.count();
+            //wait for ~1/4sec, get cp0 total count
+            while(t1.timer() < 8192);
+            c = cp0.count() - c;
+            //cp0 runs at sysclk/2, so x2 x4 = x8 or <<3
+            c <<= 3;
+            //resolution only to 0.1Mhz
+            c /= 100000;
+            c *= 100000;
+            m_extclk = c;
+            //restore timer1
+            t1.on(false);
+            t1.timer(t1bak);
+            t1.period(pr1bak);
+            t1.t1con(t1conbak);
+            //lock_irq(irstat);
+            Sys::lock(irstat);
+            return m_extclk;
+            }
 
 //=============================================================================
-    uint32_t        Osc::frcclk         ()
+            auto Osc::
+frcclk      () -> uint32_t
+            {
+            return m_frcosc_freq;
+            }
+            
 //=============================================================================
-{
-    return m_frcosc_freq;
-}
-
-//=============================================================================
-    uint32_t        Osc::pbclk          ()
-//=============================================================================
-{
-        if (m_pbclk) return m_pbclk;
-        m_pbclk = sysclk() >> pb_div();
-        return m_pbclk;
-}
+            auto Osc::
+pbclk       () -> uint32_t
+            {
+            if (m_pbclk) return m_pbclk;
+            m_pbclk = sysclk() >> pb_div();
+            return m_pbclk;
+            }

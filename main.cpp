@@ -29,6 +29,7 @@
 
 
 
+
 //svg colors for rgb led
 const uint8_t svg[][3]{
 /*blue*/ {0,0,255},
@@ -169,6 +170,54 @@ struct Led12 {
 
 };
 
+bool cdc_notify(UsbEP* ep);
+
+struct UsbTest {
+
+    Pins sw3{ Pins::C4, Pins::INPU }; //turn on usb
+    Pins sw1{ Pins::B9, Pins::INPU }; //turn off usb
+    Pins sw2{ Pins::C10, Pins::INPU }; //xmit data
+
+    UsbCdcAcm cdc;
+
+    Delay sw_debounce;
+    Delay dly;
+
+    char buf[64];
+    bool ison = false;
+    bool xmit = false;
+
+    bool notify(UsbEP* ep){
+        static uint8_t count = 0;
+        if(count >= 10){
+            dly.set_ms(5000); //set when called
+            count = 0;
+            return true;
+        }
+        dly.set_ms(2);
+        Rtcc::datetime_t dt = Rtcc::datetime();
+        snprintf(buf, 64, "%s[%02d] %02d-%02d-%04d %02d:%02d:%02d %s\r\n",
+                count ? "" : "\r\n", count,
+                dt.month, dt.day, dt.year+2000, dt.hour12, dt.minute, dt.second,
+                dt.pm ? "PM" : "AM");
+        if(cdc.send((uint8_t*)buf, strlen(buf))) count++;
+        return true;
+    }
+
+    void update(){
+        if(sw3.ison() and not ison) ison = cdc.init(true);
+        if(sw1.ison() and ison) ison = cdc.init(false);
+        if(sw2.ison() and sw_debounce.expired()){
+            xmit = not xmit;
+            sw_debounce.set_ms(1000);
+        }
+        if(ison and xmit and dly.expired()) notify(0);
+    }
+};
+UsbTest utest;
+//helper- need static function for callback
+bool cdc_notify(UsbEP* ep){ return utest.notify(ep); }
+
 
 int main()
 {
@@ -182,7 +231,7 @@ int main()
     osc.tun_auto(true);                     //let sosc tune frc
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 18, 4, 13, 0, 17, 41, 0} );
+    if(dt.year == 0) Rtcc::datetime( { 18, 5, 19, 0, 0, 21, 0} );
 
     Rtcc::on(true);
 
@@ -193,36 +242,14 @@ int main()
     Rgb rgb;
     Led12 led12;
 
-//trying my usb code
-Delay::wait_s(2);
-Pins sw3{ Pins::C4, Pins::INPU }; //turn on usb
-Pins sw1{ Pins::B9, Pins::INPU }; //turn off usb
-Pins sw2{ Pins::C10, Pins::INPU }; //xmit data
+    printf("starting...\r\n");
 
-Delay dly;
-dly.set_ms(1000);
-
-char buf[64];
-
-bool ison = false;
-bool xmit = false;
-UsbCdcAcm cdc;
-
-for(;;){
-    if(sw3.ison()){ ison = cdc.init(true); Delay::wait_ms(500); }
-    if(sw1.ison()){ ison = cdc.init(false); Delay::wait_ms(500); }
-    if(sw2.ison()){ xmit = not xmit; Delay::wait_ms(200); }
-    if(ison and dly.expired()){
-        dly.restart();
-
-        dt = Rtcc::datetime();
-        snprintf(buf, 64, "%02d-%02d-%04d %02d:%02d:%02d %s  ",
-                dt.month, dt.day, dt.year+2000, dt.hour12, dt.minute, dt.second,
-                dt.pm ? "PM" : "AM");
-        if(xmit) UsbDevice::cdc_tx((uint8_t*)buf, strlen(buf));
+    for(;;){
+        Wdt::reset();
+        led12.update();
+        rgb.update();
+        utest.update();
     }
-    //Wdt::reset(), led12.update(), rgb.update();
-}
 
 }
 

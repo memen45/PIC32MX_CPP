@@ -1,59 +1,119 @@
 #pragma once
 
 #include "Usb.hpp"
+#include "UsbCh9.hpp"
 
 #include <cstdint>
 
 
 struct UsbEP {
 
-    using notify_t = bool(*)(UsbEP*);
+            using
+notify_t    = bool(*)(UsbEP*);
 
-    enum TXRX : bool { RX, TX };
-    enum EVEODD : bool { EVEN, ODD };
+            enum
+TXRX        : bool { RX, TX };
 
-    void reset      (TXRX, bool = false); //bool = save ppbi?
-    bool init       (uint8_t);
-    bool set_buf    (TXRX, uint8_t*, uint16_t);
-    bool set_notify (TXRX, notify_t);
-    bool service    (uint8_t); //rx/tx,from ISR (0-3)
-    bool xfer       (TXRX, uint8_t*, uint16_t, notify_t = 0);
-    bool xfer       (TXRX, uint8_t*, uint16_t, bool, notify_t = 0);
-    bool busy       (TXRX);
-    bool takeback   (TXRX);
-    void txin       ();
-    void rxout      ();
+            enum
+EVEODD      : bool { EVEN, ODD };
 
-    private:
+            auto
+reset       (TXRX, bool = false) -> void; //bool = save ppbi?
 
-    bool setup      (TXRX);
+            auto
+init        (uint8_t) -> void;
+
+            auto
+service     (uint8_t) -> bool;
+
+            auto
+service_in  () -> void;
+
+            auto
+service_out () -> void;
+
+            auto
+send        (uint8_t*, uint16_t, notify_t = 0) -> bool;
+
+            //specify data01
+            auto
+send        (uint8_t*, uint16_t, bool, notify_t = 0) -> bool;
+
+            auto
+recv        (uint8_t*, uint16_t, notify_t = 0) -> bool;
+
+            //specify data01
+            auto
+recv        (uint8_t*, uint16_t, bool, notify_t = 0) -> bool;
+
+            auto
+send_busy   () -> bool;
+
+            auto
+recv_busy   () -> bool;
+
+            auto
+send_stall  () -> void;
+
+            auto
+recv_stall  () -> void;
+
+            auto
+send_zlp    () -> void;
+
+            auto
+send_notify (notify_t) -> void;
+
+            auto
+recv_notify (notify_t) -> void;
+
+            auto
+takeback    (TXRX) -> void;
+
+            using
+info_t      = struct {
+            uint8_t*        buf;        //buffer address
+            uint16_t        epsiz;      //endpoint size
+            uint16_t        bdone;      //total bytes done
+            uint16_t        btogo;      //total bytes to go
+            bool            zlp;        //need zero length end packet
+            bool            d01;        //data01
+            bool            ppbi;       //our ppbi
+            bool            stall;      //do a stall (cleared by setup())
+            Usb::stat_t     stat;       //last bdt stat
+            volatile Usb::bdt_t* bdt;   //bdt table ptr
+            notify_t        notify;     //callback
+            };
 
 
-    uint8_t     m_epnum{0};         //endpoint number
+            private:
 
-    using info_t = struct {
-        uint8_t*        buf;        //buffer address
-        uint16_t        siz;        //buffer size
-        uint16_t        epsiz;      //endpoint size
-        uint16_t        bdone;      //total bytes done
-        uint16_t        btogo;      //total bytes to go
-        bool            zlp;        //need zero length end packet
-        bool            d01;        //data01
-        bool            ppbi;       //our ppbi
-        bool            stall;      //do a stall (cleared by setup())
-        Usb::stat_t     stat;       //last bdt stat
-        volatile Usb::bdt_t* bdt;//bdt table ptr
-        notify_t        notify;     //callback
-    };
-    info_t m_ep[2]{{0},{0}};      //can use index 0/1 (TXRX)
+            auto
+setup       (info_t&) -> bool;
 
-    public:
-    info_t* rx{&m_ep[RX]};  //or use these
-    info_t* tx{&m_ep[TX]};
+            auto
+xfer        (info_t&, uint8_t*, uint16_t, notify_t) -> bool;
 
-    private:
-    uint8_t m_ustat{0};     //last usb stat (from irq)- 0-3
-                            //(dir and ppbi only)
+
+            protected:
+
+            uint8_t m_epnum{0};             //endpoint number
+            info_t  m_rx{0};
+            info_t  m_tx{0};
+
+};
+
+//endpoint 0 specific
+struct UsbEP0 : public UsbEP {
+
+            auto
+init        () -> void;
+
+            auto
+service     (uint8_t) -> bool;
+
+
+            UsbCh9::SetupPkt_t setup_pkt;
 
 };
 

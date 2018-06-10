@@ -1,399 +1,440 @@
 #include "UsbEP.hpp"
 #include "UsbCh9.hpp"
 #include "Usb.hpp"
-#include "UsbBuf.hpp"
 #include "Reg.hpp"
-#include "UsbDescriptors.hpp"
+#include "UsbCentral.hpp"
 
 #include <cstdint>
-#include <cstring> //memset, memcpy
-#include <cstdio>
-
-//this file only, for ep0
-static uint8_t              ep0rxbuf[64] = {0};
-static UsbCh9::SetupPkt_t   pkt = {0};
-static uint8_t*             ep0txbuf;
-static bool control (UsbEP*);
-static bool set_address(UsbEP*);
-
-//line coding- just store what pc wants, also return if wanted
-using line_coding_t = struct {
-    uint32_t baud;
-    uint8_t stop_bits; //0-1,1=1.5,2=2
-    uint8_t parity; //none=0,even, odd, mark, space
-    uint8_t data_bits; //5,6,7,8,16
-};
-static line_coding_t        line_coding = {115200, 0, 0, 8};
-static bool set_line_coding(UsbEP*);
-//
+#include <cstring>  //memset, memcpy
+#include <cstdio>   //debug printf
 
 
-void print_bytes(uint8_t* buf, uint16_t siz){
-    for( ; siz; siz--){
-        printf("%02x ",*buf++);
-    }
-    printf("\r\n");
-}
+//=============================================================================
+            auto UsbEP::
+reset       (TXRX tr, bool saveppbi) -> void
+            {
+            info_t& x = tr ? m_tx : m_rx;
+            x.buf = 0;
+            x.bdone = 0;
+            x.btogo = 0;
+            x.zlp = 0;
+            x.d01 = 0;
+            x.stall = 0;
+            x.notify = 0;
+            if(not saveppbi) x.ppbi = 0;
+            }
 
 //=============================================================================
-    void    UsbEP::reset            (TXRX tr, bool saveppbi)
-//=============================================================================
-{
-    info_t& x = m_ep[tr];
-    bool ppbi = saveppbi ? x.ppbi : 0;
-    x = {0};
-    x.ppbi = ppbi;
-    x.bdt = Usb::bdt_addr(m_epnum, tr, 0);//&Usb::bdt_table[m_epnum][tr][EVEN];
-}
+            auto UsbEP::
+init        (uint8_t n) -> void
+            {
+            m_epnum = n;
+            reset(TX);
+            reset(RX);
+            m_rx.epsiz = UsbCentral::get_epsiz(m_epnum, 0);
+            m_tx.epsiz = UsbCentral::get_epsiz(m_epnum, 1);
+            m_rx.bdt = Usb::bdt_addr(m_epnum, 0, 0); //0=rx, 0=even
+            m_tx.bdt = Usb::bdt_addr(m_epnum, 1, 0); //1=tx, 0=even
+            Usb::epcontrol(n, UsbCentral::get_epctrl(n)); //set ep control
+            }
 
 //=============================================================================
-    bool    UsbEP::init             (uint8_t n)
-//=============================================================================
-{
-    if(n > UsbDescriptors::last_ep_num) return false;
-    m_epnum = n;
-    reset(TX);
-    reset(RX);
-    rx->epsiz = UsbDescriptors::get_epsiz(n, 0);
-    tx->epsiz = UsbDescriptors::get_epsiz(n, 1);
-    Usb::epcontrol(n, UsbDescriptors::get_epctrl(n)); //set endpoint control
-    if(n) return true;
-    //ep0
-    return xfer(RX, ep0rxbuf, rx->epsiz);
-}
-
-//=============================================================================
-    bool    UsbEP::set_buf          (TXRX tr, uint8_t* buf, uint16_t siz)
-//=============================================================================
-{
-    m_ep[tr].buf = buf;
-    m_ep[tr].siz = siz;
-    return true;
-}
-
-//=============================================================================
-    bool    UsbEP::set_notify       (TXRX tr, notify_t f)
-//=============================================================================
-{
-    m_ep[tr].notify = f;
-    return true;
-}
+            auto UsbEP::
+xfer        (info_t& x, uint8_t* buf, uint16_t siz, notify_t f) -> bool
+            {
+            x.buf = buf;
+            x.btogo = siz;
+            x.bdone = 0;
+            if(f) x.notify = f;
+            return setup(x);
+            }
 
 //specify d01, notify optional (default = 0)
 //=============================================================================
-bool UsbEP::xfer(TXRX tr, uint8_t* buf, uint16_t siz, bool d01, notify_t f)
-//=============================================================================
-{
-    m_ep[tr].d01 = d01;
-    return xfer(tr, buf, siz, f);
-}
-
-//=============================================================================
-bool UsbEP::xfer(TXRX tr, uint8_t* buf, uint16_t siz, notify_t f)
-//=============================================================================
-{
-    info_t& x = m_ep[tr];
-    x.buf = buf;
-    x.siz = siz;
-    x.btogo = siz;
-    x.bdone = 0;
-    if(f) x.notify = f;
-    return setup(tr);
-}
-
-//=============================================================================
-    bool    UsbEP::busy                 (TXRX tr)
-//=============================================================================
-{
-    info_t& x = m_ep[tr];
-    return x.bdt[EVEN].stat.uown or x.bdt[ODD].stat.uown;
-}
-
-//=============================================================================
-    bool    UsbEP::setup                (TXRX tr)
-//=============================================================================
-{
-    info_t& x = m_ep[tr];
-    if(not x.buf) return false;//no buffer set
-    bool i = x.ppbi;
-    if(x.bdt[i].stat.uown) i xor_eq 1;      //in use, try next
-    if(x.bdt[i].stat.uown) return false;    //both in use
-
-    volatile Usb::ctrl_t ctrl = {0};
-    ctrl.bstall = x.stall; x.stall = false;
-    ctrl.data01 = x.d01;
-    ctrl.dts = 1;
-    ctrl.uown = 1;
-
-    ctrl.count = x.btogo < 64 ? x.btogo : 64;
-    x.bdt[i].bufaddr = Reg::k2phys((uint32_t)x.buf);
-    x.bdt[i].ctrl.val32 = ctrl.val32;
-
-    return true;
-}
-
-//called from ISR with rx/tx,even/odd (0-3)
-//=============================================================================
-    bool    UsbEP::service              (uint8_t ustat)
-//=============================================================================
-{
-    m_ustat = ustat bitand 3;
-    info_t& x = m_ep[ustat>>1]; //tx or rx
-    x.stat.val32 = x.bdt[ustat bitand 1].stat.val32;        //get bdt stat
-    x.ppbi xor_eq 1;            //toggle ppbi
-    x.d01 xor_eq 1;             //toggle d01
-
-printf("service(%d) %d %d %08x\r\n",ustat,m_epnum,x.stat.pid,x.stat.val32);
-
-    //in (tx), out (rx)
-    switch(x.stat.pid){
-        case UsbCh9::OUT:
-            rxout();
-            break;
-        case UsbCh9::IN:
-            txin();
-            break;
-        case UsbCh9::SETUP:
-            if(m_epnum == 0 and x.stat.count == 8){
-                //make copy of setup packet
-                memcpy(&pkt.packet[0], rx->buf, sizeof(pkt));
-                control(this);
-                //clear PKTDIS to let control xfer resume
-                Usb::control(Usb::PKTDIS, false);
+            auto UsbEP::
+send        (uint8_t* buf, uint16_t siz, bool d01, notify_t f) -> bool
+            {
+            m_tx.d01 = d01;
+            return xfer(m_tx, buf, siz, f);
             }
-            break;
-        default:
-printf("unknown x.stat.pid: %d\r\n",x.stat.pid);
-            return false;
-    }
-    return true;
-}
 
 //=============================================================================
-    bool    UsbEP::takeback             (TXRX tr)
-//=============================================================================
-{
-    info_t& x = m_ep[tr];
-    if(x.bdt[EVEN].stat.uown){ //check even
-        x.bdt[EVEN].ctrl.uown = 0;
-        x.ppbi xor_eq 1;
-    }
-    if(x.bdt[ODD].stat.uown){ //check odd
-        x.bdt[ODD].ctrl.uown = 0;
-        x.ppbi xor_eq 1;
-    }
-    reset(tr, true); //reset, but save ppbi
-    return true;
-}
-
-//=============================================================================
-    void    UsbEP::txin                 ()
-//=============================================================================
-{
-    info_t& tx = m_ep[TX];
-
-    tx.bdone += tx.stat.count;
-    if(tx.stat.count > tx.btogo){
-        tx.btogo = 0;
-    } else tx.btogo -= tx.stat.count;
-
-    if(tx.btogo){
-        tx.buf += tx.stat.count;
-        setup(TX);
-    } else if(tx.zlp){
-        tx.zlp = 0;
-        setup(TX);
-    } else if(tx.notify){
-        tx.notify(this);
-        tx.notify = 0;
-    }
-
-    if(m_epnum == 0 and tx.btogo == 0){
-        UsbBuf::release(ep0txbuf);
-    }
-}
-
-//=============================================================================
-    void    UsbEP::rxout                ()
-//=============================================================================
-{
-    info_t& rx = m_ep[RX];
-
-    rx.bdone += rx.stat.count;
-
-    if(not rx.stat.count or           //zlp
-        rx.stat.count > rx.btogo or //rx more than planned
-        rx.stat.count < rx.epsiz){  //short packet
-        rx.btogo = 0;                 //no more to do
-    }
-    else rx.btogo -= rx.stat.count;
-
-    if(rx.btogo){
-        rx.buf += rx.stat.count;
-        setup(RX);
-    } else if(rx.notify){
-printf("rx notify\r\n");
-        rx.notify(this);
-        rx.notify = 0;
-    }
-
-}
-
-
-
-//this file only- for ep0 only
-//=============================================================================
-static bool control (UsbEP* ep)
-//=============================================================================
-{
-    Usb usb;
-
-    //setup packet is now in pkt
-    //take back any pending tx on ep0
-    ep->takeback(ep->TX);
-
-    //release any previous tx
-    UsbBuf::release(ep0txbuf);
-
-    //get a tx buffer
-    ep0txbuf = UsbBuf::get64();
-    if(not ep0txbuf){
-        return false; //could not get a buffer (unlikely)
-    }
-
-    //preset first 2 bytes
-    ep0txbuf[0] = 0;
-    ep0txbuf[1] = 0;
-
-    //tx (IN) length requested, or status
-    uint16_t tlen = pkt.wLength;
-
-printf("pkt: $1%04x %04x %04x %04x$7\r\n",pkt.wRequest,pkt.wValue,pkt.wIndex,pkt.wLength);
-
-    //process std req
-    //pkt.wRequest, wValue, wIndex, wLength
-
-    switch(pkt.wRequest){
-
-        case UsbCh9::DEV_GET_STATUS: //tx 2bytes, rx status
-            ep0txbuf[0] = UsbDescriptors::get_status();
-            break;
-        case UsbCh9::IF_GET_STATUS: //tx 2bytes, rx status
-            //bytes already already setup
-            break;
-        case UsbCh9::EP_GET_STATUS: //tx 2bytes, rx status
-            ep0txbuf[0] = usb.epcontrol(pkt.wIndex, usb.EPSTALL);
-            break;
-        case UsbCh9::DEV_CLEAR_FEATURE: //no data, tx status
-            //remote wakup, test mode, do nothing
-            break;
-        case UsbCh9::EP_CLEAR_FEATURE: //no data, tx status
-            // only option is ENDPOINT_HALT (0x00) (not for ep0)
-            if(pkt.wIndex and not pkt.wValue){
-                usb.epcontrol(pkt.wIndex, usb.EPSTALL, false);
-                //data toggle resets to data0
+            auto UsbEP::
+send        (uint8_t* buf, uint16_t siz, notify_t f) -> bool
+            {
+            return xfer(m_tx, buf, siz, f);
             }
-            break;
-        case UsbCh9::DEV_SET_FEATURE: //no data, tx status
-            //remote wakup, test mode, do nothing
-            break;
-        case UsbCh9::EP_SET_FEATURE: //no data, tx status
-            //only option is ENDPOINT_HALT (0x00) (not for ep0)
-            if(pkt.wIndex and not pkt.wValue){
-                usb.epcontrol(pkt.wIndex, usb.EPSTALL, true);
+
+//specify d01, notify optional (default = 0)
+//=============================================================================
+            auto UsbEP::
+recv        (uint8_t* buf, uint16_t siz, bool d01, notify_t f) -> bool
+            {
+            m_rx.d01 = d01;
+            return xfer(m_rx, buf, siz, f);
             }
-            break;
-        case UsbCh9::DEV_SET_ADDRESS: //no data, tx status
-            ep->set_notify(ep->TX, set_address); //set address after status
-            break;
-        case UsbCh9::DEV_GET_DESCRIPTOR: //tx tlen bytes, rx status
-            UsbBuf::release(ep0txbuf); //buffer not needed
-            ep0txbuf = (uint8_t*)UsbDescriptors::get_desc(pkt.wValue, &tlen);
-            //if error, tlen=0 and ep0txbuf=0
-            break;
-//         case UsbCh9::DEV_SET_DESCRIPTOR:
-//             //no data, status (tx zlp)
-//             break;
-        case UsbCh9::DEV_GET_CONFIGURATION: //tx tlen bytes, rx status
-            //send 0=not configured, anything else=configured
-            ep0txbuf[0] = usb.dev_addr() ? 1 : 0; //show configured if address set
-            break;
-        case UsbCh9::DEV_SET_CONFIGURATION: //no data, tx status
-            if(usb.dev_addr() and not pkt.wValue) usb.dev_addr(0);
-            else UsbDescriptors::set_config(pkt.wValue);
-            //clear endpoint halt, data toggle resets to data0
-            break;
-//         case UsbCh9::IF_GET_IFACE:
-//             break;
-//         case UsbCh9::IF_SET_IFACE:
-//             break;
-//         case UsbCh9::EP_SYNC_HFRAME:
-//             break;
-        case UsbCh9::CDC_SET_LINE_CODING: //rx tlen bytes, tx status
-            ep->set_notify(ep->RX, set_line_coding); //just to print it
-            ep->xfer(ep->RX, (uint8_t*)&line_coding, 7, true);
-            ep->xfer(ep->RX, ep0rxbuf, 64, false);
-            ep->xfer(ep->TX, ep0txbuf, 0, true);
+
+//=============================================================================
+            auto UsbEP::
+recv        (uint8_t* buf, uint16_t siz, notify_t f) -> bool
+            {
+            return xfer(m_rx, buf, siz, f);
+            }
+
+//-----------------------------------------------------------------------------
+            static auto
+busy        (UsbEP::info_t& x) -> bool
+            {
+            return x.bdt[UsbEP::EVEN].stat.uown or
+                x.bdt[UsbEP::ODD].stat.uown or
+                x.btogo or
+                x.zlp;
+            }
+
+//=============================================================================
+            auto UsbEP::
+send_busy   () -> bool
+            {
+            return busy(m_tx);
+            }
+
+//=============================================================================
+            auto UsbEP::
+recv_busy   () -> bool
+            {
+            return busy(m_rx);
+            }
+
+//=============================================================================
+            auto UsbEP::
+send_stall  () -> void
+            {
+            m_tx.stall = true;
+            }
+
+//=============================================================================
+            auto UsbEP::
+recv_stall  () -> void
+            {
+            m_rx.stall = true;
+            }
+
+//=============================================================================
+            auto UsbEP::
+send_zlp    () -> void
+            {
+            m_tx.zlp = true;
+            }
+
+//=============================================================================
+            auto UsbEP::
+send_notify (notify_t f) -> void
+            {
+            if(f) m_tx.notify = f;
+            }
+
+//=============================================================================
+            auto UsbEP::
+recv_notify (notify_t f) -> void
+            {
+            if(f) m_rx.notify = f;
+            }
+
+//=============================================================================
+            auto UsbEP::
+setup       (info_t& x) -> bool
+            {
+            if(not x.buf) return false;             //no buffer set, can't do
+
+            bool i = x.ppbi;                        //get our ppbi
+            if(x.bdt[i].stat.uown) i xor_eq 1;      //already in use, try next
+            if(x.bdt[i].stat.uown) return false;    //both in use, cannot do
+
+            //DEBUG
+            printf("%s %s %d (%d)\r\n",
+            &x == &m_tx ? "TX" : "RX",i ? "ODD" : "EVEN",x.btogo,x.epsiz);
+
+            volatile Usb::ctrl_t ctrl = {0};
+            ctrl.bstall = x.stall;
+            x.stall = false;                        //is set, now clear flag
+            ctrl.data01 = x.d01;
+            ctrl.dts = 1;
+            ctrl.uown = 1;
+
+            ctrl.count = x.btogo < x.epsiz ? x.btogo : x.epsiz; //limit size
+            x.bdt[i].bufaddr = Reg::k2phys((uint32_t)x.buf); //physical address
+            x.bdt[i].ctrl.val32 = ctrl.val32;
+
             return true;
-            break;
-        case UsbCh9::CDC_GET_LINE_CODING: //tx line coding, rx status
-            memcpy(ep0txbuf, (void*)&line_coding, 7);
-            break;
-        case UsbCh9::CDC_SET_CONTROL_LINE_STATE: //no data, tx status
-            break;
-        default:
-            //check other requests somwhere else
-            //stall bad request
-            ep->tx->stall = 1;
-            ep->rx->stall = 1;
-            break;
-    }
-
-    //check if no data for request (bad string index, etc)
-    if((tlen == 0) and pkt.wLength){
-        ep->tx->stall = 1;
-        ep->rx->stall = 1;
-    }
-    //check for tx data that is less than requested (strings,descriptors,etc)
-    //if less and if is same size as ep packet size, add zlp
-    if(tlen and (tlen != pkt.wLength)){
-        if(not (tlen % 64)) ep->tx->zlp = true;
-    }
-
-    //true = data1, false=data0
-    //tx is always data1- either status, or send data in data stage
-    ep->xfer(ep->TX, ep0txbuf, tlen, true);
-    //if data stage, next rx is always data10 either rx data or rx status
-    if(pkt.wLength) ep->xfer(ep->RX, ep0rxbuf, 64, true);
-    //next setup packet (data0) in all cases
-    //(rx data stage is always <64, so there is only on rx data packet)
-    ep->xfer(ep->RX, ep0rxbuf, 64, false);
-
-    return true;
-}
+            }
 
 
-
-//callback from ep0
-//nothing to do, print just to see what is happening
 //=============================================================================
-bool set_line_coding(UsbEP* ep)
+            auto UsbEP::
+service     (uint8_t ustat) -> bool
+            {
+            info_t& x = ustat bitand 2 ? m_tx : m_rx;           //tx or rx
+            x.stat.val32 = x.bdt[ustat bitand 1].stat.val32;    //get bdt stat
+            x.ppbi xor_eq 1;                                    //toggle ppbi
+            x.d01 xor_eq 1;                                     //toggle d01
+
+            //DEBUG
+            printf("UsbEP::service   ustat: %d  ep: %d  pid: %d  bdt: %08x\r\n",
+            ustat,m_epnum,x.stat.pid,x.stat.val32);
+
+            if(x.stat.pid == UsbCh9::OUT)       service_out();  //out (rx)
+            else if(x.stat.pid == UsbCh9::IN)   service_in();   //in (tx)
+            else                                return false;   //is ep0 setup
+
+            return true;
+            }
+
 //=============================================================================
-{
-printf("%d %d %d %d\r\n",
-    line_coding.baud,line_coding.stop_bits,line_coding.parity,
-    line_coding.data_bits
-);
-   return true;
-}
+            auto UsbEP::
+takeback    (TXRX tr) -> void
+            {
+            info_t& x = tr ? m_tx : m_rx;
+            if(x.bdt[EVEN].stat.uown){          //check even
+                x.bdt[EVEN].ctrl.uown = 0;      //take
+                x.ppbi xor_eq 1;                //ppbi toggles when uown 1->0
+            }
+            if(x.bdt[ODD].stat.uown){           //check odd
+                x.bdt[ODD].ctrl.uown = 0;
+                x.ppbi xor_eq 1;
+            }
+            reset(tr, true);                    //reset, but save (our) ppbi
+            }
+
+//=============================================================================
+            auto UsbEP::
+service_in  () -> void
+            {
+            m_tx.bdone += m_tx.stat.count;      //add count to bdone
+            if(m_tx.stat.count > m_tx.btogo){   //if more than expected
+                m_tx.btogo = 0;                 //set btogo to 0
+            } else m_tx.btogo -= m_tx.stat.count;//else btogo -= count
+
+            if(m_tx.btogo){                     //if more to do
+                m_tx.buf += m_tx.stat.count;    //adjust buffer address
+                setup(m_tx);                    //and setup for next tx
+            } else if(m_tx.zlp){                //no more, but zlp set
+                m_tx.zlp = 0;                   //clear zlp flag
+                setup(m_tx);                    //and setup for tx (btogo is 0)
+            } else if(m_tx.notify){             //no more, check if notify set
+                notify_t f = m_tx.notify;       //need to copy
+                m_tx.notify = 0;                //then clear it
+                f(this);                        //call notify callback
+                //clear notify before called, as callback may setup new xfer
+                //with another callback (else we will clear the new callback)
+            }
+            }
+
+//=============================================================================
+            auto UsbEP::
+service_out () -> void
+            {
+            m_rx.bdone += m_rx.stat.count;
+
+            if(not m_rx.stat.count or           //zlp
+                m_rx.stat.count > m_rx.btogo or //rx more than planned
+                m_rx.stat.count < m_rx.epsiz){  //short packet
+                    m_rx.btogo = 0;             //no more to do
+            } else {
+                m_rx.btogo -= m_rx.stat.count;  //subtract count
+            }
+
+            if(m_rx.btogo){                     //if more to do
+                m_rx.buf += m_rx.stat.count;    //adjust buffer address
+                setup(m_rx);                    //and setup for next rx
+            } else if(m_rx.notify){             //no more, so check notify
+                notify_t f = m_rx.notify;       //need to copy
+                m_rx.notify = 0;                //then clear it
+                f(this);                        //call notify callback
+                //clear notify before called, as callback may setup new xfer
+                //with another callback (else we will clear the new callback)
+            }
+            }
+
+
+
+//UsbEP0
+
+//local var, endpoint 0 rx buffer
+//-----------------------------------------------------------------private-----
+static uint8_t ep0rxbuf[64] = {0};
 
 //callback from ep0 trn in (tx zlp after set address setup packet)
-//=============================================================================
-bool set_address(UsbEP* ep)
-//=============================================================================
-{
-    Usb::dev_addr(pkt.wValue);  //set usb address
-    return true;
-}
+//-----------------------------------------------------------------private-----
+            static auto
+set_address (UsbEP* ep) -> bool
+            {
+            //callbacks are UsbEP, cast to UsbEP0 in this case
+            UsbEP0* ep0 = (UsbEP0*)ep;
+            Usb::dev_addr(ep0->setup_pkt.wValue);  //set usb address
+            return true;
+            }
 
+//ep0 standard requests
+//-----------------------------------------------------------------private-----
+            static auto
+control     (UsbEP0* ep0) -> bool
+            {
+            Usb usb;
+            //setup packet is now in pkt
+            //take back any pending tx on ep0
+            ep0->takeback(ep0->TX);
+            //tx, only need a couple bytes for our use
+            //preset first 2 bytes to 0
+            static uint8_t txbuf[2] = {0, 0};
+            //pointer to either buf above,
+            //or set to something else below (descriptor)
+            uint8_t* ep0txbuf = txbuf;
+
+            //if data stage (wLength > 0), and device->host (IN, TX)
+            //set tlen (tx) to wLength, else is 0 (tx status)
+            uint16_t tlen = ((ep0->setup_pkt.bmRequestType bitand (1<<7)) and
+                                ep0->setup_pkt.wLength) ?
+                            ep0->setup_pkt.wLength : 0;
+
+            //stall flag
+            bool stall = false;
+
+            //DEBUG
+            printf("pkt: $1%04x %04x %04x %04x$7\r\n",
+            ep0->setup_pkt.wRequest,ep0->setup_pkt.wValue,
+            ep0->setup_pkt.wIndex,ep0->setup_pkt.wLength);
+
+            //process std req
+            //pkt.wRequest, wValue, wIndex, wLength
+
+            switch(ep0->setup_pkt.wRequest){
+
+                case UsbCh9::DEV_GET_STATUS: //tx 2bytes, rx status
+                    txbuf[0] = UsbCentral::get_status();
+                    break;
+                case UsbCh9::IF_GET_STATUS: //tx 2bytes, rx status
+                    //bytes already already setup
+                    break;
+                case UsbCh9::EP_GET_STATUS: //tx 2bytes, rx status
+                    txbuf[0] = usb.epcontrol(ep0->setup_pkt.wIndex,
+                                                usb.EPSTALL);
+                    break;
+                case UsbCh9::DEV_CLEAR_FEATURE: //no data, tx status
+                    //remote wakeup, test mode, do nothing
+                    break;
+                case UsbCh9::EP_CLEAR_FEATURE: //no data, tx status
+                    // only option is ENDPOINT_HALT (0x00) (not for ep0)
+                    if(ep0->setup_pkt.wIndex and not ep0->setup_pkt.wValue){
+                        usb.epcontrol(ep0->setup_pkt.wIndex, usb.EPSTALL,
+                                      false);
+                        //data toggle resets to data0
+                    }
+                    break;
+                case UsbCh9::DEV_SET_FEATURE: //no data, tx status
+                    //remote wakeup, test mode, do nothing
+                    break;
+                case UsbCh9::EP_SET_FEATURE: //no data, tx status
+                    //only option is ENDPOINT_HALT (0x00) (not for ep0)
+                    if(ep0->setup_pkt.wIndex and not ep0->setup_pkt.wValue){
+                        usb.epcontrol(ep0->setup_pkt.wIndex, usb.EPSTALL,
+                                      true);
+                    }
+                    break;
+                case UsbCh9::DEV_SET_ADDRESS: //no data, tx status
+                    ep0->send_notify(set_address); //set address after status
+                    break;
+                case UsbCh9::DEV_GET_DESCRIPTOR: //tx tlen bytes, rx status
+                    ep0txbuf = (uint8_t*)UsbCentral::get_desc(
+                                    ep0->setup_pkt.wValue, &tlen);
+                    //if error, tlen=0 and ep0txbuf=0
+                    if((tlen == 0) or (ep0txbuf == 0)) stall = true;
+                    break;
+                case UsbCh9::DEV_SET_DESCRIPTOR:
+                    //no data, tx status
+                    break;
+                case UsbCh9::DEV_GET_CONFIGURATION: //tx tlen bytes, rx status
+                    //send 0=not configured, anything else=configured
+                    //show configured if address set
+                    txbuf[0] = usb.dev_addr() ? 1 : 0;
+                    break;
+                case UsbCh9::DEV_SET_CONFIGURATION: //no data, tx status
+                    if(usb.dev_addr() and not ep0->setup_pkt.wValue){
+                        usb.dev_addr(0);
+                    }
+                    else UsbCentral::set_config(ep0->setup_pkt.wValue);
+                    //clear endpoint halt, data toggle resets to data0
+                    break;
+                case UsbCh9::IF_GET_IFACE:
+                case UsbCh9::IF_SET_IFACE:
+                case UsbCh9::EP_SYNC_HFRAME:
+                    stall = true;
+                    break;
+                default:
+                    //check other requests
+                    if(UsbCentral::service(0, ep0)){ //true=all handled, except
+                        ep0->recv(ep0rxbuf, 64, false); //we do next setup
+                        return true;
+                    }
+                    //bad request, stall
+                    stall = true;
+                    break;
+            }
+
+            if(stall){
+                ep0->send_stall();
+                ep0->send(ep0txbuf, 0, true);
+                ep0->recv_stall();
+                ep0->recv(ep0rxbuf, 64, false);
+                return false;
+            }
+
+            //check for tx data that is less than requested
+            //(strings,descriptors,etc)
+            //if less and if is same size as ep packet size, add zlp
+            if(tlen and (tlen != ep0->setup_pkt.wLength) and (not(tlen % 64))){
+                ep0->send_zlp();
+            }
+            //true = data1, false=data0
+            //tx is always data1- either status, or send data in data stage
+            ep0->send(ep0txbuf, tlen, true);
+            //if data stage, next rx is always data1- rx data or rx status
+            if(ep0->setup_pkt.wLength) ep0->recv(ep0rxbuf, 64, true);
+            //next setup packet (data0) in all cases
+            //(rx data stage is always <64, so there is only 1 rx data packet)
+            ep0->recv(ep0rxbuf, 64, false);
+
+            return true;
+            }
+
+//=============================================================================
+            auto UsbEP0::
+init        () -> void
+            {
+            UsbEP::init(0);                 //same as others
+            recv(ep0rxbuf, 64, false);      //and setup for first packet recv
+            }
+
+//=============================================================================
+            auto UsbEP0::
+service     (uint8_t ustat) -> bool
+            {
+            //check for in/out first, if returned false, check for setup here
+            //(need to do first, as UsbEP::service also takes care of toggle
+            //ppbi and data01, and gets bdt stat)
+            if(UsbEP::service(ustat)) return true;
+
+            //DEBUG
+            info_t& x = ustat bitand 2 ? m_tx : m_rx; //tx or rx
+            printf("UsbEP0::service   ustat: %d  ep: %d  pid: %d  bdt: %08x\r\n",
+                ustat,m_epnum,x.stat.pid,x.stat.val32);
+
+            //ep0 setup packet
+            if(x.stat.pid == UsbCh9::SETUP and x.stat.count == 8){
+                memcpy(&setup_pkt.packet[0], m_rx.buf, 8);  //copy
+                control(this);                              //process
+                Usb::control(Usb::PKTDIS, false);           //resume xfer
+                return true;
+            }
+            return false;
+            }
 

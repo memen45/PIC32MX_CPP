@@ -4,36 +4,65 @@
 
 struct Sys {
 
-    //cfgcon
-    //static void     bus_err     (bool);
+            //==== CFGCON ====
 
-    enum BMXARB : uint8_t { CPUHIGH, CPULOW, RROBIN };
-    static void     bus_mode    (BMXARB);
+//            static auto
+//bus_err     (bool) -> void;
 
-    static void     jtag        (bool);
+            enum
+BMXARB      : uint8_t { CPUHIGH, CPULOW, RROBIN };
 
-    //devid
-    static uint32_t devid       ();
-    static uint8_t  ver         ();
+            static auto
+bus_mode    (BMXARB) -> void;
 
-    //syskey
-    static void     lock        ();
-    static void     lock        (uint8_t);
-    static void     unlock      ();
-    static uint8_t  unlock_wait ();
+            static auto
+jtag        (bool) -> void;
+
+            //==== DEVID ====
+
+            static auto
+devid       () -> uint32_t;
+
+            static auto
+ver         () -> uint8_t;
+
+
+            //==== SYSKEY ====
+
+            static auto
+lock        () -> void;
+
+            static auto
+lock        (uint8_t) -> void;
+
+            static auto
+unlock      () -> void;
+
+            static auto
+unlock_wait () -> uint8_t;
+            
+
+            //==== prefetch cache ====
     
-    enum PREFEN : uint8_t { PF_EN = 0, PF_CACHE_ONLY, PF_NON_CACHE_ONLY, PF_ALL };
-    static void     pcache      (PREFEN);
-    static void     waitstates  ();
+            enum 
+PREFEN      : uint8_t { 
+            PF_EN = 0, PF_CACHE_ONLY, PF_NON_CACHE_ONLY, PF_ALL 
+            };
+            
+            static auto
+pcache      (PREFEN) -> void;
+            
+            static auto
+waitstates  () -> void;
     
 private:
-    enum KSEG0_CACHE : uint8_t { OFF = 2, ON = 3 };
-    static void     kseg0_cache_enable  (KSEG0_CACHE);
-
-    //misc
-    //static uint32_t flash_size  ();
-    //static uint32_t ram_size    ();
-
+            enum 
+KSEG0_CACHE : uint8_t { 
+            OFF = 2, ON = 3,
+            };
+            
+            static auto
+kseg0_cache_enable  (KSEG0_CACHE) -> void;
 };
 
 // PIC32MM0064GPM028 0x07708053 0b0000 0111 0111 0000 1000 0000 0101 0011 64/16

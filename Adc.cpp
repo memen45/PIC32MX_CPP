@@ -35,187 +35,188 @@ enum {
 
 //ADC1BUFn
 //=============================================================================
-    uint16_t        Adc::read           (uint8_t n)
-//=============================================================================
-{
-    if(n > ADC1BUF_LAST) n = ADC1BUF_LAST;
-    return Reg::val16(ADC1BUF0 + (n * ADC1BUF_SPACING));
-}
+            auto Adc::
+read        (uint8_t n) -> uint16_t
+            {
+            if(n > ADC1BUF_LAST) n = ADC1BUF_LAST;
+            return Reg::val16(ADC1BUF0 + (n * ADC1BUF_SPACING));
+            }
 
 //ADC1CON1
 //=============================================================================
-    void            Adc::on             (bool tf)
-//=============================================================================
-{
-    Reg::setbit(ADC1CON1, 1<<ON, tf);
-}
+            auto Adc::
+on          (bool tf) -> void
+            {
+            Reg::setbit(ADC1CON1, 1<<ON, tf);
+            }
 
 //=============================================================================
-    void            Adc::stop_idle      (bool tf)
-//=============================================================================
-{
-    Reg::setbit(ADC1CON1, 1<<SIDL, tf);
-}
+            auto Adc::
+stop_idle   (bool tf) -> void
+            {
+            Reg::setbit(ADC1CON1, 1<<SIDL, tf);
+            }
 
 //=============================================================================
-    void            Adc::format         (FORM e)
-//=============================================================================
-{
-    Reg::clrbit(ADC1CON1, FORM_MASK<<FORM_SHIFT);
-    Reg::setbit(ADC1CON1, e<<FORM_SHIFT);
-}
+            auto Adc::
+format      (FORM e) -> void
+            {
+            Reg::clrbit(ADC1CON1, FORM_MASK<<FORM_SHIFT);
+            Reg::setbit(ADC1CON1, e<<FORM_SHIFT);
+            }
 
 //=============================================================================
-    void            Adc::trig_sel       (SSRC e)
-//=============================================================================
-{
-    Reg::clrbit(ADC1CON1, SSRC_MASK<<SSRC_SHIFT);
-    Reg::setbit(ADC1CON1, e<<SSRC_SHIFT);
-}
+            auto Adc::
+trig_sel    (SSRC e) -> void
+            {
+            Reg::clrbit(ADC1CON1, SSRC_MASK<<SSRC_SHIFT);
+            Reg::setbit(ADC1CON1, e<<SSRC_SHIFT);
+            }
 
 //=============================================================================
-    void            Adc::clr_asam     	(bool tf)
-//=============================================================================
-{
-    Reg::setbit(ADC1CON1, 1<<CLRASAM, tf);
-}
+            auto Adc::
+clr_asam    (bool tf) -> void
+            {
+            Reg::setbit(ADC1CON1, 1<<CLRASAM, tf);
+            }   
 
 //=============================================================================
-    void            Adc::samp_auto      (bool tf)
-//=============================================================================
-{
-    Reg::setbit(ADC1CON1, 1<<ASAM, tf);
-}
+            auto Adc::
+samp_auto   (bool tf) -> void
+            {
+            Reg::setbit(ADC1CON1, 1<<ASAM, tf);
+            }
 
 //=============================================================================
-    void            Adc::samp           (bool tf)
-//=============================================================================
-{
-    Reg::setbit(ADC1CON1, 1<<SAMP, tf);
-}
+            auto Adc::
+samp        (bool tf) -> void
+            {
+            Reg::setbit(ADC1CON1, 1<<SAMP, tf);
+            }
 
 //=============================================================================
-    bool            Adc::samp           ()
-//=============================================================================
-{
-    return Reg::anybit(ADC1CON1, 1<<SAMP);
-}
+            auto Adc::
+samp        () -> bool
+            {
+            return Reg::anybit(ADC1CON1, 1<<SAMP);
+            }
 
 //=============================================================================
-    bool            Adc::done           ()
-//=============================================================================
-{
-    return Reg::anybit(ADC1CON1, 1<<DONE);
-}
+            auto Adc::
+done        () -> bool
+            {
+            return Reg::anybit(ADC1CON1, 1<<DONE);
+            }
 
 //ADC1CON2
 //=============================================================================
-    void            Adc::vref_cfg       (VCFG e)
-//=============================================================================
-{
-    Reg::clrbit(ADC1CON2, VCFG_MASK<<VCFG_SHIFT);
-    Reg::setbit(ADC1CON2, e<<VCFG_SHIFT);
-}
+            auto Adc::
+vref_cfg    (VCFG e) -> void
+            {
+            Reg::clrbit(ADC1CON2, VCFG_MASK<<VCFG_SHIFT);
+            Reg::setbit(ADC1CON2, e<<VCFG_SHIFT);
+            }
 
 //=============================================================================
-    void            Adc::offset_cal     (bool tf)
-//=============================================================================
-{
-    Reg::setbit(ADC1CON2, 1<<OFFCAL, tf);
-}
+            auto Adc::
+offset_cal  (bool tf) -> void
+            {
+            Reg::setbit(ADC1CON2, 1<<OFFCAL, tf);
+            }
 
 //=============================================================================
-    void            Adc::scan           (bool tf)
-//=============================================================================
-{
-    Reg::setbit(ADC1CON2, 1<<CSCNA, tf);
-}
+            auto Adc::
+scan        (bool tf) -> void
+            {
+            Reg::setbit(ADC1CON2, 1<<CSCNA, tf);
+            }
 
 //=============================================================================
-    bool            Adc::buf2nd_busy    ()
-//=============================================================================
-{
-    return Reg::anybit(ADC1CON2, 1<<BUFS);
-}
+            auto Adc::
+buf2nd_busy () -> bool
+            {
+            return Reg::anybit(ADC1CON2, 1<<BUFS);
+            }
 
 //=============================================================================
-    void            Adc::samp_nirq      (uint8_t n)
-//=============================================================================
-{
-    n -= 1; n and_eq 15; //n = 1-16 ->0-15
-    Reg::clrbit(ADC1CON2, SMPI_MASK<<SMPI_SHIFT);
-    Reg::setbit(ADC1CON2, n<<SMPI_SHIFT);
-}
+            auto Adc::
+samp_nirq   (uint8_t n) -> void
+            {
+            n -= 1; n and_eq 15; //n = 1-16 ->0-15
+            Reg::clrbit(ADC1CON2, SMPI_MASK<<SMPI_SHIFT);
+            Reg::setbit(ADC1CON2, n<<SMPI_SHIFT);
+            }
 
 //=============================================================================
-    void            Adc::buf_split      (bool tf)
-//=============================================================================
-{
-    Reg::setbit(ADC1CON2, 1<<BUFM, tf);
-}
+            auto Adc::
+buf_split   (bool tf) -> void
+            {
+            Reg::setbit(ADC1CON2, 1<<BUFM, tf);
+            }
 
 //=============================================================================
-    void            Adc::alt_input      (bool tf)
-//=============================================================================
-{
-    Reg::setbit(ADC1CON2, 1<<ALTS, tf);
-}
+            auto Adc::
+alt_input   (bool tf) -> void
+            {
+            Reg::setbit(ADC1CON2, 1<<ALTS, tf);
+            }
 
 //ADC1CON3
 //=============================================================================
-    void            Adc::clk_src        (CLK e)
-//=============================================================================
-{
-    Reg::setbit(ADC1CON3, 1<<ADRC, e);
-}
+            auto Adc::
+clk_src     (CLK e) -> void
+            {
+            Reg::setbit(ADC1CON3, 1<<ADRC, e);
+            }
 
 //=============================================================================
-    void            Adc::samp_time      (uint8_t v)
-//=============================================================================
-{
-    v and_eq 31; v = v == 0 ? 1 : v; //0 not allowed (1-31)
-    Reg::clrbit(ADC1CON3, SAMC_MASK<<SAMC_SHIFT);
-    Reg::setbit(ADC1CON3, v<<SAMC_SHIFT);
-}
+            auto Adc::
+samp_time   (uint8_t v) -> void
+            {
+            v and_eq 31; v = v == 0 ? 1 : v; //0 not allowed (1-31)
+            Reg::clrbit(ADC1CON3, SAMC_MASK<<SAMC_SHIFT);
+            Reg::setbit(ADC1CON3, v<<SAMC_SHIFT);
+            }
 
 //default value is for 80MHz, 7 will meet 200ns Tad for any clock
 //=============================================================================
-    void            Adc::conv_time      (uint8_t v)
-//=============================================================================
-{
-    Reg::val(ADC1CON3, v);
-}
+            auto Adc::
+conv_time   (uint8_t v) -> void
+            {
+            Reg::val(ADC1CON3, v);
+            }
 
 //ADC1CHS
 //=============================================================================
-    void            Adc::ch_sel         (CH0S pos, CH0N neg, SAMPLE sam)
-//=============================================================================
-{
-    Reg::val(ADC1CHS, (pos << (sam ? CH0SB_SHIFT : CH0SA_SHIFT)) bitor (neg << sam ? CH0NB : CH0NA));
-}
+            auto Adc::
+ch_sel      (CH0S pos, CH0N neg, SAMPLE sam) -> void
+            {
+            Reg::val(ADC1CHS, (pos << (sam ? CH0SB_SHIFT : CH0SA_SHIFT)) bitor 
+                                        (neg << sam ? CH0NB : CH0NA));
+            }
 
 //ADC1SS
 //single channel on/off
 //=============================================================================
-    void            Adc::ch_scan        (CH0S e, bool tf)
-//=============================================================================
-{
-    Reg::setbit(ADC1CSS, 1<<e, tf);
-}
+            auto Adc::
+ch_scan     (CH0S e, bool tf) -> void
+            {
+            Reg::setbit(ADC1CSS, 1<<e, tf);
+            }
 
 //multiple channel on, from an array of CH0SA (terminated by END)
 //=============================================================================
-    void            Adc::ch_scan        (CH0S* e)
-//=============================================================================
-{
-    Reg::val(ADC1CSS, 0); //clr all
-    for(; *e not_eq END; e++) Reg::setbit(ADC1CSS, 1<<*e); //set list
-}
+            auto Adc::
+ch_scan     (CH0S* e) -> void
+            {
+            Reg::val(ADC1CSS, 0); //clr all
+            for(; *e not_eq END; e++) Reg::setbit(ADC1CSS, 1<<*e); //set list
+            }
 
 //just set all bits as needed manually in one shot
 //=============================================================================
-    void            Adc::ch_scan        (uint32_t v)
-//=============================================================================
-{
-    Reg::val(ADC1CSS, v);
-}
+            auto Adc::
+ch_scan     (uint32_t v) -> void
+            {
+            Reg::val(ADC1CSS, v);
+            }

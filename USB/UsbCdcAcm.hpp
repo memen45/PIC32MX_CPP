@@ -1,15 +1,20 @@
 #pragma once
 
-#include <cstdint>
-#include "UsbDescriptors.hpp"
 #include "UsbEP.hpp"
-#include "UsbDevice.hpp"
-
+#include <cstdint>
 
 struct UsbCdcAcm {
 
-    static bool init(bool);
+            static auto
+init        (bool) -> bool;
 
-    static bool service(uint32_t, uint8_t);
+            static auto
+send        (uint8_t*, uint16_t, UsbEP::notify_t = 0) -> bool;
+
+            static auto
+recv        (uint8_t*, uint16_t, UsbEP::notify_t = 0) -> bool;
+
+            static auto
+is_active   () -> bool;
 
 };

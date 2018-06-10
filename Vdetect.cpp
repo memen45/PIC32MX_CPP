@@ -2,62 +2,61 @@
 #include "Reg.hpp"
 
 enum {
-    HLVDCON = 0xBF802920,
-        ON = 15,
-        SIDL = 13,
-        VDIR = 11,
-        BGVST = 10,
-        IRVST = 9,
-        HLEVT = 8
+HLVDCON = 0xBF802920,
+    ON = 15,
+    SIDL = 13,
+    VDIR = 11,
+    BGVST = 10,
+    IRVST = 9,
+    HLEVT = 8
 };
 
 //=============================================================================
-    void        Vdetect::on             (bool tf)
-//=============================================================================
-{
-    Reg::setbit(HLVDCON, 1<<ON, tf);
-}
+            auto Vdetect::
+on          (bool tf) -> void
+            {
+            Reg::setbit(HLVDCON, 1<<ON, tf);
+            }
 
 //=============================================================================
-    void        Vdetect::stop_idle      (bool tf)
-//=============================================================================
-{
-    Reg::setbit(HLVDCON, 1<<SIDL, tf);
-}
+            auto Vdetect::
+stop_idle   (bool tf) -> void
+            {
+            Reg::setbit(HLVDCON, 1<<SIDL, tf);
+            }
 
 //=============================================================================
-    void        Vdetect::trip_above     (bool tf)
-//=============================================================================
-{
-    Reg::setbit(HLVDCON, 1<<VDIR, tf);
-}
+            auto Vdetect::
+trip_above  (bool tf) -> void
+            {
+            Reg::setbit(HLVDCON, 1<<VDIR, tf);
+            }
 
 //=============================================================================
-    bool        Vdetect::bgap_stable    ()
-//=============================================================================
-{
-    return Reg::anybit(HLVDCON, 1<<BGVST);
-}
+            auto Vdetect::
+bgap_stable () -> bool
+            {
+            return Reg::anybit(HLVDCON, 1<<BGVST);
+            }
 
 //=============================================================================
-    bool        Vdetect::iref_stable    ()
-//=============================================================================
-{
-    return Reg::anybit(HLVDCON, 1<<IRVST);
-}
+            auto Vdetect::
+iref_stable () -> bool
+            {
+            return Reg::anybit(HLVDCON, 1<<IRVST);
+            }
 
 //=============================================================================
-    bool        Vdetect::tripped        ()
-//=============================================================================
-{
-    return Reg::anybit(HLVDCON, 1<<HLEVT);
-}
+            auto Vdetect::
+tripped     () -> bool
+            {
+            return Reg::anybit(HLVDCON, 1<<HLEVT);
+            }
 
 //=============================================================================
-    void        Vdetect::limit          (HLVDL e)
-//=============================================================================
-{
-    Reg::clrbit(HLVDCON, VEXT);
-    Reg::setbit(HLVDCON, e);
-}
-
+            auto Vdetect::
+limit       (HLVDL e) -> void
+            {
+            Reg::clrbit(HLVDCON, VEXT);
+            Reg::setbit(HLVDCON, e);
+            }
