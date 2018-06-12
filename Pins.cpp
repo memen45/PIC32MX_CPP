@@ -147,9 +147,9 @@ ison        () -> bool
 
 //=============================================================================
             auto Pins::
-    icn_flagclr () -> void
+icn_flagclr () -> void
             {
-    Reg::clrbit(m_pt + CNF, m_pn);
+            Reg::clrbit(m_pt + CNF, m_pn);
             }
 
 //=============================================================================
@@ -226,7 +226,7 @@ icn_risefall () -> void
             {
             Reg::setbit(m_pt + CNCON, 1<<CNSTYLE);
             Reg::setbit(m_pt + CNEN0, m_pn);
-            Reg::clrbit(m_pt + CNEN1, m_pn);
+            Reg::setbit(m_pt + CNEN1, m_pn);
             }
 
 //=============================================================================
