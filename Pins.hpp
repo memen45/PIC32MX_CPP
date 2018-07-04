@@ -51,7 +51,7 @@ RPN         : uint16_t {
             C2 = 34|19<<RPSHIFT|29<<ANSHIFT, C3 = 35|29<<ANSHIFT,
             C4 = 36|29<<ANSHIFT, C5 = 37|15<<ANSHIFT,
             C6 = 38|23<<RPSHIFT|29<<ANSHIFT, C7 = 39|20<<RPSHIFT|29<<ANSHIFT,
-            C8 = 40|18<<RPSHIFT|14<<ANSHIFT, C9 = 41|29<<ANSHIFT,
+            C8 = 40|14<<ANSHIFT, C9 = 41|18<<RPSHIFT|29<<ANSHIFT,
             C10 = 42|29<<ANSHIFT, C11 = 43|29<<ANSHIFT,
             C12 = 44|29<<ANSHIFT, C13 = 45|29<<ANSHIFT,
             C14 = 46|29<<ANSHIFT, C15 = 47|29<<ANSHIFT,
@@ -65,7 +65,7 @@ RPN         : uint16_t {
             RP5 = A4, RP6 = B0, RP7 = B1, RP8 = B2,
             RP9 = B3, RP10 = B4, RP11 = B5, RP12 = B7,
             RP13 = B8, RP14 = B9, RP15 = B13, RP16 = B14,
-            RP17 = B15, RP18 = C8, RP19 = C2, RP20 = C7,
+            RP17 = B15, RP18 = C9, RP19 = C2, RP20 = C7,
             RP21 = A7, RP22 = A10, RP23 = C6, RP24 = A9,
 
             //ANn 0-19
