@@ -2,7 +2,7 @@
 #include "Reg.hpp"
 
 enum {
-T1CON = 0xBF808040, TMR23_SPACING = 0x10,  //spacing in words
+T2CON = 0xBF808040, TMR23_SPACING = 0x10,  //spacing in words
 ON = 15,
 SIDL = 13,
 TGATE = 7,
@@ -16,9 +16,9 @@ TCS = 1
 //=============================================================================
             Timer23::
 Timer23     (TMR23 e)
-            : m_txcon( (vu32ptr)T1CON + (e * TMR23_SPACING) ),
-            m_tmrx( *((vu32ptr)T1CON + (e * TMR23_SPACING) + 4) ),
-            m_prx( *((vu32ptr)T1CON + (e * TMR23_SPACING) + 8) )
+            : m_txcon( (vu32ptr)T2CON + (e * TMR23_SPACING) ),
+              m_tmrx( *((vu32ptr)T2CON + (e * TMR23_SPACING) + 4) ),
+              m_prx( *((vu32ptr)T2CON + (e * TMR23_SPACING) + 8) )
             {
             }
 
@@ -27,20 +27,13 @@ Timer23     (TMR23 e)
 count       (uint32_t n) -> void
             {
             m_tmrx = n;
-            if(Reg::anybit(m_txcon, 1<<T32)){
-                *((vu32ptr)m_tmrx + TMR23_SPACING) = n>>16;
-            }
             }
 
 //=============================================================================
             auto Timer23::
 count       () -> uint32_t
             {
-            uint32_t ret = 0;
-            if(Reg::anybit(m_txcon, 1<<T32)){
-                ret = *((vu32ptr)m_tmrx + TMR23_SPACING)<<16;
-            }
-            return ret | m_tmrx;
+            return m_tmrx;
             }
 
 //=============================================================================
@@ -48,20 +41,13 @@ count       () -> uint32_t
 period      (uint32_t n) -> void
             {
             m_prx = n;
-            if(Reg::anybit(m_txcon, 1<<T32)){
-                *((vu32ptr)m_prx + TMR23_SPACING) = n>>16;
-            }
             }
 
 //=============================================================================
             auto Timer23::
 period      () -> uint32_t
             {
-            uint32_t ret = 0;
-            if(Reg::anybit(m_txcon, 1<<T32)){
-                ret = *((vu32ptr)m_prx + TMR23_SPACING)<<16;
-            }
-            return ret | m_prx;
+            return m_prx;
             }
 
 //=============================================================================
@@ -97,11 +83,11 @@ prescale    (PRESCALE e) -> void
             auto Timer23::
 mode32      (bool tf) -> void
             {
-            Reg::setbit(m_txcon, 1<<T32, tf);
-            //if turned on, bit will 'stick'
-            //so must be T2, make sure T3 SIDL is off
-            if(tf and Reg::anybit(m_txcon, 1<<T32)){
-            Reg::clrbit(m_txcon + TMR23_SPACING, SIDL);
+            //T2 controls T32, so only do if this is T2
+            if(m_txcon == (vu32ptr)T2CON){
+                Reg::setbit(m_txcon, 1<<T32, tf);
+                //set T3 SIDL off
+                Reg::clrbit(m_txcon + TMR23_SPACING, SIDL);
             }
             }
 
