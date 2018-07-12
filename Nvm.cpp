@@ -33,6 +33,7 @@ NVMBWP = 0xBF8029A0, //locked
     BWP0 = 8
 };
 
+
 //-----------------------------------------------------------------private-----
             static auto
 unlock      () -> uint8_t
@@ -75,8 +76,9 @@ do_op       (uint8_t v) -> void
             static auto
 address     (uint32_t v) -> void
             {
-            //all addr to physical (and 0 based to kseg based)
-            v or_eq Nvm::BASEMEM;
+            //0 based values to kseg0
+            v or_eq Nvm::BASEFLASH;
+            //kseg0 values to physical
             Reg::val(NVMADDR, Reg::k2phys(v));
             }
 
@@ -87,6 +89,14 @@ error       () -> uint8_t
             uint8_t err = (Reg::val16(NVMCON)>>12) bitand 3;
             if(err) do_op(NOP);
             return err;
+            }
+
+//=============================================================================
+            auto
+mem_size    () -> uint32_t
+            {
+            //32K << 1,2,3 = 64k,128k,256k
+            return 0x8000 << ((Sys::devid() >> 15) & 3);
             }
 
 //=============================================================================

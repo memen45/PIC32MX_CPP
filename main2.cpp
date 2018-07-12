@@ -149,10 +149,11 @@ int main(){
     Nvm nvm;
     uint8_t onerow[Nvm::ROWSIZE];
     for(uint16_t i = 0; i<Nvm::ROWSIZE; i++) onerow[i] = i;
-    nvm.page_erase(Nvm::MAXROW256*Nvm::PAGESIZE);
-    nvm.write_row((uint32_t*)onerow, Nvm::MAXROW256*Nvm::ROWSIZE);
+    uint32_t last_page = (nvm.mem_size() - Nvm::PAGESIZE) | Nvm::BASEFLASH;
+    nvm.page_erase(last_page);
+    nvm.write_row((uint32_t*)onerow, last_page);
 
-    uint32_t ip = (Nvm::MAXROW256*Nvm::ROWSIZE)|Nvm::BASEMEM;
+    uint32_t ip = last_page;
     for(uint16_t i = 0; i<Nvm::ROWSIZE; i++){
         volatile uint8_t x = Reg::val8(ip++);
         x = x;
