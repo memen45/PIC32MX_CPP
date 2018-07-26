@@ -13,29 +13,20 @@
 
     no check is made for address alignment- if incorrect the address will be
     masked by the register used and an nvm op will take place on the register
-   'forced' alignment
+    (hardware 'forced' alignment, but may not be what is wanted if user error)
 */
 
 struct Nvm {
 
             enum
 MEM         : uint32_t {
-            BASEMEM = 0x9D000000,
-            PAGESIZE = 512*4, //512words, 2048bytes
-            ROWSIZE = 64*4, //64words, 256bytes
-
-            MAXMEM64 = PAGESIZE*32-1,
-            MAXPAGE64 = 31, //0-31
-            MAXROW64 = 255, //0-255
-
-            MAXMEM128 = PAGESIZE*64-1,
-            MAXPAGE128 = 63, //0-63
-            MAXROW128 = 511, //0-511
-
-            MAXMEM256 = PAGESIZE*128-1,
-            MAXPAGE256 = 127, //0-127
-            MAXROW256 = 1023, //0-1023
+            BASEFLASH = 0x9D000000, //kseg0
+            PAGESIZE = 512*4,       //512words, 2048bytes
+            ROWSIZE = 64*4,         //64words, 256bytes
             };
+
+            static auto
+mem_size    () -> uint32_t;
 
             static auto
 write_2word (uint32_t, uint32_t, uint32_t) -> uint8_t;
@@ -56,3 +47,27 @@ BOOTP       : uint16_t { PAGE0 = 1<<8, PAGE1 = 1<<9, PAGE2 = 1<<10 };
 boot_protect (BOOTP, bool) -> void; //true=lock until reset
 
 };
+
+/*
+pic32mm0256gpm064 series-
+
+mem pins devid
+64  28 0x07708053   000 01 000
+128 28      10      000 10 000
+256 28      18      000 11 000
+
+64  36 0x0770A053   000 01 010
+128 36      12      000 10 010
+256 36      1A      000 11 010
+
+64  48 0x0772C053   001 01 100
+128 48      34      001 10 100
+256 48      3C      001 11 100
+
+64  64 0x0770E053   000 01 110
+128 28      16      000 10 110
+256 28      1E      000 11 110
+                        ||
+devid bit<16:15>-------//  -> 1=64K, 2=128K, 3=256K
+
+*/

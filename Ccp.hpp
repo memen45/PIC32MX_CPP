@@ -175,7 +175,7 @@ GATEAUTOSRC : uint8_t {
 gate_autosrc (GATEAUTOSRC) -> void;
 
 
-        //==== CCPxCON3 ====
+            //==== CCPxCON3 ====
 
             auto
 out_trigwait (bool) -> void;

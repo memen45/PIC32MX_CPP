@@ -27,20 +27,13 @@ Timer       (TMRX e)
 count       (uint32_t n) -> void
             {
             m_tmrx = n;
-            if(Reg::anybit(m_txcon, 1<<T32)){
-                *((vu32ptr)m_tmrx + TMRX_SPACING) = n>>16;
-            }
             }
 
 //=============================================================================
             auto Timer::
 count       () -> uint32_t
             {
-            uint32_t ret = 0;
-            if(Reg::anybit(m_txcon, 1<<T32)){
-                ret = *((vu32ptr)m_tmrx + TMRX_SPACING)<<16;
-            }
-            return ret | m_tmrx;
+            return m_tmrx;
             }
 
 //=============================================================================
@@ -48,20 +41,13 @@ count       () -> uint32_t
 period      (uint32_t n) -> void
             {
             m_prx = n;
-            if(Reg::anybit(m_txcon, 1<<T32)){
-                *((vu32ptr)m_prx + TMRX_SPACING) = n>>16;
-            }
             }
 
 //=============================================================================
             auto Timer::
 period      () -> uint32_t
             {
-            uint32_t ret = 0;
-            if(Reg::anybit(m_txcon, 1<<T32)){
-                ret = *((vu32ptr)m_prx + TMRX_SPACING)<<16;
-            }
-            return ret | m_prx;
+            return m_prx;
             }
 
 //=============================================================================
@@ -104,11 +90,11 @@ prescale    () -> PRESCALE
             auto Timer::
 mode32      (bool tf) -> void
             {
-            Reg::setbit(m_txcon, 1<<T32, tf);
-            //if turned on, bit will 'stick'
-            //so must be T2, make sure T3 SIDL is off
-            if(tf and Reg::anybit(m_txcon, 1<<T32)){
-            Reg::clrbit(m_txcon + TMRX_SPACING, SIDL);
+            //T2 controls T32, so only do if this is T2 or T4
+            if (m_txcon == (vu32ptr)T2CON || m_txcon == (vu32ptr)T2CON + (2 * TMRX_SPACING)){
+                Reg::setbit(m_txcon, 1<<T32, tf);
+                //set T3 or T5 SIDL off
+                Reg::clrbit(m_txcon + TMRX_SPACING, SIDL);
             }
             }
 
