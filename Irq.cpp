@@ -122,10 +122,7 @@ init        (IRQ_NR e, uint8_t pri, uint8_t sub, bool tf) -> void
             {
             uint8_t vn = m_lookup_vn[e];
             uint32_t priority_shift = 8 * (vn % 4);
-            pri and_eq 7; 
-            sub and_eq 3; 
-            pri <<= 2; 
-            pri or_eq sub;
+            pri and_eq 7; sub and_eq 3; pri <<= 2; pri or_eq sub;
             Reg::clrbit(IPC_BASE + ((vn / 4) * 16), (31<<priority_shift));
             Reg::setbit(IPC_BASE + ((vn / 4) * 16), (pri<<priority_shift));
             flag_clr(e);
