@@ -95,9 +95,9 @@ m_lookup_vn[] = {
 
             /* SPI1_ERR = */ 23, /* SPI1_RX = */ 23, /* SPI1_TX = */ 23,
 
-            /* UART1_ERR = */ 24, /* SPI3_ERR = */ 24, /* I2C3_BUS = */ 24,
-            /* UART1_RX = */ 24, /* SPI3_RX = */ 24, /* I2C3_SLAVE = */ 24,
-            /* UART1_TX = */ 24, /* SPI3_TX = */ 24, /* I2C3_MASTER = */ 24,
+            /* UART1_ERR = */ 24, /* SPI3_ERR = 24, I2C3_BUS =  24, */
+            /* UART1_RX = */ 24, /* SPI3_RX = 24, I2C3_SLAVE = 24, */
+            /* UART1_TX = */ 24, /* SPI3_TX = 24, I2C3_MASTER = 24, */
 
             /* I2C1_BUS = */ 25, /* I2C1_SLAVE = */ 25, /* I2C1_MASTER = */ 25,
             /* CHANGE_NOTICE = */ 26,
@@ -105,13 +105,13 @@ m_lookup_vn[] = {
             /* PMP = */ 28,
             /* CMP_1 = */ 29, /* CMP_2 = */ 30,
 
-            /* UART3_ERR = */ 31, /* SPI2_ERR = */ 31, /* I2C4_BUS = */ 31,
-            /* UART3_RX = */ 31, /* SPI2_RX = */ 31, /* I2C4_SLAVE = */ 31,
-            /* UART3_TX = */ 31, /* SPI2_TX = */ 31, /* I2C4_MASTER = */ 31,
+            /* UART3_ERR = */ 31, /* SPI2_ERR = 31, I2C4_BUS = 31, */
+            /* UART3_RX = */ 31, /* SPI2_RX = 31, I2C4_SLAVE = 31, */
+            /* UART3_TX = */ 31, /* SPI2_TX = 31, I2C4_MASTER = 31, */
 
-            /* UART2_ERR = */ 32, /* SPI4_ERR = */ 32, /* I2C5_BUS = */ 32,
-            /* UART2_RX = */ 32,/*  SPI4_RX = */ 32, /* I2C5_SLAVE = */ 32,
-            /* UART2_TX = */ 32, /* SPI4_TX = */ 32, /* I2C5_MASTER = */ 32,
+            /* UART2_ERR = */ 32, /* SPI4_ERR = 32, I2C5_BUS = 32, */
+            /* UART2_RX = */ 32, /* SPI4_RX = 32, I2C5_SLAVE = 32, */
+            /* UART2_TX = */ 32, /* SPI4_TX = 32, I2C5_MASTER = 32, */
 
             /* I2C2_BUS = */ 33, /* I2C2_SLAVE = */ 33, /* I2C2_MASTER = */ 33,
 
