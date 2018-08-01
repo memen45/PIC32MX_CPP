@@ -27,7 +27,7 @@ The following modules are present in the current repository:
 | Sys     | yes (added support for prefetch cache and wait states) | yes |
 | Timer1  | yes | yes |
 | Timer   | yes | yes |
-| Uart    | yes | no |
+| Uart    | yes | yes |
 | Vdetect | not (yet) | no |
 | Wdt     | not (yet) | no |
 
