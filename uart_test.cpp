@@ -11,7 +11,7 @@ int main()
     info.on(true);
 
     for(;;){ 
-        info.putchar("Hello World? ");
+        info.puts("Hello World? ");
     }
 }
 
