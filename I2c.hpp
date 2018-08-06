@@ -7,33 +7,13 @@
 struct I2c  {
 
             enum
-I2CX        { I2C1, I2C2, I2C3 };
+I2CX        { I2C3, I2C4, I2C5, I2C1, I2C2 };
 
             //instantiate I2c with i2c number
 I2c         (I2CX);
 
 
             //==== I2C1CON ====
-
-            //irq enable on stop
-            auto
-irq_stop    (bool) -> void;
-
-            //irq enable on start
-            auto
-irq_start   (bool) -> void;
-
-            auto
-overwrite   (bool) -> void;
-
-            enum
-HOLDTIM     : bool { NS100, NS300 };
-
-            auto
-hold_time   (HOLDTIM) -> void;
-
-            auto
-irq_collision (bool) -> void;
 
             auto
 on          (bool) -> void;

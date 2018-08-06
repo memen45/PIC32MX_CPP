@@ -4,12 +4,7 @@
 
 enum :uint32_t {
 I2CX_SPACING = 0x40, //spacing in words
-I2C1CON = 0xBF801500,
-    PCIE = 22,
-    SCIE = 21,
-    BOEN = 20,
-    SDAHT = 19,
-    SBCDE = 18,
+I2CXCON_BASE = 0xBF805000,      // address of I2C3, but others follow in memory
     ON = 15,
     SIDL = 13,
     SCLREL = 12,
@@ -36,47 +31,12 @@ I2CXRCV = 24
 //=============================================================================
             I2c::
 I2c         (I2CX e)
-            : m_i2cx_con((volatile uint32_t*)I2C1CON + (e * I2CX_SPACING)),
+            : m_i2cx_con((volatile uint32_t*)I2CXCON_BASE + (e * I2CX_SPACING)),
                 m_speed(KHZ100)
             {
             }
 
 //I2C1CON
-//=============================================================================
-            auto I2c::
-irq_stop    (bool tf) -> void
-            {
-            Reg::setbit(m_i2cx_con, 1<<PCIE, tf);
-            }
-
-//=============================================================================
-            auto I2c::
-irq_start   (bool tf) -> void
-            {
-            Reg::setbit(m_i2cx_con, 1<<SCIE, tf);
-            }
-
-//=============================================================================
-            auto I2c::
-overwrite   (bool tf) -> void
-            {
-            Reg::setbit(m_i2cx_con, 1<<BOEN, tf);
-            }
-
-//=============================================================================
-            auto I2c::
-hold_time   (HOLDTIM e) -> void
-            {
-            Reg::setbit(m_i2cx_con, 1<<SDAHT, e);
-            }
-
-//=============================================================================
-            auto I2c::
-irq_collision (bool tf) -> void
-            {
-            Reg::setbit(m_i2cx_con, 1<<SBCDE, tf);
-            }
-
 //=============================================================================
             auto I2c::
 on          (bool tf) -> void
@@ -230,9 +190,8 @@ addr_mask   (uint16_t v) -> void
 speed       (I2CSPEED e) -> void
             {
             uint32_t sck = e * 2;
-            uint32_t clk = Osc::sysclk()<<6;
-            clk = clk / sck - clk / 9615384; //1/9615384=104ns=Tpgd
-            brg((clk>>6) - 2);
+            uint32_t clk = Osc::pbclk();
+            brg((clk / sck) - 2);
             m_speed = e;
             }
 
