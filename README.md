@@ -12,10 +12,10 @@ The following modules are present in the current repository:
 | Cvref   | not (yet) | no |
 | Delay   | not (yet) | no |
 | Dma     | not (yet) | no |
-| I2c     | not (yet) | no |
+| I2c     | yes | not yet |
 | Irq     | yes | yes |
 | Nvm     | not (yet) | no |
-| Oc      | yes | no |
+| Oc      | yes | not yet |
 | Osc     | partial (no ext clock sources) | partially |
 | Pins    | yes | partially (an pins not) |
 | Pmd     | not (yet) | no |
