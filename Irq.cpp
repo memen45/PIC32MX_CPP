@@ -107,6 +107,12 @@ on          (IRQ_NR e, bool tf) -> void
             {
             Reg::setbit(IEC_BASE + ((e / 32) * 16), 1u<<(e % 32), tf);
             }
+//=============================================================================
+            auto Irq::
+on          (IRQ_NR e) -> bool
+            {
+            return Reg::anybit(IEC_BASE + ((e / 32) * 16), 1u<<(e % 32));
+            }
 
 //vector 17 example												Vector number: 28
 //priority_shift = 8*(17%4) =  8*1= 8							8*(28%4) = 8*2 = 0

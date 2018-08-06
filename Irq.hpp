@@ -141,6 +141,9 @@ flag        (IRQ_NR) -> bool;
 on          (IRQ_NR, bool) -> void;
 
             static auto
+on          (IRQ_NR) -> bool;
+
+            static auto
 init        (IRQ_NR, uint8_t, uint8_t, bool) -> void;
 
             //to create a list (array) of irq's to init/enable
