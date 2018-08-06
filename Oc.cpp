@@ -1,5 +1,7 @@
 #include "Oc.hpp"
 
+#include "Reg.hpp"
+
 enum {
 	OCX_SPACING = 0x80,			//spacing in words
 	OCXCON_BASE = 0xBF803000,
@@ -11,7 +13,7 @@ enum {
 		OCM_SHIFT = 0, OCM_MASK = 7,
 	OCXR = 4,					//offset from OCXCON in words
 	OCXRS = 8					//offset from OCXCON in words
-}
+};
 
 //Spi
 

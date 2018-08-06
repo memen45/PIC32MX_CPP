@@ -1,7 +1,9 @@
 
+#include <cstdint>
+
 struct Oc {
 	enum OCX { OC1, OC2, OC3, OC4, OC5 };
-	
+                    Oc              (OCX);
 	//OCxcon
     void            on              (bool);             //oc on/off
 	void			sidl			(bool);				//stop in idle mode
@@ -16,11 +18,11 @@ struct Oc {
 	
 	enum MODE : uint8_t { 
 		DISABLE,
-		LOW_HIGH,
-		HIGH_LOW,
+		HIGH,
+		LOW,
 		TOGGLE,
-		LOW_SINGLE_PULSE,
-		LOW_CONTIN_PULSE,
+		SINGLE_PULSE,
+		CONTIN_PULSE,
 		PWM_NO_FAULT,
 		PWM_FAULT
 	};
@@ -33,4 +35,4 @@ struct Oc {
 	void			r_sec			(uint32_t);			//set secondary compare register
 	
 	volatile uint32_t* m_ocx_con;
-}
+};
