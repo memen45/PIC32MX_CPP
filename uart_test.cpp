@@ -26,7 +26,7 @@ int main()
 
 #if 0
 
-//here is a C version, doing minimal to get equivelent function as C++ code above
+//here is a C version, doing minimal to get equivalent function as C++ code above
 
 //xc32 v2.10, optimizations -Os , each function in section, remove unused sections
 //data used = 0 bytes
