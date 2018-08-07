@@ -56,6 +56,7 @@ void main(void) {
     SYSKEY = 0; //syskey lock
 
     //uart2 tx->pin C6 (RP23), 230400 baud, 8N1
+    //C6 happens to not have analog function (no ansel), so no need to setup as pps overrides tris
     RPOR5bits.RP23R = 4; //RP23 -> U2TX
     U2MODEbits.BRGH = 1; //hispeed
     U2BRGbits.BRG = 2604; //230400 w/24MHz
