@@ -12,7 +12,7 @@ int main()
     osc.pll_set ( osc.MUL12, osc.DIV4 );
     //tx only
     Uart info { Uart::UART2TX, Pins::C6, 230400 };
-    //8N1 (is default, so really not needed to be set)
+    //8N1 (is default, so really no need to set)
     info.mode ( info.MODE8N1 );
     info.on ( true );
 
