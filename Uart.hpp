@@ -31,8 +31,7 @@ UARTX       {
             };
 
 Uart        (UARTX);
-            //tx/rx only, bit2=1=tx bit2=0=rx
-Uart        (UARTX, Pins::RPN, uint32_t = 0);
+Uart        (UARTX, Pins::RPN, uint32_t = 0); //tx/rx only, bit2=1=tx bit2=0=rx
 Uart        (UARTX, Pins::RPN, Pins::RPN, uint32_t = 0);
 
 

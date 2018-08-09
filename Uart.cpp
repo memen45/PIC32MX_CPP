@@ -44,7 +44,7 @@ UXBRG = 16
 
 //Uart
 
-//setup pins manually
+//setup pins manually (and enable tx/rx as needed)
 //=============================================================================
             Uart::
 Uart        (UARTX e)
@@ -58,7 +58,7 @@ Uart        (UARTX e)
             {
             }
 
-//specify pins
+//specify tx/rx pins
 //=============================================================================
             Uart::
 Uart        (UARTX e, Pins::RPN tx, Pins::RPN rx, uint32_t baud)
@@ -67,12 +67,12 @@ Uart        (UARTX e, Pins::RPN tx, Pins::RPN rx, uint32_t baud)
             {
             //UART1 is fixed pins, no pps
             if(e == Uart::UART2){
-                Pins r(rx); r.pps_in(Pins::U2RX);
-                Pins t(tx); t.pps_out(Pins::U2TX);
+                Pins r(rx, Pins::INPU); r.pps_in(Pins::U2RX);
+                Pins t(tx, Pins::OUT); t.pps_out(Pins::U2TX);
             }
             else if(e == Uart::UART3){
-                Pins r(rx); r.pps_in(Pins::U3RX);
-                Pins t(tx); t.pps_out(Pins::U3TX);
+                Pins r(rx, Pins::INPU); r.pps_in(Pins::U3RX);
+                Pins t(tx, Pins::OUT); t.pps_out(Pins::U3TX);
             }
             m_uartx_baud = baud;
             baud_set();
@@ -88,21 +88,21 @@ Uart        (UARTX e, Pins::RPN trx, uint32_t baud)
             Uart(e)
             {
             //UART1 is fixed pins, no pps
-            if(e == Uart::UART2){
+            if((e bitand 3) == Uart::UART2){
                 if(e bitand (1<<2)){
-                    Pins t(trx); t.pps_out(Pins::U2TX);
+                    Pins t(trx, Pins::OUT); t.pps_out(Pins::U2TX);
                     tx_on(true);
                 } else {
-                    Pins r(trx); r.pps_in(Pins::U2RX);
+                    Pins r(trx, Pins::INPU); r.pps_in(Pins::U2RX);
                     rx_on(true);
                 }
             }
-            else if(e == Uart::UART3){
+            else if((e bitand 3) == Uart::UART3){
                 if(e bitand (1<<2)){
-                    Pins t(trx); t.pps_out(Pins::U3TX);
+                    Pins t(trx, Pins::OUT); t.pps_out(Pins::U3TX);
                     tx_on(true);
                 } else {
-                    Pins r(trx); r.pps_in(Pins::U3RX);
+                    Pins r(trx, Pins::INPU); r.pps_in(Pins::U3RX);
                     rx_on(true);
                 }
             }
