@@ -93,6 +93,7 @@ adcval      () -> uint16_t
             {
             Adc adc;
             adc.mode_12bit(true);           //12bit mode
+            adc.format(adc.INT16);          //integer
             adc.trig_sel(adc.AUTO);         //adc starts conversion
             adc.samp_time(31);              //max sampling time- 31Tad
             adc.conv_time();                //if no arg,default is 4 (for 24MHz)
@@ -100,7 +101,7 @@ adcval      () -> uint16_t
             adc.on(true);
             adc.samp(true);
             while(not Adc::done());         //blocking
-            return Adc::read();             //buf[0]
+            return (uint16_t)Adc::read();   //buf[0]
             }
 
 //=============================================================================

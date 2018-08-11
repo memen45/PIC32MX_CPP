@@ -9,8 +9,9 @@ struct Adc {
             //==== ADC1BUFn ====
 
             //read adc buffer N, N = 0 - ADC1BUF_LAST (21), N default = 0
+            //returning register contents, caller has to determine format
             static auto
-read        (uint8_t = 0) -> uint16_t;
+read        (uint8_t = 0) -> uint32_t;
 
 
             //==== ADC1CON1 ====

@@ -41,10 +41,10 @@ ADC1CHIT = 0xBF8022D0
 //ADC1BUFn
 //=============================================================================
             auto Adc::
-read        (uint8_t n) -> uint16_t
+read        (uint8_t n) -> uint32_t
             {
             if(n > ADC1BUF_LAST) n = ADC1BUF_LAST;
-            return Reg::val16(ADC1BUF0 + (n * ADC1BUF_SPACING));
+            return Reg::val(ADC1BUF0 + (n * ADC1BUF_SPACING));
             }
 
 //ADC1CON1
