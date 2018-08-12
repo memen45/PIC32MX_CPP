@@ -93,119 +93,137 @@ struct Reg {
     //byte, half-word, or word, determined by size of V
 
     //set bitmask bit(s) in register to specified level 0/1
-    //set bitmask bit(s) in register to 1
-    //clear bitmask bit(s) in register to 0
     template <typename T, typename V> static void setbit(T, V, bool);
+    //set bitmask bit(s) in register to 1
     template <typename T, typename V> static void setbit(T, V);
+    //clear bitmask bit(s) in register to 0
     template <typename T, typename V> static void clrbit(T, V);
-
     //flip bitmask bit(s) in register
     template <typename T, typename V> static void flipbit (T, V);
-
-    //test if any bitmask bit(s) in the register are set/clear
+    //test if any bitmask bit(s) in the register are set
     template <typename T, typename V> static bool anybit(T, V);
+    //test if any bitmask bit(s) in the register are clear
     template <typename T, typename V> static bool anybit0(T, V);
-
-    //test if all bitmask bit(s) in the register are set/clear
+    //test if all bitmask bit(s) in the register are set
     template <typename T, typename V> static bool allbit(T, V);
+    //test if all bitmask bit(s) in the register are clear
     template <typename T, typename V> static bool allbit0(T, V);
 
-    //return val from register- val = 32bit, val16 = 16bit, val8 = 8bit
+    //return val from register- 32bit
     template <typename T> static uint32_t val(T);
+    //return val from register- 16bit
     template <typename T> static uint16_t val16(T);
+    //return val from register- 8bit
     template <typename T> static uint8_t  val8(T);
 
     //val(address, val)-> *(V*)address = (V)val
     template <typename T, typename V> static void val(T r, V v);
 
-    //physical to kseg0/1 addr, kseg to physical addr
-    template <typename T> static uint32_t   p2kseg1 (T);
-    template <typename T> static uint32_t   p2kseg0 (T);
-    template <typename T> static uint32_t   k2phys  (T);
+    //physical to kseg1 addr
+    template <typename T> static uint32_t p2kseg1 (T);
+    //physical to kseg0 addr
+    template <typename T> static uint32_t p2kseg0 (T);
+    //kseg to physical addr
+    template <typename T> static uint32_t k2phys  (T);
 
 };
 
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //  functions inline
 
-//setbit, specify 1/0
-template <typename T, typename V> void Reg::setbit(T r, V v, bool sc){
+//setbit, specify 1 or 0
+template <typename T, typename V>
+void Reg::setbit(T r, V v, bool sc){
     if(sc) setbit(r,v); else clrbit(r,v);
 }
 
 //setbit
-template <typename T, typename V> void Reg::setbit(T r, V v){
+template <typename T, typename V>
+void Reg::setbit(T r, V v){
     using vtype = typename getVsiz<V>::type;
     //((volatile vtype*)r)[Vsiz<sizeof(V)>::SET] = v;
     *((volatile vtype*)r+Vsiz<sizeof(V)>::SET) = v;
 }
 
 //clrbit
-template <typename T, typename V> void Reg::clrbit(T r, V v){
+template <typename T, typename V>
+void Reg::clrbit(T r, V v){
     using vtype = typename getVsiz<V>::type;
     *((volatile vtype*)r+Vsiz<sizeof(V)>::CLR) = v;
 }
 
 //flipbit
-template <typename T, typename V> void Reg::flipbit(T r, V v){
+template <typename T, typename V>
+void Reg::flipbit(T r, V v){
     using vtype = typename getVsiz<V>::type;
     *((volatile vtype*)r+Vsiz<sizeof(V)>::INV) = v;
 }
 
 //anybit
-template <typename T, typename V> bool Reg::anybit(T r, V v){
+template <typename T, typename V>
+bool Reg::anybit(T r, V v){
     using vtype = typename getVsiz<V>::type;
     return *(volatile vtype*)r bitand v;
 }
 
 //anybit0
-template <typename T, typename V> bool Reg::anybit0(T r, V v){
+template <typename T, typename V>
+bool Reg::anybit0(T r, V v){
     using vtype = typename getVsiz<V>::type;
     return (compl *(volatile vtype*)r) bitand v;
 }
 
 //allbit
-template <typename T, typename V> bool Reg::allbit(T r, V v){
+template <typename T, typename V>
+bool Reg::allbit(T r, V v){
     using vtype = typename getVsiz<V>::type;
     return *(volatile vtype*)r bitand v == v;
 }
 
 //allbit0
-template <typename T, typename V> bool Reg::allbit0(T r, V v){
+template <typename T, typename V>
+bool Reg::allbit0(T r, V v){
     using vtype = typename getVsiz<V>::type;
     return (compl *(volatile vtype*)r) bitand v == v;
 }
 
 
 //return uint32_t value of register r
-template <typename T> uint32_t Reg::val(T r){
-     return *(volatile uint32_t*)r;
- }
- //return uint16_t value of register r
- template <typename T> uint16_t Reg::val16(T r){
-     return *(volatile uint16_t*)r;
- }
- //return uint8_t value of register r
- template <typename T> uint8_t Reg::val8(T r){
-     return *(volatile uint8_t*)r;
- }
+template <typename T>
+uint32_t Reg::val(T r){
+    return *(volatile uint32_t*)r;
+}
+//return uint16_t value of register r
+template <typename T>
+uint16_t Reg::val16(T r){
+    return *(volatile uint16_t*)r;
+}
+//return uint8_t value of register r
+template <typename T>
+uint8_t Reg::val8(T r){
+    return *(volatile uint8_t*)r;
+}
 
 
 //set uint32_t/uint16_t/uint8_t value to register r
 //(determined by size of V type)
-template <typename T, typename V> void Reg::val(T r, V v){
+template <typename T, typename V>
+void Reg::val(T r, V v){
     using vtype = typename getVsiz<V>::type;
     *(volatile vtype*)r = v;
 }
 
 
 //physical to kseg0/1 addr, kseg to physical addr
-template <typename T> uint32_t Reg::p2kseg1(T r){
+template <typename T>
+uint32_t Reg::p2kseg1(T r){
     return (uint32_t)r bitor 0xA0000000; //A0=0b1010_0000
 }
-template <typename T> uint32_t Reg::p2kseg0(T r){
+template <typename T>
+uint32_t Reg::p2kseg0(T r){
     return (uint32_t)r bitor 0x80000000; //80=0b1000_0000
 }
-template <typename T> uint32_t Reg::k2phys(T r){
+template <typename T>
+uint32_t Reg::k2phys(T r){
     return (uint32_t)r bitand 0x1FFFFFFF; //1F=0b0001_1111
 }
