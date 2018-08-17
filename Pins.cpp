@@ -143,7 +143,7 @@ off         () -> void
             auto Pins::
 ison        () -> bool
             {
-            return m_lowison ? not pinval() : pinval();
+            return m_lowison xor pinval();
             }
 
 //=============================================================================

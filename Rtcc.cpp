@@ -71,10 +71,27 @@ Rtcc::datetime_t Rtcc::m_boot_time;
 
 //-----------------------------------------------------------------private-----
             static auto
+read_verify (uint32_t reg) -> uint32_t
+            {
+            uint32_t v;
+            while( (v = Reg::val(reg)) != Reg::val(reg) );
+            return v;
+            }
+
+//-----------------------------------------------------------------private-----
+            static auto
+write_verify (uint32_t reg, uint32_t val) -> void
+            {
+            do{ Reg::val(reg, val); } while( Reg::val(reg) != val );
+            }
+
+
+//-----------------------------------------------------------------private-----
+            static auto
 time        () -> time_t
             {
             time_t t;
-            t.w = Reg::val(RTCTIME);
+            t.w = read_verify(RTCTIME);
             return t;
             }
 
@@ -83,7 +100,7 @@ time        () -> time_t
 date        () -> date_t
             {
             date_t d;
-            d.w = Reg::val(RTCDATE);
+            d.w = read_verify(RTCDATE);
             return d;
             }
 
@@ -144,7 +161,7 @@ calc_weekday (date_t v) -> uint8_t
 time        (time_t v) -> void
             {
             unlock();
-            Reg::val(RTCTIME, v.w);
+            write_verify(RTCTIME, v.w);
             lock();
             }
 
@@ -155,7 +172,7 @@ date        (date_t v) -> void
             {
             v.weekday = calc_weekday(v); //get correct weekday
             unlock();
-            Reg::val(RTCDATE, v.w);
+            write_verify(RTCDATE, v.w);
             lock();
             }
 
@@ -163,7 +180,11 @@ date        (date_t v) -> void
             static auto
 alarm_time  (time_t v) -> void
             {
+            bool b = Rtcc::alarm();
+            Rtcc::alarm(false);
+            while(Rtcc::alarm_busy());
             Reg::val(ALMTIME, v.w);
+            Rtcc::alarm(b);
             }
 
 //-----------------------------------------------------------------private-----
@@ -171,7 +192,11 @@ alarm_time  (time_t v) -> void
 alarm_date  (date_t v) -> void
             {
             v.weekday = calc_weekday(v); //get correct weekday
-            Reg::val(ALMTIME, v.w);
+            bool b = Rtcc::alarm();
+            Rtcc::alarm(false);
+            while(Rtcc::alarm_busy());
+            Reg::val(ALMDATE, v.w);
+            Rtcc::alarm(b);
             }
 
 //-----------------------------------------------------------------private-----
@@ -218,6 +243,13 @@ dt_to_dt    (date_t d, time_t t) -> Rtcc::datetime_t
 alarm       (bool tf) -> void
             {
             Reg::setbit(RTCCON1, 1<<ALARMEN, tf);
+            }
+
+//=============================================================================
+            auto Rtcc::
+alarm       () -> bool
+            {
+            return Reg::anybit(RTCCON1, 1<<ALARMEN);
             }
 
 //=============================================================================

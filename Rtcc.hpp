@@ -27,6 +27,9 @@ datetime_t  = struct {
 alarm       (bool) -> void;
 
             static auto
+alarm       () -> bool;
+
+            static auto
 chime       (bool) -> void;
 
             enum
