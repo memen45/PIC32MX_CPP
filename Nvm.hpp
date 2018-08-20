@@ -7,12 +7,13 @@
 /*
     all done from flash, so check of wr for completion is not made
     (cpu is halted until done, so no need)
+    if need to keep cpu running, create your own function(s) in ram
 
     return values
     0= no error, 1= low voltage error, 2= write error
 
     no check is made for address alignment- if incorrect the address will be
-    masked by the register used and an nvm op will take place on the register
+    masked by the register/op used and an nvm op will take place
     (hardware 'forced' alignment, but may not be what is wanted if user error)
 */
 
