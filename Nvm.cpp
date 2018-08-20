@@ -132,21 +132,24 @@ page_erase  (uint32_t v) -> uint8_t
             return error();
             }
 
-//address | 0x1Dxxxxxx, true=lock until reset
+//address = physical 0x1Dxxxxxx (0x1D03FFFF and below for 256k)
+//address masked so can provide a flash address for page (and below) to protect
+//(can use one time only)
 //=============================================================================
             auto Nvm::
-write_protect (uint32_t v, bool tf) -> void
+write_protect (uint32_t v) -> void
             {
             unlock();
-            Reg::val(NVMPWP, (v bitand PWP_CLR) | not tf<<PWPULOCK);
+            Reg::val(NVMPWP, (v bitand PWP_CLR)); //PWPULOCK will be cleared
             lock();
             }
 
+//(can use one time only)
 //=============================================================================
             auto Nvm::
-boot_protect (BOOTP e, bool tf) -> void
+boot_protect (BOOTP e) -> void
             {
             unlock();
-            Reg::val(NVMBWP, e | not tf<<BWPULOCK);
+            Reg::val(NVMBWP, e); //BWPULOCK will be cleared
             lock();
             }

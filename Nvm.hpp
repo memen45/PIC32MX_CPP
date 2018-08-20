@@ -38,13 +38,13 @@ write_row   (uint32_t, uint32_t) -> uint8_t; //src,dst
 page_erase  (uint32_t) -> uint8_t;
 
             static auto
-write_protect (uint32_t, bool) -> void; //true=lock until reset
+write_protect (uint32_t) -> void;
 
             enum
 BOOTP       : uint16_t { PAGE0 = 1<<8, PAGE1 = 1<<9, PAGE2 = 1<<10 };
 
             static auto
-boot_protect (BOOTP, bool) -> void; //true=lock until reset
+boot_protect (BOOTP) -> void;
 
 };
 
