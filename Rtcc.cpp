@@ -301,14 +301,10 @@ on          (bool tf) -> void
 out_pin     (OUTSEL v) -> void
             {
             if(v != OFF){
-                unlock();
                 Reg::clrbit(RTCCON1, OUTSEL_MASK<<OUTSEL_SHIFT);
                 Reg::setbit(RTCCON1, v<<OUTSEL_SHIFT);
-                lock();
             }
-            unlock();
             Reg::setbit(RTCCON1, 1<<PINON, v != OFF);
-            lock();
             }
 
 //=============================================================================
