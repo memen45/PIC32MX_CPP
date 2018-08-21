@@ -123,6 +123,8 @@ alarm_date  () -> date_t
             }
 
 //RTCCON1.ON, RTCCON2, DATE/TIME registers need WRLOCK=0
+//functions cannot call other functions that use unlock/lock inside its
+//unlock/lock code (will end up putting the caller back in lock mode)
 //-----------------------------------------------------------------private-----
             static auto
 unlock      () -> void
@@ -281,9 +283,9 @@ on          (bool tf) -> void
             {
             //datasheet shows DIV=0 on reset,
             //rtcc frm shows DIV=0x3FFF- frm is correct
-            clk_div(CLK_DIV_32KHZ);             //(same as reset value)
-            clk_src(Osc::sosc() ? SOSC : LPRC); //use sosc if on
-            clk_pre(PRE1);                      //(same as reset value)
+            //reset div/pre values assume sosc, so no need to set
+            //if using LPRC, just use Rtcc::clk_src(Rtcc::LPRC) first
+            //if using PWRLPIN/FCY, will also habe to use clk_div/clk_pre
             unlock();
             Reg::setbit(RTCCON1, 1<<ON, tf);
             lock();
