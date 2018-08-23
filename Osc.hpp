@@ -176,7 +176,7 @@ pbclk      () -> uint32_t;
             //store current refo frequency
             static const uint32_t   m_frcosc_freq = 8000000;
             //manually set here if want exact ext freq
-            static const uint32_t   m_extosc_freq = 0;
+            static const uint32_t   m_extosc_freq = 8000000;
             static const uint8_t    m_mul_lookup[8];
             static const uint8_t    m_idiv_lookup[8];
 };

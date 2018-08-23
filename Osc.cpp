@@ -13,7 +13,7 @@ enum {
 		PLLODIV_SHIFT = 27, PLLODIV_MASK = 7,
         FRCDIV_SHIFT = 24, FRCDIV_MASK = 7,
         PBDIV_SHIFT = 19, PBDIV_MASK = 3,
-		PLLMUL_MASK = 7,
+		PLLMUL_SHIFT = 16, PLLMUL_MASK = 7,
         COSC_SHIFT = 12, COSC_MASK = 7,
         NOSC_SHIFT = 8, NOSC_MASK = 7,
         CLKLOCK = 7,
@@ -188,8 +188,12 @@ pll_set     (PLLMUL m, DIVS d, CNOSC frc) -> void
             //switch to frc (hardware does nothing if already frc)
             clk_src(FRCDIV);
             //set new pll vals
-            Reg::val(OSCCON + 3, d<<3);
-            Reg::val(OSCCON + 2, m);
+            //Reg::val(OSCCON + 3, d<<3); <-- WRITE TO ODD ADDRESS: REMOVE
+            Reg::clrbit(OSCCON, PLLODIV_MASK << PLLODIV_SHIFT);
+            Reg::setbit(OSCCON, d << PLLODIV_SHIFT);
+            //Reg::val(OSCCON + 2, m); <-- WRITE TO ODD ADDRESS: REMOVE
+            Reg::clrbit(OSCCON, PLLMUL_MASK << PLLMUL_SHIFT);
+            Reg::setbit(OSCCON, m << PLLMUL_SHIFT);
             //pll select
             clk_src(frc);
             //lock_irq(irstat);
