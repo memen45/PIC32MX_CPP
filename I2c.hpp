@@ -64,7 +64,6 @@ start       (bool) -> void;
 STAT        : uint16_t {
             ACK = 1<<15,
             TXBUSY = 1<<14,
-            ACKTIM = 1<<13,
             BUSCOL = 1<<10,
             GENCALL = 1<<9,
             ADD10 = 1<<8,

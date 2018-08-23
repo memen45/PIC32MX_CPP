@@ -23,6 +23,8 @@ ISR_DEFAULT(TIMER_5)
         
 ISR_DEFAULT(SPI1_ERR) /* ISR_DEFAULT(SPI1_RX) and ISR_DEFAULT(SPI1_TX) have same vector number */ 
         
+ISR_DEFAULT(I2C1_BUS) /* ISR_DEFAULT(I2C1_SLAVE) and ISR_DEFAULT(I2C1_MASTER) have same vector number */
+        
 ISR_DEFAULT(UART1_ERR) /* ISR_DEFAULT(UART1_TX) and ISR_DEFAULT(UART1_RX) have same vector number */ 
 ISR_DEFAULT(UART2_ERR) /* ISR_DEFAULT(UART2_TX) and ISR_DEFAULT(UART2_RX) have same vector number */ 
 ISR_DEFAULT(UART3_ERR) /* ISR_DEFAULT(UART3_TX) and ISR_DEFAULT(UART3_RX) have same vector number */ 
