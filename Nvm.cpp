@@ -36,29 +36,30 @@ NVMBWP = 0xBF8029A0, //locked
 
 //-----------------------------------------------------------------private-----
             static auto
-unlock      () -> uint8_t
+unlock      () -> void
             {
+            //use Sys:: function to prevent irq/dma interruption of these
+            //two writes (although a sys unlock not needed)
             uint8_t idstat = Sys::unlock_wait();
             Reg::val(NVMKEY, MAGIC1);
             Reg::val(NVMKEY, MAGIC2);
-            return idstat;
+            Sys::lock(idstat);
             }
 
 //-----------------------------------------------------------------private-----
             static auto
-lock        (uint8_t v) -> void
+lock        () -> void
             {
             Reg::val(NVMKEY, 0);
-            Sys::lock(v);
             }
 
 //-----------------------------------------------------------------private-----
             static auto
 do_wr       () -> void
             {
-            uint8_t stat = unlock();
+            unlock();
             Reg::setbit(NVMCON, 1<<WR);
-            lock(stat);
+            lock();
             while(Reg::anybit(NVMCON, 1<<WR));
             }
 
@@ -131,21 +132,24 @@ page_erase  (uint32_t v) -> uint8_t
             return error();
             }
 
-//address | 0x1Dxxxxxx, true=lock until reset
+//address = physical 0x1Dxxxxxx (0x1D03FFFF and below for 256k)
+//address masked so can provide a flash address for page (and below) to protect
+//(can use one time only)
 //=============================================================================
             auto Nvm::
-write_protect (uint32_t v, bool tf) -> void
+write_protect (uint32_t v) -> void
             {
-            uint8_t stat = unlock();
-            Reg::val(NVMPWP, (v bitand PWP_CLR) | not tf<<PWPULOCK);
-            lock(stat);
+            unlock();
+            Reg::val(NVMPWP, (v bitand PWP_CLR)); //PWPULOCK will be cleared
+            lock();
             }
 
+//(can use one time only)
 //=============================================================================
             auto Nvm::
-boot_protect (BOOTP e, bool tf) -> void
+boot_protect (BOOTP e) -> void
             {
-            uint8_t stat = unlock();
-            Reg::val(NVMBWP, e | not tf<<BWPULOCK);
-            lock(stat);
+            unlock();
+            Reg::val(NVMBWP, e); //BWPULOCK will be cleared
+            lock();
             }

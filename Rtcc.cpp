@@ -71,10 +71,27 @@ Rtcc::datetime_t Rtcc::m_boot_time;
 
 //-----------------------------------------------------------------private-----
             static auto
+read_verify (uint32_t reg) -> uint32_t
+            {
+            uint32_t v;
+            while( (v = Reg::val(reg)) != Reg::val(reg) );
+            return v;
+            }
+
+//-----------------------------------------------------------------private-----
+            static auto
+write_verify (uint32_t reg, uint32_t val) -> void
+            {
+            do{ Reg::val(reg, val); } while( Reg::val(reg) != val );
+            }
+
+
+//-----------------------------------------------------------------private-----
+            static auto
 time        () -> time_t
             {
             time_t t;
-            t.w = Reg::val(RTCTIME);
+            t.w = read_verify(RTCTIME);
             return t;
             }
 
@@ -83,7 +100,7 @@ time        () -> time_t
 date        () -> date_t
             {
             date_t d;
-            d.w = Reg::val(RTCDATE);
+            d.w = read_verify(RTCDATE);
             return d;
             }
 
@@ -106,6 +123,8 @@ alarm_date  () -> date_t
             }
 
 //RTCCON1.ON, RTCCON2, DATE/TIME registers need WRLOCK=0
+//functions cannot call other functions that use unlock/lock inside its
+//unlock/lock code (will end up putting the caller back in lock mode)
 //-----------------------------------------------------------------private-----
             static auto
 unlock      () -> void
@@ -144,7 +163,7 @@ calc_weekday (date_t v) -> uint8_t
 time        (time_t v) -> void
             {
             unlock();
-            Reg::val(RTCTIME, v.w);
+            write_verify(RTCTIME, v.w);
             lock();
             }
 
@@ -155,7 +174,7 @@ date        (date_t v) -> void
             {
             v.weekday = calc_weekday(v); //get correct weekday
             unlock();
-            Reg::val(RTCDATE, v.w);
+            write_verify(RTCDATE, v.w);
             lock();
             }
 
@@ -163,7 +182,11 @@ date        (date_t v) -> void
             static auto
 alarm_time  (time_t v) -> void
             {
+            bool b = Rtcc::alarm();
+            Rtcc::alarm(false);
+            while(Rtcc::alarm_busy());
             Reg::val(ALMTIME, v.w);
+            Rtcc::alarm(b);
             }
 
 //-----------------------------------------------------------------private-----
@@ -171,7 +194,11 @@ alarm_time  (time_t v) -> void
 alarm_date  (date_t v) -> void
             {
             v.weekday = calc_weekday(v); //get correct weekday
-            Reg::val(ALMTIME, v.w);
+            bool b = Rtcc::alarm();
+            Rtcc::alarm(false);
+            while(Rtcc::alarm_busy());
+            Reg::val(ALMDATE, v.w);
+            Rtcc::alarm(b);
             }
 
 //-----------------------------------------------------------------private-----
@@ -222,6 +249,13 @@ alarm       (bool tf) -> void
 
 //=============================================================================
             auto Rtcc::
+alarm       () -> bool
+            {
+            return Reg::anybit(RTCCON1, 1<<ALARMEN);
+            }
+
+//=============================================================================
+            auto Rtcc::
 chime       (bool tf) -> void
             {
             Reg::setbit(RTCCON1, 1<<CHIME, tf);
@@ -249,9 +283,9 @@ on          (bool tf) -> void
             {
             //datasheet shows DIV=0 on reset,
             //rtcc frm shows DIV=0x3FFF- frm is correct
-            clk_div(CLK_DIV_32KHZ);             //(same as reset value)
-            clk_src(Osc::sosc() ? SOSC : LPRC); //use sosc if on
-            clk_pre(PRE1);                      //(same as reset value)
+            //reset div/pre values assume sosc, so no need to set
+            //if using LPRC, just use Rtcc::clk_src(Rtcc::LPRC) first
+            //if using PWRLPIN/FCY, will also habe to use clk_div/clk_pre
             unlock();
             Reg::setbit(RTCCON1, 1<<ON, tf);
             lock();
@@ -267,14 +301,10 @@ on          (bool tf) -> void
 out_pin     (OUTSEL v) -> void
             {
             if(v != OFF){
-                unlock();
                 Reg::clrbit(RTCCON1, OUTSEL_MASK<<OUTSEL_SHIFT);
                 Reg::setbit(RTCCON1, v<<OUTSEL_SHIFT);
-                lock();
             }
-            unlock();
             Reg::setbit(RTCCON1, 1<<PINON, v != OFF);
-            lock();
             }
 
 //=============================================================================

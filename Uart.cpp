@@ -44,9 +44,9 @@ enum {
 //=============================================================================
             Uart::
 Uart        (UARTX e, uint32_t baud)
-    : m_uartx_base((vu32ptr)U1MODE + (e * UARTX_SPACING)),
-      m_uartx_tx(*((vu32ptr)U1MODE + (e * UARTX_SPACING) + UXTXREG)),
-      m_uartx_rx(*((vu32ptr)U1MODE + (e * UARTX_SPACING) + UXRXREG)),
+    : m_uartx_base((vu32ptr)U1MODE + ((e bitand 7) * UARTX_SPACING)),
+      m_uartx_tx(*((vu32ptr)U1MODE + ((e bitand 7) * UARTX_SPACING) + UXTXREG)),
+      m_uartx_rx(*((vu32ptr)U1MODE + ((e bitand 7) * UARTX_SPACING) + UXRXREG)),
       m_uartx_baud(0)
             {    
                 m_uartx_baud = baud;

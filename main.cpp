@@ -218,7 +218,6 @@ UsbTest utest;
 //helper- need static function for callback
 bool cdc_notify(UsbEP* ep){ return utest.notify(ep); }
 
-
 int main()
 {
     //just get/store resets cause (not used here,though)
