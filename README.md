@@ -11,12 +11,12 @@ The following modules are present in the current repository:
 | Cp0     | not (yet) | no |
 | Cvref   | not (yet) | no |
 | Delay   | not (yet) | no |
-| Dma     | not (yet) | no |
-| I2c     | yes | not yet |
+| Dma     | in progress | no |
+| I2c     | yes | yes |
 | Irq     | yes | yes |
 | Nvm     | not (yet) | no |
-| Oc      | yes | not yet |
-| Osc     | partial (no ext clock sources) | partially |
+| Oc      | yes | yes |
+| Osc     | yes (clean required) | partially (not yet for LPRC) |
 | Pins    | yes | partially (an pins not) |
 | Pmd     | not (yet) | no |
 | Pmp     | not (yet) | no |
