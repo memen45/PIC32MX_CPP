@@ -186,7 +186,7 @@ pll_src     (PLLSRC e) -> void
 //PLLSRC default is FRC
 //=============================================================================
             auto Osc::
-pll_set     (PLLMUL m, DIVS d, PLLSRC frc) -> void
+pll_set     (PLLMUL m, DIVS d, PLLSRC s) -> void
             {
             //IDSTAT irstat  = unlock_irq();
             uint8_t irstat  = Sys::unlock_wait();
@@ -197,7 +197,7 @@ pll_set     (PLLMUL m, DIVS d, PLLSRC frc) -> void
             Reg::val(SPLLCON + 3, d);
             Reg::val(SPLLCON + 2, m);
             //pll select
-            pll_src(frc); //do after m, so refoclk() sees new m value
+            pll_src(s); //do after m, so refoclk() sees new m value
             //source to SPLL
             clk_src(SPLL);
             //lock_irq(irstat);

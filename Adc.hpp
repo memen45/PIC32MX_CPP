@@ -20,7 +20,7 @@ read        (uint8_t = 0) -> uint32_t;
             static auto
 on          (bool) -> void;
 
-            //enable stop adc when in idle mode
+            //stop adc when in idle mode
             static auto
 stop_idle   (bool) -> void;
 
