@@ -58,12 +58,15 @@ set_s       (uint16_t) -> void;
 
             //blocking
 
+            //wait us
             static auto
 wait_us     (uint32_t) -> void;
 
+            //wait ms
             static auto
 wait_ms     (uint32_t) -> void;
 
+            //wait s
             static auto
 wait_s      (uint16_t) -> void;
 
