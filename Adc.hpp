@@ -16,7 +16,7 @@ read        (uint8_t = 0) -> uint32_t;
 
             //==== ADC1CON1 ====
 
-            //enable adc
+            //enable/disable adc
             static auto
 on          (bool) -> void;
 
