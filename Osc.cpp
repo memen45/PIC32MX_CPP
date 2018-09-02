@@ -140,7 +140,9 @@ sosc        (bool tf) -> void
             Sys::unlock();
             Reg::setbit(OSCCON, 1<<SOSCEN, tf);
             Sys::lock();
-            while(tf and not ready(SOSCRDY));
+            while(tf != ready(SOSCRDY));
+            //if turned on, wait for sosc start-up timer to expire
+            //but probably no need to wait around
             }
 
 //=============================================================================
