@@ -1,0 +1,80 @@
+            //this file is for 28 pins - pic32mmxxxxgpm028
+            //this file included inline into Pins.hpp
+
+
+                                   _______
+                        [/MCLR] 1 |       | 28 [AVdd]
+            RP1  RA0 AN0        2 |       | 27 [AVss]
+            RP2  RA1 AN1        3 |       | 26      AN10 RB15 RP17
+            RP6  RB0 AN2        4 |       | 25      AN9  RB14 RP16
+            RP7  RB1 AN3        5 |       | 24      AN8  RB13 RP15
+            RP8  RB2 AN4        6 |       | 23 [Vusb3v3]
+            RP9  RB3 AN11       7 |       | 22 [D+]      RB11
+                         [Vss]  8 |       | 21 [D-]      RB10
+            RP3  RA2 AN5        9 |       | 20 [Vcap]
+            RP4  RA3 AN6       10 |       | 19           RC9  RP18
+            RP10 RB4 AN7       11 |       | 18           RB9  RP14
+            RP5  RA4           12 |       | 17           RB8  RP13
+                         [Vdd] 13 |       | 16           RB7  RP12
+            RP11 RB5           14 |_______| 15 [Vbus]    RB6
+
+
+            //helper enum
+            enum : uint8_t {
+            PTSHIFT = 4, PTMASK = 3,
+            PNSHIFT = 0, PNMASK = 15,
+            RPSHIFT = 6, RPMASK = 31,
+            ANSHIFT = 11, ANMASK = 31
+            };
+
+            //use any format you wish-> A0, RP1, AN0, PIN2
+            //all will refer to the same pin with the appropriate functions
+
+            enum
+RPN         : uint16_t {
+            // encode as- 0xaaaaarrrrrppnnnn - | ANn | RPn | PORT | PIN |
+            // aaaaa = ANn = 0-19
+            // pp = port A=0,B=1,C=2,D=3
+            // nnnn = pin = 0-15
+            // rrrrr = RPn = 1-24
+
+            //pins without AN (analog in) will be set to use AVss (29) as AN
+            //input (since AN0 is 0, we need something other than 0 to signify
+            //no AN for pin, so we will just give it something that will result
+            //in no result if ever used adcval() by mistake)
+
+            //A0 - A15
+            A0 = 0|1<<RPSHIFT|0<<ANSHIFT, A1 = 1|2<<RPSHIFT|1<<ANSHIFT,
+            A2 = 2|3<<RPSHIFT|5<<ANSHIFT, A3 = 3|4<<RPSHIFT|6<<ANSHIFT,
+            A4 = 4|5<<RPSHIFT|29<<ANSHIFT,
+            //B0-B15
+            B0 = 16|6<<RPSHIFT|2<<ANSHIFT, B1 = 17|7<<RPSHIFT|3<<ANSHIFT,
+            B2 = 18|8<<RPSHIFT|4<<ANSHIFT, B3 = 19|9<<RPSHIFT|11<<ANSHIFT,
+            B4 = 20|10<<RPSHIFT|7<<ANSHIFT, B5 = 21|11<<RPSHIFT|29<<ANSHIFT,
+            B6 = 22|29<<ANSHIFT, B7 = 23|12<<RPSHIFT|29<<ANSHIFT,
+            B8 = 24|13<<RPSHIFT|29<<ANSHIFT, B9 = 25|14<<RPSHIFT|29<<ANSHIFT,
+            B10 = 26|29<<ANSHIFT, B11 = 27|29<<ANSHIFT,
+            /*no B12*/ B13 = 29|15<<RPSHIFT|8<<ANSHIFT,
+            B14 = 30|16<<RPSHIFT|9<<ANSHIFT, B15 = 31|17<<RPSHIFT|10<<ANSHIFT,
+            //C0-C15
+            C9 = 41|18<<RPSHIFT|29<<ANSHIFT,
+
+            //RPn 1-24
+            RP1 = A0, RP2 = A1, RP3 = A2, RP4 = A3,
+            RP5 = A4, RP6 = B0, RP7 = B1, RP8 = B2,
+            RP9 = B3, RP10 = B4, RP11 = B5, RP12 = B7,
+            RP13 = B8, RP14 = B9, RP15 = B13, RP16 = B14,
+            RP17 = B15, RP18 = C9,
+
+            //ANn 0-19
+            AN0 = A0, AN1 = A1, AN2 = B0, AN3 = B1, AN4 = B2, AN5 = A2,
+            AN6 = A3, AN7 = B4, AN8 = B13, AN9 = B14, AN10 = B15, AN11 = B3,
+
+            //PINn 1-28
+            /*PIN1 = MCLR*/ PIN2 = A0, PIN3 = A1, PIN4 = B0, PIN5 = B1,
+            PIN6 = B2, PIN7 = B3, /*PIN8 = Vss*/ PIN9 = A2, PIN10 = A3,
+            PIN11 = B4, PIN12 = A4, /*PIN13 = Vdd*/ PIN14 = B5, PIN15 = B6,
+            PIN16 = B7, PIN17 = B8, PIN18 = B9, PIN19 = C9, /*PIN20 = Vcap*/
+            PIN21 = B10, PIN22 = B11, /*PIN23 = Vusb3v3*/ PIN24 = B13, PIN25 = B14,
+            PIN26 = B15 /*PIN27 = AVss, PIN28 = AVdd*/
+            };
