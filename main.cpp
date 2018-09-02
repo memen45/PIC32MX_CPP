@@ -7,8 +7,6 @@
  http://ww1.microchip.com/downloads/en/DeviceDoc/60001387c.pdf
 
  =============================================================================*/
-
-
 #include <cstdint>
 #include <cstring> //strlen
 #include <stdio.h>
@@ -170,7 +168,7 @@ struct Led12 {
 
 };
 
-bool cdc_notify(UsbEP* ep);
+//bool cdc_notify(UsbEP* ep);
 
 struct UsbTest {
 
@@ -216,7 +214,7 @@ struct UsbTest {
 };
 UsbTest utest;
 //helper- need static function for callback
-bool cdc_notify(UsbEP* ep){ return utest.notify(ep); }
+//bool cdc_notify(UsbEP* ep){ return utest.notify(ep); }
 
 int main()
 {

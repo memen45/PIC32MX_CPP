@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include "Pins.hpp"
 
 //SPI 1/2/3
 
@@ -9,7 +10,9 @@ struct Spi  {
             enum
 SPIX        { SPI1, SPI2, SPI3 };
 
-            //instantiate Comp123 with comparator number
+            //instantiate spi number
+            //SPI2 uses PPS, so user will also have to setup pins
+            //(not done here as there are a number of pins, and not all always needed)
 Spi         (SPIX);
 
             //==== SPIxCON ====
