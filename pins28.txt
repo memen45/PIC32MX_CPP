@@ -1,7 +1,14 @@
             //this file is for 28 pins - pic32mmxxxxgpm028
             //this file included inline into Pins.hpp
 
+            //uncomment which package is used (only 1),
+            //the PINn defines are different for each, all else is the same
+            //#define SSOP
+            #define QFN
 
+            /*
+
+            SSOP Package
                                    _______
                         [/MCLR] 1 |       | 28 [AVdd]
             RP1  RA0 AN0        2 |       | 27 [AVss]
@@ -18,6 +25,42 @@
                          [Vdd] 13 |       | 16           RB7  RP12
             RP11 RB5           14 |_______| 15 [Vbus]    RB6
 
+
+
+            QFN Package - (same order as SSOP, but pin numbers shifted by 3)
+            outer pin number shown below is the equivilent SSOP pin number
+            instead of trying to also layout the names below, just translate
+            using diagram above to get pin names (RPn, Rxn, ANn)
+            if using PINn, they ARE specific to each package-
+                SSOP-> AN0=RA0=RP1=PIN2
+                 QFN-> AN0=RA0=RP1=PIN27
+
+
+    SSOP ->    3   2    1 |28  27  26  25
+                          |
+    QFN ->     28  27  26 |25  24  23  22
+               _|___|___|_|_|___|___|___|_
+              |           |               |
+         4  1 |           |               | 21  24
+              |                           |
+         5  2 |                           | 20  23
+              |                           |
+         6  3 |                           | 19  22
+              |                           |
+         7  4 |                           | 18  21
+              |                           |
+         8  5 |                           | 17  20
+              |                           |
+         9  6 |                           | 16  19
+              |                           |
+        10  7 |                           | 15  18
+              |_______________|___________|
+                |   |   |   | | |   |   |
+                8   9  10  11 |12  13  14
+                              |
+               11  12  13  14 |15  16  17
+
+            */
 
             //helper enum
             enum : uint8_t {
@@ -70,6 +113,14 @@ RPN         : uint16_t {
             AN0 = A0, AN1 = A1, AN2 = B0, AN3 = B1, AN4 = B2, AN5 = A2,
             AN6 = A3, AN7 = B4, AN8 = B13, AN9 = B14, AN10 = B15, AN11 = B3,
 
+            //PINn specific for each package
+            #if (defined SSOP) && (defined QFN)
+              #error "set package to SSOP or QFN, not both (pins28.txt)"
+
+            #elif not (defined SSOP) && not (defined QFN)
+              #error "set package to SSOP or QFN (pins28.txt)"
+
+            #elif (defined SSOP)
             //PINn 1-28
             /*PIN1 = MCLR*/ PIN2 = A0, PIN3 = A1, PIN4 = B0, PIN5 = B1,
             PIN6 = B2, PIN7 = B3, /*PIN8 = Vss*/ PIN9 = A2, PIN10 = A3,
@@ -77,4 +128,15 @@ RPN         : uint16_t {
             PIN16 = B7, PIN17 = B8, PIN18 = B9, PIN19 = C9, /*PIN20 = Vcap*/
             PIN21 = B10, PIN22 = B11, /*PIN23 = Vusb3v3*/ PIN24 = B13, PIN25 = B14,
             PIN26 = B15 /*PIN27 = AVss, PIN28 = AVdd*/
+
+            #elif (defined QFN)
+            //PINn 1-28
+            /*PIN26 = MCLR*/ PIN27 = A0, PIN28 = A1, PIN1 = B0, PIN2 = B1,
+            PIN3 = B2, PIN4 = B3, /*PIN5 = Vss*/ PIN6 = A2, PIN7 = A3,
+            PIN8 = B4, PIN9 = A4, /*PIN10 = Vdd*/ PIN11 = B5, PIN12 = B6,
+            PIN13 = B7, PIN14 = B8, PIN15 = B9, PIN16 = C9, /*PIN17 = Vcap*/
+            PIN18 = B10, PIN19 = B11, /*PIN20 = Vusb3v3*/ PIN21 = B13, PIN22 = B14,
+            PIN23 = B15 /*PIN24 = AVss, PIN25 = AVdd*/
+
+            #endif
             };

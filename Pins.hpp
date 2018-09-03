@@ -11,28 +11,29 @@ struct Pins {
             // so just using the compiler provided part defines to get pin count)
 
             //see specified file for pin information
+            //64pin
             #if   (defined __32MM0256GPM064__) || \
                   (defined __32MM0128GPM064__) || \
                   (defined __32MM0064GPM064__)
                 #include "pins64.txt"
-
+            //48pin
             #elif (defined __32MM0256GPM048__) || \
                   (defined __32MM0128GPM048__) || \
                   (defined __32MM0064GPM048__)
                 #include "pins48.txt"
-
+            //36pin
             #elif (defined __32MM0256GPM036__) || \
                   (defined __32MM0128GPM036__) || \
                   (defined __32MM0064GPM036__)
                 #include "pins36.txt"
-
+            //28pin
             #elif (defined __32MM0256GPM028__) || \
                   (defined __32MM0128GPM028__) || \
                   (defined __32MM0064GPM028__)
                 #include "pins28.txt"
-
+            //trouble
             #else
-            #error "unknown PIC32MM in use, see Pins.hpp"
+                #error "unknown PIC32MM in use, see Pins.hpp"
             #endif
 
             enum
