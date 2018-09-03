@@ -26,7 +26,7 @@ struct Pins {
                   (defined __32MM0128GPM036__) || \
                   (defined __32MM0064GPM036__)
                 #include "pins36.txt"
-            //28pin
+            //28pin (specify SSOP or QFN in pins28.txt)
             #elif (defined __32MM0256GPM028__) || \
                   (defined __32MM0128GPM028__) || \
                   (defined __32MM0064GPM028__)
