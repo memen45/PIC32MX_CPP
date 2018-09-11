@@ -87,6 +87,7 @@ void main(void) {
 #include "Uart.hpp"
 #include "Irq.hpp"
 #include "Delay.hpp"
+#include "Cp0.hpp"
 
 //led status
 struct LedStatus {
@@ -140,11 +141,18 @@ int main()
     osc.pll_set( osc.MUL12, osc.DIV4 ); //24MHz
     info.on( true ); //turn on uart after osc (baud is set when turned on)
     Irq::init( Irq::UART2_RX, 1, 0, true ); //pri=1, spri=0, on=true
+    Cp0::compare_ms( 10 ); //cp0 irq every 10ms
+    Irq::init( Irq::CORE_TIMER, 1, 0, true );
     Irq::global( true );
     for(;;){
+        Osc::idle(); //cp0 or rx2 will wake
         leds.update();
     }
 }
+
+ISRautoflag( CORE_TIMER ){
+    Cp0::compare_reload();
+}}
 
 ISR( UART2_RX ){
     Irq irq;

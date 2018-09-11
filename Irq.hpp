@@ -115,7 +115,7 @@ shadow_set  (uint8_t) -> void;
 
 ////////////////////////////////////////////////////////////////////////////////
 // ISR MACRO - auto clear irq flag
-// usage- ISR(ADC){ /* isr code here */ }}
+// usage- ISRautoflag(ADC){ /* isr code here */ }}
 // NOTE- need }} to close isr
 // NOTE flag is cleared at start of isr, do not use if flag needs clearing
 // after a register is read
