@@ -1,3 +1,4 @@
+#if 0
 #include "Osc.hpp"
 #include "Uart.hpp"
 
@@ -20,7 +21,7 @@ int main()
         info.puts ( "Hello World? " );
     }
 }
-
+#endif
 
 
 
@@ -77,7 +78,7 @@ void main(void) {
 
 #endif
 
-#if 0
+#if 1
 
 //another uart test with irq
 
@@ -87,29 +88,61 @@ void main(void) {
 #include "Irq.hpp"
 #include "Delay.hpp"
 
-//rgb led on curiosity board
-Pins ledR{Pins::D1, Pins::OUT};
-Pins ledG{Pins::C3, Pins::OUT};
-Pins ledB{Pins::C15, Pins::OUT};
+//led status
+struct LedStatus {
+
+    private:
+    //rgb led on curiosity board
+    Pins ledR{Pins::D1, Pins::OUT};
+    Pins ledG{Pins::C3, Pins::OUT};
+    Pins ledB{Pins::C15, Pins::OUT};
+    //make led's persist
+    Delay persistG, persistR, persistB;
+
+    public:
+    //check if persist time expired
+    void update(){
+        if( persistG.expired() ) ledG.off();
+        if( persistR.expired() ) ledR.off();
+        if( persistB.expired() ) ledB.off();
+    }
+
+    //set led state
+    enum LEDSTATE { OK, OERR, BITERR };
+    void state(LEDSTATE s){
+        switch(s){
+            case OK:
+                persistG.set_ms( 100 );
+                ledG.on();
+                break;
+            case OERR:
+                persistR.set_ms( 4000 );
+                ledG.off();
+                ledR.on();
+                break;
+            case BITERR:
+                persistB.set_ms( 4000 );
+                ledG.off();
+                ledB.on();
+                break;
+        }
+    }
+
+};
+LedStatus leds;
+
 //uart2 to cp2101 usb-ttl board
 Uart info { Uart::UART2, Pins::C6, Pins::C7, 230400 };
-//make led's persist
-Delay persistG, persistR, persistB;
 
 int main()
 {
     Osc osc;
-    osc.pll_set ( osc.MUL12, osc.DIV4 ); //24MHz
-    info.on ( true ); //turn on uart after osc (baud is set when turned on)
+    osc.pll_set( osc.MUL12, osc.DIV4 ); //24MHz
+    info.on( true ); //turn on uart after osc (baud is set when turned on)
     Irq::init( Irq::UART2_RX, 1, 0, true ); //pri=1, spri=0, on=true
-    persistG.set_ms( 200 ); //short persist for normal rx char
-    persistR.set_ms( 2000 ); //long persist for any errors
-    persistB.set_ms( 2000 );
     Irq::global( true );
     for(;;){
-        if( persistG.expired() ) ledG.off();
-        if( persistR.expired() ) ledR.off();
-        if( persistB.expired() ) ledB.off();
+        leds.update();
     }
 }
 
@@ -118,12 +151,13 @@ ISR( UART2_RX ){
 
     //get errors before reading rx buf
     if( info.rx_oerr() ){
-        ledR.on(); persistR.restart();
-        info.rx_oerrclr();
+        leds.state(leds.OERR);
+        info.rx_oerrclr(); //clear all buffers
     } else if( info.rx_ferr() || info.rx_perr() ){
-        ledB.on(); persistB.restart();
+        leds.state(leds.BITERR);
+        info.read(); //read just to advance buffer
     } else {
-        ledG.on(); persistG.restart();
+        leds.state(leds.OK);
         info.putchar( info.read() ); //echo rx to tx
         //Delay::wait_s( 2 ); //to force overrun error
     }
