@@ -173,6 +173,10 @@ rx_ferr     () -> bool;
             auto
 rx_oerr     () -> bool;
 
+            //clear rx overrun err
+            auto
+rx_oerrclr  () -> void;
+
             //rx is empty?
             auto
 rx_empty    () -> bool;

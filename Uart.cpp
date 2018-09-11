@@ -340,6 +340,14 @@ rx_oerr     () -> bool
             }
 
 //=============================================================================
+            //clear rx overrun err
+            auto Uart::
+rx_oerrclr  () -> void
+            {
+            Reg::clrbit(m_uartx_base + UXSTA, 1<<OERR);
+            }
+
+//=============================================================================
             auto Uart::
 rx_empty    () -> bool
             {

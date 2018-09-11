@@ -76,3 +76,59 @@ void main(void) {
 }
 
 #endif
+
+#if 0
+
+//another uart test with irq
+
+#include "Osc.hpp"
+#include "Pins.hpp"
+#include "Uart.hpp"
+#include "Irq.hpp"
+#include "Delay.hpp"
+
+//rgb led on curiosity board
+Pins ledR{Pins::D1, Pins::OUT};
+Pins ledG{Pins::C3, Pins::OUT};
+Pins ledB{Pins::C15, Pins::OUT};
+//uart2 to cp2101 usb-ttl board
+Uart info { Uart::UART2, Pins::C6, Pins::C7, 230400 };
+//make led's persist
+Delay persistG, persistR, persistB;
+
+int main()
+{
+    Osc osc;
+    osc.pll_set ( osc.MUL12, osc.DIV4 ); //24MHz
+    info.on ( true ); //turn on uart after osc (baud is set when turned on)
+    Irq::init( Irq::UART2_RX, 1, 0, true ); //pri=1, spri=0, on=true
+    persistG.set_ms( 200 ); //short persist for normal rx char
+    persistR.set_ms( 2000 ); //long persist for any errors
+    persistB.set_ms( 2000 );
+    Irq::global( true );
+    for(;;){
+        if( persistG.expired() ) ledG.off();
+        if( persistR.expired() ) ledR.off();
+        if( persistB.expired() ) ledB.off();
+    }
+}
+
+ISR( UART2_RX ){
+    Irq irq;
+
+    //get errors before reading rx buf
+    if( info.rx_oerr() ){
+        ledR.on(); persistR.restart();
+        info.rx_oerrclr();
+    } else if( info.rx_ferr() || info.rx_perr() ){
+        ledB.on(); persistB.restart();
+    } else {
+        ledG.on(); persistG.restart();
+        info.putchar( info.read() ); //echo rx to tx
+        //Delay::wait_s( 2 ); //to force overrun error
+    }
+
+    irq.flag_clr( irq.UART2_RX );
+}
+
+#endif
