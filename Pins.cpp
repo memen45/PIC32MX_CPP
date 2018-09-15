@@ -101,7 +101,7 @@ adcval      () -> uint16_t
             adc.on(true);
             adc.samp(true);
             while(not Adc::done());         //blocking
-            return (uint16_t)Adc::read();   //buf[0]
+            return (uint16_t)Adc::read();   //default read is from BUF0
             }
 
 //=============================================================================

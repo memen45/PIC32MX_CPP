@@ -8,10 +8,17 @@ struct Adc {
 
             //==== ADC1BUFn ====
 
-            //read adc buffer N, N = 0 - ADC1BUF_LAST (21), N default = 0
+            enum
+BUFN        : uint8_t {
+            BUF0, BUF1, BUF2, BUF3, BUF4, BUF5, BUF6, BUF7,
+            BUF8, BUF9, BUF10, BUF11, BUF12, BUF13, BUF14, BUF15,
+            BUF16, BUF17, BUF18, BUF19, BUF20, BUF21
+            };
+
+            //read adc buffer, default = BUF0
             //returning register contents, caller has to determine format
             static auto
-read        (uint8_t = 0) -> uint32_t;
+read        (BUFN = BUF0) -> uint32_t;
 
 
             //==== ADC1CON1 ====
