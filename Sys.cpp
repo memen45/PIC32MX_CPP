@@ -17,13 +17,8 @@ SYSKEY = 0xBF803670,
     MAGIC2 = 0x556699AA,
 ANCFG = 0xBF802300,
     VBGADC = 2,
-    VBGCMP = 1,
-UDID1 = 0xBF801840,
-UDID2 = 0xBF801850,
-UDID3 = 0xBF801860,
-UDID4 = 0xBF801870,
-UDID5 = 0xBF801880
-            };
+    VBGCMP = 1
+};
 
 //-----------------------------------------------------------------private-----
 //syskey lock/unlock
@@ -157,8 +152,7 @@ bgap_comp   (bool tf) -> void
 //udid
 //=============================================================================
             auto Sys::
-udid        (uint8_t v) -> uint32_t
+udid        (UDIDN e) -> uint32_t
             {
-            if(v > 4) v = 4;
-            return Reg::val(UDID1 + v);
+            return Reg::val(e);
             }

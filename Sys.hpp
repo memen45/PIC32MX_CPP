@@ -57,8 +57,13 @@ bgap_comp   (bool) -> void;
 
             //==== UDID ====
 
+            enum
+UDIDN       : uint32_t {
+            UDID1 = 0xBFC41840, UDID2 = 0xBFC41844, UDID3 = 0xBFC41848,
+            UDID4 = 0xBFC4184C, UDID5 = 0xBFC41850 };
+
             static auto
-udid        (uint8_t) -> uint32_t; //0-4 ->UDID1-5
+udid        (UDIDN) -> uint32_t; //UDID1-5
 
 };
 
