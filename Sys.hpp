@@ -57,24 +57,24 @@ bgap_comp   (bool) -> void;
 
             //==== UDID ====
 
+            enum
+UDID        : uint32_t {
+                LOTH = 0xBFC41840, LOTL = 0xBFC41844, SCRIBE = 0xBFC41848,
+                DIEX = 0xBFC4184C, DIEY = 0xBFC41850
+            };
+
             static auto
-udid        () -> uint64_t;
+udid        (UDID) -> uint32_t;
 
 };
 
 /*
-udid - only 11 unique bytes (and those seem to be bcd, so actually less)
-UDID1: FF917471
-UDID2: FF938000
-UDID3: FFFFFF23
-UDID4: FFFF0253
-UDID5: FFFF0253
-
-reduce to 64bits via hash
-hash function comes from book "The C Programming Language"
-UDID: 8aca36f6cba4a710
-
-
+udid - only 11 unique bytes - 9 unused
+UDID1: FF917471 Lot Number H
+UDID2: FF938000 Lot Number L
+UDID3: FFFFFF23 Scribe
+UDID4: FFFF0253 Die X coordinate
+UDID5: FFFF0253 Die Y coordinate
 
 devid
 PIC32MM0064GPM028 0x07708053 0b0000 0111 0111 0000 1000 0000 0101 0011 64/16

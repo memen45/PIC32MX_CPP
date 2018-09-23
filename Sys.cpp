@@ -17,8 +17,7 @@ SYSKEY = 0xBF803670,
     MAGIC2 = 0x556699AA,
 ANCFG = 0xBF802300,
     VBGADC = 2,
-    VBGCMP = 1,
-UDID1 = 0xBFC41840
+    VBGCMP = 1
 };
 
 //-----------------------------------------------------------------private-----
@@ -150,17 +149,14 @@ bgap_comp   (bool tf) -> void
             Reg::setbit(ANCFG, 1<<VBGCMP, tf);
             }
 
-//udid (return uint64_t, reduced from actual 88bits to 64bits with hash from
-//       the book "The C Programming Language")
+//udid
 //=============================================================================
             auto Sys::
-udid        () -> uint64_t
+udid        (UDID e) -> uint32_t
             {
-            uint64_t hash = 0;
-            for (uint8_t i = 0; i < 20; i++){
-                 uint8_t tmp = Reg::val8(UDID1+i);
-                 if(tmp == 0xFF) continue; //ignore unused bytes
-                 hash = (hash * 1313131) + tmp;// 31 131 1313 13131 131313 etc..
-            }
-            return hash;
+            union { uint8_t b[4]; uint32_t w; } u;
+            u.w = Reg::val(e);
+            //unused bytes 0xFF -> 0x00
+            for(uint8_t i = 3; u.b[i] == 0xFF; u.b[i--] = 0);
+            return u.w;
             }
