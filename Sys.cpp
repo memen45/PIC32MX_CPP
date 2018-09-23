@@ -150,16 +150,17 @@ bgap_comp   (bool tf) -> void
             Reg::setbit(ANCFG, 1<<VBGCMP, tf);
             }
 
-//udid (return uint64_t, reduced from actual 88bits to 64bits with DJB Hash)
+//udid (return uint64_t, reduced from actual 88bits to 64bits with hash from
+//       the book "The C Programming Language")
 //=============================================================================
             auto Sys::
 udid        () -> uint64_t
             {
-            uint64_t hash = 5381;
-            for (int i = 0; i < 20; i++){
-                uint8_t tmp = Reg::val8(UDID1+i);
-                if(tmp == 0xFF) continue; //ignore unused bytes
-                hash = ((hash << 5) + hash) + (Reg::val8(UDID1+i));
+            uint64_t hash = 0;
+            for (uint8_t i = 0; i < 20; i++){
+                 uint8_t tmp = Reg::val8(UDID1+i);
+                 if(tmp == 0xFF) continue; //ignore unused bytes
+                 hash = (hash * 131) + tmp;// 31 131 1313 13131 131313 etc..
             }
             return hash;
             }

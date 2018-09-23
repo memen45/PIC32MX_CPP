@@ -70,8 +70,9 @@ UDID3: FFFFFF23
 UDID4: FFFF0253
 UDID5: FFFF0253
 
-reduced to 64bits with DJB Hash function
-UDID: c0c7dcd36f47335b
+reduce to 64bits via hash
+hash function comes from book "The C Programming Language"
+UDID: 8aca36f6cba4a710
 
 
 
