@@ -160,7 +160,7 @@ udid        () -> uint64_t
             for (uint8_t i = 0; i < 20; i++){
                  uint8_t tmp = Reg::val8(UDID1+i);
                  if(tmp == 0xFF) continue; //ignore unused bytes
-                 hash = (hash * 131) + tmp;// 31 131 1313 13131 131313 etc..
+                 hash = (hash * 131313) + tmp;// 31 131 1313 13131 131313 etc..
             }
             return hash;
             }
