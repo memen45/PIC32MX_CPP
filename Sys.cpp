@@ -154,8 +154,8 @@ bgap_comp   (bool tf) -> void
             auto Sys::
 udid        (UDID e) -> uint64_t
             {
-            union { uint8_t b[8]; uint16_t h[4];
-                uint32_t w[2]; uint64_t ww; } u = { 0 };
+            union { uint8_t b[8]; uint16_t h[4]; uint32_t w[2]; uint64_t ww; }
+                u = { 0 };
             if(e == LOTSCRIBE){ //combine LOT-H|LOT-L|SCRIBE
                 u.w[1] = Reg::val(e) & 0x00FFFFFF;      //0x00hhhhhh........
                 u.w[0] = Reg::val(e+4) << 8;            //0x........llllll00
