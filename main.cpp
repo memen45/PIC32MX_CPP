@@ -240,8 +240,8 @@ int main()
     Rgb rgb;
     Led12 led12;
 
-    printf("UDID  lot: %016llx\r\n",Sys::udid(Sys::LOT));
-    printf("UDID  die: %08x\r\n",(uint32_t)Sys::udid(Sys::DIE));
+    printf("UDID  lot: %016llx\r\n",Sys::udid(Sys::LOTSCRIBE));
+    printf("UDID  die: %08x\r\n",(uint32_t)Sys::udid(Sys::DIEXY));
     printf("starting...\r\n");
 
     for(;;){

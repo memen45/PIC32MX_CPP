@@ -58,7 +58,7 @@ bgap_comp   (bool) -> void;
             //==== UDID ====
 
             enum
-UDID        : uint32_t { LOT = 0xBFC41840, DIE = 0xBFC4184C };
+UDID        : uint32_t { LOTSCRIBE = 0xBFC41840, DIEXY = 0xBFC4184C };
 
             static auto
 udid        (UDID) -> uint64_t;
@@ -73,9 +73,9 @@ UDID3: FFFFFF23 Scribe
 UDID4: FFFF0253 Die X coordinate
 UDID5: FFFF0253 Die Y coordinate
 
-udid function returns either LOT number or DIE info
+udid function returns either LOT/SCRIBE info or DIEXY info
 UDID  lot: 0091747193800023 LOTH|LOTL|SCRIBE
-UDID  die: 0000000002530253 DIEX|DIEY
+UDID  die: 02530253 DIEX|DIEY
 
 
 devid

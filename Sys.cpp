@@ -156,13 +156,13 @@ udid        (UDID e) -> uint64_t
             {
             union { uint8_t b[8]; uint16_t h[4];
                 uint32_t w[2]; uint64_t ww; } u = { 0 };
-            if(e == LOT){ //combine LOT-H|LOT-L|SCRIBE
-                u.w[1] = Reg::val(e) & 0x00FFFFFF;      //0x00hhhhhh00000000
-                u.w[0] = Reg::val(e+4) << 8;            //0x00hhhhhhllllll00
-                u.b[0] = Reg::val8(e+8);               //0x00hhhhhhllllllss
+            if(e == LOTSCRIBE){ //combine LOT-H|LOT-L|SCRIBE
+                u.w[1] = Reg::val(e) & 0x00FFFFFF;      //0x00hhhhhh........
+                u.w[0] = Reg::val(e+4) << 8;            //0x........llllll00
+                u.b[0] = Reg::val8(e+8);                //0x..............ss
             } else { //combine DIE-X|DIE-Y (only 32bits used)
-                u.h[1] = Reg::val16(e);                 //0x00000000xxxx0000
-                u.h[0] = Reg::val16(e+4);               //0x00000000xxxxyyyy
+                u.h[1] = Reg::val16(e);                 //0x........xxxx....
+                u.h[0] = Reg::val16(e+4);               //0x............yyyy
             }
             return u.ww;
             }
