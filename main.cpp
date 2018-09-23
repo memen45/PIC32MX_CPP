@@ -240,19 +240,8 @@ int main()
     Rgb rgb;
     Led12 led12;
 
-    printf("UDID1: %08x\r\n",Sys::udid(Sys::UDID1));
-    printf("UDID2: %08x\r\n",Sys::udid(Sys::UDID2));
-    printf("UDID3: %08x\r\n",Sys::udid(Sys::UDID3));
-    printf("UDID4: %08x\r\n",Sys::udid(Sys::UDID4));
-    printf("UDID5: %08x\r\n",Sys::udid(Sys::UDID5));
-    /*
-        UDID1: ff917471
-        UDID2: ff938000
-        UDID3: ffffff23
-        UDID4: ffff0253
-        UDID5: ffff0253
+    printf("UDID: %llx\r\n",Sys::udid());
 
-     */
     printf("starting...\r\n");
 
     for(;;){

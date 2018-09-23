@@ -57,23 +57,23 @@ bgap_comp   (bool) -> void;
 
             //==== UDID ====
 
-            enum
-UDIDN       : uint32_t {
-            UDID1 = 0xBFC41840, UDID2 = 0xBFC41844, UDID3 = 0xBFC41848,
-            UDID4 = 0xBFC4184C, UDID5 = 0xBFC41850 };
-
             static auto
-udid        (UDIDN) -> uint32_t; //UDID1-5
+udid        () -> uint64_t;
 
 };
 
 /*
-udid - only 11 unique bytes
+udid - only 11 unique bytes (and those seem to be bcd, so actually less)
 UDID1: FF917471
 UDID2: FF938000
 UDID3: FFFFFF23
 UDID4: FFFF0253
 UDID5: FFFF0253
+
+reduced to 64bits with DJB Hash function
+UDID: c0c7dcd36f47335b
+
+
 
 devid
 PIC32MM0064GPM028 0x07708053 0b0000 0111 0111 0000 1000 0000 0101 0011 64/16
