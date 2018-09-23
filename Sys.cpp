@@ -17,7 +17,8 @@ SYSKEY = 0xBF803670,
     MAGIC2 = 0x556699AA,
 ANCFG = 0xBF802300,
     VBGADC = 2,
-    VBGCMP = 1
+    VBGCMP = 1,
+    UDID1 = 0xBFC41840
 };
 
 //-----------------------------------------------------------------private-----
@@ -152,19 +153,15 @@ bgap_comp   (bool tf) -> void
 //udid
 //=============================================================================
             auto Sys::
-udid        (UDID e) -> uint64_t
+udid        () -> udid_t
             {
-            union { uint8_t b[8]; uint16_t h[4]; uint32_t w[2]; uint64_t ww; }
-                u = { 0 };
-            if(e == LOTSCRIBE){ //combine LOT-H|LOT-L|SCRIBE
-                u.w[1] = Reg::val(e) & 0x00FFFFFF;      //0x00hhhhhh........
-                u.w[0] = Reg::val(e+4) << 8;            //0x........llllll00
-                u.b[0] = Reg::val8(e+8);                //0x..............ss
-            } else { //combine DIE-X|DIE-Y (only 32bits used)
-                u.h[1] = Reg::val16(e);                 //0x........xxxx....
-                u.h[0] = Reg::val16(e+4);               //0x............yyyy
-            }
-            return u.ww;
-            //0x00hhhhhhllllllss - LOTSCRIBE
-            //0x00000000xxxxyyyy - DIEXY
+            udid_t id = { 0 };                      //0x00HHHHHH........
+            id.lot = (uint64_t)(Reg::val(UDID1) & 0x00FFFFFF)<<32;
+            id.lot |= Reg::val(UDID1+4)<<8;         //0x........LLLLLL00
+            id.lot |= Reg::val8(UDID1+8);           //0x..............SS
+            id.die = Reg::val16(UDID1+12)<<16;      //0xXXXX....
+            id.die |= Reg::val16(UDID1+16);         //0x....YYYY
+            return id;
+            // .lot = 0x00HHHHHHLLLLLLSS - LOT/SCRIBE
+            // .die = 0xXXXXYYYY - DIE-XY
             }

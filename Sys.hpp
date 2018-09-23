@@ -57,11 +57,11 @@ bgap_comp   (bool) -> void;
 
             //==== UDID ====
 
-            enum
-UDID        : uint32_t { LOTSCRIBE = 0xBFC41840, DIEXY = 0xBFC4184C };
+            using
+udid_t      = struct { uint64_t lot; uint32_t die; };
 
             static auto
-udid        (UDID) -> uint64_t;
+udid        () -> udid_t;
 
 };
 
