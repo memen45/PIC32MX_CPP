@@ -165,4 +165,6 @@ udid        (UDID e) -> uint64_t
                 u.h[0] = Reg::val16(e+4);               //0x............yyyy
             }
             return u.ww;
+            //0x00hhhhhhllllllss - LOTSCRIBE
+            //0x00000000xxxxyyyy - DIEXY
             }
