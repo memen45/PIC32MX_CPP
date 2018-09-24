@@ -18,7 +18,7 @@ SYSKEY = 0xBF803670,
 ANCFG = 0xBF802300,
     VBGADC = 2,
     VBGCMP = 1,
-    UDID1 = 0xBFC41840
+UDID1 = 0xBFC41840
 };
 
 //-----------------------------------------------------------------private-----
@@ -150,18 +150,17 @@ bgap_comp   (bool tf) -> void
             Reg::setbit(ANCFG, 1<<VBGCMP, tf);
             }
 
-//udid
+//udid (20bytes, 11bytes usable-> reduced to 64bit hash)
+//https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
+//FNV-1a
 //=============================================================================
             auto Sys::
-udid        () -> udid_t
+udid        () -> uint64_t
             {
-            udid_t id = { 0 };                      //0x00HHHHHH........
-            id.lot = (uint64_t)(Reg::val(UDID1) & 0x00FFFFFF)<<32;
-            id.lot |= Reg::val(UDID1+4)<<8;         //0x........LLLLLL00
-            id.lot |= Reg::val8(UDID1+8);           //0x..............SS
-            id.die = Reg::val16(UDID1+12)<<16;      //0xXXXX....
-            id.die |= Reg::val16(UDID1+16);         //0x....YYYY
-            return id;
-            // .lot = 0x00HHHHHHLLLLLLSS - LOT/SCRIBE
-            // .die = 0xXXXXYYYY - DIE-XY
+            uint64_t hash = 0xcbf29ce484222325;
+            for(uint8_t i = 0; i < 20; i++){
+                uint8_t tmp = Reg::val8(UDID1+i);
+                hash = (hash ^ tmp) * 0x100000001b3;
+            }
+            return hash;
             }

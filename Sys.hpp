@@ -57,25 +57,24 @@ bgap_comp   (bool) -> void;
 
             //==== UDID ====
 
-            using
-udid_t      = struct { uint64_t lot; uint32_t die; };
-
             static auto
-udid        () -> udid_t;
+udid        () -> uint64_t;
 
 };
 
 /*
-udid - only 11 unique bytes - 9 unused
+udid - only 11 bytes used - 9 unused
 UDID1: FF917471 Lot Number H
 UDID2: FF938000 Lot Number L
 UDID3: FFFFFF23 Scribe
 UDID4: FFFF0253 Die X coordinate
 UDID5: FFFF0253 Die Y coordinate
+(appear to be bcd numbers)
+not too useful, so just create a 'unique' 64 bit hash
 
-udid function returns either LOT/SCRIBE info or DIEXY info
-UDID  lot: 0091747193800023 LOTH|LOTL|SCRIBE
-UDID  die: 02530253 DIEX|DIEY
+hashed value returned from udid()-
+UDID: 5cc0ece0d9c1d4a6
+
 
 
 devid
