@@ -124,6 +124,10 @@ samp_extend (bool) -> void;
             static auto
 samp_time   (uint8_t) -> void;
 
+            //minimal conversion times for frc(8MHz)/pbclk(24MHz) for 10/12bits
+            enum
+CONVTIME    { FRC10BIT = 1, FRC12BIT, PBCLK10BIT, PBCLK12BIT };
+
             //set conversion clock time Tad, default = 4 (max needed)
             static auto
 conv_time   (uint8_t = 4) -> void;
@@ -204,10 +208,6 @@ ch_hit      (CH0SA) -> bool;
             //get all channels adc compare hit bit
             static auto
 ch_hit      () -> uint32_t;
-
-            //minimal conversion times for frc/pbclk(24MHz) for 10/12bits
-            enum
-CONVTIME    { FRC10BIT = 1, FRC12BIT, PBCLK10BIT, PBCLK12BIT };
 
 };
 

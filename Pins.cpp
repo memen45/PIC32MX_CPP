@@ -92,16 +92,17 @@ latval      (bool tf) -> void
 adcval      () -> uint16_t
             {
             Adc adc;
+            adc.on(true);
             adc.mode_12bit(true);           //12bit mode
             adc.format(adc.INT16);          //integer
             adc.trig_sel(adc.AUTO);         //adc starts conversion
             adc.samp_time(31);              //max sampling time- 31Tad
             adc.conv_time();                //if no arg,default is 4 (for 24MHz)
             adc.ch_sel((Adc::CH0SA)m_an);   //ANn (AVss if no ANn for pin)
-            adc.on(true);
             adc.samp(true);
             while(not Adc::done());         //blocking
             return (uint16_t)Adc::read();   //default read is from BUF0
+            adc.on(false);
             }
 
 //=============================================================================
