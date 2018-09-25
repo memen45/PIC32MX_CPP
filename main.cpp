@@ -240,7 +240,11 @@ int main()
     Rgb rgb;
     Led12 led12;
 
-    printf("UDID: %016llx\r\n",Sys::udid());
+    Pins pot{Pins::AN14}; //test adc, get pot adc val
+    uint32_t p = pot.adcval();
+    printf("pot: %d\r\n",p);
+
+    printf("UDID: %016llx\r\n",Sys::udid()); //check udid
     printf("starting...\r\n");
 
     for(;;){
