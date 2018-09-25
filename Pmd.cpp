@@ -26,41 +26,9 @@ lock        () -> void
 
 //=============================================================================
             auto Pmd::
-off         (PMD e) -> void
+disable     (PMD e, bool tf) -> void
             {
             unlock();
-            Reg::setbit(PMD1 + 16 * (e / 32), (1<<(e % 32)));
-            lock();
-            }
-
-//=============================================================================
-            auto Pmd::
-on          (PMD e) -> void
-            {
-            unlock();
-            Reg::clrbit(PMD1 + 16 * (e / 32), (1<<(e % 32)));
-            lock();
-            }
-
-//array of modules to disable/enable
-//=============================================================================
-            auto Pmd::
-off         (PMD* e, uint8_t sz) -> void
-            {
-            unlock();
-            for(uint8_t i = 0; i < sz; i++){
-                Reg::setbit(PMD1 + 16 * (e[i] / 32), (1<<(e[i] % 32)));
-            }
-            lock();
-            }
-
-//=============================================================================
-            auto Pmd::
-on          (PMD* e, uint8_t sz) -> void
-            {
-            unlock();
-            for(uint8_t i = 0; i < sz; i++){
-                Reg::clrbit(PMD1 + 16 * (e[i] / 32), (1<<(e[i] % 32)));
-            }
+            Reg::setbit(PMD1 + 16 * (e / 32), (1<<(e % 32)), tf);
             lock();
             }
