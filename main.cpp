@@ -28,7 +28,6 @@
 
 
 
-
 //svg colors for rgb led
 const uint8_t svg[][3]{
 /*blue*/ {0,0,255},

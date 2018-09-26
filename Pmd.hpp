@@ -19,8 +19,7 @@ PMD         {
             SPI1 = 136, SPI2 = 137, SPI3 = 138,
             I2C1 = 144, I2C2 = 145, I2C3 = 146, USB = 152,
             RTCC = 160, REFO = 168,                                 //PMD6
-            DMA = 196,                                              //PDM7
-            ALL = 255                                               //all on/off
+            DMA = 196                                               //PDM7
             };
 
             //disable peripheral true/false
