@@ -29,6 +29,10 @@ lock        () -> void
 disable     (PMD e, bool tf) -> void
             {
             unlock();
-            Reg::setbit(PMD1 + 16 * (e / 32), (1<<(e % 32)), tf);
+            if(e == ALL){ //all PMD1-7 (0x10 register spacing)
+                for(uint8_t i = 0; i < 7*16; i += 16) Reg::setbit(PMD1+i, tf);
+            } else {
+                Reg::setbit(PMD1 + 16 * (e / 32), (1<<(e % 32)), tf);
+            }
             lock();
             }
