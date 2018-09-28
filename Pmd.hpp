@@ -30,5 +30,6 @@ disable     (PMD, bool) -> void;
 
 /*
 reset values for registers PMD1-7 is 0 (enabled)
-(contrary to datasheet, which says default value is 0xFFFF)
+(datasheet register table shows default value of 0xFFFF,
+ but in the text says default is 0 )
 */
