@@ -27,3 +27,8 @@ PMD         {
 disable     (PMD, bool) -> void;
 
 };
+
+/*
+reset values for registers PMD1-7 is 0 (enabled)
+(contrary to datasheet, which says default value is 0xFFFF)
+*/
