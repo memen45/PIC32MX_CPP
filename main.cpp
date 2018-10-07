@@ -26,6 +26,7 @@
 
 #include "UsbCdcAcm.hpp"
 
+#include "Nvm.hpp"
 
 
 //svg colors for rgb led
@@ -245,6 +246,14 @@ int main()
 
     printf("UDID: %016llx\r\n",Sys::udid()); //check udid
     printf("starting...\r\n");
+
+    //check page erase time
+    //cp0 count
+    uint32_t t1 = Cp0::count();
+    //erase last page
+    uint8_t err = Nvm::page_erase(Nvm::mem_size()-1);
+    uint32_t t2 = Cp0::count();
+    printf("result: %d  clocks: %d\r\n", err, (t2-t1)*2);
 
     for(;;){
         Wdt::reset();
