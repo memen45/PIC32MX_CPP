@@ -139,7 +139,7 @@ refo_on     () -> void;
 
             enum
 ROSEL       : uint8_t {
-            RSYSCLK = 0, RPOSC = 2, RFRC, RLPRC, RSOSC, RPLLVCO = 7
+            RSYSCLK = 0, RPOSC = 2, RFRC, RLPRC, RSOSC, RPLLVCO = 7, RREFCLKI = 9
             };
 
             //refo on, src sel
