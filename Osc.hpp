@@ -273,6 +273,8 @@ frcclk      () -> uint32_t;
             static const uint32_t   m_frcosc_freq = 8000000;
             //manually set here if want exact ext freq
             static const uint32_t   m_extosc_freq = 0;
+            //manually set REFCLKI freqency here if using external REFO clock
+            static const uint32_t   m_refclki_freq = 0;
             static const uint8_t    m_mul_lookup[7];
 
 };

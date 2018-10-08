@@ -229,7 +229,7 @@ int main()
     osc.tun_auto(true);                     //let sosc tune frc
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 18, 10, 5, 0, 4, 6, 0 } );
+    if(dt.year == 0) Rtcc::datetime( { 18, 10, 7, 0, 19, 48, 0 } );
 
     Rtcc::on(true);
 
@@ -246,14 +246,6 @@ int main()
 
     printf("UDID: %016llx\r\n",Sys::udid()); //check udid
     printf("starting...\r\n");
-
-    //check page erase time
-    //cp0 count
-    uint32_t t1 = Cp0::count();
-    //erase last page
-    uint8_t err = Nvm::page_erase(Nvm::mem_size()-1);
-    uint32_t t2 = Cp0::count();
-    printf("result: %d  clocks: %d\r\n", err, (t2-t1)*2);
 
     for(;;){
         Wdt::reset();

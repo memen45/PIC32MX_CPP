@@ -310,6 +310,7 @@ refoclk     () -> uint32_t
                 case RLPRC:     m_refoclk = 32125;          break;
                 case RSOSC:     m_refoclk = 32768;          break;
                 case RPLLVCO:   m_refoclk = vcoclk();       break;
+                case RREFCLKI:  m_refoclk = m_refclki_freq; break;
                 //should not get anything else, could set clk src
                 //to frc/pll if think could ever get here
             }
