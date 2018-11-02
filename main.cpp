@@ -228,8 +228,22 @@ int main()
     osc.sosc(true);                         //enable sosc if not already
     osc.tun_auto(true);                     //let sosc tune frc
 
+//testing REFOCLKI
+//Pins led1{Pins::D3, Pins::OUT};
+//Pins clki{Pins::D0, Pins::OUT}; //drive refclki
+//Pins clko{Pins::B15, Pins::IN}; //watch refclko
+//osc.refo_on(osc.RREFCLKI); //pin34 RD0 in
+//osc.refo_div(200); //divide by 200 (=200ms below, as loop is 1ms)
+//osc.refo_out(true); //pin3 RB15 out
+//
+//for(;;){
+//    clki.invert();
+//    if(clko.pinval()) led1.on(); else led1.off();
+//    Delay::wait_ms(1);
+//}
+
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 18, 10, 7, 0, 19, 48, 0 } );
+    if(dt.year == 0) Rtcc::datetime( { 18, 10, 8, 0, 10, 15, 0 } );
 
     Rtcc::on(true);
 

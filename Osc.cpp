@@ -211,7 +211,7 @@ pll_set     (PLLMUL m, DIVS d, PLLSRC s) -> void
             auto Osc::
 refo_div    (uint16_t v) -> void
             {
-            Reg::val(REFO1CON, v);
+            Reg::val(REFO1CON + 2, v);
             }
 
 //=============================================================================
@@ -227,7 +227,7 @@ refo_on     () -> void
             {
             refoclk(); //calculate if needed
             Reg::setbit(REFO1CON, 1<<ON);
-            while(refo_active() == 0);
+//            while(refo_active() == 0);
             }
 
 //=============================================================================
@@ -243,7 +243,7 @@ refo_on     (ROSEL e) -> void
 refo_off    () -> void
             {
             Reg::clrbit(REFO1CON, 1<<ON);
-            while(refo_active());
+//            while(refo_active());
             }
 
 //=============================================================================
