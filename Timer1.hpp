@@ -32,7 +32,8 @@ wr_busy     () -> bool;
 
             enum
 CLK         : uint16_t {
-            SOSC = 0x0002, T1CK = 0x0102, LPRC = 0x0202, PBCLK = 0x0000
+            //bit1 = sysclock/ext, bit8:7 = ext src, 0=sosc,1=t1ck,2=lprc
+            PBCLK = 0, SOSC = 1<<1, T1CK = 1<<8|1<<1, LPRC = 2<<8|1<<1
             };
 
             //clock source - also sets TCS unless pbclk
