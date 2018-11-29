@@ -359,15 +359,19 @@ rx_empty    () -> bool
             auto Uart::
 baud_set    (uint32_t v) -> void
             {
+            if(v < 110) v = 110;
+            if(v > 921600) v = 921600;
             m_uartx_baud = v;
             uint32_t bclk = baud_clk();
             v = (bclk / 16 / (m_uartx_baud / 100));
-            if( ((v / 100 * 100) / (v % 100)) < 50 ){ //<50 = >2% error,
-                v *= 4; //so switch to hispeed
+            if( (v % 100) && ((v / 100 * 100) / (v % 100)) < 50 ){ //<50 = >2% error,
+                //so switch to hispeed
+                v = (bclk / 4 / (m_uartx_baud / 100));
                 hispeed(true);
             } else { hispeed(false); }
             Reg::val(m_uartx_base + UXBRG, (v/100)-1);
             }
+
 // 115200 8MHz
 //8000000 / 16 / 1152 = 434,
 // (434 / 100 * 100) / (434 % 100) = 11 = 8.5%error -> need hispeed

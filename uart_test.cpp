@@ -1,4 +1,4 @@
-#if 0
+#if 1
 #include "Osc.hpp"
 #include "Uart.hpp"
 
@@ -78,7 +78,7 @@ void main(void) {
 
 #endif
 
-#if 1
+#if 0
 
 //another uart test with irq
 
