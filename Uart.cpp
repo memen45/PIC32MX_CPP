@@ -44,70 +44,59 @@ UXBRG = 16
 
 //Uart
 
-//setup pins manually (and enable tx/rx as needed)
+//base uart instantiation
+//UARTX-> <b3:0> -> |rx|tx|uartN| -> rx=b3 tx=b2 uartn=<b1:0>
 //=============================================================================
             Uart::
-Uart        (UARTX e)
+Uart        (UARTX e, uint32_t baud)
             :
             m_uartx_base((vu32ptr)U1MODE + ((e bitand 3) * UARTX_SPACING)),
             m_uartx_tx(*((vu32ptr)U1MODE + ((e bitand 3) *
                 UARTX_SPACING) + UXTXREG)),
             m_uartx_rx(*((vu32ptr)U1MODE + ((e bitand 3) *
                 UARTX_SPACING) + UXRXREG)),
-            m_uartx_baud(0)
+            m_uartx_baud(baud)
             {
+                if(e bitand (1<<2)) tx_on(true);
+                if(e bitand (1<<3)) rx_on(true);
             }
 
-//specify tx/rx pins
+//specify tx/rx pins (UART2,UART3)
+//(there is no 'Pins' value of 0, so can use 0 to check if tx/rx pin not used)
+//(when called by the following instantiation function with tx/rx only)
 //=============================================================================
             Uart::
 Uart        (UARTX e, Pins::RPN tx, Pins::RPN rx, uint32_t baud)
             :
-            Uart(e)
+            Uart(e, baud)
             {
-            //UART1 is fixed pins, no pps
-            if(e == Uart::UART2){
-                Pins r(rx, Pins::INPU); r.pps_in(Pins::U2RX);
-                Pins t(tx, Pins::OUT); t.pps_out(Pins::U2TX);
+            uint32_t u = (uint32_t)(e bitand 3); //uart 0-2
+            //UART1 is fixed pins, no pps (UART1 is 0)
+            if(u == 0) return;
+            //must be uart2 (1) or uart3 (2)
+            if(rx) {
+                Pins r(rx, Pins::INPU);
+                r.pps_in(u == 1 ? r.U2RX : r.U3RX);
             }
-            else if(e == Uart::UART3){
-                Pins r(rx, Pins::INPU); r.pps_in(Pins::U3RX);
-                Pins t(tx, Pins::OUT); t.pps_out(Pins::U3TX);
+            if(tx){
+                Pins t(tx, Pins::OUT);
+                t.pps_out(u == 1 ? t.U2TX : t.U3TX);
             }
-            m_uartx_baud = baud;
-            baud_set();
-            rx_on(true);
-            tx_on(true);
             }
 
-//tx or rx only
+//specify tx or rx pin only (UART2,UART3)
+//use UARTnTX or UARTnRX
 //=============================================================================
             Uart::
 Uart        (UARTX e, Pins::RPN trx, uint32_t baud)
             :
-            Uart(e)
+            //rx overides any attempt to use both tx/rx when using UARTn
+            //instead of correctly using UARTnTX or UARTnRX
+            Uart(e,
+                (e bitand (1<<3)) ? (Pins::RPN)0 : trx, //tx
+                (e bitand (1<<3)) ? trx : (Pins::RPN)0, //rx
+                baud)
             {
-            //UART1 is fixed pins, no pps
-            if((e bitand 3) == Uart::UART2){
-                if(e bitand (1<<2)){
-                    Pins t(trx, Pins::OUT); t.pps_out(Pins::U2TX);
-                    tx_on(true);
-                } else {
-                    Pins r(trx, Pins::INPU); r.pps_in(Pins::U2RX);
-                    rx_on(true);
-                }
-            }
-            else if((e bitand 3) == Uart::UART3){
-                if(e bitand (1<<2)){
-                    Pins t(trx, Pins::OUT); t.pps_out(Pins::U3TX);
-                    tx_on(true);
-                } else {
-                    Pins r(trx, Pins::INPU); r.pps_in(Pins::U3RX);
-                    rx_on(true);
-                }
-            }
-            m_uartx_baud = baud;
-            baud_set();
             }
 
 //uxtxreg
@@ -365,7 +354,7 @@ baud_set    (uint32_t v) -> void
             uint32_t bclk = baud_clk();
             //always use highspeed, simpler and works fine @ 24Mhz/921600
             //max clock and lowest baud also fits in uxbrg in highspeed
-            v = (bclk / 4 / m_uartx_baud);
+            v = bclk / 4 / m_uartx_baud;
             hispeed(true);
             //if v is 0 (clock too slow for desired baud),
             //just set to maximum baud for this clock

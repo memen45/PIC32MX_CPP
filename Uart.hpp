@@ -8,30 +8,35 @@
 
 struct Uart  {
 
-    //instantiate Uart with uart number only (pins setup manually)-
+    //instantiate Uart with uart number, optionally baud rate-
+    //(pins setup manually)
     //(use this for UART1- has fixed pins, so cannot use pps)
-    //  Uart u(UART1);
+    //  UARTn, [, baud ]
+    //  Uart u(UART1);              //tx+rx, default baud 115200
+    //  Uart u(UART1TX, 230400);    //tx only, 230400 baud
 
     //or uart number and tx/rx pin info (tx or rx only), optionally baud rate-
-    //  UARTnTX|RX, tx|rx pin, [baud]
-    //  Uart u(UART2TX, Pins::A0);          //115200 default baud
-    //  Uart u(UART2TX, Pins::A0, 19200);   //specify baud
-    //  Uart u(UART2RX, Pins::A0, 19200);   //specify baud
+    //  UARTnTX|RX, tx|rx pin [, baud ]
+    //  Uart u(UART2TX, Pins::A0);          //tx, 115200 default baud
+    //  Uart u(UART2TX, Pins::A0, 19200);   //tx, 19200 baud
+    //  Uart u(UART2RX, Pins::A0, 230400);  //rx, 230400 baud
 
     //or uart number and both tx/rx pins info, optionally set baud rate
-    //  UARTn, tx pin, rx pin,  [baud]
-    //  Uart u(UART2, Pins::A0, Pins::B0);  //uart#, tx pin, rx pin, [baud]
+    //  UARTn, tx pin, rx pin [, baud ]
+    //  Uart u(UART2, Pins::A0, Pins::B0);
     //  Uart u(UART2, Pins::A0, Pins::B0, 230400);
 
             enum
 UARTX       {
-            UART1 = 0, UART1TX = UART1|1<<2, UART1RX = UART1,
-            UART2 = 1, UART2TX = UART2|1<<2, UART2RX = UART2,
-            UART3 = 2, UART3TX = UART3|1<<2, UART3RX = UART3
+            //assume both tx/rx wanted unless specified
+            //      |rx|tx|uartN|
+            UART1 = 0|1<<2|1<<3, UART1TX = 0|1<<2, UART1RX = 0|1<<3,
+            UART2 = 1|1<<2|1<<3, UART2TX = 1|1<<2, UART2RX = 1|1<<3,
+            UART3 = 2|1<<2|1<<3, UART3TX = 2|1<<2, UART3RX = 2|1<<3
             };
 
-Uart        (UARTX);
-Uart        (UARTX, Pins::RPN, uint32_t = 0); //tx/rx only, bit2=1=tx bit2=0=rx
+Uart        (UARTX, uint32_t = 0); //fixed pins, or setup pins on your own
+Uart        (UARTX, Pins::RPN, uint32_t = 0); //tx/rx only
 Uart        (UARTX, Pins::RPN, Pins::RPN, uint32_t = 0);
 
 
