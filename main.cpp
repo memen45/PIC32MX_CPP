@@ -50,7 +50,7 @@ const uint8_t svg[][3]{
 };
 
 
-Uart info{Uart::UART2, Pins::C6, Pins::C7, 460800};
+Uart info{Uart::UART2, Pins::C6, Pins::C7, 1000000};
 
 
 //printf - use replacement putc
@@ -243,7 +243,7 @@ int main()
 //}
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 18, 11, 28, 0, 21, 23, 0 } );
+    if(dt.year == 0) Rtcc::datetime( { 18, 11, 29, 0, 2, 53, 0 } );
 
     Rtcc::on(true);
     info.on(true);

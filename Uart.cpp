@@ -364,8 +364,9 @@ baud_set    (uint32_t v) -> void
             m_uartx_baud = v;
             uint32_t bclk = baud_clk();
             v = (bclk / 16 / (m_uartx_baud / 100));
-            if( (v % 100) && ((v / 100 * 100) / (v % 100)) < 50 ){ //<50 = >2% error,
-                //so switch to hispeed
+            //if >=115200 or >2% error, use highspeed
+            if( (v >= 115200) ||
+                ((v % 100) && ((v / 100 * 100) / (v % 100)) < 50 )){
                 v = (bclk / 4 / (m_uartx_baud / 100));
                 hispeed(true);
             } else { hispeed(false); }
