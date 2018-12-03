@@ -90,8 +90,8 @@ Uart        (UARTX e, Pins::RPN tx, Pins::RPN rx, uint32_t baud)
             Uart::
 Uart        (UARTX e, Pins::RPN trx, uint32_t baud)
             :
-            //rx overides any attempt to use both tx/rx when using UARTn
-            //instead of correctly using UARTnTX or UARTnRX
+            //overide any attempt to use both tx/rx when using UARTn
+            //instead of correctly using UARTnTX or UARTnRX (rx overrides)
             Uart(e,
                 (e bitand (1<<3)) ? (Pins::RPN)0 : trx, //tx
                 (e bitand (1<<3)) ? trx : (Pins::RPN)0, //rx
