@@ -359,33 +359,18 @@ rx_empty    () -> bool
             auto Uart::
 baud_set    (uint32_t v) -> void
             {
-            if(v < 110) v = 110;
-            if(v > 921600) v = 921600;
-            m_uartx_baud = v;
+            if(v < 110) v = 110;        //minimum
+            if(v > 921600) v = 921600;  //maximum
+            m_uartx_baud = v;           //store
             uint32_t bclk = baud_clk();
-            v = (bclk / 16 / (m_uartx_baud / 100));
-            //if >=115200 or >2% error, use highspeed
-            if( (v >= 115200) ||
-                ((v % 100) && ((v / 100 * 100) / (v % 100)) < 50 )){
-                v = (bclk / 4 / (m_uartx_baud / 100));
-                hispeed(true);
-            } else { hispeed(false); }
-            Reg::val(m_uartx_base + UXBRG, (v/100)-1);
+            //always use highspeed, simpler and works fine @ 24Mhz/921600
+            //max clock and lowest baud also fits in uxbrg in highspeed
+            v = (bclk / 4 / m_uartx_baud);
+            hispeed(true);
+            //if v is 0 (clock too slow for desired baud),
+            //just set to maximum baud for this clock
+            Reg::val(m_uartx_base + UXBRG, v ? v-1 : 0);
             }
-
-// 115200 8MHz
-//8000000 / 16 / 1152 = 434,
-// (434 / 100 * 100) / (434 % 100) = 11 = 8.5%error -> need hispeed
-//8000000 / 4 / 1152 = 1736,
-// (1736 / 100 * 100) / (1736 % 100) = 47 = 2.1%error -> ok (best we can get)
-// 115200 24MHz
-//24000000 / 16 / 1152 = 1302,
-// (1302 / 100 * 100) / (1302 % 100) = 650 = 0.15%error -> ok
-// 230400 24MHz
-//24000000 / 16 / 2304 = 651,
-// (651 / 100 * 100) / (651 % 100) = 11 = 8.5%error -> need hispeed
-//24000000 / 4 / 2304 = 2604,
-// (2604 / 100 * 100) / (2604 % 100) = 650 = 0.15%error -> ok
 
 //called by clk_sel(), on()
 //=============================================================================
