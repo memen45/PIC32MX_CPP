@@ -166,7 +166,7 @@ lowison     (bool tf) -> void
 digital_in  () -> void
             {
             Reg::setbit(m_pt + TRIS, m_pn);
-            Reg::clrbit(m_pt, m_pn);
+            Reg::clrbit(m_pt, m_pn); //ANSELx
             }
 
 //=============================================================================
@@ -174,7 +174,7 @@ digital_in  () -> void
 analog_in   () -> void
             {
             Reg::setbit(m_pt + TRIS, m_pn);
-            Reg::setbit(m_pt, m_pn);
+            Reg::setbit(m_pt, m_pn); //ANSELx
             }
 
 //=============================================================================
@@ -182,7 +182,7 @@ analog_in   () -> void
 digital_out () -> void
             {
             Reg::clrbit(m_pt + TRIS, m_pn);
-            Reg::clrbit(m_pt, m_pn);
+            Reg::clrbit(m_pt, m_pn); //ANSELx
             }
 
 //=============================================================================
