@@ -11,6 +11,8 @@
 #include <cstring> //strlen
 #include <stdio.h>
 
+#include <stdlib.h>
+
 #include "Pins.hpp"
 #include "Wdt.hpp"
 #include "Osc.hpp"
@@ -243,7 +245,7 @@ int main()
 //}
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 18, 12, 6, 0, 5, 33, 0 } );
+    if(dt.year == 0) Rtcc::datetime( { 18, 12, 18, 0, 0, 53, 0 } );
 
     Rtcc::on(true);
     info.on(true);
