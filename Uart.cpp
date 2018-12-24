@@ -261,10 +261,11 @@ rx_oerr     () -> bool
             }
 
 //=============================================================================
+            //clear rx overrun err
             auto Uart::
-rx_oerr_clr () -> void
+rx_oerrclr  () -> void
             {
-            return Reg::clrbit(m_uartx_base + UXSTA, 1<<OERR);
+            Reg::clrbit(m_uartx_base + UXSTA, 1<<OERR);
             }
 
 //=============================================================================
@@ -279,7 +280,9 @@ rx_empty    () -> bool
             auto Uart::
 baud_set    (uint32_t v) -> void
             {
-            m_uartx_baud = v;
+            if(v < 110) v = 110;        //minimum
+            if(v > 921600) v = 921600;  //maximum
+            m_uartx_baud = v;           //store
             uint32_t bclk = baud_clk();
             v = ((bclk / v) >> 2) - 1;          //desired baud
             if( (v >> 16) != 0 ){               //check if fits in 16bit

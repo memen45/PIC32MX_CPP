@@ -9,19 +9,22 @@
 
 struct Uart  {
 
-    //instantiate Uart with uart number only (pins setup manually)-
+    //instantiate Uart with uart number, optionally baud rate-
+    //(pins setup manually)
     //(use this for UART1- has fixed pins, so cannot use pps)
-    //  Uart u(UART1);
+    //  UARTn, [, baud ]
+    //  Uart u(UART1);              //tx+rx, default baud 115200
+    //  Uart u(UART1TX, 230400);    //tx only, 230400 baud
 
     //or uart number and tx/rx pin info (tx or rx only), optionally baud rate-
-    //  UARTnTX|RX, tx|rx pin, [baud]
-    //  Uart u(UART2TX, Pins::A0);          //115200 default baud
-    //  Uart u(UART2TX, Pins::A0, 19200);   //specify baud
-    //  Uart u(UART2RX, Pins::A0, 19200);   //specify baud
+    //  UARTnTX|RX, tx|rx pin [, baud ]
+    //  Uart u(UART2TX, Pins::A0);          //tx, 115200 default baud
+    //  Uart u(UART2TX, Pins::A0, 19200);   //tx, 19200 baud
+    //  Uart u(UART2RX, Pins::A0, 230400);  //rx, 230400 baud
 
     //or uart number and both tx/rx pins info, optionally set baud rate
-    //  UARTn, tx pin, rx pin,  [baud]
-    //  Uart u(UART2, Pins::A0, Pins::B0);  //uart#, tx pin, rx pin, [baud]
+    //  UARTn, tx pin, rx pin [, baud ]
+    //  Uart u(UART2, Pins::A0, Pins::B0);
     //  Uart u(UART2, Pins::A0, Pins::B0, 230400);
 
             enum
@@ -161,9 +164,9 @@ rx_ferr     () -> bool;
             auto
 rx_oerr     () -> bool;
 
-			//clear rx overrun err
-			auto
-rx_oerr_clr	() -> void;
+            //clear rx overrun err
+            auto
+rx_oerrclr  () -> void;
 
             //rx is empty?
             auto

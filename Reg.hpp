@@ -134,14 +134,17 @@ struct Reg {
 //setbit, specify 1 or 0
 template <typename T, typename V>
 void Reg::setbit(T r, V v, bool sc){
-    if(sc) setbit(r,v); else clrbit(r,v);
+    using vtype = typename getVsiz<V>::type;
+    *((volatile vtype*)r+Vsiz<sizeof(V)>::CLR+(sc*Vsiz<sizeof(V)>::CLR)) = v;
+    //if(sc) setbit(r,v); else clrbit(r,v); //this is 4bytes more code per use
+
 }
 
 //setbit
 template <typename T, typename V>
 void Reg::setbit(T r, V v){
     using vtype = typename getVsiz<V>::type;
-    //((volatile vtype*)r)[Vsiz<sizeof(V)>::SET] = v;
+    //((volatile vtype*)r)[Vsiz<sizeof(V)>::SET] = v; //same thing
     *((volatile vtype*)r+Vsiz<sizeof(V)>::SET) = v;
 }
 

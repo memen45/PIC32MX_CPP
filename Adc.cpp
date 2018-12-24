@@ -36,9 +36,8 @@ enum {
 //ADC1BUFn
 //=============================================================================
             auto Adc::
-read        (uint8_t n) -> uint32_t
+read        (BUFN n) -> uint32_t
             {
-            if(n > ADC1BUF_LAST) n = ADC1BUF_LAST;
             return Reg::val(ADC1BUF0 + (n * ADC1BUF_SPACING));
             }
 

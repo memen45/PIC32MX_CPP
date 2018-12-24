@@ -1,3 +1,4 @@
+#if 0
 #include "Osc.hpp"
 #include "Uart.hpp"
 
@@ -20,7 +21,7 @@ int main()
         info.puts ( "Hello World? " );
     }
 }
-
+#endif
 
 
 
@@ -59,7 +60,7 @@ void main(void) {
     //C6 happens to not have analog function (no ansel), so no need to setup as pps overrides tris
     RPOR5bits.RP23R = 4; //RP23 -> U2TX
     U2MODEbits.BRGH = 1; //hispeed
-    U2BRGbits.BRG = 2604; //230400 w/24MHz
+    U2BRGbits.BRG = 26; //230400 w/24MHz 24MHz/4/230400=26.04
     U2MODEbits.PDSEL = 0; //8N
     U2MODEbits.STSEL = 0; //1
     U2STAbits.UTXEN = 1; //tx on
@@ -75,4 +76,116 @@ void main(void) {
     }
 }
 
+#endif
+
+#if 1
+
+//another uart test with irq
+
+#include "Osc.hpp"
+#include "Pins.hpp"
+#include "Uart.hpp"
+#include "Irq.hpp"
+#include "Delay.hpp"
+#include "Cp0.hpp"
+
+//led status
+struct LedStatus {
+
+    enum LEDSTATE { OK, OERR, BITERR, NOCHANGE };
+
+    private:
+
+    using led_t = struct {
+        Pins pin;
+        Delay persist;
+        uint16_t ontime;
+    };
+
+    //rgb led on curiosity board
+    led_t leds[3] = {
+        { {Pins::D1, Pins::OUT}, {}, 4000 },     //Red
+        { {Pins::C3, Pins::OUT}, {}, 100 },      //Green
+        { {Pins::C15, Pins::OUT}, {}, 4000 }    //Blue
+    };
+    enum RGB { R, G, B };
+
+    //led's state
+    LEDSTATE state{NOCHANGE};
+
+    public:
+
+    //regular check/update from cp0 isr
+    void update(){
+        //check if persist time expired
+        for( auto& n : leds ){
+            if( n.persist.expired() ) n.pin.off();
+        }
+
+        //if no change to state, done
+        if( state == NOCHANGE ) return;
+
+        //change made, turn off all led's first
+        for( auto& n : leds ) n.pin.off();
+
+        //assume state is OK
+        RGB n = G;
+        if( state == OERR ) n = R;
+        else if( state == BITERR ) n = B;
+
+        //set delay and turn on
+        leds[n].persist.set_ms( leds[n].ontime );
+        leds[n].pin.on();
+        state = NOCHANGE;
+    }
+
+    //set led status (from rx isr)
+    void status(LEDSTATE s){ state = s; }
+
+};
+LedStatus leds;
+
+//uart2 to Onion Omega2 uart1, 921600 baud (1Mbaud actual)
+Uart info { Uart::UART2, Pins::C6, Pins::C7, 921600 };
+
+int main()
+{
+    Osc osc;
+    osc.pll_set( osc.MUL12, osc.DIV4 ); //24MHz
+    info.on( true ); //turn on uart after osc (baud is set when turned on)
+    Irq::init( Irq::UART2_RX, 1, 0, true ); //pri=1, spri=0, on=true
+    Cp0::compare_ms( 10 ); //cp0 irq every 10ms
+    Irq::init( Irq::CORE_TIMER, 1, 0, true );
+    Irq::global( true );
+    info.puts( "\r\nStarting uart echo test with led status...\r\n\r\n" );
+    for(;;){
+        Osc::idle(); //cp0 or rx2 will wake
+    }
+}
+
+ISRautoflag( CORE_TIMER ){
+    Cp0::compare_reload();
+    leds.update();
+}}
+
+ISR( UART2_RX ){
+    Irq irq;
+
+    //get errors before reading rx buf
+    if( info.rx_oerr() ){
+        leds.status(leds.OERR);
+        info.rx_oerrclr(); //clear all buffers
+    } else if( info.rx_ferr() || info.rx_perr() ){
+        leds.status(leds.BITERR);
+        info.read(); //read just to advance buffer
+    } else {
+        leds.status(leds.OK);
+        char c = info.read();
+        info.putchar( c ); //echo rx to tx
+        if( c == '\r' ) info.putchar( '\n' ); //add nl to cr
+        //Delay::wait_s( 2 ); //to force overrun error
+    }
+
+    irq.flag_clr( irq.UART2_RX );
+}
 #endif

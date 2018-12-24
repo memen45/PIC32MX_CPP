@@ -7,11 +7,11 @@
  http://ww1.microchip.com/downloads/en/DeviceDoc/60001387c.pdf
 
  =============================================================================*/
-
-
 #include <cstdint>
 #include <cstring> //strlen
 #include <stdio.h>
+
+#include <stdlib.h>
 
 #include "Pins.hpp"
 #include "Wdt.hpp"
@@ -23,11 +23,12 @@
 #include "Cp0.hpp"
 #include "Rtcc.hpp"
 #include "Irq.hpp"
+#include "Sys.hpp"
 
 
 #include "UsbCdcAcm.hpp"
 
-
+#include "Nvm.hpp"
 
 
 //svg colors for rgb led
@@ -51,7 +52,7 @@ const uint8_t svg[][3]{
 };
 
 
-Uart info{Uart::UART2, Pins::C6, Pins::C7, 230400};
+Uart info{Uart::UART2, Pins::C6, Pins::C7, 1000000};
 
 
 //printf - use replacement putc
@@ -170,7 +171,7 @@ struct Led12 {
 
 };
 
-bool cdc_notify(UsbEP* ep);
+//bool cdc_notify(UsbEP* ep);
 
 struct UsbTest {
 
@@ -216,7 +217,7 @@ struct UsbTest {
 };
 UsbTest utest;
 //helper- need static function for callback
-bool cdc_notify(UsbEP* ep){ return utest.notify(ep); }
+//bool cdc_notify(UsbEP* ep){ return utest.notify(ep); }
 
 int main()
 {
@@ -229,11 +230,24 @@ int main()
     osc.sosc(true);                         //enable sosc if not already
     osc.tun_auto(true);                     //let sosc tune frc
 
+//testing REFOCLKI
+//Pins led1{Pins::D3, Pins::OUT};
+//Pins clki{Pins::D0, Pins::OUT}; //drive refclki
+//Pins clko{Pins::B15, Pins::IN}; //watch refclko
+//osc.refo_on(osc.RREFCLKI); //pin34 RD0 in
+//osc.refo_div(200); //divide by 200 (=200ms below, as loop is 1ms)
+//osc.refo_out(true); //pin3 RB15 out
+//
+//for(;;){
+//    clki.invert();
+//    if(clko.pinval()) led1.on(); else led1.off();
+//    Delay::wait_ms(1);
+//}
+
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 18, 6, 16, 0, 8, 48, 0} );
+    if(dt.year == 0) Rtcc::datetime( { 18, 12, 18, 0, 0, 53, 0 } );
 
     Rtcc::on(true);
-
     info.on(true);
     cls(); //cls
     cursor(false); //hide cursor
@@ -241,6 +255,11 @@ int main()
     Rgb rgb;
     Led12 led12;
 
+    Pins pot{Pins::AN14}; //test adc, get pot adc val
+    uint32_t p = pot.adcval();
+    printf("pot: %d\r\n",p);
+
+    printf("UDID: %016llx\r\n",Sys::udid()); //check udid
     printf("starting...\r\n");
 
     for(;;){

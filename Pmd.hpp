@@ -22,20 +22,12 @@ PMD         {
             DMA = 196                                               //PDM7
             };
 
-            //single
+            //disable peripheral true/false
             static auto
-off         (PMD) -> void;
-
-            //single
-            static auto
-on          (PMD) -> void;
-
-            //array, size
-            static auto
-off         (PMD*, uint8_t) -> void;
-
-            //array, size
-            static auto
-on          (PMD*, uint8_t) -> void;
+disable     (PMD, bool) -> void;
 
 };
+
+/*
+reset values for all PMD bits is 0 (enabled)
+*/

@@ -236,11 +236,12 @@ int main(){
 
     //__________________________________________________________________________
     //peripheral module disable
-    Pmd::off(pmd_list,sizeof(pmd_list));    //test Pmd disable (T1/2/3 disabled)
-                                            //can verify T1,T2,T3 no longer work
-                                            //with below enable commented out
-
-    Pmd::on(pmd_list,sizeof(pmd_list));     //test Pmd enable- all back on again
+    for(Pmd::PMD e : pmd_list){             //test Pmd disable (T1/2/3 disabled)
+        Pmd::disable(e, true);              //can verify T1,T2,T3 no longer work
+    }                                       //with below loop commented out
+    for(Pmd::PMD e : pmd_list){             //test Pmd enable- all back on again
+        Pmd::disable(e, false);
+    }
 
     //__________________________________________________________________________
     //see if pps code works (does nothing)
