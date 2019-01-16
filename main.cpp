@@ -9,9 +9,9 @@
  =============================================================================*/
 #include <cstdint>
 #include <cstring> //strlen
-#include <stdio.h>
+#include <cstdio>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "Pins.hpp"
 #include "Wdt.hpp"
@@ -24,12 +24,8 @@
 #include "Rtcc.hpp"
 #include "Irq.hpp"
 #include "Sys.hpp"
-
-
 #include "UsbCdcAcm.hpp"
-
 #include "Nvm.hpp"
-
 
 //svg colors for rgb led
 const uint8_t svg[][3]{
@@ -53,7 +49,6 @@ const uint8_t svg[][3]{
 
 
 Uart info{Uart::UART2, Pins::C6, Pins::C7, 1000000};
-
 
 //printf - use replacement putc
 //will use $ for trigger to print ansi colors (use $$ if want $ character)
@@ -245,7 +240,7 @@ int main()
 //}
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 19, 1, 13, 0, 2, 19, 0 } );
+    if(dt.year == 0) Rtcc::datetime( { 19, 1, 15, 0, 19, 0, 0 } );
 
     Rtcc::on(true);
     info.on(true);
