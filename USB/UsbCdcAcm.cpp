@@ -10,7 +10,9 @@
 // sorry, a few defines here to make descriptor construction a little easier
 
 // constexpr function to get first char of stringified macro arg
-constexpr char char0(const char* str){ return str[0]; }
+constexpr char char0(const char* str){
+    return str[0] == 0 ? ' ' : str[0]; // if empty string, return space (' ')
+}
 
 // word -> byte, byte - any word (2bytes) in descriptor, use W(word)
 #define W(v) (uint8_t)(v), (v) >> 8
