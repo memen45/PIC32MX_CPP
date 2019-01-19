@@ -11,7 +11,7 @@
 
 // constexpr function to get first char of stringified macro arg
 constexpr char char0(const char* str){
-    return str[0] == 0 ? ' ' : str[0]; // if empty string, return space (' ')
+    return str[0] ? str[0] : ' '; // if empty string, return space (' ')
 }
 
 // word -> byte, byte - any word (2bytes) in descriptor, use W(word)
