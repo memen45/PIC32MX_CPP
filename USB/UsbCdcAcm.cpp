@@ -3,6 +3,7 @@
 #include "UsbEP.hpp"
 #include "UsbCentral.hpp"
 #include "Usb.hpp"
+#include <cstring> //strlen
 
 //#include <cstdio> //debug printf
 
@@ -219,6 +220,17 @@ send        (uint8_t* buf, uint16_t siz, UsbEP::notify_t f) -> bool
             return m_ep_txrx.send_busy() ? false : m_ep_txrx.send(buf, siz, f);
             }
 
+// called by user app to send data, optionally set callback when send complete
+// buf = buffer pointer, optional notify func pointer
+// (this one will get the buffer size, so cannot have embedded 0's)
+//=============================================================================
+            auto UsbCdcAcm::
+send        (uint8_t* buf, UsbEP::notify_t f) -> bool
+            {
+            uint16_t siz = strlen( (const char*)buf );
+            return m_ep_txrx.send_busy() ? false : m_ep_txrx.send(buf, siz, f);
+            }
+
 // called by user app to recv data, optionally set callback when recv complete
 // buf = buffer pointer, siz = bytes to recv, optional notify func pointer
 // if receive less than full packet, recv will be considered complete
@@ -236,4 +248,13 @@ recv        (uint8_t* buf, uint16_t siz, UsbEP::notify_t f) -> bool
 is_active   () -> bool
             {
             return m_is_active;
+            }
+
+// check if usb busy
+//=============================================================================
+            auto UsbCdcAcm::
+busy        (TXRX e) -> bool
+            {
+            return m_is_active and
+                e == SEND ? m_ep_txrx.send_busy() : m_ep_txrx.recv_busy() ;
             }
