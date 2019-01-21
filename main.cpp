@@ -240,7 +240,7 @@ int main()
 //}
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 19, 1, 16, 0, 13, 51, 0 } );
+    if(dt.year == 0) Rtcc::datetime( { 19, 1, 21, 0, 16, 17, 0 } );
 
     Rtcc::on(true);
     info.on(true);
