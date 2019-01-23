@@ -227,10 +227,11 @@ send        (uint8_t* buf, uint16_t siz, UsbEP::notify_t f) -> bool
 // (this one will get the buffer size, so cannot have embedded 0's)
 //=============================================================================
             auto UsbCdcAcm::
-send        (uint8_t* buf, UsbEP::notify_t f) -> bool
+send        (const char* buf, UsbEP::notify_t f) -> bool
             {
-            uint16_t siz = strlen( (const char*)buf );
-            return m_ep_txrx.send_busy() ? false : m_ep_txrx.send(buf, siz, f);
+            uint16_t siz = strlen( buf );
+            return m_ep_txrx.send_busy() ?
+                false : m_ep_txrx.send((uint8_t*)buf, siz, f);
             }
 
 // called by user app to recv data, optionally set callback when recv complete
