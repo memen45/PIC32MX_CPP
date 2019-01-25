@@ -132,31 +132,46 @@ using line_coding_t = struct {
 };
 static line_coding_t        m_line_coding = {115200, 0, 0, 8};
 
-//SetupPkt_t.wRequest  (bRequest<<8|bmRequestType)
-enum SETUP_WREQUEST_CDC {
-    CDC_SEND_ENCAP_COMMAND =        0x0021,
-    CDC_GET_ENCAP_RESPONSE =        0x0121,
-    CDC_SET_COMM_FEATURE =          0x0221,
-    CDC_GET_COMM_FEATURE =          0x0321,
-    CDC_CLEAR_COMM_FEATURE =        0x0421,
-    CDC_SET_LINE_CODING =           0x2021,
-    CDC_GET_LINE_CODING =           0x2121,
-    CDC_SET_CONTROL_LINE_STATE =    0x2221,
-    CDC_SEND_BREAK =                0x2321
+//SetupPkt_t.bRequest
+enum SETUP_BREQUEST_CDC {
+    CDC_BMREQUEST_TYPE =            0x21, //bmRequestType
+    CDC_SEND_ENCAP_COMMAND =        0x00,
+    CDC_GET_ENCAP_RESPONSE =        0x01,
+    CDC_SET_COMM_FEATURE =          0x02,
+    CDC_GET_COMM_FEATURE =          0x03,
+    CDC_CLEAR_COMM_FEATURE =        0x04,
+    CDC_SET_LINE_CODING =           0x20,
+    CDC_GET_LINE_CODING =           0x21,
+    CDC_SET_CONTROL_LINE_STATE =    0x22,
+    CDC_SEND_BREAK =                0x23
 };
 //-----------------------------------------------------------------------------
 
 
-// any endpoint 0 setup requests for us handles here
+
+#include <cstdio>   //debug printf
+
+//debug line coding being set in ep0->recv, call here when recv'd
+bool ep0callback(UsbEP* ep0){
+    printf("UsbCdcAcm:: m_line_coding $3%d %d %d %d$7\r\n",
+            m_line_coding.baud, m_line_coding.stop_bits,
+            m_line_coding.parity, m_line_coding.data_bits);
+    return true;
+}
+
+// any endpoint 0 setup requests for us handled here
 // we take care of endpoint 0 rx/tx here (if for us), but endpoint 0 will
 // take care of next setup rx
 //-----------------------------------------------------------------private-----
             static auto
 ep0_request (UsbEP0* ep0) -> bool
             {
-            switch(ep0->setup_pkt.wRequest){
+            if(ep0->setup_pkt.bmRequestType != CDC_BMREQUEST_TYPE) return false;
+            printf("UsbCdcAcm::ep0_request  bRequest: $2%02x$7\r\n",
+                   ep0->setup_pkt.bRequest);
+            switch(ep0->setup_pkt.bRequest){
                 case CDC_SET_LINE_CODING:
-                    ep0->recv((uint8_t*)&m_line_coding, 7, true); //rx data,
+                    ep0->recv((uint8_t*)&m_line_coding, 7, true, ep0callback); //rx data,
                     ep0->send((uint8_t*)&m_line_coding, 0, true); //tx status
                     return true;
                 case CDC_GET_LINE_CODING:
@@ -164,7 +179,7 @@ ep0_request (UsbEP0* ep0) -> bool
                     ep0->recv((uint8_t*)&m_line_coding, 0, true); //rx status
                     return true;
                 case CDC_SET_CONTROL_LINE_STATE:
-                    ep0->send((uint8_t*)&m_line_coding, 0, true);//tx status
+                    ep0->send((uint8_t*)&m_line_coding, 0, true); //tx status
                     return true;
             }
             return false; //unhandled
@@ -184,6 +199,10 @@ service     (uint8_t ustat, UsbEP0* ep0) -> bool
                 m_is_active = false;            //not active
                 return true;
             }
+            //init sets active, but the reset above also happens in the
+            //initial setup, so anytime we get here we must be active
+            //so turn it back on
+            m_is_active = true;
 
             //ustat = ep<5:2> dir<1> even/odd<0>
             uint8_t n = ustat>>2;

@@ -300,9 +300,11 @@ control     (UsbEP0* ep0) -> bool
             bool stall = false;
 
             //DEBUG
-            printf("pkt: $1%04x %04x %04x %04x$7\r\n",
-            ep0->setup_pkt.wRequest,ep0->setup_pkt.wValue,
-            ep0->setup_pkt.wIndex,ep0->setup_pkt.wLength);
+            printf("pkt: $1%02x %02x %04x %04x %04x$7\r\n",
+                ep0->setup_pkt.bmRequestType, ep0->setup_pkt.bRequest,
+                ep0->setup_pkt.wValue,
+                ep0->setup_pkt.wIndex,
+                ep0->setup_pkt.wLength);
 
             //process std req
             //pkt.wRequest, wValue, wIndex, wLength
