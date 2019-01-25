@@ -8,8 +8,17 @@
             auto Delay::
 expired     () -> bool
             {
+            if( m_expired ) return true; //do not calc, already know
             if((Cp0::count() - m_start) >= m_countn) m_expired = true;
             return m_expired;
+            }
+
+//force time expired
+//=============================================================================
+            auto Delay::
+expire      () -> void
+            {
+            m_expired = true;
             }
 
 //=============================================================================

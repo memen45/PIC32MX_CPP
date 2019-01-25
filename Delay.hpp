@@ -39,6 +39,10 @@ struct Delay {
             auto
 expired     () -> bool;
 
+            //force time expired
+            auto
+expire      () -> void;
+
             //restart, do again
             auto
 restart     () -> void;

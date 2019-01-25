@@ -55,23 +55,33 @@ struct UsbTest {
     Pins sw3{ Pins::C4, Pins::INPU };   //turn usb on/off
     Pins sw2{ Pins::C10, Pins::INPU };  //enable/disable xmit data
     Pins led1{Pins::D3, Pins::OUT};     //led1 activity light
+    Pins led2{Pins::C13, Pins::OUT};    //led2 usb active light
 
     UsbCdcAcm cdc;
 
-    Delay sw_debounce, xmit_dly;
+    Delay xmit_dly;
 
     bool xmit = false;
 
     void update(){
-        if( sw3.ison() and sw_debounce.expired() ){
+        if( sw3.ison() ){
             cdc.init( not cdc.is_active() );
-            sw_debounce.set_ms(500);
+            Delay::wait_ms(100); //debounce
+            while( sw3.ison() );
         }
-        if( sw2.ison() and sw_debounce.expired() ){
+        if( not cdc.is_active() ){
+            led2.off();
+            xmit = false;
+            xmit_dly.expire();
+            return; //not on, no need to go further
+        }
+        led2.on();
+        if( sw2.ison() ){
             xmit = not xmit;
-            sw_debounce.set_ms(500);
+            Delay::wait_ms(100); //debounce
+            while( sw2.ison() );
         }
-        if( cdc.is_active() and xmit and xmit_dly.expired() ){
+        if( xmit and xmit_dly.expired() ){
             xmit_dly.set_ms(1000);
             if(cdc.send((uint8_t*)"Hello ", strlen("Hello "))){
                 led1.on();

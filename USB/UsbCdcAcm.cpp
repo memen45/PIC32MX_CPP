@@ -4,8 +4,8 @@
 #include "UsbCentral.hpp"
 #include "Usb.hpp"
 #include <cstring> //strlen
+#include <cstdio>  //debug printf
 
-//#include <cstdio> //debug printf
 
 // sorry, a few defines here to make descriptor construction a little easier
 
@@ -149,9 +149,8 @@ enum SETUP_BREQUEST_CDC {
 
 
 
-#include <cstdio>   //debug printf
 
-//debug line coding being set in ep0->recv, call here when recv'd
+//debug line coding being set in ep0->recv, call here after data received
 bool ep0callback(UsbEP* ep0){
     printf("UsbCdcAcm:: m_line_coding $3%d %d %d %d$7\r\n",
             m_line_coding.baud, m_line_coding.stop_bits,
@@ -167,8 +166,6 @@ bool ep0callback(UsbEP* ep0){
 ep0_request (UsbEP0* ep0) -> bool
             {
             if(ep0->setup_pkt.bmRequestType != CDC_BMREQUEST_TYPE) return false;
-            printf("UsbCdcAcm::ep0_request  bRequest: $2%02x$7\r\n",
-                   ep0->setup_pkt.bRequest);
             switch(ep0->setup_pkt.bRequest){
                 case CDC_SET_LINE_CODING:
                     ep0->recv((uint8_t*)&m_line_coding, 7, true, ep0callback); //rx data,
@@ -179,6 +176,8 @@ ep0_request (UsbEP0* ep0) -> bool
                     ep0->recv((uint8_t*)&m_line_coding, 0, true); //rx status
                     return true;
                 case CDC_SET_CONTROL_LINE_STATE:
+                    printf("UsbCdcAcm::ep0_request  set control line state: $4RTS: %d DTR: %d$7\r\n",
+                        (ep0->setup_pkt.wValue bitand 2) >> 1, ep0->setup_pkt.wValue bitand 1);
                     ep0->send((uint8_t*)&m_line_coding, 0, true); //tx status
                     return true;
             }
