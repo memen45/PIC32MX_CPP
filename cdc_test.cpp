@@ -83,7 +83,11 @@ struct UsbTest {
         }
         if( xmit and xmit_dly.expired() ){
             xmit_dly.set_ms(1000);
-            if(cdc.send((uint8_t*)"Hello ", strlen("Hello "))){
+            static char hw[] = "\033[3_mHello ";
+            static int count = 1;
+            hw[3] = count + '0';
+            count++; if( count > 7 ) count = 1;
+            if( cdc.send((const char*)hw) ){
                 led1.on();
                 Delay::wait_ms( 20 );
                 led1.off();
@@ -109,7 +113,7 @@ int main()
     cls(); //cls
     cursor(false); //hide cursor
 
-    printf("Starting...\r\n");
+    printf("\r\n\r\nStarting...\r\n");
 
     for(;;){
         Wdt::reset();

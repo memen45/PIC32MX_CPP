@@ -176,7 +176,7 @@ ep0_request (UsbEP0* ep0) -> bool
                     ep0->recv((uint8_t*)&m_line_coding, 0, true); //rx status
                     return true;
                 case CDC_SET_CONTROL_LINE_STATE:
-                    printf("UsbCdcAcm::ep0_request  set control line state: $4RTS: %d DTR: %d$7\r\n",
+                    printf("UsbCdcAcm::ep0_request  $4RTS: %d DTR: %d$7\r\n",
                         (ep0->setup_pkt.wValue bitand 2) >> 1, ep0->setup_pkt.wValue bitand 1);
                     ep0->send((uint8_t*)&m_line_coding, 0, true); //tx status
                     return true;
