@@ -77,7 +77,7 @@ static const uint8_t m_descriptor[] = {
 
         //cdc descriptors
         5, 36, 0, W(0x110),     //cdc header
-        4, 36, 2, 0,            //acm, the last is D0|D1|D2|D3- don't need
+        4, 36, 2, 2,            //acm, D0-D3, D1 set- line coding/state
         5, 36, 6, 0, 1,         //union comm id=0, data id=1
         5, 36, 1, 0, 1,         //call management
 
@@ -145,11 +145,8 @@ enum SETUP_BREQUEST_CDC {
     CDC_SET_CONTROL_LINE_STATE =    0x22,
     CDC_SEND_BREAK =                0x23
 };
-//-----------------------------------------------------------------------------
 
-
-
-
+//-------------------------------------------------------------------debug-----
 //debug line coding being set in ep0->recv, call here after data received
 bool ep0callback(UsbEP* ep0){
     printf("UsbCdcAcm:: m_line_coding $3%d %d %d %d$7\r\n",
@@ -166,8 +163,11 @@ bool ep0callback(UsbEP* ep0){
 ep0_request (UsbEP0* ep0) -> bool
             {
             if(ep0->setup_pkt.bmRequestType != CDC_BMREQUEST_TYPE) return false;
+            printf("UsbCdcAcm::ep0_request  $3%02x$7\r\n",
+                ep0->setup_pkt.bRequest);
             switch(ep0->setup_pkt.bRequest){
                 case CDC_SET_LINE_CODING:
+                    //callback will print debug info after line coding data received
                     ep0->recv((uint8_t*)&m_line_coding, 7, true, ep0callback); //rx data,
                     ep0->send((uint8_t*)&m_line_coding, 0, true); //tx status
                     return true;

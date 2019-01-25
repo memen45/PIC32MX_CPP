@@ -29,6 +29,24 @@
             }
             do_something_else();
         }
+
+    if a delay is set (polled version), and you will not get back to it
+    within the rollover time, expire it so the next time its checked for
+    expiration it will be expired (without doing the calculation, which
+    by now could be completely wrong)- not needed much, but there can be
+    times it is handy
+
+        Delay d{ 1000 };
+        //I now go something else for 5 minutes
+        //if I check if expired, could be wrong calculation as rollover
+        //has occurred
+        //so anytime you want to force an expiration, do-
+        d.expire();
+        //now next time its checked, it will be expired no matter what rollover
+        //occurred
+        //not a great example here, but you will run into times a forced expiration
+        //will be needed (or simply change your code sctructure to avoid it)
+
 */
 
 struct Delay {
