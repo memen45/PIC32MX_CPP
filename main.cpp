@@ -202,7 +202,7 @@ struct UsbTest {
                 count == 1 ? "\r\n" : "", count,
                 dt.month, dt.day, dt.year+2000, dt.hour12, dt.minute, dt.second,
                 dt.pm ? "PM" : "AM");
-        if(cdc.send((uint8_t*)buf, strlen(buf))) count++;
+        if( cdc.send( (const char*)buf ) ) count++;
         return true;
     }
 
