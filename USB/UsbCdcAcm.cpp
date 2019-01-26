@@ -57,7 +57,7 @@ static const uint8_t m_descriptor[] = {
     W(0x0100),          //(bcd) release number
     1,                  //string index- manufacturer
     2,                  // -product
-    0,                  // -serial number
+    3,                  // -serial number
     1,                  //#of configurations
 
 
@@ -102,6 +102,8 @@ static const uint8_t m_descriptor[] = {
     SD(_(P),_(I),_(C),_(3),_(2),_(M),_(M)),     //manufacturer (idx 1)
 
     SD(_(C),_(D),_(C),_(-),_(A),_(C),_(M)),     //product (idx 2)
+
+    SD(_(1),_(2),_(3),_(4),_(5),_(6),_(7)),     //serial# (idx 3)
 
     0 //end of descriptor marker - NEED to know where descriptor ends
       //since we iterrate over descriptor in our desciptor functions
@@ -248,8 +250,7 @@ send        (uint8_t* buf, uint16_t siz, UsbEP::notify_t f) -> bool
 send        (const char* buf, UsbEP::notify_t f) -> bool
             {
             uint16_t siz = strlen( buf );
-            return m_ep_txrx.send_busy() ?
-                false : m_ep_txrx.send((uint8_t*)buf, siz, f);
+            return send( (uint8_t*)buf, siz, f );
             }
 
 // called by user app to recv data, optionally set callback when recv complete

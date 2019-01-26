@@ -19,6 +19,7 @@
 #include "Resets.hpp"
 #include "Uart.hpp"
 #include "UsbCdcAcm.hpp"
+#include "UsbEP.hpp" //notify_t
 
 
 //need uart going for usb debugging
@@ -48,14 +49,13 @@ void cls(){ info.putchar(12); }
 void cursor(bool tf){ printf("\033[?25%c", tf ? 'h' : 'l'); }
 void ansi_reset(){ printf("\033[0m"); }
 
-
+//keep them 'global' (led1 used outside of class)
+Pins sw3{ Pins::C4, Pins::INPU };   //turn usb on/off
+Pins sw2{ Pins::C10, Pins::INPU };  //enable/disable xmit data
+Pins led2{Pins::C13, Pins::OUT};    //led2 usb active light
+Pins led1{Pins::D3, Pins::OUT};     //led1 activity light
 
 struct UsbTest {
-
-    Pins sw3{ Pins::C4, Pins::INPU };   //turn usb on/off
-    Pins sw2{ Pins::C10, Pins::INPU };  //enable/disable xmit data
-    Pins led1{Pins::D3, Pins::OUT};     //led1 activity light
-    Pins led2{Pins::C13, Pins::OUT};    //led2 usb active light
 
     UsbCdcAcm cdc;
 
@@ -63,11 +63,18 @@ struct UsbTest {
 
     bool xmit = false;
 
+    static bool txcallback(UsbEP* ep){
+        Delay::wait_ms(3);
+        led1.off();
+        return true;
+    }
+
     void update(){
         if( sw3.ison() ){
             cdc.init( not cdc.is_active() );
-            Delay::wait_ms(100); //debounce
+            //debounce
             while( sw3.ison() );
+            Delay::wait_ms(100);
         }
         if( not cdc.is_active() ){
             led2.off();
@@ -78,19 +85,20 @@ struct UsbTest {
         led2.on();
         if( sw2.ison() ){
             xmit = not xmit;
-            Delay::wait_ms(100); //debounce
+            //debounce
             while( sw2.ison() );
+            Delay::wait_ms(100);
         }
         if( xmit and xmit_dly.expired() ){
-            xmit_dly.set_ms(1000);
+            xmit_dly.set_ms(500);
+            //cycle through ansi colors 1-7
             static char hw[] = "\033[3_mHello ";
             static int count = 1;
             hw[3] = count + '0';
             count++; if( count > 7 ) count = 1;
-            if( cdc.send((const char*)hw) ){
+            //send, turn on led1, callback will turn it off
+            if( cdc.send((const char*)hw, txcallback) ){
                 led1.on();
-                Delay::wait_ms( 20 );
-                led1.off();
             }
         }
     }
