@@ -5,6 +5,7 @@
 #include "Usb.hpp"
 #include <cstring> //strlen
 #include <cstdio>  //debug printf
+#include "UsbDebug.hpp"
 
 
 // sorry, a few defines here to make descriptor construction a little easier
@@ -125,6 +126,9 @@ static UsbEP                m_ep_txrx;   //ep2 = tx/rx
 static const uint8_t        m_ep_txrx_num = 2;
 static bool                 m_is_active = false;
 
+static int                  m_dbg_bufsiz = 0;
+static char*                m_dbg_buf = nullptr;
+
 //line coding- just store what pc wants, also return if wanted
 using line_coding_t = struct {
     uint32_t    baud;
@@ -151,9 +155,22 @@ enum SETUP_BREQUEST_CDC {
 //-------------------------------------------------------------------debug-----
 //debug line coding being set in ep0->recv, call here after data received
 bool ep0callback(UsbEP* ep0){
-    printf("UsbCdcAcm:: m_line_coding $3%d %d %d %d$7\r\n",
+
+//     printf("UsbCdcAcm:: m_line_coding $3%d %d %d %d$7\r\n",
+//             m_line_coding.baud, m_line_coding.stop_bits,
+//             m_line_coding.parity, m_line_coding.data_bits);
+//     return true;
+
+    // * * * * DEBUG * * * *
+    m_dbg_buf = UsbDebug::getbuf(&m_dbg_bufsiz);
+    if( m_dbg_bufsiz ){
+        snprintf(m_dbg_buf, m_dbg_bufsiz,
+            "UsbCdcAcm:: line coding set to: $3%d %d %d %d$7\r\n",
             m_line_coding.baud, m_line_coding.stop_bits,
             m_line_coding.parity, m_line_coding.data_bits);
+        UsbDebug::debug( m_dbg_buf );
+    }
+    // * * * * DEBUG * * * *
     return true;
 }
 
@@ -165,8 +182,16 @@ bool ep0callback(UsbEP* ep0){
 ep0_request (UsbEP0* ep0) -> bool
             {
             if(ep0->setup_pkt.bmRequestType != CDC_BMREQUEST_TYPE) return false;
-            printf("UsbCdcAcm::ep0_request  $3%02x$7\r\n",
+
+            // * * * * DEBUG * * * *
+            m_dbg_buf = UsbDebug::getbuf(&m_dbg_bufsiz);
+            if( m_dbg_bufsiz ){
+                snprintf(m_dbg_buf, m_dbg_bufsiz, "UsbCdcAcm::ep0_request  $3%02x$7\r\n",
                 ep0->setup_pkt.bRequest);
+                UsbDebug::debug( m_dbg_buf );
+            }
+            // * * * * DEBUG * * * *
+
             switch(ep0->setup_pkt.bRequest){
                 case CDC_SET_LINE_CODING:
                     //callback will print debug info after line coding data received
@@ -178,8 +203,18 @@ ep0_request (UsbEP0* ep0) -> bool
                     ep0->recv((uint8_t*)&m_line_coding, 0, true); //rx status
                     return true;
                 case CDC_SET_CONTROL_LINE_STATE:
-                    printf("UsbCdcAcm::ep0_request  $4RTS: %d DTR: %d$7\r\n",
-                        (ep0->setup_pkt.wValue bitand 2) >> 1, ep0->setup_pkt.wValue bitand 1);
+
+                    // * * * * DEBUG * * * *
+                    m_dbg_buf = UsbDebug::getbuf(&m_dbg_bufsiz);
+                    if( m_dbg_bufsiz ){
+                        snprintf(m_dbg_buf, m_dbg_bufsiz,
+                            "UsbCdcAcm::ep0_request  $4RTS: %d DTR: %d$7\r\n",
+                            (ep0->setup_pkt.wValue bitand 2) >> 1,
+                            ep0->setup_pkt.wValue bitand 1);
+                        UsbDebug::debug( m_dbg_buf );
+                    }
+                    // * * * * DEBUG * * * *
+
                     ep0->send((uint8_t*)&m_line_coding, 0, true); //tx status
                     return true;
             }

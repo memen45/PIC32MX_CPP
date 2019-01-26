@@ -26,6 +26,7 @@
 #include "Sys.hpp"
 #include "UsbCdcAcm.hpp"
 #include "Nvm.hpp"
+#include "UsbDebug.hpp"
 
 //svg colors for rgb led
 const uint8_t svg[][3]{
@@ -170,30 +171,35 @@ struct Led12 {
 
 struct UsbTest {
 
-    Pins sw3{ Pins::C4, Pins::INPU }; //turn on usb
-    Pins sw1{ Pins::B9, Pins::INPU }; //turn off usb
+    Pins sw3{ Pins::C4, Pins::INPU }; //turn on/off usb
+    Pins sw1{ Pins::B9, Pins::INPU }; //enable/disable debug
     Pins sw2{ Pins::C10, Pins::INPU }; //xmit data
 
     UsbCdcAcm cdc;
 
-    Delay sw_debounce;
     Delay dly;
 
     char buf[64];
     bool ison = false;
     bool xmit = false;
 
+    void debounce(Pins& p){
+        while( p.ison() );
+        Delay::wait_ms( 100 ); //long
+    }
+
     bool notify(UsbEP* ep){
-        static uint8_t count = 0;
-        if(count >= 10){
+        static uint8_t count = 1;
+        if(count > 7){
             dly.set_ms(5000); //set when called
-            count = 0;
+            count = 1;
             return true;
         }
         dly.set_ms(2);
         Rtcc::datetime_t dt = Rtcc::datetime();
-        snprintf(buf, 64, "%s[%02d] %02d-%02d-%04d %02d:%02d:%02d %s\r\n",
-                count ? "" : "\r\n", count,
+        snprintf(buf, 64, "\033[3%dm%s[%02d] %02d-%02d-%04d %02d:%02d:%02d %s\r\n",
+                count,
+                count == 1 ? "\r\n" : "", count,
                 dt.month, dt.day, dt.year+2000, dt.hour12, dt.minute, dt.second,
                 dt.pm ? "PM" : "AM");
         if(cdc.send((uint8_t*)buf, strlen(buf))) count++;
@@ -201,13 +207,20 @@ struct UsbTest {
     }
 
     void update(){
-        if(sw3.ison() and not ison) ison = cdc.init(true);
-        if(sw1.ison() and ison) ison = cdc.init(false);
-        if(sw2.ison() and sw_debounce.expired()){
-            xmit = not xmit;
-            sw_debounce.set_ms(1000);
+        if( sw3.ison() ){
+            cdc.init( not cdc.is_active() );
+            debounce( sw3 );
         }
-        if(ison and xmit and dly.expired()) notify(0);
+        if( not cdc.is_active() ) return;
+        if( sw1.ison() ){
+            UsbDebug::debug( not UsbDebug::debug() );
+            debounce( sw1 );
+        }
+        if( sw2.ison() ){
+            xmit = not xmit;
+            debounce( sw2 );
+        }
+        if( xmit and dly.expired()) notify(0);
     }
 };
 UsbTest utest;
@@ -240,7 +253,7 @@ int main()
 //}
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 19, 1, 23, 0, 14, 26, 0 } );
+    if(dt.year == 0) Rtcc::datetime( { 19, 1, 25, 0, 21, 31, 0 } );
 
     Rtcc::on(true);
     info.on(true);

@@ -3,10 +3,15 @@
 #include "Usb.hpp"
 #include "Reg.hpp"
 #include "UsbCentral.hpp"
+#include "UsbDebug.hpp"
 
 #include <cstdint>
 #include <cstring>  //memset, memcpy
-#include <cstdio>   //debug printf
+
+// private, debug use
+static int                      m_dbg_bufsiz = 0;
+static char*                    m_dbg_buf = nullptr;
+
 
 
 //=============================================================================
@@ -150,9 +155,18 @@ setup       (info_t& x) -> bool
             if(x.bdt[i].stat.uown) i xor_eq 1;      //already in use, try next
             if(x.bdt[i].stat.uown) return false;    //both in use, cannot do
 
-            //DEBUG
-            printf("%s %s %d (%d)\r\n",
-            &x == &m_tx ? "TX" : "RX",i ? "ODD" : "EVEN",x.btogo,x.epsiz);
+            // * * * * DEBUG * * * *
+            m_dbg_buf = UsbDebug::getbuf(&m_dbg_bufsiz);
+            if( m_dbg_bufsiz ){
+                snprintf(m_dbg_buf, m_dbg_bufsiz,
+                    "%s %s %d (%d)\r\n",
+                    &x == &m_tx ? "TX" : "RX",
+                    i ? "ODD" : "EVEN",
+                    x.btogo, x.epsiz);
+                UsbDebug::debug( m_dbg_buf );
+            }
+            // * * * * DEBUG * * * *
+
 
             volatile Usb::ctrl_t ctrl = {0};
             ctrl.bstall = x.stall;
@@ -178,9 +192,15 @@ service     (uint8_t ustat) -> bool
             x.ppbi xor_eq 1;                                    //toggle ppbi
             x.d01 xor_eq 1;                                     //toggle d01
 
-            //DEBUG
-            printf("UsbEP::service   ustat: %d  ep: %d  pid: %d  bdt: %08x\r\n",
-            ustat,m_epnum,x.stat.pid,x.stat.val32);
+            // * * * * DEBUG * * * *
+            m_dbg_buf = UsbDebug::getbuf(&m_dbg_bufsiz);
+            if( m_dbg_bufsiz ){
+                snprintf(m_dbg_buf, m_dbg_bufsiz,
+                    "UsbEP::service   ustat: %d  ep: %d  pid: %d  bdt: %08x\r\n",
+                    ustat,m_epnum,x.stat.pid,x.stat.val32);
+                UsbDebug::debug( m_dbg_buf );
+            }
+            // * * * * DEBUG * * * *
 
             if(x.stat.pid == UsbCh9::OUT)       service_out();  //out (rx)
             else if(x.stat.pid == UsbCh9::IN)   service_in();   //in (tx)
@@ -299,12 +319,19 @@ control     (UsbEP0* ep0) -> bool
             //stall flag
             bool stall = false;
 
-            //DEBUG
-            printf("pkt: $1%02x %02x %04x %04x %04x$7\r\n",
-                ep0->setup_pkt.bmRequestType, ep0->setup_pkt.bRequest,
-                ep0->setup_pkt.wValue,
-                ep0->setup_pkt.wIndex,
-                ep0->setup_pkt.wLength);
+            // * * * * DEBUG * * * *
+            m_dbg_buf = UsbDebug::getbuf(&m_dbg_bufsiz);
+            if( m_dbg_bufsiz ){
+                snprintf(m_dbg_buf, m_dbg_bufsiz,
+                    "pkt: $1%02x %02x %04x %04x %04x$7\r\n",
+                    ep0->setup_pkt.bmRequestType, ep0->setup_pkt.bRequest,
+                    ep0->setup_pkt.wValue,
+                    ep0->setup_pkt.wIndex,
+                    ep0->setup_pkt.wLength);
+                UsbDebug::debug( m_dbg_buf );
+            }
+            // * * * * DEBUG * * * *
+
 
             //process std req
             //pkt.wRequest, wValue, wIndex, wLength
@@ -425,10 +452,17 @@ service     (uint8_t ustat) -> bool
             //ppbi and data01, and gets bdt stat)
             if(UsbEP::service(ustat)) return true;
 
-            //DEBUG
             info_t& x = ustat bitand 2 ? m_tx : m_rx; //tx or rx
-            printf("UsbEP0::service   ustat: %d  ep: %d  pid: %d  bdt: %08x\r\n",
-                ustat,m_epnum,x.stat.pid,x.stat.val32);
+
+            // * * * * DEBUG * * * *
+            m_dbg_buf = UsbDebug::getbuf(&m_dbg_bufsiz);
+            if( m_dbg_bufsiz ){
+                snprintf(m_dbg_buf, m_dbg_bufsiz,
+                    "UsbEP0::service   ustat: %d  ep: %d  pid: %d  bdt: %08x\r\n",
+                    ustat,m_epnum,x.stat.pid,x.stat.val32);
+                UsbDebug::debug( m_dbg_buf );
+            }
+            // * * * * DEBUG * * * *
 
             //ep0 setup packet
             if(x.stat.pid == UsbCh9::SETUP and x.stat.count == 8){

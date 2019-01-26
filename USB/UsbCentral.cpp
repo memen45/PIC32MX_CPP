@@ -3,9 +3,8 @@
 #include "Irq.hpp"
 #include "UsbEP.hpp"
 #include "Delay.hpp"
+#include "UsbDebug.hpp"
 
-
-#include <cstdio> //debug printf
 
 //-----------------------------------------------------------------private-----
 static UsbEP0                   ep0;
@@ -15,6 +14,9 @@ static UsbCentral::service_t    m_service = 0;
 //counters
 static uint32_t                 m_timer1ms = 0;
 static uint32_t                 m_sofcount = 0;
+//debug use
+static int                      m_dbg_bufsiz = 0;
+static char*                    m_dbg_buf = nullptr;
 
 //class vars
 //=============================================================================
@@ -58,8 +60,14 @@ attach      () -> void
             auto UsbCentral::
 init        (bool tf) -> bool
             {
-            //DEBUG
-            printf("\r\n\r\nUsbCentral::init(%d)\r\n",tf);
+            // * * * * DEBUG * * * *
+            m_dbg_buf = UsbDebug::getbuf(&m_dbg_bufsiz);
+            if( m_dbg_bufsiz ){
+                snprintf(m_dbg_buf, m_dbg_bufsiz,
+                    "\r\n\r\nUsbCentral::init(%d)\r\n", tf);
+                UsbDebug::debug( m_dbg_buf );
+            }
+            // * * * * DEBUG * * * *
 
             bool wason = Usb::power(Usb::USBPWR);
             detach();
@@ -84,9 +92,15 @@ service     (uint32_t flags, uint8_t ustat) -> void
                 //so we only worry about reset irq when needed
                 usb.irq(usb.URST, true);
 
-                //DEBUG
-                printf("\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",
+                // * * * * DEBUG * * * *
+                m_dbg_buf = UsbDebug::getbuf(&m_dbg_bufsiz);
+                if( m_dbg_bufsiz ){
+                    snprintf(m_dbg_buf, m_dbg_bufsiz,
+                       "\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",
                        usb.frame(),ustat);
+                    UsbDebug::debug( m_dbg_buf );
+                }
+                // * * * * DEBUG * * * *
 
                 if(ustat < 4){                  //endpoint 0 (ustat 0-3)
                     if(not ep0.service(ustat))  //if std request not handled

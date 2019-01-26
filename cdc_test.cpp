@@ -19,11 +19,12 @@
 #include "Resets.hpp"
 #include "Uart.hpp"
 #include "UsbCdcAcm.hpp"
-#include "UsbEP.hpp" //notify_t
+
 
 
 //need uart going for usb debugging
 Uart info{Uart::UART2, Pins::C6, Pins::C7, 1000000};
+
 
 //printf - use replacement putc so we can use our uart class
 //will use $ for trigger to print ansi colors (use $$ if want $ character)
@@ -41,8 +42,8 @@ extern "C" void _mon_putc(char c){
         return;
     }
     //not triggered
-    if(c == '$') trigger = true;//trigger char
-    else info.putchar(c);       //regular char
+    if(c == '$') trigger = true;    //trigger char
+    else info.putchar(c);           //regular char
 }
 
 void cls(){ info.putchar(12); }
@@ -57,6 +58,8 @@ Pins led1{ Pins::D3, Pins::OUT };   //led1 activity light
 
 struct UsbTest {
 
+    private:
+
     UsbCdcAcm cdc;
 
     Delay xmit_dly;
@@ -69,12 +72,17 @@ struct UsbTest {
         return true;
     }
 
+    void debounce(Pins& p){
+        while( p.ison() );
+        Delay::wait_ms( 100 ); //long
+    }
+
+    public:
+
     void update(){
         if( sw3.ison() ){
             cdc.init( not cdc.is_active() );
-            //debounce
-            while( sw3.ison() );
-            Delay::wait_ms(100);
+            debounce( sw3 );
         }
         if( not cdc.is_active() ){
             led2.off();
@@ -85,9 +93,7 @@ struct UsbTest {
         led2.on();
         if( sw2.ison() ){
             xmit = not xmit;
-            //debounce
-            while( sw2.ison() );
-            Delay::wait_ms(100);
+            debounce( sw2 );
         }
         if( xmit and xmit_dly.expired() ){
             xmit_dly.set_ms(500);
