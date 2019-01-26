@@ -457,7 +457,7 @@ service     (uint8_t ustat) -> bool
             if( dbg.debug() ){
                 snprintf( dbg.buffer, dbg.bufsiz,
                     "ustat: %d  ep: %d  pid: %d  bdt: %08x",
-                    ustat,m_epnum,x.stat.pid,x.stat.val32);
+                    ustat, m_epnum, x.stat.pid, x.stat.val32);
                 dbg.debug( m_filename, __func__ );
             }
             // * * * * DEBUG * * * *
