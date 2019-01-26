@@ -52,8 +52,8 @@ void ansi_reset(){ printf("\033[0m"); }
 //keep them 'global' (led1 used outside of class)
 Pins sw3{ Pins::C4, Pins::INPU };   //turn usb on/off
 Pins sw2{ Pins::C10, Pins::INPU };  //enable/disable xmit data
-Pins led2{Pins::C13, Pins::OUT};    //led2 usb active light
-Pins led1{Pins::D3, Pins::OUT};     //led1 activity light
+Pins led2{ Pins::C13, Pins::OUT };  //led2 usb active light
+Pins led1{ Pins::D3, Pins::OUT };   //led1 activity light
 
 struct UsbTest {
 
