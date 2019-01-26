@@ -15,8 +15,7 @@ static UsbCentral::service_t    m_service = 0;
 static uint32_t                 m_timer1ms = 0;
 static uint32_t                 m_sofcount = 0;
 //debug use
-static int                      m_dbg_bufsiz = 0;
-static char*                    m_dbg_buf = nullptr;
+static const char*              m_filename = "UsbCentral.cpp";
 
 //class vars
 //=============================================================================
@@ -61,11 +60,11 @@ attach      () -> void
 init        (bool tf) -> bool
             {
             // * * * * DEBUG * * * *
-            m_dbg_buf = UsbDebug::getbuf(&m_dbg_bufsiz);
-            if( m_dbg_bufsiz ){
-                snprintf(m_dbg_buf, m_dbg_bufsiz,
-                    "\r\n\r\nUsbCentral::init(%d)\r\n", tf);
-                UsbDebug::debug( m_dbg_buf );
+            UsbDebug dbg;
+            if( dbg.debug() ){
+                snprintf( dbg.buffer, dbg.bufsiz,
+                    "%s", tf ? "usb started" : "usb stopped");
+                dbg.debug( m_filename, __func__ );
             }
             // * * * * DEBUG * * * *
 
@@ -93,12 +92,12 @@ service     (uint32_t flags, uint8_t ustat) -> void
                 usb.irq(usb.URST, true);
 
                 // * * * * DEBUG * * * *
-                m_dbg_buf = UsbDebug::getbuf(&m_dbg_bufsiz);
-                if( m_dbg_bufsiz ){
-                    snprintf(m_dbg_buf, m_dbg_bufsiz,
-                       "\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",
+                UsbDebug dbg;
+                if( dbg.debug() ){
+                    snprintf( dbg.buffer, dbg.bufsiz,
+                       "frame: %d  ustat: %d",
                        usb.frame(),ustat);
-                    UsbDebug::debug( m_dbg_buf );
+                    dbg.debug( m_filename, __func__ );
                 }
                 // * * * * DEBUG * * * *
 

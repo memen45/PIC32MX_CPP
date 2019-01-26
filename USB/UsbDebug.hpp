@@ -4,15 +4,23 @@
 
 struct UsbDebug {
 
+    //send out info via printf
+    //(filename, funcname, message)
     static
-    char*   getbuf      (int*);    //get a buffer to use
-
-    static
-    void    debug       (char*);    //send out info via printf
+    void    debug       (const char*, const char*);
 
     static
     void    debug       (bool);     //enable/disable
 
     static
     bool    debug       ();         //get enable/disable
+
+    static
+    const int bufsiz{81};
+
+    static
+    char   buffer[bufsiz];
+
+
 };
+

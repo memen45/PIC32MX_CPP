@@ -109,12 +109,14 @@ struct Rgb {
 
         Rtcc::datetime_t dt = Rtcc::datetime();
 
+        if( not UsbDebug::debug() ){ //if not using uart for debug, print this
         printf("$7color[$3%02d$7]: $2%03d.%03d.%03d$7",
             m_idx,m_ccp[0].compb()>>8,m_ccp[1].compb()>>8,m_ccp[2].compb()>>8);
         printf(" CP0 Count: $1%010u$7", Cp0::count());
         printf(" now: $5%02d-%02d-%04d %02d:%02d:%02d %s$7\r\n",
                 dt.month, dt.day, dt.year+2000, dt.hour12, dt.minute, dt.second,
                 dt.pm ? "PM" : "AM");
+        }
 
         if(++m_idx >= sizeof(svg)/sizeof(svg[0])) m_idx = 0;
     };
@@ -197,9 +199,9 @@ struct UsbTest {
         }
         dly.set_ms(2);
         Rtcc::datetime_t dt = Rtcc::datetime();
-        snprintf(buf, 64, "\033[3%dm%s[%02d] %02d-%02d-%04d %02d:%02d:%02d %s\r\n",
+        snprintf(buf, 64, "\033[3%dm[%02d] %02d-%02d-%04d %02d:%02d:%02d %s ",
                 count,
-                count == 1 ? "\r\n" : "", count,
+                count,
                 dt.month, dt.day, dt.year+2000, dt.hour12, dt.minute, dt.second,
                 dt.pm ? "PM" : "AM");
         if( cdc.send( (const char*)buf ) ) count++;
@@ -253,7 +255,7 @@ int main()
 //}
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 19, 1, 25, 0, 21, 31, 0 } );
+    if(dt.year == 0) Rtcc::datetime( { 19, 1, 26, 0, 7, 55, 0 } );
 
     Rtcc::on(true);
     info.on(true);

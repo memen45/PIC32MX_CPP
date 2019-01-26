@@ -9,9 +9,7 @@
 #include <cstring>  //memset, memcpy
 
 // private, debug use
-static int                      m_dbg_bufsiz = 0;
-static char*                    m_dbg_buf = nullptr;
-
+static const char* m_filename = "UsbEP.cpp";
 
 
 //=============================================================================
@@ -156,14 +154,14 @@ setup       (info_t& x) -> bool
             if(x.bdt[i].stat.uown) return false;    //both in use, cannot do
 
             // * * * * DEBUG * * * *
-            m_dbg_buf = UsbDebug::getbuf(&m_dbg_bufsiz);
-            if( m_dbg_bufsiz ){
-                snprintf(m_dbg_buf, m_dbg_bufsiz,
-                    "%s %s %d (%d)\r\n",
+            UsbDebug dbg;
+            if( dbg.debug() ){
+                snprintf( dbg.buffer, dbg.bufsiz,
+                    "%s %s %d (%d)",
                     &x == &m_tx ? "TX" : "RX",
                     i ? "ODD" : "EVEN",
                     x.btogo, x.epsiz);
-                UsbDebug::debug( m_dbg_buf );
+                dbg.debug( m_filename, __func__ );
             }
             // * * * * DEBUG * * * *
 
@@ -193,12 +191,12 @@ service     (uint8_t ustat) -> bool
             x.d01 xor_eq 1;                                     //toggle d01
 
             // * * * * DEBUG * * * *
-            m_dbg_buf = UsbDebug::getbuf(&m_dbg_bufsiz);
-            if( m_dbg_bufsiz ){
-                snprintf(m_dbg_buf, m_dbg_bufsiz,
-                    "UsbEP::service   ustat: %d  ep: %d  pid: %d  bdt: %08x\r\n",
+            UsbDebug dbg;
+            if( dbg.debug() ){
+                snprintf( dbg.buffer, dbg.bufsiz,
+                    "ustat: %d  ep: %d  pid: %d  bdt: %08x",
                     ustat,m_epnum,x.stat.pid,x.stat.val32);
-                UsbDebug::debug( m_dbg_buf );
+                dbg.debug( m_filename, __func__ );
             }
             // * * * * DEBUG * * * *
 
@@ -320,15 +318,15 @@ control     (UsbEP0* ep0) -> bool
             bool stall = false;
 
             // * * * * DEBUG * * * *
-            m_dbg_buf = UsbDebug::getbuf(&m_dbg_bufsiz);
-            if( m_dbg_bufsiz ){
-                snprintf(m_dbg_buf, m_dbg_bufsiz,
-                    "pkt: $1%02x %02x %04x %04x %04x$7\r\n",
+            UsbDebug dbg;
+            if( dbg.debug() ){
+                snprintf( dbg.buffer, dbg.bufsiz,
+                    "pkt: $1%02x %02x %04x %04x %04x$7",
                     ep0->setup_pkt.bmRequestType, ep0->setup_pkt.bRequest,
                     ep0->setup_pkt.wValue,
                     ep0->setup_pkt.wIndex,
                     ep0->setup_pkt.wLength);
-                UsbDebug::debug( m_dbg_buf );
+                dbg.debug( m_filename, __func__ );
             }
             // * * * * DEBUG * * * *
 
@@ -455,12 +453,12 @@ service     (uint8_t ustat) -> bool
             info_t& x = ustat bitand 2 ? m_tx : m_rx; //tx or rx
 
             // * * * * DEBUG * * * *
-            m_dbg_buf = UsbDebug::getbuf(&m_dbg_bufsiz);
-            if( m_dbg_bufsiz ){
-                snprintf(m_dbg_buf, m_dbg_bufsiz,
-                    "UsbEP0::service   ustat: %d  ep: %d  pid: %d  bdt: %08x\r\n",
+            UsbDebug dbg;
+            if( dbg.debug() ){
+                snprintf( dbg.buffer, dbg.bufsiz,
+                    "ustat: %d  ep: %d  pid: %d  bdt: %08x",
                     ustat,m_epnum,x.stat.pid,x.stat.val32);
-                UsbDebug::debug( m_dbg_buf );
+                dbg.debug( m_filename, __func__ );
             }
             // * * * * DEBUG * * * *
 

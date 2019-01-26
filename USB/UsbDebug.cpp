@@ -1,14 +1,15 @@
 #include "UsbDebug.hpp"
 #include <cstdio>  //printf
+#include "Cp0.hpp"
 
 //_mon_putc has to be used so printf can go out our uart
 //currently created 'somehwere else'
 
+//debug is a blocking function
 
-static const int bufsize{128};
-static const int bufn{2};
-static char m_buf[bufn][bufsize]{0};
 static bool m_enable{true};
+
+char UsbDebug::buffer[UsbDebug::bufsiz] = {0};
 
 // enable/disable
 //=============================================================================
@@ -26,28 +27,17 @@ debug       () -> bool
             return m_enable;
             }
 
-// get a buffer to use
-//=============================================================================
-            auto UsbDebug::
-getbuf      (int* siz) -> char*
-            {
-            *siz = 0;
-            if( not m_enable ) return (char*)0;
-            for(auto& b : m_buf){
-                if( b[0] ) continue; //in use if not 0
-                b[0] = ' '; //mark as in use (harmless)
-                *siz = bufsize; //provide size
-                return &b[0];
-            }
-            return (char*)0;
-            }
-
-
 // send buffer contents out via printf
+// (filename, funcname, message)
 //=============================================================================
             auto UsbDebug::
-debug       (char* msg) -> void
+debug       (const char* fil, const char* fnam) -> void
             {
-            if( m_enable ) printf( "%s", msg );
-            msg[0] = 0; //mark buffer as available
+            if( not m_enable ) return;
+            printf( "[$1%010u$7]", Cp0::count() );
+            printf( "[$2%-14s$7]", fil ); //filename
+            printf( "[$5%-14s$7] %s\r\n", fnam, buffer );
             }
+
+
+
