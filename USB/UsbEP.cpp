@@ -55,7 +55,7 @@ xfer        (info_t& x, uint8_t* buf, uint16_t siz, notify_t f) -> bool
 //specify d01, notify optional (default = 0)
 //=============================================================================
             auto UsbEP::
-send        (uint8_t* buf, uint16_t siz, bool d01, notify_t f) -> bool
+write       (uint8_t* buf, uint16_t siz, bool d01, notify_t f) -> bool
             {
             m_tx.d01 = d01;
             return xfer(m_tx, buf, siz, f);
@@ -63,7 +63,7 @@ send        (uint8_t* buf, uint16_t siz, bool d01, notify_t f) -> bool
 
 //=============================================================================
             auto UsbEP::
-send        (uint8_t* buf, uint16_t siz, notify_t f) -> bool
+write       (uint8_t* buf, uint16_t siz, notify_t f) -> bool
             {
             return xfer(m_tx, buf, siz, f);
             }
@@ -71,7 +71,7 @@ send        (uint8_t* buf, uint16_t siz, notify_t f) -> bool
 //specify d01, notify optional (default = 0)
 //=============================================================================
             auto UsbEP::
-recv        (uint8_t* buf, uint16_t siz, bool d01, notify_t f) -> bool
+read        (uint8_t* buf, uint16_t siz, bool d01, notify_t f) -> bool
             {
             m_rx.d01 = d01;
             return xfer(m_rx, buf, siz, f);
@@ -79,16 +79,16 @@ recv        (uint8_t* buf, uint16_t siz, bool d01, notify_t f) -> bool
 
 //=============================================================================
             auto UsbEP::
-recv        (uint8_t* buf, uint16_t siz, notify_t f) -> bool
+read        (uint8_t* buf, uint16_t siz, notify_t f) -> bool
             {
             return xfer(m_rx, buf, siz, f);
             }
 
 //-----------------------------------------------------------------------------
             auto UsbEP::
-busy        (TXRX e) -> bool
+busy        (TXRX tr) -> bool
             {
-            UsbEP::info_t& x = e == TX ? m_tx : m_rx;
+            UsbEP::info_t& x = tr == TX ? m_tx : m_rx;
             return x.bdt[UsbEP::EVEN].stat.uown or
                 x.bdt[UsbEP::ODD].stat.uown or
                 x.btogo or
@@ -104,23 +104,17 @@ stall       (TXRX tr) -> void
 
 //=============================================================================
             auto UsbEP::
-send_zlp    () -> void
+zlp         () -> void
             {
             m_tx.zlp = true;
             }
 
 //=============================================================================
             auto UsbEP::
-send_notify (notify_t f) -> void
+notify      (TXRX tr, notify_t f) -> void
             {
-            if(f) m_tx.notify = f;
-            }
-
-//=============================================================================
-            auto UsbEP::
-recv_notify (notify_t f) -> void
-            {
-            if(f) m_rx.notify = f;
+            if( not f) return;
+            if( tr == RX ) m_rx.notify = f; else m_tx.notify = f;
             }
 
 //=============================================================================
@@ -138,7 +132,7 @@ setup       (info_t& x) -> bool
             if( dbg.debug() ){
                 dbg.debug( m_filename, __func__,
                     "%s (%s) %d bytes",
-                    &x == &m_tx ? "send" : "recv",
+                    &x == &m_tx ? "write" : "read",
                     i ? "odd" : "even",
                     x.btogo );
             }
@@ -356,7 +350,7 @@ control     (UsbEP0* ep0) -> bool
                     }
                     break;
                 case UsbCh9::DEV_SET_ADDRESS: //no data, tx status
-                    ep0->send_notify(set_address); //set address after status
+                    ep0->notify(ep0->TX, set_address); //set address after status
                     break;
                 case UsbCh9::DEV_GET_DESCRIPTOR: //tx tlen bytes, rx status
                     ep0txbuf = (uint8_t*)UsbCentral::get_desc(
@@ -390,7 +384,7 @@ control     (UsbEP0* ep0) -> bool
                 default:
                     //check other requests
                     if(UsbCentral::service(0, ep0)){ //true=all handled, except
-                        ep0->recv(ep0rxbuf, 64, false); //we do next setup
+                        ep0->read(ep0rxbuf, 64, false); //we do next setup
                         return true;
                     }
                     //bad request, stall
@@ -408,16 +402,16 @@ control     (UsbEP0* ep0) -> bool
             //(strings,descriptors,etc)
             //if less and if is same size as ep packet size, add zlp
             if(tlen and (tlen != ep0->setup_pkt.wLength) and (not(tlen % 64))){
-                ep0->send_zlp();
+                ep0->zlp();
             }
             //true = data1, false=data0
             //tx is always data1- either status, or send data in data stage
-            ep0->send(ep0txbuf, tlen, true);
+            ep0->write(ep0txbuf, tlen, true);
             //if data stage, next rx is always data1- rx data or rx status
-            if(ep0->setup_pkt.wLength) ep0->recv(ep0rxbuf, 64, true);
+            if(ep0->setup_pkt.wLength) ep0->read(ep0rxbuf, 64, true);
             //next setup packet (data0) in all cases
             //(rx data stage is always <64, so there is only 1 rx data packet)
-            ep0->recv(ep0rxbuf, 64, false);
+            ep0->read(ep0rxbuf, 64, false);
 
             return true;
             }
@@ -427,7 +421,7 @@ control     (UsbEP0* ep0) -> bool
 init        () -> void
             {
             UsbEP::init(0);                 //same as others
-            recv(ep0rxbuf, 64, false);      //and setup for first packet recv
+            read(ep0rxbuf, 64, false);      //and setup for first packet recv
             }
 
 //=============================================================================

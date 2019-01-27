@@ -11,15 +11,16 @@ notify_t    = UsbEP::notify_t;
             static auto
 init        (bool) -> bool;
 
+            //specify size
             static auto
-send        (uint8_t*, uint16_t, notify_t = 0) -> bool;
+write       (uint8_t*, uint16_t, notify_t = 0) -> bool;
 
-            //const string w/no embedded 0's
+            //const string w/no embedded 0's (auto size)
             static auto
-send        (const char*, notify_t = 0) -> bool;
+write       (const char*, notify_t = 0) -> bool;
 
             static auto
-recv        (uint8_t*, uint16_t, notify_t = 0) -> bool;
+read        (uint8_t*, uint16_t, notify_t = 0) -> bool;
 
             static auto
 is_active   () -> bool;

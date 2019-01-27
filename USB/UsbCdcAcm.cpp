@@ -187,12 +187,12 @@ ep0_request (UsbEP0* ep0) -> bool
             switch(ep0->setup_pkt.bRequest){
                 case CDC_SET_LINE_CODING:
                     //callback will print debug info after line coding data received
-                    ep0->recv((uint8_t*)&m_line_coding, 7, true, showlinecoding); //rx data,
-                    ep0->send((uint8_t*)&m_line_coding, 0, true); //tx status
+                    ep0->read((uint8_t*)&m_line_coding, 7, true, showlinecoding); //rx data,
+                    ep0->write((uint8_t*)&m_line_coding, 0, true); //tx status
                     return true;
                 case CDC_GET_LINE_CODING:
-                    ep0->send((uint8_t*)&m_line_coding, 7, true); //tx data,
-                    ep0->recv((uint8_t*)&m_line_coding, 0, true); //rx status
+                    ep0->write((uint8_t*)&m_line_coding, 7, true); //tx data,
+                    ep0->read((uint8_t*)&m_line_coding, 0, true); //rx status
                     return true;
                 case CDC_SET_CONTROL_LINE_STATE:
 
@@ -206,7 +206,7 @@ ep0_request (UsbEP0* ep0) -> bool
                     }
                     // * * * * DEBUG * * * *
 
-                    ep0->send((uint8_t*)&m_line_coding, 0, true); //tx status
+                    ep0->write((uint8_t*)&m_line_coding, 0, true); //tx status
                     return true;
             }
             return false; //unhandled
@@ -263,10 +263,10 @@ init        (bool tf) -> bool
 // buf = buffer pointer, siz = bytes to send, optional notify func pointer
 //=============================================================================
             auto UsbCdcAcm::
-send        (uint8_t* buf, uint16_t siz, notify_t f) -> bool
+write       (uint8_t* buf, uint16_t siz, notify_t f) -> bool
             {
             return m_ep_txrx.busy(m_ep_txrx.TX) ? false
-                : m_ep_txrx.send(buf, siz, f);
+                : m_ep_txrx.write(buf, siz, f);
             }
 
 // called by user app to send data, optionally set callback when send complete
@@ -274,10 +274,10 @@ send        (uint8_t* buf, uint16_t siz, notify_t f) -> bool
 // (this one will get the buffer size, so cannot have embedded 0's)
 //=============================================================================
             auto UsbCdcAcm::
-send        (const char* buf, notify_t f) -> bool
+write       (const char* buf, notify_t f) -> bool
             {
             uint16_t siz = strlen( buf );
-            return send( (uint8_t*)buf, siz, f );
+            return write( (uint8_t*)buf, siz, f );
             }
 
 // called by user app to recv data, optionally set callback when recv complete
@@ -285,10 +285,10 @@ send        (const char* buf, notify_t f) -> bool
 // if receive less than full packet, recv will be considered complete
 //=============================================================================
             auto UsbCdcAcm::
-recv        (uint8_t* buf, uint16_t siz, UsbEP::notify_t f) -> bool
+read        (uint8_t* buf, uint16_t siz, UsbEP::notify_t f) -> bool
             {
             return m_ep_txrx.busy(m_ep_txrx.RX) ? false
-                : m_ep_txrx.recv(buf, siz, f);
+                : m_ep_txrx.read(buf, siz, f);
             }
 
 // check if usb active (may have detached)
