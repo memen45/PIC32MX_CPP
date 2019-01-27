@@ -19,19 +19,19 @@ UsbCh9 ch9; //so we can shorten usage from :: to .
 // will need to use _() for any space characters
 #define _(x) ((char*)#x)[0] ? ((char*)#x)[0] : ' ', 0
 
-// for descriptors- (descriptor-type, data...)
-#define DESC(typ, ...)                                         \
-    (sizeof((uint8_t[]){__VA_ARGS__}))+2,  /*total length*/    \
-    (uint8_t)typ,                          /*type*/            \
-    __VA_ARGS__                            /*data*/
+// for descriptors
+#define DESC(typ, ...) \
+    (sizeof((uint8_t[]){__VA_ARGS__}))+2, /*size of descriptor*/ \
+    (uint8_t)typ,                         /*type*/ \
+    __VA_ARGS__                           /*data*/
 
 // device descriptor
 #define DEVd(...) DESC(ch9.DEVICE, __VA_ARGS__)
 // for configuration descriptor type
-#define CONFd(...) 9,                                   /*size of config*/  \
-                ch9.CONFIGURATION,                      /*type*/            \
-                W((sizeof((uint8_t[]){__VA_ARGS__}))+4),/*total length*/    \
-                __VA_ARGS__                             /*data*/
+#define CONFd(...) 9,                       /*size of config*/  \
+    ch9.CONFIGURATION,                      /*type*/            \
+    W((sizeof((uint8_t[]){__VA_ARGS__}))+4),/*total length*/    \
+    __VA_ARGS__                             /*data*/
 
 // for interface descriptor type
 #define IFd(...) DESC(ch9.INTERFACE, __VA_ARGS__)
