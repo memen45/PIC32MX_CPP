@@ -16,14 +16,5 @@ struct UsbDebug {
     static
     bool    debug       ();         //get enable/disable
 
-    //buffer size, made available for snprintf use
-    static
-    const int bufsiz{81};
-
-    //buffer for snprintf use
-    static
-    char   buffer[bufsiz];
-
-
 };
 
