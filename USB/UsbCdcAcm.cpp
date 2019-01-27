@@ -157,11 +157,6 @@ bool showlinecoding(UsbEP* ep0){
     // * * * * DEBUG * * * *
     UsbDebug dbg;
     if( dbg.debug() ){
-        // snprintf( dbg.buffer, dbg.bufsiz,
-        //     "$3%d %d %d %d$7",
-        //     m_line_coding.baud, m_line_coding.stop_bits,
-        //     m_line_coding.parity, m_line_coding.data_bits);
-        // dbg.debug( m_filename, __func__ );
         dbg.debug( m_filename, __func__,
             "$3%d %d %d %d$7",
             m_line_coding.baud, m_line_coding.stop_bits,

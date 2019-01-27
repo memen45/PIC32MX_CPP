@@ -157,10 +157,10 @@ setup       (info_t& x) -> bool
             UsbDebug dbg;
             if( dbg.debug() ){
                 dbg.debug( m_filename, __func__,
-                    "%s %s %d (%d)",
-                    &x == &m_tx ? "TX" : "RX",
-                    i ? "ODD" : "EVEN",
-                    x.btogo, x.epsiz );
+                    "%s (%s) %d bytes",
+                    &x == &m_tx ? "send" : "recv",
+                    i ? "odd" : "even",
+                    x.btogo );
             }
             // * * * * DEBUG * * * *
 
