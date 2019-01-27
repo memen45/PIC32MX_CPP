@@ -263,9 +263,10 @@ init        (bool tf) -> bool
 // buf = buffer pointer, siz = bytes to send, optional notify func pointer
 //=============================================================================
             auto UsbCdcAcm::
-send        (uint8_t* buf, uint16_t siz, UsbEP::notify_t f) -> bool
+send        (uint8_t* buf, uint16_t siz, notify_t f) -> bool
             {
-            return m_ep_txrx.send_busy() ? false : m_ep_txrx.send(buf, siz, f);
+            return m_ep_txrx.busy(m_ep_txrx.TX) ? false
+                : m_ep_txrx.send(buf, siz, f);
             }
 
 // called by user app to send data, optionally set callback when send complete
@@ -273,7 +274,7 @@ send        (uint8_t* buf, uint16_t siz, UsbEP::notify_t f) -> bool
 // (this one will get the buffer size, so cannot have embedded 0's)
 //=============================================================================
             auto UsbCdcAcm::
-send        (const char* buf, UsbEP::notify_t f) -> bool
+send        (const char* buf, notify_t f) -> bool
             {
             uint16_t siz = strlen( buf );
             return send( (uint8_t*)buf, siz, f );
@@ -286,7 +287,8 @@ send        (const char* buf, UsbEP::notify_t f) -> bool
             auto UsbCdcAcm::
 recv        (uint8_t* buf, uint16_t siz, UsbEP::notify_t f) -> bool
             {
-            return m_ep_txrx.recv_busy() ? false : m_ep_txrx.recv(buf, siz, f);
+            return m_ep_txrx.busy(m_ep_txrx.RX) ? false
+                : m_ep_txrx.recv(buf, siz, f);
             }
 
 // check if usb active (may have detached)
@@ -301,8 +303,7 @@ is_active   () -> bool
 // check if usb busy
 //=============================================================================
             auto UsbCdcAcm::
-busy        (TXRX e) -> bool
+busy        (TXRX tr) -> bool
             {
-            return m_is_active and
-                e == SEND ? m_ep_txrx.send_busy() : m_ep_txrx.recv_busy() ;
+            return is_active() and m_ep_txrx.busy( tr );
             }

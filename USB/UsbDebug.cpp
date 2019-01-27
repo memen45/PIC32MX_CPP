@@ -3,6 +3,8 @@
 #include "Cp0.hpp"
 #include <cstdarg> //variadic args
 
+#include <ostream>
+
 //_mon_putc has to be used so printf can go out our uart
 //currently created 'somehwere else'
 

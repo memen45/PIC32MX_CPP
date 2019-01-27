@@ -5,25 +5,27 @@
 
 struct UsbCdcAcm {
 
+            using
+notify_t    = UsbEP::notify_t;
+
             static auto
 init        (bool) -> bool;
 
             static auto
-send        (uint8_t*, uint16_t, UsbEP::notify_t = 0) -> bool;
+send        (uint8_t*, uint16_t, notify_t = 0) -> bool;
 
             //const string w/no embedded 0's
             static auto
-send        (const char*, UsbEP::notify_t = 0) -> bool;
+send        (const char*, notify_t = 0) -> bool;
 
             static auto
-recv        (uint8_t*, uint16_t, UsbEP::notify_t = 0) -> bool;
+recv        (uint8_t*, uint16_t, notify_t = 0) -> bool;
 
             static auto
 is_active   () -> bool;
 
-            enum
-TXRX        : bool
-            { SEND, RECV };
+            using
+TXRX        = UsbEP::TXRX;
 
             static auto
 busy        (TXRX) -> bool;

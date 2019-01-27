@@ -85,9 +85,10 @@ recv        (uint8_t* buf, uint16_t siz, notify_t f) -> bool
             }
 
 //-----------------------------------------------------------------------------
-            static auto
-busy        (UsbEP::info_t& x) -> bool
+            auto UsbEP::
+busy        (TXRX e) -> bool
             {
+            UsbEP::info_t& x = e == TX ? m_tx : m_rx;
             return x.bdt[UsbEP::EVEN].stat.uown or
                 x.bdt[UsbEP::ODD].stat.uown or
                 x.btogo or
@@ -96,30 +97,9 @@ busy        (UsbEP::info_t& x) -> bool
 
 //=============================================================================
             auto UsbEP::
-send_busy   () -> bool
+stall       (TXRX tr) -> void
             {
-            return busy(m_tx);
-            }
-
-//=============================================================================
-            auto UsbEP::
-recv_busy   () -> bool
-            {
-            return busy(m_rx);
-            }
-
-//=============================================================================
-            auto UsbEP::
-send_stall  () -> void
-            {
-            m_tx.stall = true;
-            }
-
-//=============================================================================
-            auto UsbEP::
-recv_stall  () -> void
-            {
-            m_rx.stall = true;
+            if( tr == RX ) m_rx.stall = true; else m_tx.stall = true;
             }
 
 //=============================================================================
@@ -421,7 +401,7 @@ control     (UsbEP0* ep0) -> bool
             //if IN, will stall the data packet
             //if OUT, will stall the handshake
             if(stall){
-               ep0->send_stall();
+               ep0->stall( ep0->TX );
             }
 
             //check for tx data that is less than requested

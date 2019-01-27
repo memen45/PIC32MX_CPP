@@ -47,16 +47,10 @@ recv        (uint8_t*, uint16_t, notify_t = 0) -> bool;
 recv        (uint8_t*, uint16_t, bool, notify_t = 0) -> bool;
 
             auto
-send_busy   () -> bool;
+busy        (TXRX) -> bool;
 
             auto
-recv_busy   () -> bool;
-
-            auto
-send_stall  () -> void;
-
-            auto
-recv_stall  () -> void;
+stall       (TXRX) -> void;
 
             auto
 send_zlp    () -> void;
