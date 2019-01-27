@@ -20,33 +20,8 @@
 
 
 
-//need uart for usb debugging
+//need uart for usb debugging (and printf)
 Uart info{Uart::UART2, Pins::C6, Pins::C7, 1000000};
-
-
-//printf - use replacement putc so we can use our uart class
-//will use $ for trigger to print ansi colors (use $$ if want $ character)
-//printf("this is $1red $7white and I have $$1");
-extern "C" void _mon_putc(char c){
-    static bool trigger = false;
-    if(trigger){
-        trigger = false;
-        if(c >= '0' && c <= '7'){
-            info.puts("\033[3");    //ansi color start
-            info.putchar(c);        //plus color
-            c = 'm';                //below will output this
-        }
-        info.putchar(c);            //'m' from above, or regular char after '$'
-        return;
-    }
-    //not triggered
-    if(c == '$') trigger = true;    //trigger char
-    else info.putchar(c);           //regular char
-}
-
-void cls(){ info.putchar(12); }
-void cursor(bool tf){ printf("\033[?25%c", tf ? 'h' : 'l'); }
-void ansi_reset(){ printf("\033[0m"); }
 
 //pins used
 Pins sw3{ Pins::C4, Pins::INPU };   //turn usb on/off
@@ -72,8 +47,9 @@ struct UsbTest {
     }
 
     void debounce(Pins& p){
+        Delay::wait_ms( 50 ); //down
         while( p.ison() );
-        Delay::wait_ms( 100 ); //long
+        Delay::wait_ms( 100 ); //up, long
     }
 
     public:
@@ -106,7 +82,7 @@ struct UsbTest {
             hw[3] = color + '0'; //replace _ with 1-7
             color++; if( color > 7 ) color = 1;
             //send, turn on led1, callback will turn it off
-            if( cdc.send((const char*)hw, txcallback) ){
+            if( cdc.write((const char*)hw, txcallback) ){
                 led1.on();
             }
         }
@@ -127,8 +103,7 @@ int main()
     osc.tun_auto(true);                 //let sosc tune frc
 
     info.on(true);
-    cls(); //cls
-    cursor(false); //hide cursor
+    UsbDebug dbg( &info );
 
     printf("\r\n\r\nStarting...\r\n");
 

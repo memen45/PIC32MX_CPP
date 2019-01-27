@@ -49,31 +49,9 @@ const uint8_t svg[][3]{
 };
 
 
+//UsbDebug will use, will also be deault for printf
+//(via _mon_putc in UsbDeg.cpp)
 Uart info{Uart::UART2, Pins::C6, Pins::C7, 1000000};
-
-//printf - use replacement putc
-//will use $ for trigger to print ansi colors (use $$ if want $ character)
-//printf("this is $1red $7white and I have $$1");
-extern "C" void _mon_putc(char c){
-    static bool trigger = false;
-    if(trigger){
-        trigger = false;
-        if(c >= '0' && c <= '7'){
-            info.puts("\033[3");    //ansi color start
-            info.putchar(c);        //plus color
-            c = 'm';                //below will output this
-        }
-        info.putchar(c);            //'m' from above, or regular char after '$'
-        return;
-    }
-    //not triggered
-    if(c == '$') trigger = true;//trigger char
-    else info.putchar(c);       //regular char
-}
-
-void cls(){ info.putchar(12); }
-void cursor(bool tf){ printf("\033[?25%c", tf ? 'h' : 'l'); }
-void ansi_reset(){ printf("\033[0m"); }
 
 
 //rgb led's struct, use pwm for brightness
@@ -256,9 +234,9 @@ int main()
     if(dt.year == 0) Rtcc::datetime( { 19, 1, 27, 0, 3, 33, 0 } );
 
     Rtcc::on(true);
-    info.on(true);
-    cls(); //cls
-    cursor(false); //hide cursor
+
+    info.on(true);  //uart on
+    UsbDebug dbg( &info ); //set UsbDebug to use our uart
 
     Rgb rgb;
     Led12 led12;

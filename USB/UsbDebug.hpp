@@ -1,8 +1,12 @@
 #pragma once
 #include <cstdio>  //printf
 #include <cstdbool>
+#include "Uart.hpp"
 
 struct UsbDebug {
+
+    UsbDebug(){}        //empty constructor
+    UsbDebug(Uart*);    //or specify uart
 
     //send out info via printf
     //(filename, funcname, format, args...)
@@ -15,6 +19,9 @@ struct UsbDebug {
 
     static
     bool    debug       ();         //get enable/disable
+
+    static
+    void    debug       (Uart*);    //set which uart
 
 };
 
