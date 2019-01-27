@@ -48,7 +48,7 @@ static const uint8_t m_descriptor[] = {
 
     18,                 //length(always 18)
     UsbCh9::DEVICE,     //1
-    W(0x0101),          //0x0200 //(bcd) usb 1.1 (prevent unneeded inquiries)
+    W(0x0200),          //0x0200 can us 0x0101- usb 1.1 (less inquiries)
     2,                  //class (CDC device)
     0,                  //subclass
     0,                  //protocol

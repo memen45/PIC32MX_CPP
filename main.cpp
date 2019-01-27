@@ -169,8 +169,6 @@ struct Led12 {
 
 };
 
-//bool cdc_notify(UsbEP* ep);
-
 struct UsbTest {
 
     Pins sw3{ Pins::C4, Pins::INPU }; //turn on/off usb
@@ -226,8 +224,7 @@ struct UsbTest {
     }
 };
 UsbTest utest;
-//helper- need static function for callback
-//bool cdc_notify(UsbEP* ep){ return utest.notify(ep); }
+
 
 int main()
 {
@@ -255,7 +252,7 @@ int main()
 //}
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 19, 1, 26, 0, 7, 55, 0 } );
+    if(dt.year == 0) Rtcc::datetime( { 19, 1, 26, 0, 14, 21, 0 } );
 
     Rtcc::on(true);
     info.on(true);

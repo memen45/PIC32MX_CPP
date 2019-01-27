@@ -148,8 +148,9 @@ get_desc    (uint16_t wValue, uint16_t* siz) -> const uint8_t*
                     if(not idx) break;     //found it
                     idx--;                 //wrong index, dec until 0
                 }
-                i += m_descriptor[i];
-                if(not i){ *siz = 0; return 0; } //at end (0 marker)
+                i += m_descriptor[i];       //next descriptor
+                //at end ? (0 marker)
+                if(not m_descriptor[i]){ *siz = 0; return 0; }
             }
             //we now have index into descriptor
             //get size of type, if config get total size

@@ -289,6 +289,17 @@ set_address (UsbEP* ep) -> bool
             //callbacks are UsbEP, cast to UsbEP0 in this case
             UsbEP0* ep0 = (UsbEP0*)ep;
             Usb::dev_addr(ep0->setup_pkt.wValue);  //set usb address
+
+            // * * * * DEBUG * * * *
+            UsbDebug dbg;
+            if( dbg.debug() ){
+                snprintf( dbg.buffer, dbg.bufsiz,
+                    "usb address: %d",
+                    ep0->setup_pkt.wValue);
+                dbg.debug( m_filename, __func__ );
+            }
+            // * * * * DEBUG * * * *
+
             return true;
             }
 
@@ -308,10 +319,11 @@ control     (UsbEP0* ep0) -> bool
             //or set to something else below (descriptor)
             uint8_t* ep0txbuf = txbuf;
 
+            bool txin = ep0->setup_pkt.bmRequestType bitand (1<<7);
+
             //if data stage (wLength > 0), and device->host (IN, TX)
             //set tlen (tx) to wLength, else is 0 (tx status)
-            uint16_t tlen = ((ep0->setup_pkt.bmRequestType bitand (1<<7)) and
-                                ep0->setup_pkt.wLength) ?
+            uint16_t tlen = (txin and ep0->setup_pkt.wLength) ?
                             ep0->setup_pkt.wLength : 0;
 
             //stall flag
@@ -374,7 +386,10 @@ control     (UsbEP0* ep0) -> bool
                     ep0txbuf = (uint8_t*)UsbCentral::get_desc(
                                     ep0->setup_pkt.wValue, &tlen);
                     //if error, tlen=0 and ep0txbuf=0
-                    if((tlen == 0) or (ep0txbuf == 0)) stall = true;
+                    if((tlen == 0) or (ep0txbuf == 0)){
+                        stall = true;
+                        ep0txbuf = txbuf;
+                    }
                     break;
                 case UsbCh9::DEV_SET_DESCRIPTOR:
                     //no data, tx status
@@ -407,12 +422,10 @@ control     (UsbEP0* ep0) -> bool
                     break;
             }
 
+            //if IN, will stall the data packet
+            //if OUT, will stall the handshake
             if(stall){
-                ep0->send_stall();
-                ep0->send(ep0txbuf, 0, true);
-                ep0->recv_stall();
-                ep0->recv(ep0rxbuf, 64, false);
-                return false;
+               ep0->send_stall();
             }
 
             //check for tx data that is less than requested
