@@ -9,27 +9,38 @@
 
 UsbCh9 ch9; //so we can shorten usage from :: to .
 
-// a few (rare) defines here to make descriptor construction a little easier
+//(rare) defines here to make descriptor construction easier
 
 // word -> byte, byte - any word (2bytes) in descriptor, use W(word)
 #define W(v) (uint8_t)(v), (v) >> 8
 
 // to wide char
 // _(Z) -> 'Z', 0  (so no single quotes needed)
-// will need to use _() for space characters
+// will need to use _() for any space characters
 #define _(x) ((char*)#x)[0] ? ((char*)#x)[0] : ' ', 0
 
-// for string descriptor type, use SD(_(s),_(t),_(r),_(i),_(n),_(g))
-#define SD(...) (sizeof((char[]){__VA_ARGS__}))+2,      /*total length*/    \
-                UsbCh9::STRING,                         /*type*/            \
-                __VA_ARGS__                             /*wide char data*/
+// for descriptors- (descriptor-type, data...)
+#define DESC(typ, ...)                                         \
+    (sizeof((uint8_t[]){__VA_ARGS__}))+2,  /*total length*/    \
+    (uint8_t)typ,                          /*type*/            \
+    __VA_ARGS__                            /*data*/
 
+// device descriptor
+#define DEVd(...) DESC(ch9.DEVICE, __VA_ARGS__)
 // for configuration descriptor type
-#define CD(...) 9,                                      /*size of config*/  \
-                UsbCh9::CONFIGURATION,                  /*type*/            \
+#define CONFd(...) 9,                                   /*size of config*/  \
+                ch9.CONFIGURATION,                      /*type*/            \
                 W((sizeof((uint8_t[]){__VA_ARGS__}))+4),/*total length*/    \
                 __VA_ARGS__                             /*data*/
 
+// for interface descriptor type
+#define IFd(...) DESC(ch9.INTERFACE, __VA_ARGS__)
+// for cdc descriptor type (communications class, CS_INTERFACE)
+#define CDCd(...) DESC(0x24, __VA_ARGS__)
+// for endpoint descriptor type
+#define EPd(...) DESC(ch9.ENDPOINT, __VA_ARGS__)
+// for string descriptor type, use SD(_(s),_(t),_(r),_(i),_(n),_(g))
+#define STRd(...) DESC(ch9.STRING, __VA_ARGS__)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -42,25 +53,19 @@ static const uint8_t m_descriptor[] = {
 
     //==== device descriptor ====
 
-    18,                 //length(always 18)
-    ch9.DEVICE,         //1
-    W(0x0200),          //0x0200 can us 0x0101- usb 1.1 (less inquiries)
-    2,                  //class (CDC device)
-    0,                  //subclass
-    0,                  //protocol
-    64,                 //max ep0 packet size (IN/OUT same)
-    W(0x04D8),          //VID
-    W(0x000A),          //PID
-    W(0x0100),          //(bcd) release number
-    1,                  //string index- manufacturer
-    2,                  // -product
-    3,                  // -serial number
-    1,                  //#of configurations
+    DEVd(
+        W(0x0101),          //0x0200/0x0101 (usb 1.1 has less inquiries)
+        2, 0, 0,            //class (CDC device), subclass, prorocol
+        64,                 //max ep0 packet size (IN/OUT same)
+        W(0x04D8),W(0x000A),//VID, PID
+        W(0x0100),          //(bcd) release number
+        1, 2, 3,            //string index- manufacturer, product, serial
+        1                   //#of configurations
+    ), //end device descriptor
 
     //==== config 1 ====
 
-    CD(
-        //(9, UsbCh9::CONFIGURATION, total size -> done by macro)
+    CONFd(
         //configuration
         2,                      //number of interfaces
         1,                      //this configuration number
@@ -69,37 +74,31 @@ static const uint8_t m_descriptor[] = {
         50,                     //bus power required, in 2ma units
 
         //interface0
-        9, ch9.INTERFACE, 0, 0, 1, 2, 2, 1, 0,
+        IFd( 0, 0, 1, 2, 2, 1, 0 ),
 
         //cdc descriptors
-        5, 36, 0, W(0x110),     //cdc header
-        4, 36, 2, 2,            //acm, D0-D3, D1 set- line coding/state
-        5, 36, 6, 0, 1,         //union comm id=0, data id=1
-        5, 36, 1, 0, 1,         //call management
+        CDCd( 0, W(0x110) ),    //cdc header
+        CDCd( 2, 2 ),           //acm, D0-D3, D1 set- line coding/state
+        CDCd( 6, 0, 1 ),        //union comm id=0, data id=1
+        CDCd( 1, 0, 1 ),        //call management
 
         //endpoint
-        7, ch9.ENDPOINT, ch9.IN1, ch9.INTERRUPT, W(8), 2,
-
+        EPd( ch9.IN1, ch9.INTERRUPT, W(8), 2 ),
         //interface1
-        9, ch9.INTERFACE, 1, 0, 2, 10, 0, 0, 0,
-
+        IFd( 1, 0, 2, 10, 0, 0, 0 ),
         //endpoint
-        7, ch9.ENDPOINT, ch9.OUT2, ch9.BULK, W(64), 0,
-
+        EPd( ch9.OUT2, ch9.BULK, W(64), 0 ),
         //endpoint
-        7, ch9.ENDPOINT, ch9.IN2, ch9.BULK, W(64), 0
+        EPd( ch9.IN2, ch9.BULK, W(64), 0 )
 
-    ), //end CD (configuration descriptor)
+    ), //end configuration descriptor
 
     //==== strings ====
 
-    SD(W(0x0409)),                              //language 0x0409
-
-    SD(_(P),_(I),_(C),_(3),_(2),_(M),_(M)),     //manufacturer (idx 1)
-
-    SD(_(C),_(D),_(C),_(-),_(A),_(C),_(M)),     //product (idx 2)
-
-    SD(_(1),_(2),_(3),_(4),_(5),_(6),_(7)),     //serial# (idx 3)
+    STRd( W(0x0409) ),                            //language 0x0409
+    STRd( _(P),_(I),_(C),_(3),_(2),_(M),_(M) ),   //manufacturer (idx 1)
+    STRd( _(C),_(D),_(C),_(-),_(A),_(C),_(M) ),   //product (idx 2)
+    STRd( _(1),_(2),_(3),_(4),_(5),_(6),_(7) ),   //serial# (idx 3)
 
     0 //end of descriptor marker - NEED to know where descriptor ends
       //since we iterrate over descriptor in our desciptor functions

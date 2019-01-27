@@ -184,8 +184,9 @@ struct UsbTest {
     bool xmit = false;
 
     void debounce(Pins& p){
+        Delay::wait_ms( 50 ); //down
         while( p.ison() );
-        Delay::wait_ms( 100 ); //long
+        Delay::wait_ms( 100 ); //up (long ok here)
     }
 
     bool notify(UsbEP* ep){
@@ -252,7 +253,7 @@ int main()
 //}
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 19, 1, 26, 0, 14, 21, 0 } );
+    if(dt.year == 0) Rtcc::datetime( { 19, 1, 27, 0, 3, 33, 0 } );
 
     Rtcc::on(true);
     info.on(true);
