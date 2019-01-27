@@ -7,20 +7,17 @@
 #include <cstdio>  //debug printf
 #include "UsbDebug.hpp"
 
+UsbCh9 ch9; //so we can shorten usage from :: to .
 
-// sorry, a few defines here to make descriptor construction a little easier
-
-// constexpr function to get first char of stringified macro arg
-constexpr char char0(const char* str){
-    return str[0] ? str[0] : ' '; // if empty string, return space (' ')
-}
+// a few (rare) defines here to make descriptor construction a little easier
 
 // word -> byte, byte - any word (2bytes) in descriptor, use W(word)
 #define W(v) (uint8_t)(v), (v) >> 8
 
-// to wide char (uses char0 function to get first char of stringified arg)
+// to wide char
 // _(Z) -> 'Z', 0  (so no single quotes needed)
-#define _(x) char0(#x), 0
+// will need to use _() for space characters
+#define _(x) ((char*)#x)[0] ? ((char*)#x)[0] : ' ', 0
 
 // for string descriptor type, use SD(_(s),_(t),_(r),_(i),_(n),_(g))
 #define SD(...) (sizeof((char[]){__VA_ARGS__}))+2,      /*total length*/    \
@@ -40,14 +37,13 @@ constexpr char char0(const char* str){
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-
 //CDC-ACM
 static const uint8_t m_descriptor[] = {
 
     //==== device descriptor ====
 
     18,                 //length(always 18)
-    UsbCh9::DEVICE,     //1
+    ch9.DEVICE,         //1
     W(0x0200),          //0x0200 can us 0x0101- usb 1.1 (less inquiries)
     2,                  //class (CDC device)
     0,                  //subclass
@@ -61,7 +57,6 @@ static const uint8_t m_descriptor[] = {
     3,                  // -serial number
     1,                  //#of configurations
 
-
     //==== config 1 ====
 
     CD(
@@ -70,11 +65,11 @@ static const uint8_t m_descriptor[] = {
         2,                      //number of interfaces
         1,                      //this configuration number
         0,                      //string index for this config
-        UsbCh9::SELFPOWER,      //self-powered and remote-wakup
+        ch9.SELFPOWER,          //self-powered and remote-wakup
         50,                     //bus power required, in 2ma units
 
         //interface0
-        9, UsbCh9::INTERFACE, 0, 0, 1, 2, 2, 1, 0,
+        9, ch9.INTERFACE, 0, 0, 1, 2, 2, 1, 0,
 
         //cdc descriptors
         5, 36, 0, W(0x110),     //cdc header
@@ -83,16 +78,16 @@ static const uint8_t m_descriptor[] = {
         5, 36, 1, 0, 1,         //call management
 
         //endpoint
-        7, UsbCh9::ENDPOINT, UsbCh9::IN1, UsbCh9::INTERRUPT, W(8), 2,
+        7, ch9.ENDPOINT, ch9.IN1, ch9.INTERRUPT, W(8), 2,
 
         //interface1
-        9, UsbCh9::INTERFACE, 1, 0, 2, 10, 0, 0, 0,
+        9, ch9.INTERFACE, 1, 0, 2, 10, 0, 0, 0,
 
         //endpoint
-        7, UsbCh9::ENDPOINT, UsbCh9::OUT2, UsbCh9::BULK, W(64), 0,
+        7, ch9.ENDPOINT, ch9.OUT2, ch9.BULK, W(64), 0,
 
         //endpoint
-        7, UsbCh9::ENDPOINT, UsbCh9::IN2, UsbCh9::BULK, W(64), 0
+        7, ch9.ENDPOINT, ch9.IN2, ch9.BULK, W(64), 0
 
     ), //end CD (configuration descriptor)
 
@@ -163,11 +158,15 @@ bool showlinecoding(UsbEP* ep0){
     // * * * * DEBUG * * * *
     UsbDebug dbg;
     if( dbg.debug() ){
-        snprintf( dbg.buffer, dbg.bufsiz,
+        // snprintf( dbg.buffer, dbg.bufsiz,
+        //     "$3%d %d %d %d$7",
+        //     m_line_coding.baud, m_line_coding.stop_bits,
+        //     m_line_coding.parity, m_line_coding.data_bits);
+        // dbg.debug( m_filename, __func__ );
+        dbg.debug( m_filename, __func__,
             "$3%d %d %d %d$7",
             m_line_coding.baud, m_line_coding.stop_bits,
-            m_line_coding.parity, m_line_coding.data_bits);
-        dbg.debug( m_filename, __func__ );
+            m_line_coding.parity, m_line_coding.data_bits );
     }
     // * * * * DEBUG * * * *
     return true;
@@ -185,10 +184,9 @@ ep0_request (UsbEP0* ep0) -> bool
             // * * * * DEBUG * * * *
             UsbDebug dbg;
             if( dbg.debug() ){
-                snprintf( dbg.buffer, dbg.bufsiz,
-                "$3%02x$7",
-                ep0->setup_pkt.bRequest);
-                dbg.debug( m_filename, __func__ );
+                dbg.debug( m_filename, __func__,
+                    "$3%02x$7",
+                    ep0->setup_pkt.bRequest );
             }
             // * * * * DEBUG * * * *
 
@@ -207,11 +205,10 @@ ep0_request (UsbEP0* ep0) -> bool
                     // * * * * DEBUG * * * *
                     UsbDebug dbg;
                     if( dbg.debug() ){
-                        snprintf( dbg.buffer, dbg.bufsiz,
+                        dbg.debug( m_filename, __func__,
                             "$4RTS: %d DTR: %d$7",
                             (ep0->setup_pkt.wValue bitand 2) >> 1,
-                            ep0->setup_pkt.wValue bitand 1);
-                        dbg.debug( m_filename, __func__ );
+                            ep0->setup_pkt.wValue bitand 1 );
                     }
                     // * * * * DEBUG * * * *
 

@@ -156,12 +156,11 @@ setup       (info_t& x) -> bool
             // * * * * DEBUG * * * *
             UsbDebug dbg;
             if( dbg.debug() ){
-                snprintf( dbg.buffer, dbg.bufsiz,
+                dbg.debug( m_filename, __func__,
                     "%s %s %d (%d)",
                     &x == &m_tx ? "TX" : "RX",
                     i ? "ODD" : "EVEN",
-                    x.btogo, x.epsiz);
-                dbg.debug( m_filename, __func__ );
+                    x.btogo, x.epsiz );
             }
             // * * * * DEBUG * * * *
 
@@ -193,10 +192,9 @@ service     (uint8_t ustat) -> bool
             // * * * * DEBUG * * * *
             UsbDebug dbg;
             if( dbg.debug() ){
-                snprintf( dbg.buffer, dbg.bufsiz,
+                dbg.debug( m_filename, __func__,
                     "ustat: %d  ep: %d  pid: %d  bdt: %08x",
-                    ustat,m_epnum,x.stat.pid,x.stat.val32);
-                dbg.debug( m_filename, __func__ );
+                    ustat,m_epnum,x.stat.pid,x.stat.val32 );
             }
             // * * * * DEBUG * * * *
 
@@ -293,10 +291,9 @@ set_address (UsbEP* ep) -> bool
             // * * * * DEBUG * * * *
             UsbDebug dbg;
             if( dbg.debug() ){
-                snprintf( dbg.buffer, dbg.bufsiz,
+                dbg.debug( m_filename, __func__,
                     "usb address: %d",
-                    ep0->setup_pkt.wValue);
-                dbg.debug( m_filename, __func__ );
+                    ep0->setup_pkt.wValue );
             }
             // * * * * DEBUG * * * *
 
@@ -332,13 +329,12 @@ control     (UsbEP0* ep0) -> bool
             // * * * * DEBUG * * * *
             UsbDebug dbg;
             if( dbg.debug() ){
-                snprintf( dbg.buffer, dbg.bufsiz,
+                dbg.debug( m_filename, __func__,
                     "pkt: $1%02x %02x %04x %04x %04x$7",
                     ep0->setup_pkt.bmRequestType, ep0->setup_pkt.bRequest,
                     ep0->setup_pkt.wValue,
                     ep0->setup_pkt.wIndex,
-                    ep0->setup_pkt.wLength);
-                dbg.debug( m_filename, __func__ );
+                    ep0->setup_pkt.wLength );
             }
             // * * * * DEBUG * * * *
 
@@ -468,10 +464,9 @@ service     (uint8_t ustat) -> bool
             // * * * * DEBUG * * * *
             UsbDebug dbg;
             if( dbg.debug() ){
-                snprintf( dbg.buffer, dbg.bufsiz,
+                dbg.debug( m_filename, __func__,
                     "ustat: %d  ep: %d  pid: %d  bdt: %08x",
-                    ustat, m_epnum, x.stat.pid, x.stat.val32);
-                dbg.debug( m_filename, __func__ );
+                    ustat, m_epnum, x.stat.pid, x.stat.val32 );
             }
             // * * * * DEBUG * * * *
 

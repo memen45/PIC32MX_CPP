@@ -62,9 +62,8 @@ init        (bool tf) -> bool
             // * * * * DEBUG * * * *
             UsbDebug dbg;
             if( dbg.debug() ){
-                snprintf( dbg.buffer, dbg.bufsiz,
-                    "%s", tf ? "usb started" : "usb stopped");
-                dbg.debug( m_filename, __func__ );
+                dbg.debug( m_filename, __func__,
+                    "%s", tf ? "usb started" : "usb stopped" );
             }
             // * * * * DEBUG * * * *
 
@@ -94,10 +93,9 @@ service     (uint32_t flags, uint8_t ustat) -> void
                 // * * * * DEBUG * * * *
                 UsbDebug dbg;
                 if( dbg.debug() ){
-                    snprintf( dbg.buffer, dbg.bufsiz,
+                    dbg.debug( m_filename, __func__,
                        "frame: %d  ustat: %d",
-                       usb.frame(),ustat);
-                    dbg.debug( m_filename, __func__ );
+                       usb.frame(),ustat );
                 }
                 // * * * * DEBUG * * * *
 

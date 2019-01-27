@@ -5,9 +5,10 @@
 struct UsbDebug {
 
     //send out info via printf
-    //(filename, funcname)
+    //(filename, funcname, format, args...)
+
     static
-    void    debug       (const char*, const char*);
+    void    debug       (const char*, const char*, const char*, ... );
 
     static
     void    debug       (bool);     //enable/disable
