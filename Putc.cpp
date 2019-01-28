@@ -7,8 +7,20 @@ static Uart* m_uart;
 static bool m_ansi_on = true;
 static bool m_ansi_triggered = false;
 static const char m_ansi_trigchar = '@';
-//color code, replace index [3] with 0-7, index [2] with 3 (fg) or 4 (bg)
-static char m_ansi_color[] = "\033[37m";
+//color code start
+static const char m_ansi_colorfg[] = "\033[38;5;";
+static const char m_ansi_colorbg[] = "\033[48;5;";
+//use 256 color palette
+static const char* m_colors[] = {
+    "000m", //K
+    "196m", //R
+    "10m",  //G
+    "11m",  //Y
+    "26m",  //B
+    "135m", //M
+    "39m",  //C
+    "15m",  //W
+};
 //reset ansi atrtibutes, colors
 static const char m_ansi_reset[] = "\033[0;37;40m";
 
@@ -62,9 +74,13 @@ _mon_putc   (char c) -> void
                     if( markdown[n] == c ) break;
                 }
                 if( markdown[n] ){ //found
-                    m_ansi_color[2] = (n >> 3) + '3'; //'3' or '4'
-                    m_ansi_color[3] = (n bitand 7) + '0'; //'0' - '7'
-                    m_uart->puts(m_ansi_color);
+                    if( n bitand 8 ){
+                        m_uart->puts(m_ansi_colorbg);
+                        m_uart->puts(m_colors[n bitand 7]);
+                    } else {
+                        m_uart->puts(m_ansi_colorfg);
+                        m_uart->puts(m_colors[n bitand 7]);
+                    }
                     return;
                 }
                 if( c == '!' ){
