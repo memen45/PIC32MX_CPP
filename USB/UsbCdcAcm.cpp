@@ -149,11 +149,6 @@ enum SETUP_BREQUEST_CDC {
 //debug line coding being set in ep0->recv, call here after data received
 bool showlinecoding(UsbEP* ep0){
 
-//     printf("UsbCdcAcm:: m_line_coding $3%d %d %d %d$7\r\n",
-//             m_line_coding.baud, m_line_coding.stop_bits,
-//             m_line_coding.parity, m_line_coding.data_bits);
-//     return true;
-
     // * * * * DEBUG * * * *
     UsbDebug dbg;
     if( dbg.debug() ){
