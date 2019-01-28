@@ -6,7 +6,7 @@
 struct UsbDebug {
 
     UsbDebug(){}        //empty constructor
-    UsbDebug(Uart*);    //or specify uart
+    UsbDebug(Uart*);    //or specify a uart device
 
     //send out info via printf
     //(filename, funcname, format, args...)
@@ -21,7 +21,7 @@ struct UsbDebug {
     bool    debug       ();         //get enable/disable
 
     static
-    void    debug       (Uart*);    //set which uart
+    void    debug       (Uart*);    //set which uart device
 
 };
 

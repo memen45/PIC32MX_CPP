@@ -170,7 +170,7 @@ struct UsbTest {
     bool notify(UsbEP* ep){
         static uint8_t count = 1;
         if(count > 7){
-            dly.set_ms(5000); //set when called
+            dly.set_ms(1000); //set when called
             count = 1;
             return true;
         }

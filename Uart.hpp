@@ -4,9 +4,10 @@
 
 #include "Pins.hpp"
 
+
 //UART 1/2/3
 
-struct Uart  {
+struct Uart {
 
     //instantiate Uart with uart number, optionally baud rate-
     //(pins setup manually)
@@ -220,7 +221,7 @@ baud_clk    () -> uint32_t;
             //blocking functions
 
             auto
-putchar     (const char) -> void;
+putc        (const char) -> void;
 
             //(no '\n', like fputs)
             auto
