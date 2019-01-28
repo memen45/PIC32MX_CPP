@@ -304,7 +304,7 @@ control     (UsbEP0* ep0) -> bool
             UsbDebug dbg;
             if( dbg.debug() ){
                 dbg.debug( m_filename, __func__,
-                    "pkt: $1%02x %02x %04x %04x %04x$7",
+                    "pkt: @Y%02x %02x %04x %04x %04x@W",
                     ep0->setup_pkt.bmRequestType, ep0->setup_pkt.bRequest,
                     ep0->setup_pkt.wValue,
                     ep0->setup_pkt.wIndex,

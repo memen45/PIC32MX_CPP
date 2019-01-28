@@ -88,10 +88,10 @@ struct Rgb {
         Rtcc::datetime_t dt = Rtcc::datetime();
 
         if( not UsbDebug::debug() ){ //if not using uart for debug, print this
-        printf("$7color[$3%02d$7]: $2%03d.%03d.%03d$7",
+        printf("@Wcolor[@R%02d@W]: @G%03d.%03d.%03d@W",
             m_idx,m_ccp[0].compb()>>8,m_ccp[1].compb()>>8,m_ccp[2].compb()>>8);
-        printf(" CP0 Count: $1%010u$7", Cp0::count());
-        printf(" now: $5%02d-%02d-%04d %02d:%02d:%02d %s$7\r\n",
+        printf(" CP0 Count: @B%010u@W", Cp0::count());
+        printf(" now: @M%02d-%02d-%04d %02d:%02d:%02d %s@W\r\n",
                 dt.month, dt.day, dt.year+2000, dt.hour12, dt.minute, dt.second,
                 dt.pm ? "PM" : "AM");
         }
@@ -243,10 +243,9 @@ int main()
 
     Pins pot{Pins::AN14}; //test adc, get pot adc val
     uint32_t p = pot.adcval();
-    printf("pot: %d\r\n",p);
-
+    printf("@!\r\npot: %d\r\n",p);
     printf("UDID: %016llx\r\n",Sys::udid()); //check udid
-    printf("starting...\r\n");
+    printf("@Gstarting...\r\n@W");
 
     for(;;){
         Wdt::reset();

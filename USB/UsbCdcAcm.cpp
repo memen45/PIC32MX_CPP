@@ -153,7 +153,7 @@ bool showlinecoding(UsbEP* ep0){
     UsbDebug dbg;
     if( dbg.debug() ){
         dbg.debug( m_filename, __func__,
-            "$3%d %d %d %d$7",
+            "@M%d %d %d %d@W",
             m_line_coding.baud, m_line_coding.stop_bits,
             m_line_coding.parity, m_line_coding.data_bits );
     }
@@ -174,7 +174,7 @@ ep0_request (UsbEP0* ep0) -> bool
             UsbDebug dbg;
             if( dbg.debug() ){
                 dbg.debug( m_filename, __func__,
-                    "$3%02x$7",
+                    "@G%02x@W",
                     ep0->setup_pkt.bRequest );
             }
             // * * * * DEBUG * * * *
@@ -195,7 +195,7 @@ ep0_request (UsbEP0* ep0) -> bool
                     UsbDebug dbg;
                     if( dbg.debug() ){
                         dbg.debug( m_filename, __func__,
-                            "$4RTS: %d DTR: %d$7",
+                            "@CRTS: %d DTR: %d@W",
                             (ep0->setup_pkt.wValue bitand 2) >> 1,
                             ep0->setup_pkt.wValue bitand 1 );
                     }

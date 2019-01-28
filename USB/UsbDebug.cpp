@@ -14,7 +14,7 @@ static bool m_enable{true};
             UsbDebug::
 UsbDebug    (Uart* u)
             {
-            Putc::set(u);
+            Putc::use(u);
             }
 
 // set putc device
@@ -22,7 +22,7 @@ UsbDebug    (Uart* u)
             auto UsbDebug::
 debug       (Uart* u) -> void
             {
-            Putc::set(u);
+            Putc::use(u);
             }
 
 // enable/disable
@@ -51,9 +51,9 @@ debug       (const char* fil, const char* fnam, const char* fmt, ...) -> void
             va_list args;
             va_start(args, fmt);
 
-            printf( "[$1%010u$7]", Cp0::count() );
-            printf( "[$2%-14s$7]", fil ); //filename
-            printf( "[$5%-14s$7] ", fnam );
+            printf( "[@R%010u@W]", Cp0::count() );
+            printf( "[@M%-14s@W]", fil ); //filename
+            printf( "[@G%-14s@W] ", fnam );
             vprintf(fmt, args); //variadic arguments, use vprintf
             printf("\r\n");
 

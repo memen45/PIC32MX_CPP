@@ -63,7 +63,7 @@ init        (bool tf) -> bool
             UsbDebug dbg;
             if( dbg.debug() ){
                 dbg.debug( m_filename, __func__,
-                    "%s", tf ? "usb started" : "usb stopped" );
+                    "%s@W@k", tf ? "@K@gusb started" : "@W@rusb stopped" );
             }
             // * * * * DEBUG * * * *
 

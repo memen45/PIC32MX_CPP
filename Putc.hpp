@@ -5,6 +5,9 @@
 struct Putc {
 
     //set which uart device uses _mon_putc()
-    static void set(Uart*);
+    static void use(Uart*);
+
+    //enable/disable simple ansi markdown
+    static void ansi(bool);
 
 };
