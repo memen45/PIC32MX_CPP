@@ -10,9 +10,9 @@ static const char m_ansi_trigchar = '@';
 //color code start
 static const char m_ansi_colorfg[] = "\033[38;5;";
 static const char m_ansi_colorbg[] = "\033[48;5;";
-//use 256 color palette
+//use 256 color palette for a little more control
 static const char* m_colors[] = {
-    "000m", //K
+    "0m", //K
     "196m", //R
     "10m",  //G
     "11m",  //Y
@@ -22,7 +22,7 @@ static const char* m_colors[] = {
     "15m",  //W
 };
 //reset ansi atrtibutes, colors
-static const char m_ansi_reset[] = "\033[0;37;40m";
+static const char m_ansi_reset[] = "\033[0;38;5;15m\033[48;5;0m";
 
 
 // set which uart to use
