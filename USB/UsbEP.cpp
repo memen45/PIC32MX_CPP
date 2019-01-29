@@ -131,9 +131,10 @@ setup       (info_t& x) -> bool
             UsbDebug dbg;
             if( dbg.debug() ){
                 dbg.debug( m_filename, __func__,
-                    "%s (%s) %d bytes",
-                    &x == &m_tx ? "write" : "read",
+                    "%s [%s][data%d][%db]",
+                    &x == &m_tx ? "-->" : "<--",
                     i ? "odd" : "even",
+                    x.d01,
                     x.btogo );
             }
             // * * * * DEBUG * * * *
@@ -266,7 +267,7 @@ set_address (UsbEP* ep) -> bool
             UsbDebug dbg;
             if( dbg.debug() ){
                 dbg.debug( m_filename, __func__,
-                    "usb address: %d",
+                    "@musb address: %d@k",
                     ep0->setup_pkt.wValue );
             }
             // * * * * DEBUG * * * *

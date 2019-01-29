@@ -2,8 +2,9 @@
 #include <cstdio>  //printf
 #include <cstdbool>
 #include "Uart.hpp"
+#include "Putc.hpp"
 
-struct UsbDebug {
+struct UsbDebug : public Putc {
 
     UsbDebug(){}        //empty constructor
     UsbDebug(Uart*);    //or specify a uart device

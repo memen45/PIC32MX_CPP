@@ -1,45 +1,37 @@
 #include "Putc.hpp"
 #include "Uart.hpp"
 
-//which uart to use
-static Uart* m_uart;
-//simple ansi enable
+
+//simple ansi
 static bool m_ansi_on = true;
 static bool m_ansi_triggered = false;
 static const char m_ansi_trigchar = '@';
-//color code start
 static const char m_ansi_colorfg[] = "\033[38;5;";
 static const char m_ansi_colorbg[] = "\033[48;5;";
 //use 256 color palette for a little more control
+//appended to _fg[] _bg above
 static const char* m_colors[] = {
-    "0m", //K
+    "0m",   //K
     "196m", //R
-    "10m",  //G
-    "11m",  //Y
+    "48m",  //G
+    "226m", //Y
     "26m",  //B
-    "135m", //M
-    "39m",  //C
+    "163m", //M
+    "6m",  //C
     "15m",  //W
 };
 //reset ansi atrtibutes, colors
 static const char m_ansi_reset[] = "\033[0;38;5;15m\033[48;5;0m";
 
+//which uart to use
+static Uart* m_uart;
 
-// set which uart to use
+// set which uart to use,  (Uart*)0 to disable output
 //=============================================================================
             auto Putc::
 use         (Uart* u) -> void
             {
             if(u) m_uart = u;
-            }
-
-// enable/disable simple ansi markdown language
-//=============================================================================
-            auto Putc::
-ansi        (bool tf) -> void
-            {
-            m_ansi_on = tf;
-            m_ansi_triggered = false; //reset
             }
 
 //=============================================================================
@@ -50,6 +42,7 @@ ansi        (bool tf) -> void
 //black red green yellow blue magenta cyan white
 //backround color - k r g y b m c w
 //reset ansi attributes and color - "@!"
+//turn off/on ansi color "@-" "@+" (still have to use "@@" for "@")
 //set foreground to white - "@W" (uppercase)
 //set background to black - "@k" (lowercase)
 //normal trigger char usage- @@ = '@', @@K = @K
@@ -58,7 +51,6 @@ ansi        (bool tf) -> void
 _mon_putc   (char c) -> void
             {
             if( not m_uart ) return;
-            if( not m_ansi_on ){ m_uart->putc(c); return; }
             if( c == m_ansi_trigchar and not m_ansi_triggered ){
                 m_ansi_triggered = true;
                 return;
@@ -74,6 +66,7 @@ _mon_putc   (char c) -> void
                     if( markdown[n] == c ) break;
                 }
                 if( markdown[n] ){ //found
+                    if( not m_ansi_on ) return;
                     if( n bitand 8 ){
                         m_uart->puts(m_ansi_colorbg);
                         m_uart->puts(m_colors[n bitand 7]);
@@ -87,7 +80,11 @@ _mon_putc   (char c) -> void
                     m_uart->puts(m_ansi_reset);
                     return; //done here
                 }
-                //if was not "$$", need to print previously suppressed '$'
+                if( c == '-' || c == '+' ){
+                    m_ansi_on = c == '-' ? false : true;
+                    return; //done here
+                }
+                //if was not "@@", need to print previously suppressed '@'
                 if( c != m_ansi_trigchar ) m_uart->putc(m_ansi_trigchar);
             }
             m_uart->putc(c);

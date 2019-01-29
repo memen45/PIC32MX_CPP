@@ -169,14 +169,12 @@ struct UsbTest {
 
     bool notify(UsbEP* ep){
         static uint8_t count = 1;
-        if(count > 7){
-            dly.set_ms(1000); //set when called
-            count = 1;
-            return true;
-        }
-        dly.set_ms(2);
+        dly.set_ms(1000);
+        if(count > 231) count = 1;
         Rtcc::datetime_t dt = Rtcc::datetime();
-        snprintf(buf, 64, "\033[3%dm[%02d] %02d-%02d-%04d %02d:%02d:%02d %s ",
+
+        //snprintf(buf, 64, "\033[3%dm[%02d] %02d-%02d-%04d %02d:%02d:%02d %s ",
+        snprintf(buf, 64, "\033[38;5;%dm[%02d] %02d-%02d-%04d %02d:%02d:%02d %s ",
                 count,
                 count,
                 dt.month, dt.day, dt.year+2000, dt.hour12, dt.minute, dt.second,
@@ -231,7 +229,14 @@ int main()
 //}
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 19, 1, 29, 0, 1, 1, 0 } );
+    if(dt.year == 0) Rtcc::datetime( {
+        // 19, 1, 29, 0, 9, 45, 0 -> Y,M,D,0,H,M.S (day calculated in Rtcc)
+        //add to pre-build step
+        //date +%-y,%-m,%-d,0,%-k,%-M,%-S > ${ProjectDir}/now.h
+        //so date/time automatically set
+        #include "now.h"
+        //will be a few seconds lagging- compile time+programming time
+    } );
 
     Rtcc::on(true);
 
