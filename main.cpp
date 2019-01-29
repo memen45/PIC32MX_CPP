@@ -231,7 +231,7 @@ int main()
 //}
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 19, 1, 27, 0, 3, 33, 0 } );
+    if(dt.year == 0) Rtcc::datetime( { 19, 1, 29, 0, 1, 1, 0 } );
 
     Rtcc::on(true);
 
