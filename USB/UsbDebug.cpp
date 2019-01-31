@@ -3,19 +3,18 @@
 #include "Cp0.hpp"  //print cp0 count
 #include <cstdarg>  //variadic args
 #include "Uart.hpp" //any uart device can de used for output
-//#include "Putc.hpp"
+#include "Putc.hpp"
 
 //debug is a blocking function
 
-static bool m_enable{true};
+static bool m_enable{false};
 
 // constructor specifying uart
 //=============================================================================
             UsbDebug::
 UsbDebug    (Uart* u)
             {
-            //Putc::use(u);
-            use(u);
+            Putc::use(u);
             }
 
 // set putc device
@@ -23,8 +22,7 @@ UsbDebug    (Uart* u)
             auto UsbDebug::
 debug       (Uart* u) -> void
             {
-            //Putc::use(u);
-            use(u);
+            Putc::use(u);
             }
 
 // enable/disable

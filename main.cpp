@@ -27,6 +27,7 @@
 #include "UsbCdcAcm.hpp"
 #include "Nvm.hpp"
 #include "UsbDebug.hpp"
+#include "Putc.hpp"
 
 //svg colors for rgb led
 const uint8_t svg[][3]{
@@ -199,6 +200,7 @@ struct UsbTest {
         }
         if( xmit and dly.expired()) notify(0);
     }
+
 };
 UsbTest utest;
 
@@ -242,6 +244,7 @@ int main()
 
     info.on(true);  //uart on
     UsbDebug dbg( &info ); //set UsbDebug to use our uart
+    dbg.debug( true );
 
     Rgb rgb;
     Led12 led12;
