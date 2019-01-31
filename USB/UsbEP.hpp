@@ -33,39 +33,30 @@ service_in  () -> void;
 service_out () -> void;
 
             auto
-send        (uint8_t*, uint16_t, notify_t = 0) -> bool;
+write       (uint8_t*, uint16_t, notify_t = 0) -> bool;
 
             //specify data01
             auto
-send        (uint8_t*, uint16_t, bool, notify_t = 0) -> bool;
+write       (uint8_t*, uint16_t, bool, notify_t = 0) -> bool;
 
             auto
-recv        (uint8_t*, uint16_t, notify_t = 0) -> bool;
+read        (uint8_t*, uint16_t, notify_t = 0) -> bool;
 
             //specify data01
             auto
-recv        (uint8_t*, uint16_t, bool, notify_t = 0) -> bool;
+read        (uint8_t*, uint16_t, bool, notify_t = 0) -> bool;
 
             auto
-send_busy   () -> bool;
+busy        (TXRX) -> bool;
 
             auto
-recv_busy   () -> bool;
+stall       (TXRX) -> void;
 
             auto
-send_stall  () -> void;
+zlp         () -> void;
 
             auto
-recv_stall  () -> void;
-
-            auto
-send_zlp    () -> void;
-
-            auto
-send_notify (notify_t) -> void;
-
-            auto
-recv_notify (notify_t) -> void;
+notify      (TXRX, notify_t) -> void;
 
             auto
 takeback    (TXRX) -> void;

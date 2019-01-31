@@ -9,9 +9,9 @@
  =============================================================================*/
 #include <cstdint>
 #include <cstring> //strlen
-#include <stdio.h>
+#include <cstdio>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "Pins.hpp"
 #include "Wdt.hpp"
@@ -24,12 +24,10 @@
 #include "Rtcc.hpp"
 #include "Irq.hpp"
 #include "Sys.hpp"
-
-
 #include "UsbCdcAcm.hpp"
-
 #include "Nvm.hpp"
-
+#include "UsbDebug.hpp"
+#include "Putc.hpp"
 
 //svg colors for rgb led
 const uint8_t svg[][3]{
@@ -52,32 +50,9 @@ const uint8_t svg[][3]{
 };
 
 
+//UsbDebug will use, will also be deault for printf
+//(via _mon_putc in UsbDeg.cpp)
 Uart info{Uart::UART2, Pins::C6, Pins::C7, 1000000};
-
-
-//printf - use replacement putc
-//will use $ for trigger to print ansi colors (use $$ if want $ character)
-//printf("this is $1red $7white and I have $$1");
-extern "C" void _mon_putc(char c){
-    static bool trigger = false;
-    if(trigger){
-        trigger = false;
-        if(c >= '0' && c <= '7'){
-            info.puts("\033[3");    //ansi color start
-            info.putchar(c);        //plus color
-            c = 'm';                //below will output this
-        }
-        info.putchar(c);            //'m' from above, or regular char after '$'
-        return;
-    }
-    //not triggered
-    if(c == '$') trigger = true;//trigger char
-    else info.putchar(c);       //regular char
-}
-
-void cls(){ info.putchar(12); }
-void cursor(bool tf){ printf("\033[?25%c", tf ? 'h' : 'l'); }
-void ansi_reset(){ printf("\033[0m"); }
 
 
 //rgb led's struct, use pwm for brightness
@@ -113,12 +88,14 @@ struct Rgb {
 
         Rtcc::datetime_t dt = Rtcc::datetime();
 
-        printf("$7color[$3%02d$7]: $2%03d.%03d.%03d$7",
+        if( not UsbDebug::debug() ){ //if not using uart for debug, print this
+        printf("@Wcolor[@R%02d@W]: @G%03d.%03d.%03d@W",
             m_idx,m_ccp[0].compb()>>8,m_ccp[1].compb()>>8,m_ccp[2].compb()>>8);
-        printf(" CP0 Count: $1%010u$7", Cp0::count());
-        printf(" now: $5%02d-%02d-%04d %02d:%02d:%02d %s$7\r\n",
+        printf(" CP0 Count: @B%010u@W", Cp0::count());
+        printf(" now: @M%02d-%02d-%04d %02d:%02d:%02d %s@W\r\n",
                 dt.month, dt.day, dt.year+2000, dt.hour12, dt.minute, dt.second,
                 dt.pm ? "PM" : "AM");
+        }
 
         if(++m_idx >= sizeof(svg)/sizeof(svg[0])) m_idx = 0;
     };
@@ -171,53 +148,62 @@ struct Led12 {
 
 };
 
-//bool cdc_notify(UsbEP* ep);
-
 struct UsbTest {
 
-    Pins sw3{ Pins::C4, Pins::INPU }; //turn on usb
-    Pins sw1{ Pins::B9, Pins::INPU }; //turn off usb
+    Pins sw3{ Pins::C4, Pins::INPU }; //turn on/off usb
+    Pins sw1{ Pins::B9, Pins::INPU }; //enable/disable debug
     Pins sw2{ Pins::C10, Pins::INPU }; //xmit data
 
     UsbCdcAcm cdc;
 
-    Delay sw_debounce;
     Delay dly;
 
     char buf[64];
     bool ison = false;
     bool xmit = false;
 
+    void debounce(Pins& p){
+        Delay::wait_ms( 50 ); //down
+        while( p.ison() );
+        Delay::wait_ms( 100 ); //up (long ok here)
+    }
+
     bool notify(UsbEP* ep){
-        static uint8_t count = 0;
-        if(count >= 10){
-            dly.set_ms(5000); //set when called
-            count = 0;
-            return true;
-        }
-        dly.set_ms(2);
+        static uint8_t count = 1;
+        dly.set_ms(1000);
+        if(count > 231) count = 1;
         Rtcc::datetime_t dt = Rtcc::datetime();
-        snprintf(buf, 64, "%s[%02d] %02d-%02d-%04d %02d:%02d:%02d %s\r\n",
-                count ? "" : "\r\n", count,
+
+        //snprintf(buf, 64, "\033[3%dm[%02d] %02d-%02d-%04d %02d:%02d:%02d %s ",
+        snprintf(buf, 64, "\033[38;5;%dm[%02d] %02d-%02d-%04d %02d:%02d:%02d %s ",
+                count,
+                count,
                 dt.month, dt.day, dt.year+2000, dt.hour12, dt.minute, dt.second,
                 dt.pm ? "PM" : "AM");
-        if(cdc.send((uint8_t*)buf, strlen(buf))) count++;
+        if( cdc.write( (const char*)buf ) ) count++;
         return true;
     }
 
     void update(){
-        if(sw3.ison() and not ison) ison = cdc.init(true);
-        if(sw1.ison() and ison) ison = cdc.init(false);
-        if(sw2.ison() and sw_debounce.expired()){
-            xmit = not xmit;
-            sw_debounce.set_ms(1000);
+        if( sw3.ison() ){
+            cdc.init( not cdc.is_active() );
+            debounce( sw3 );
         }
-        if(ison and xmit and dly.expired()) notify(0);
+        if( not cdc.is_active() ) return;
+        if( sw1.ison() ){
+            UsbDebug::debug( not UsbDebug::debug() );
+            debounce( sw1 );
+        }
+        if( sw2.ison() ){
+            xmit = not xmit;
+            debounce( sw2 );
+        }
+        if( xmit and dly.expired()) notify(0);
     }
+
 };
 UsbTest utest;
-//helper- need static function for callback
-//bool cdc_notify(UsbEP* ep){ return utest.notify(ep); }
+
 
 int main()
 {
@@ -245,22 +231,29 @@ int main()
 //}
 
     Rtcc::datetime_t dt = Rtcc::datetime();
-    if(dt.year == 0) Rtcc::datetime( { 18, 12, 18, 0, 0, 53, 0 } );
+    if(dt.year == 0) Rtcc::datetime( {
+        // 19, 1, 29, 0, 9, 45, 0 -> Y,M,D,0,H,M.S (day calculated in Rtcc)
+        //add to pre-build step
+        //date +%-y,%-m,%-d,0,%-k,%-M,%-S > ${ProjectDir}/now.h
+        //so date/time automatically set
+        #include "now.h"
+        //will be a few seconds lagging- compile time+programming time
+    } );
 
     Rtcc::on(true);
-    info.on(true);
-    cls(); //cls
-    cursor(false); //hide cursor
+
+    info.on(true);  //uart on
+    UsbDebug dbg( &info ); //set UsbDebug to use our uart
+    dbg.debug( true );
 
     Rgb rgb;
     Led12 led12;
 
     Pins pot{Pins::AN14}; //test adc, get pot adc val
     uint32_t p = pot.adcval();
-    printf("pot: %d\r\n",p);
-
+    printf("@!\r\npot: %d\r\n",p);
     printf("UDID: %016llx\r\n",Sys::udid()); //check udid
-    printf("starting...\r\n");
+    printf("@Gstarting...\r\n@W");
 
     for(;;){
         Wdt::reset();

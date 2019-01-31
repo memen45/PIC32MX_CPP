@@ -320,9 +320,13 @@ baud_set    () -> void
             }
 
 //misc
+
+// putc required for any derived class of Putc
+// so we can change to any Putc device for printf use indirecly via
+// via _mon_putc which printf ultimately will use (see Putc.hpp/cpp)
 //=============================================================================
             auto Uart::
-putchar     (const char c) -> void
+putc        (const char c) -> void
             {
             while(tx_full());
             write(c);
@@ -332,7 +336,7 @@ putchar     (const char c) -> void
             auto Uart::
 puts        (const char* s) -> void
             {
-            while(s && *s) putchar(*s++);
+            while(s && *s) putc(*s++);
             }
 
 //=============================================================================

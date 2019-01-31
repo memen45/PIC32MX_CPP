@@ -3,10 +3,13 @@
 #include "Usb.hpp"
 #include "Reg.hpp"
 #include "UsbCentral.hpp"
+#include "UsbDebug.hpp"
 
 #include <cstdint>
 #include <cstring>  //memset, memcpy
-#include <cstdio>   //debug printf
+
+// private, debug use
+static const char* m_filename = "UsbEP.cpp";
 
 
 //=============================================================================
@@ -52,7 +55,7 @@ xfer        (info_t& x, uint8_t* buf, uint16_t siz, notify_t f) -> bool
 //specify d01, notify optional (default = 0)
 //=============================================================================
             auto UsbEP::
-send        (uint8_t* buf, uint16_t siz, bool d01, notify_t f) -> bool
+write       (uint8_t* buf, uint16_t siz, bool d01, notify_t f) -> bool
             {
             m_tx.d01 = d01;
             return xfer(m_tx, buf, siz, f);
@@ -60,7 +63,7 @@ send        (uint8_t* buf, uint16_t siz, bool d01, notify_t f) -> bool
 
 //=============================================================================
             auto UsbEP::
-send        (uint8_t* buf, uint16_t siz, notify_t f) -> bool
+write       (uint8_t* buf, uint16_t siz, notify_t f) -> bool
             {
             return xfer(m_tx, buf, siz, f);
             }
@@ -68,7 +71,7 @@ send        (uint8_t* buf, uint16_t siz, notify_t f) -> bool
 //specify d01, notify optional (default = 0)
 //=============================================================================
             auto UsbEP::
-recv        (uint8_t* buf, uint16_t siz, bool d01, notify_t f) -> bool
+read        (uint8_t* buf, uint16_t siz, bool d01, notify_t f) -> bool
             {
             m_rx.d01 = d01;
             return xfer(m_rx, buf, siz, f);
@@ -76,15 +79,16 @@ recv        (uint8_t* buf, uint16_t siz, bool d01, notify_t f) -> bool
 
 //=============================================================================
             auto UsbEP::
-recv        (uint8_t* buf, uint16_t siz, notify_t f) -> bool
+read        (uint8_t* buf, uint16_t siz, notify_t f) -> bool
             {
             return xfer(m_rx, buf, siz, f);
             }
 
 //-----------------------------------------------------------------------------
-            static auto
-busy        (UsbEP::info_t& x) -> bool
+            auto UsbEP::
+busy        (TXRX tr) -> bool
             {
+            UsbEP::info_t& x = tr == TX ? m_tx : m_rx;
             return x.bdt[UsbEP::EVEN].stat.uown or
                 x.bdt[UsbEP::ODD].stat.uown or
                 x.btogo or
@@ -93,51 +97,24 @@ busy        (UsbEP::info_t& x) -> bool
 
 //=============================================================================
             auto UsbEP::
-send_busy   () -> bool
+stall       (TXRX tr) -> void
             {
-            return busy(m_tx);
+            if( tr == RX ) m_rx.stall = true; else m_tx.stall = true;
             }
 
 //=============================================================================
             auto UsbEP::
-recv_busy   () -> bool
-            {
-            return busy(m_rx);
-            }
-
-//=============================================================================
-            auto UsbEP::
-send_stall  () -> void
-            {
-            m_tx.stall = true;
-            }
-
-//=============================================================================
-            auto UsbEP::
-recv_stall  () -> void
-            {
-            m_rx.stall = true;
-            }
-
-//=============================================================================
-            auto UsbEP::
-send_zlp    () -> void
+zlp         () -> void
             {
             m_tx.zlp = true;
             }
 
 //=============================================================================
             auto UsbEP::
-send_notify (notify_t f) -> void
+notify      (TXRX tr, notify_t f) -> void
             {
-            if(f) m_tx.notify = f;
-            }
-
-//=============================================================================
-            auto UsbEP::
-recv_notify (notify_t f) -> void
-            {
-            if(f) m_rx.notify = f;
+            if( not f) return;
+            if( tr == RX ) m_rx.notify = f; else m_tx.notify = f;
             }
 
 //=============================================================================
@@ -150,9 +127,18 @@ setup       (info_t& x) -> bool
             if(x.bdt[i].stat.uown) i xor_eq 1;      //already in use, try next
             if(x.bdt[i].stat.uown) return false;    //both in use, cannot do
 
-            //DEBUG
-            printf("%s %s %d (%d)\r\n",
-            &x == &m_tx ? "TX" : "RX",i ? "ODD" : "EVEN",x.btogo,x.epsiz);
+            // * * * * DEBUG * * * *
+            UsbDebug dbg;
+            if( dbg.debug() ){
+                dbg.debug( m_filename, __func__,
+                    "%s [%s][data%d][%db]",
+                    &x == &m_tx ? "-->" : "<--",
+                    i ? "odd" : "even",
+                    x.d01,
+                    x.btogo );
+            }
+            // * * * * DEBUG * * * *
+
 
             volatile Usb::ctrl_t ctrl = {0};
             ctrl.bstall = x.stall;
@@ -178,9 +164,14 @@ service     (uint8_t ustat) -> bool
             x.ppbi xor_eq 1;                                    //toggle ppbi
             x.d01 xor_eq 1;                                     //toggle d01
 
-            //DEBUG
-            printf("UsbEP::service   ustat: %d  ep: %d  pid: %d  bdt: %08x\r\n",
-            ustat,m_epnum,x.stat.pid,x.stat.val32);
+            // * * * * DEBUG * * * *
+            UsbDebug dbg;
+            if( dbg.debug() ){
+                dbg.debug( m_filename, __func__,
+                    "ustat: %d  ep: %d  pid: %d  bdt: %08x",
+                    ustat,m_epnum,x.stat.pid,x.stat.val32 );
+            }
+            // * * * * DEBUG * * * *
 
             if(x.stat.pid == UsbCh9::OUT)       service_out();  //out (rx)
             else if(x.stat.pid == UsbCh9::IN)   service_in();   //in (tx)
@@ -271,6 +262,16 @@ set_address (UsbEP* ep) -> bool
             //callbacks are UsbEP, cast to UsbEP0 in this case
             UsbEP0* ep0 = (UsbEP0*)ep;
             Usb::dev_addr(ep0->setup_pkt.wValue);  //set usb address
+
+            // * * * * DEBUG * * * *
+            UsbDebug dbg;
+            if( dbg.debug() ){
+                dbg.debug( m_filename, __func__,
+                    "@musb address: %d@k",
+                    ep0->setup_pkt.wValue );
+            }
+            // * * * * DEBUG * * * *
+
             return true;
             }
 
@@ -290,19 +291,28 @@ control     (UsbEP0* ep0) -> bool
             //or set to something else below (descriptor)
             uint8_t* ep0txbuf = txbuf;
 
+            bool txin = ep0->setup_pkt.bmRequestType bitand (1<<7);
+
             //if data stage (wLength > 0), and device->host (IN, TX)
             //set tlen (tx) to wLength, else is 0 (tx status)
-            uint16_t tlen = ((ep0->setup_pkt.bmRequestType bitand (1<<7)) and
-                                ep0->setup_pkt.wLength) ?
+            uint16_t tlen = (txin and ep0->setup_pkt.wLength) ?
                             ep0->setup_pkt.wLength : 0;
 
             //stall flag
             bool stall = false;
 
-            //DEBUG
-            printf("pkt: $1%04x %04x %04x %04x$7\r\n",
-            ep0->setup_pkt.wRequest,ep0->setup_pkt.wValue,
-            ep0->setup_pkt.wIndex,ep0->setup_pkt.wLength);
+            // * * * * DEBUG * * * *
+            UsbDebug dbg;
+            if( dbg.debug() ){
+                dbg.debug( m_filename, __func__,
+                    "pkt: @Y%02x %02x %04x %04x %04x@W",
+                    ep0->setup_pkt.bmRequestType, ep0->setup_pkt.bRequest,
+                    ep0->setup_pkt.wValue,
+                    ep0->setup_pkt.wIndex,
+                    ep0->setup_pkt.wLength );
+            }
+            // * * * * DEBUG * * * *
+
 
             //process std req
             //pkt.wRequest, wValue, wIndex, wLength
@@ -341,13 +351,16 @@ control     (UsbEP0* ep0) -> bool
                     }
                     break;
                 case UsbCh9::DEV_SET_ADDRESS: //no data, tx status
-                    ep0->send_notify(set_address); //set address after status
+                    ep0->notify(ep0->TX, set_address); //set address after status
                     break;
                 case UsbCh9::DEV_GET_DESCRIPTOR: //tx tlen bytes, rx status
                     ep0txbuf = (uint8_t*)UsbCentral::get_desc(
                                     ep0->setup_pkt.wValue, &tlen);
                     //if error, tlen=0 and ep0txbuf=0
-                    if((tlen == 0) or (ep0txbuf == 0)) stall = true;
+                    if((tlen == 0) or (ep0txbuf == 0)){
+                        stall = true;
+                        ep0txbuf = txbuf;
+                    }
                     break;
                 case UsbCh9::DEV_SET_DESCRIPTOR:
                     //no data, tx status
@@ -372,7 +385,7 @@ control     (UsbEP0* ep0) -> bool
                 default:
                     //check other requests
                     if(UsbCentral::service(0, ep0)){ //true=all handled, except
-                        ep0->recv(ep0rxbuf, 64, false); //we do next setup
+                        ep0->read(ep0rxbuf, 64, false); //we do next setup
                         return true;
                     }
                     //bad request, stall
@@ -380,28 +393,26 @@ control     (UsbEP0* ep0) -> bool
                     break;
             }
 
+            //if IN, will stall the data packet
+            //if OUT, will stall the handshake
             if(stall){
-                ep0->send_stall();
-                ep0->send(ep0txbuf, 0, true);
-                ep0->recv_stall();
-                ep0->recv(ep0rxbuf, 64, false);
-                return false;
+               ep0->stall( ep0->TX );
             }
 
             //check for tx data that is less than requested
             //(strings,descriptors,etc)
             //if less and if is same size as ep packet size, add zlp
             if(tlen and (tlen != ep0->setup_pkt.wLength) and (not(tlen % 64))){
-                ep0->send_zlp();
+                ep0->zlp();
             }
             //true = data1, false=data0
             //tx is always data1- either status, or send data in data stage
-            ep0->send(ep0txbuf, tlen, true);
+            ep0->write(ep0txbuf, tlen, true);
             //if data stage, next rx is always data1- rx data or rx status
-            if(ep0->setup_pkt.wLength) ep0->recv(ep0rxbuf, 64, true);
+            if(ep0->setup_pkt.wLength) ep0->read(ep0rxbuf, 64, true);
             //next setup packet (data0) in all cases
             //(rx data stage is always <64, so there is only 1 rx data packet)
-            ep0->recv(ep0rxbuf, 64, false);
+            ep0->read(ep0rxbuf, 64, false);
 
             return true;
             }
@@ -411,7 +422,7 @@ control     (UsbEP0* ep0) -> bool
 init        () -> void
             {
             UsbEP::init(0);                 //same as others
-            recv(ep0rxbuf, 64, false);      //and setup for first packet recv
+            read(ep0rxbuf, 64, false);      //and setup for first packet recv
             }
 
 //=============================================================================
@@ -423,10 +434,16 @@ service     (uint8_t ustat) -> bool
             //ppbi and data01, and gets bdt stat)
             if(UsbEP::service(ustat)) return true;
 
-            //DEBUG
             info_t& x = ustat bitand 2 ? m_tx : m_rx; //tx or rx
-            printf("UsbEP0::service   ustat: %d  ep: %d  pid: %d  bdt: %08x\r\n",
-                ustat,m_epnum,x.stat.pid,x.stat.val32);
+
+            // * * * * DEBUG * * * *
+            UsbDebug dbg;
+            if( dbg.debug() ){
+                dbg.debug( m_filename, __func__,
+                    "ustat: %d  ep: %d  pid: %d  bdt: %08x",
+                    ustat, m_epnum, x.stat.pid, x.stat.val32 );
+            }
+            // * * * * DEBUG * * * *
 
             //ep0 setup packet
             if(x.stat.pid == UsbCh9::SETUP and x.stat.count == 8){

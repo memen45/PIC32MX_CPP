@@ -3,9 +3,8 @@
 #include "Irq.hpp"
 #include "UsbEP.hpp"
 #include "Delay.hpp"
+#include "UsbDebug.hpp"
 
-
-#include <cstdio> //debug printf
 
 //-----------------------------------------------------------------private-----
 static UsbEP0                   ep0;
@@ -15,6 +14,8 @@ static UsbCentral::service_t    m_service = 0;
 //counters
 static uint32_t                 m_timer1ms = 0;
 static uint32_t                 m_sofcount = 0;
+//debug use
+static const char*              m_filename = "UsbCentral.cpp";
 
 //class vars
 //=============================================================================
@@ -58,8 +59,13 @@ attach      () -> void
             auto UsbCentral::
 init        (bool tf) -> bool
             {
-            //DEBUG
-            printf("\r\n\r\nUsbCentral::init(%d)\r\n",tf);
+            // * * * * DEBUG * * * *
+            UsbDebug dbg;
+            if( dbg.debug() ){
+                dbg.debug( m_filename, __func__,
+                    "%s@W@k", tf ? "@K@gusb started" : "@W@rusb stopped" );
+            }
+            // * * * * DEBUG * * * *
 
             bool wason = Usb::power(Usb::USBPWR);
             detach();
@@ -84,9 +90,14 @@ service     (uint32_t flags, uint8_t ustat) -> void
                 //so we only worry about reset irq when needed
                 usb.irq(usb.URST, true);
 
-                //DEBUG
-                printf("\r\nUsbCentral::service  frame: %d  ustat: %d\r\n",
-                       usb.frame(),ustat);
+                // * * * * DEBUG * * * *
+                UsbDebug dbg;
+                if( dbg.debug() ){
+                    dbg.debug( m_filename, __func__,
+                       "frame: %d  ustat: %d",
+                       usb.frame(),ustat );
+                }
+                // * * * * DEBUG * * * *
 
                 if(ustat < 4){                  //endpoint 0 (ustat 0-3)
                     if(not ep0.service(ustat))  //if std request not handled
@@ -135,8 +146,9 @@ get_desc    (uint16_t wValue, uint16_t* siz) -> const uint8_t*
                     if(not idx) break;     //found it
                     idx--;                 //wrong index, dec until 0
                 }
-                i += m_descriptor[i];
-                if(not i){ *siz = 0; return 0; } //at end (0 marker)
+                i += m_descriptor[i];       //next descriptor
+                //at end ? (0 marker)
+                if(not m_descriptor[i]){ *siz = 0; return 0; }
             }
             //we now have index into descriptor
             //get size of type, if config get total size
