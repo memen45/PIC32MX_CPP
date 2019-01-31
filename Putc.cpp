@@ -25,6 +25,7 @@ static const char m_ansi_reset[] = "\033[0;38;5;15m\033[48;5;0m";
 
 //which uart to use
 static Uart* m_uart;
+//or use usb cdc
 static UsbCdcAcm* m_cdc;
 
 // set which uart to use,  (Uart*)0 to disable output
@@ -61,20 +62,26 @@ use         (UsbCdcAcm* u) -> void
 //normal trigger char usage- @@ = '@', @@K = @K
 //=============================================================================
 //private
-static void do_puts(const char* str){
-    if(m_uart) m_uart->puts(str);
-    else if(m_cdc){
-        m_cdc->write(str);
-        while(m_cdc->busy(UsbEP::TX));
-    }
-}
-static void do_putc(const char c){
-    if(m_uart) m_uart->putc(c);
-    else if(m_cdc){
-        m_cdc->write((uint8_t*)&c, (uint16_t)1);
-        while(m_cdc->busy(UsbEP::TX));
-    }
-}
+            static auto
+do_puts     (const char* str) -> void
+            {
+            if(m_uart) m_uart->puts(str);
+            else if(m_cdc){
+                m_cdc->write(str);
+                while(m_cdc->busy(UsbEP::TX));
+            }
+            }
+
+            static auto
+do_putc     (const char c) -> void
+            {
+            if(m_uart) m_uart->putc(c);
+            else if(m_cdc){
+                m_cdc->write((uint8_t*)&c, (uint16_t)1);
+                while(m_cdc->busy(UsbEP::TX));
+            }
+            }
+
             extern "C" auto
 _mon_putc   (char c) -> void
             {
@@ -96,20 +103,15 @@ _mon_putc   (char c) -> void
                 if( markdown[n] ){ //found
                     if( not m_ansi_on ) return;
                     if( n bitand 8 ){
-                        // m_uart->puts(m_ansi_colorbg);
-                        // m_uart->puts(m_colors[n bitand 7]);
                         do_puts(m_ansi_colorbg);
                         do_puts(m_colors[n bitand 7]);
                     } else {
-                        // m_uart->puts(m_ansi_colorfg);
-                        // m_uart->puts(m_colors[n bitand 7]);
                         do_puts(m_ansi_colorfg);
                         do_puts(m_colors[n bitand 7]);
                     }
                     return;
                 }
                 if( c == '!' ){
-                    // m_uart->puts(m_ansi_reset);
                     do_puts(m_ansi_reset);
                     return; //done here
                 }
@@ -118,12 +120,8 @@ _mon_putc   (char c) -> void
                     return; //done here
                 }
                 //if was not "@@", need to print previously suppressed '@'
-                if( c != m_ansi_trigchar ){
-                    //  m_uart->putc(m_ansi_trigchar);
-                    do_putc(m_ansi_trigchar);
-                }
+                if( c != m_ansi_trigchar ) do_putc(m_ansi_trigchar);
             }
-            // m_uart->putc(c);
             do_putc(c);
             }
 
