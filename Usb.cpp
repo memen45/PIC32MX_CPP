@@ -7,31 +7,31 @@
 
 //registers - all registers use only first 8bits
 enum {
-U1OTGIR = 0xBF808440,   //no SET, INV - all bits write-1-to-clear
-U1OTGIE = 0xBF808450,
-U1OTGSTAT = 0xBF808460, //no SET, INV, CLR
-U1OTGCON = 0xBF808470,
-U1PWRC = 0xBF808480,
-U1IR = 0xBF808600,      //no SET, INV
-U1IE = 0xBF808610,
-U1EIR = 0xBF808620,     //no SET, INV
-U1EIE = 0xBF808630,
-U1STAT = 0xBF808640,    //no SET, INV, CLR
+U1OTGIR = 0xBF885040,   //no SET, INV - all bits write-1-to-clear
+U1OTGIE = 0xBF885050,
+U1OTGSTAT = 0xBF885060, //no SET, INV, CLR
+U1OTGCON = 0xBF885070,
+U1PWRC = 0xBF885080,
+U1IR = 0xBF885200,      //no SET, INV
+U1IE = 0xBF885210,
+U1EIR = 0xBF885220,     //no SET, INV
+U1EIE = 0xBF885230,
+U1STAT = 0xBF885240,    //no SET, INV, CLR
     ENDPT_SHIFT = 4, ENDPT_MASK = 15,
     DIR = 3,
     PPBI = 2,
-U1CON = 0xBF808650,
-U1ADDR = 0xBF808660,
+U1CON = 0xBF885250,
+U1ADDR = 0xBF885260,
     LSEN = 7,
-U1BDTP1 = 0xBF808670,
-U1FRML = 0xBF808680,    //no SET, INV, CLR
-U1FRMH = 0xBF808690,    //no SET, INV, CLR
-U1TOK = 0xBF8086A0,
-U1SOF = 0xBF8086B0,
-U1BDTP2 = 0xBF8086C0,
-U1BDTP3 = 0xBF8086D0,
-U1CNFG1 = 0xBF8086E0,
-U1EP0 = 0xBF808700, U1EP_SPACING = 0x10
+U1BDTP1 = 0xBF885270,
+U1FRML = 0xBF885280,    //no SET, INV, CLR
+U1FRMH = 0xBF885290,    //no SET, INV, CLR
+U1TOK = 0xBF8852A0,
+U1SOF = 0xBF8852B0,
+U1BDTP2 = 0xBF8852C0,
+U1BDTP3 = 0xBF8852D0,
+U1CNFG1 = 0xBF8852E0,
+U1EP0 = 0xBF885300, U1EP_SPACING = 0x10
 };
 
 //class var
@@ -39,7 +39,7 @@ U1EP0 = 0xBF808700, U1EP_SPACING = 0x10
 volatile Usb::bdt_t Usb::bdt_table[][2][2] = {0};
 
 //-----------------------------------------------------------------private-----
-Pins vbus_pin(Usb::vbus_pin_n, Pins::INPD);
+//Pins vbus_pin(Usb::vbus_pin_n, Pins::INPD);
 
 //=============================================================================
             auto Usb::
@@ -53,7 +53,8 @@ bdt_init    () -> void
             auto Usb::
 vbus_ison   () -> bool
             {
-            return vbus_pin.ison();
+			return flag(SESVD);
+            //return vbus_pin.ison();
             }
 
 //U1OTGIR/IE, U1IR/IE, U1EIR/IE

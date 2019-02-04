@@ -28,6 +28,7 @@ The following modules are present in the current repository:
 | Timer1  | yes | yes |
 | Timer   | yes | yes |
 | Uart    | yes | yes |
+| Usb     | yes | no |
 | Vdetect | not (yet) | no |
 | Wdt     | not (yet) | no |
 

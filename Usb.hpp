@@ -63,7 +63,7 @@ struct Usb : private Reg {
 bdt_init    () -> void;
 
             //vbus pin
-            static const Pins::RPN vbus_pin_n = Pins::B6;
+//            static const Pins::RPN vbus_pin_n = Pins::B6;
 
             static auto
 vbus_ison   () -> bool;
