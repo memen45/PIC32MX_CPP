@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <cstdbool>
+#include <cstddef> //size_t
 
 
 
@@ -59,5 +60,8 @@ codes_t     = struct
 
             //store all markup char+ansi codes and size of string-1
             static const codes_t m_codes[];
+            //size of temp buffer, should be same or larger
+            //than Sprintf buffer
+            static constexpr const size_t m_bufsiz{256};
 
 };

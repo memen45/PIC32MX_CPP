@@ -5,8 +5,8 @@
 
 
             //cannot get constexpr to return a struct for some reason
-            //in this version of gcc, so so something else to create
-            //codes with length of string...
+            //in this version of gcc, so do something else to create
+            //codes (strings) with the length of string...
             // -1 as not including leading markup char
             #define MKSTR(str) { str, strlen(str)-1 }
 
@@ -28,13 +28,13 @@
             auto Markup::
 markup      (char* str) -> bool
             {
-            //"test @Rstring@W"
+            //"test @Rstring@W" ->
             //"test \033[38;5;196mstring\033[38;5;15m"
             char* str_copy = str;
-            char buf[256];
-            int idxbuf = 0;
+            char buf[m_bufsiz];
+            size_t idxbuf = 0;
             bool any = false;
-            for(; idxbuf < 255; str++){
+            for(; idxbuf < m_bufsiz-2; str++){
                 buf[idxbuf] = *str;
                 if(not *str) break;
                 if(*str != m_trigger){ idxbuf++;  continue; }
@@ -47,12 +47,12 @@ markup      (char* str) -> bool
                 if(not m_ison) continue;
                 for(auto i = 0; m_codes[i].siz; i++){
                     if(m_codes[i].ansistr[0] != *str) continue;
-                    if(idxbuf+m_codes[i].siz >= 254) return strip(str_copy);
+                    if(idxbuf+m_codes[i].siz >= m_bufsiz-2) return strip(str_copy);
                     memcpy((void*)&buf[idxbuf], m_codes[i].ansistr+1, m_codes[i].siz);
                     idxbuf += m_codes[i].siz;
                 }
             }
-            if(idxbuf >= 255) return strip(str_copy);
+            if(idxbuf >= m_bufsiz-1) return strip(str_copy);
             if(any) memcpy((void*)str_copy, buf, idxbuf+1);
             return true;
             }
@@ -64,10 +64,10 @@ markup      (char* str) -> bool
 strip       (char* src) -> bool
             {
             char* dst = src;
-            // @@ -> @  @W -> ""
+            // "@@"" -> "@""  "@W" -> ""
             while(*dst = *src, *src){
-                if(*src == m_trigger and *++src != m_trigger) src++;
-                else { dst++; src++; }
+                if(*src != m_trigger or *++src == m_trigger) dst++;
+                src++;
             }
             return false;
             }
