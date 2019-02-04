@@ -12,7 +12,7 @@ enum {
         INT1EP = 1,
         INT0EP = 0,
     INTSTAT = 0xBF881010,
-    TPTMR = 0xBF881020,
+    IPTMR = 0xBF881020,
     IFS_BASE = 0xBF881030,
     IEC_BASE = 0xBF881060,
     IPC_BASE = 0xBF881090
@@ -42,7 +42,7 @@ proxtimer   (uint8_t n, uint32_t v) -> void
             { //n = priority 1-7 (and lower) starts prox timer, 0 = off
             clrbit(INTCON, TPC_CLR<<TPC_SHIFT);
             setbit(INTCON, (n bitand TPC_CLR)<<TPC_SHIFT);
-            val(TPTMR, v); //timer value
+            val(IPTMR, v); //timer value
             }
 
 //=============================================================================
