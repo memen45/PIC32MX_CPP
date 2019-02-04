@@ -3,8 +3,9 @@
 //Peripheral Module Disable
 
 #include <cstdint>
+#include "Reg.hpp"
 
-struct Pmd {
+struct Pmd : private Reg {
 
             //bit shift amount into 7 registers (PMD1-PMD7,224 possible values)
             enum

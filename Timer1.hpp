@@ -3,8 +3,9 @@
 //Timer1 functions
 
 #include <cstdint>
+#include "Reg.hpp"
 
-struct Timer1 {
+struct Timer1 : private Reg {
 
             static auto
 timer       (uint16_t) -> void;
@@ -31,8 +32,8 @@ wr_async    (bool) -> void;
 wr_busy     () -> bool;
 
             enum
-CLK         : uint16_t {
-            PBCLK = 0x0000, T1CK
+CLK         : bool {
+            PBCLK = false, T1CK
             };
 
             //clock source - also sets TCS unless pbclk

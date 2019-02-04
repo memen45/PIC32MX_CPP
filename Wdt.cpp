@@ -1,5 +1,4 @@
 #include "Wdt.hpp"
-#include "Reg.hpp"
 
 enum {
 WDTCON = 0xBF803990,
@@ -15,19 +14,19 @@ WDTCON = 0xBF803990,
             auto Wdt::
 reset       () -> void
             {
-            Reg::val(WDTCON + 2, (uint16_t)CLRKEY);
+            val(WDTCON + 2, (uint16_t)CLRKEY);
             }
 
 //=============================================================================
             auto Wdt::
 on          (bool tf) -> void
             {
-            Reg::setbit(WDTCON, 1<<ON, tf);
+            setbit(WDTCON, 1<<ON, tf);
             }
 
 //=============================================================================
             auto Wdt::
 window_on   (bool tf) -> void
             {
-            Reg::setbit(WDTCON, 1<<WINEN, tf);
+            setbit(WDTCON, 1<<WINEN, tf);
             }

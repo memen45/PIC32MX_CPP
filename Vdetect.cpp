@@ -1,5 +1,4 @@
 #include "Vdetect.hpp"
-#include "Reg.hpp"
 
 enum {
 HLVDCON = 0xBF802920,
@@ -15,48 +14,48 @@ HLVDCON = 0xBF802920,
             auto Vdetect::
 on          (bool tf) -> void
             {
-            Reg::setbit(HLVDCON, 1<<ON, tf);
+            setbit(HLVDCON, 1<<ON, tf);
             }
 
 //=============================================================================
             auto Vdetect::
 stop_idle   (bool tf) -> void
             {
-            Reg::setbit(HLVDCON, 1<<SIDL, tf);
+            setbit(HLVDCON, 1<<SIDL, tf);
             }
 
 //=============================================================================
             auto Vdetect::
 trip_above  (bool tf) -> void
             {
-            Reg::setbit(HLVDCON, 1<<VDIR, tf);
+            setbit(HLVDCON, 1<<VDIR, tf);
             }
 
 //=============================================================================
             auto Vdetect::
 bgap_stable () -> bool
             {
-            return Reg::anybit(HLVDCON, 1<<BGVST);
+            return anybit(HLVDCON, 1<<BGVST);
             }
 
 //=============================================================================
             auto Vdetect::
 iref_stable () -> bool
             {
-            return Reg::anybit(HLVDCON, 1<<IRVST);
+            return anybit(HLVDCON, 1<<IRVST);
             }
 
 //=============================================================================
             auto Vdetect::
 tripped     () -> bool
             {
-            return Reg::anybit(HLVDCON, 1<<HLEVT);
+            return anybit(HLVDCON, 1<<HLEVT);
             }
 
 //=============================================================================
             auto Vdetect::
 limit       (HLVDL e) -> void
             {
-            Reg::clrbit(HLVDCON, VEXT);
-            Reg::setbit(HLVDCON, e);
+            clrbit(HLVDCON, VEXT);
+            setbit(HLVDCON, e);
             }

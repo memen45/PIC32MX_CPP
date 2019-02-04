@@ -4,9 +4,11 @@
 
 #include <cstdint>
 #include <functional>
-
-struct Irq {
     
+#include "Reg.hpp"
+
+struct Irq : private Reg {
+
             static auto
 global      (bool) -> void;
 

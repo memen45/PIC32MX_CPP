@@ -1,10 +1,11 @@
 #pragma once
 
 #include <cstdint>
+#include "Reg.hpp"
 
 //Dma 0/1/2/3
 
-struct Dma {
+struct Dma : private Reg {
 
             enum
 DMAX        { DMA0, DMA1, DMA2, DMA3 };

@@ -1,10 +1,11 @@
 #pragma once
 
 #include <cstdint>
+#include "Reg.hpp"
 
 //I2c 1/2/3
 
-struct I2c  {
+struct I2c : private Reg {
 
             enum
 I2CX        { I2C3, I2C4, I2C5, I2C1, I2C2 };

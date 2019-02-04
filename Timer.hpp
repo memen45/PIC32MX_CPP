@@ -1,10 +1,11 @@
 #pragma once
 
-//Timer2/Timer3
+//Timer2/Timer3/Timer4/Timer5
 
 #include <cstdint>
+#include "Reg.hpp"
 
-class Timer {
+class Timer : private Reg {
 
     public:
 

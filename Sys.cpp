@@ -1,6 +1,5 @@
 #include "Sys.hpp"
 #include "Irq.hpp"
-#include "Reg.hpp"
 #include "Dma.hpp"
 #include "Osc.hpp"
 
@@ -47,7 +46,7 @@ lock        () -> void
             Irq::global(false);
             //unlock_count only accessed with irq off
             if(unlock_count) unlock_count--;            //dec counter
-            if(unlock_count == 0) Reg::val(SYSKEY, 0);  //if 0, lock
+            if(unlock_count == 0) val(SYSKEY, 0);  //if 0, lock
             //
             if(irqstate) Irq::global(true);             //restore IE state
             }
@@ -62,8 +61,8 @@ unlock      () -> void
             Dma::all_suspend(true);                     //suspend DMA
             //
             if(unlock_count == 0){                      //first time, unlock
-                Reg::val(SYSKEY, MAGIC1);
-                Reg::val(SYSKEY, MAGIC2);
+                val(SYSKEY, MAGIC1);
+                val(SYSKEY, MAGIC2);
             }
             unlock_count++;                             //inc unlock_count
             //
@@ -92,35 +91,35 @@ unlock_wait () -> uint8_t
             Dma::all_suspend(true);                     //suspend DMA
             //
             if(unlock_count == 0){                      //first time, unlock
-                Reg::val(SYSKEY, MAGIC1);
-                Reg::val(SYSKEY, MAGIC2);
+                val(SYSKEY, MAGIC1);
+                val(SYSKEY, MAGIC2);
             }
             unlock_count++;                             //inc unlock_count
             //
             return (dmasusp<<1) bitor irqstate;
             }
 
-////cfgcon
-////=============================================================================
-//    void        Sys::bus_err            (bool tf)
-////=============================================================================
-//{
-//    Reg::setbit(BMXCON, 1<<BMXERRDIS, !tf);
-//}
+//cfgcon
+//=============================================================================
+//            auto Sys::
+//bus_err     (bool tf) -> void
+//            {
+//            setbit(BMXCON, 1<<BMXERRDIS, !tf);
+//            }
 
 //=============================================================================
             auto Sys::
 bus_mode    (BMXARB e) -> void
             {
-            Reg::clrbit(BMXCON, BMXARB_MASK<<BMXARB_SHIFT);
-            Reg::setbit(BMXCON, e<<BMXARB_SHIFT);
+            clrbit(BMXCON, BMXARB_MASK<<BMXARB_SHIFT);
+            setbit(BMXCON, e<<BMXARB_SHIFT);
             }
 
 //=============================================================================
             auto Sys::
 jtag        (bool tf) -> void
             {
-            Reg::setbit(DDPCON, 1<<JTAGEN, tf);
+            setbit(DDPCON, 1<<JTAGEN, tf);
             }
 
 //devid
@@ -128,14 +127,14 @@ jtag        (bool tf) -> void
             auto Sys::
 devid       () -> uint32_t
             {
-            return Reg::val(DEVID) bitand ID_MASK;
+            return val(DEVID) bitand ID_MASK;
             }
 
 //=============================================================================
             auto Sys::
 ver         () -> uint8_t
             {
-            return Reg::val(DEVID)>>VER_SHIFT;
+            return val(DEVID)>>VER_SHIFT;
             }
 
 //=============================================================================
@@ -145,8 +144,8 @@ waitstates  () -> void
             uint8_t waitstates = Osc::sysclk() / FLASHSPEED;
             bool irqstate = Irq::global();                //get STATUS.IE
             Irq::global(false);
-            Reg::clrbit(BMXCON, 1 << BMXWSDRM);				//Disable RAM wait states
-            Reg::val(CHECON, waitstates << PFMWS_SHIFT);
+            clrbit(BMXCON, 1 << BMXWSDRM);				//Disable RAM wait states
+            val(CHECON, waitstates << PFMWS_SHIFT);
             if(irqstate) Irq::global(true);                 //restore IE state
             }
     
@@ -156,8 +155,8 @@ pcache      (PREFEN p) -> void
             {
             bool irqstate = Irq::global();                //get STATUS.IE
             Irq::global(false);
-            Reg::clrbit(CHECON, PREFEN_MASK << PREFEN_SHIFT);
-            Reg::setbit(CHECON, p << PREFEN_SHIFT);
+            clrbit(CHECON, PREFEN_MASK << PREFEN_SHIFT);
+            setbit(CHECON, p << PREFEN_SHIFT);
             kseg0_cache_enable(ON);
             if(irqstate) Irq::global(true);                 //restore IE state
             }

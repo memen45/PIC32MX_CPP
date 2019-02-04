@@ -3,8 +3,9 @@
 //ADC
 
 #include <cstdint>
+#include "Reg.hpp"
 
-struct Adc {
+struct Adc : private Reg {
 
             //==== ADC1BUFn ====
 

@@ -2,10 +2,11 @@
 
 #include <cstdint>
 #include "Pins.hpp"
+#include "Reg.hpp"
 
 //SPI 1/2/3
 
-struct Spi  {
+struct Spi : private Reg {
 
     //internal SPI register order used here
     enum SPIX { SPI3, SPI2, SPI4, SPI1 };

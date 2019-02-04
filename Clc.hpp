@@ -3,8 +3,9 @@
 //CLC1-4
 
 #include <cstdint>
+#include "Reg.hpp"
 
-struct Clc {
+struct Clc : private Reg {
 
             enum
 CLCX        { CLC1, CLC2, CLC3, CLC4 };

@@ -4,7 +4,6 @@
 #include "Dma.hpp"
 #include "Wdt.hpp"
 #include "Resets.hpp"
-#include "Reg.hpp"
 #include "Sys.hpp"
 #include "Irq.hpp"
 
@@ -40,7 +39,7 @@ const uint8_t Osc::m_idiv_lookup[] = {1, 2, 3, 4, 5, 6, 10, 12};
 frc_div     (DIVS e) -> void
             {
             Sys::unlock();
-            Reg::val(OSCCON + 3, e);
+            val(OSCCON + 3, e);
             Sys::lock();
             }
 
@@ -48,14 +47,14 @@ frc_div     (DIVS e) -> void
             auto Osc::
 frc_div     () -> DIVS
             {
-            return (DIVS) (Reg::val8(OSCCON + 3) bitand FRCDIV_MASK);
+            return (DIVS) (val8(OSCCON + 3) bitand FRCDIV_MASK);
             }
 
 //=============================================================================
             auto Osc::
 clk_src     () -> CNOSC
             {
-            return (CNOSC)((Reg::val(OSCCON) >> COSC_SHIFT) bitand COSC_MASK);
+            return (CNOSC)((val(OSCCON) >> COSC_SHIFT) bitand COSC_MASK);
             }
 
 //=============================================================================
@@ -63,10 +62,10 @@ clk_src     () -> CNOSC
 clk_src     (CNOSC e) -> void
             {
             uint8_t irstat = Sys::unlock_wait();
-            Reg::clrbit(OSCCON, NOSC_MASK << NOSC_SHIFT);
-            Reg::setbit(OSCCON, e << NOSC_SHIFT);
-            Reg::setbit(OSCCON, 1<<OSWEN);
-            while(Reg::anybit(OSCCON, 1<<OSWEN));
+            clrbit(OSCCON, NOSC_MASK << NOSC_SHIFT);
+            setbit(OSCCON, e << NOSC_SHIFT);
+            setbit(OSCCON, 1<<OSWEN);
+            while(anybit(OSCCON, 1<<OSWEN));
             Sys::lock(irstat);
             m_sysclk = 0;
             m_pbclk = 0;
@@ -77,7 +76,7 @@ clk_src     (CNOSC e) -> void
             auto Osc::
 clk_lock    () -> void
             {
-            Reg::setbit(OSCCON, 1<<CLKLOCK);
+            setbit(OSCCON, 1<<CLKLOCK);
             }
 
 //=============================================================================
@@ -86,12 +85,12 @@ sleep       () -> void
             {
             //sleep bit only enabled here, then disabled when wakes
             Sys::unlock();
-            Reg::setbit(OSCCON, 1<<SLPEN);
+            setbit(OSCCON, 1<<SLPEN);
             Sys::lock();
             Wdt::reset();
             __asm__ __volatile__ ("wait");
             Sys::unlock();
-            Reg::clrbit(OSCCON, 1<<SLPEN);
+            clrbit(OSCCON, 1<<SLPEN);
             Sys::lock();
             }
 
@@ -117,7 +116,7 @@ idle        () -> void
             auto Osc::
 clk_bad     () -> bool
             {
-            return Reg::anybit(OSCCON, 1<<CF);
+            return anybit(OSCCON, 1<<CF);
             }
 
 //=============================================================================
@@ -125,7 +124,7 @@ clk_bad     () -> bool
 sosc        (bool tf) -> void
             {
             Sys::unlock();
-            Reg::setbit(OSCCON, 1<<SOSCEN, tf);
+            setbit(OSCCON, 1<<SOSCEN, tf);
             Sys::lock();
             while(tf != ready(SOSCRDY));
             //if turned on, wait for sosc start-up timer to expire
@@ -136,7 +135,7 @@ sosc        (bool tf) -> void
             auto Osc::
 sosc        () -> bool
             {
-            return Reg::anybit(OSCCON, 1<<SOSCEN);
+            return anybit(OSCCON, 1<<SOSCEN);
             }
 
 //=============================================================================
@@ -144,8 +143,8 @@ sosc        () -> bool
 pb_div      (DIVS e) -> void
             {
             Sys::unlock();
-            Reg::setbit(OSCCON, PBDIV_MASK << PBDIV_SHIFT);
-            Reg::clrbit(OSCCON, (~(e bitand PBDIV_MASK)) << PBDIV_SHIFT);
+            setbit(OSCCON, PBDIV_MASK << PBDIV_SHIFT);
+            clrbit(OSCCON, (~(e bitand PBDIV_MASK)) << PBDIV_SHIFT);
             Sys::lock();
             }
 
@@ -153,7 +152,7 @@ pb_div      (DIVS e) -> void
             auto Osc::
 pb_div      () -> DIVS
             {
-            return (DIVS) ((Reg::val(OSCCON) >> PBDIV_SHIFT) bitand PBDIV_MASK);
+            return (DIVS) ((val(OSCCON) >> PBDIV_SHIFT) bitand PBDIV_MASK);
             }
 
 //spllcon
@@ -161,21 +160,21 @@ pb_div      () -> DIVS
             auto Osc::
 pll_odiv    () -> DIVS
             {
-            return (DIVS)((Reg::val(OSCCON) >> PLLODIV_SHIFT) bitand PLLODIV_MASK);
+            return (DIVS)((val(OSCCON) >> PLLODIV_SHIFT) bitand PLLODIV_MASK);
             }
 
 //=============================================================================
             auto Osc::
 pll_idiv    () -> IDIVS
             {
-            return (IDIVS) (Reg::val8(DEVCFG2) bitand PLLIDIV_MASK);
+            return (IDIVS) (val8(DEVCFG2) bitand PLLIDIV_MASK);
             }
 
 //=============================================================================
             auto Osc::
 pll_mul     () -> PLLMUL
             {
-            return (PLLMUL)(Reg::val8(OSCCON + 2) bitand PLLMUL_MASK);
+            return (PLLMUL)(val8(OSCCON + 2) bitand PLLMUL_MASK);
             }
 
 //set SPLL as clock source with specified mul/div
@@ -191,11 +190,11 @@ pll_set     (PLLMUL m, DIVS d, CNOSC frc) -> void
             clk_src(FRCDIV);
             //set new pll vals
             //Reg::val(OSCCON + 3, d<<3); <-- WRITE TO ODD ADDRESS: REMOVE
-            Reg::clrbit(OSCCON, PLLODIV_MASK << PLLODIV_SHIFT);
-            Reg::setbit(OSCCON, d << PLLODIV_SHIFT);
+            clrbit(OSCCON, PLLODIV_MASK << PLLODIV_SHIFT);
+            setbit(OSCCON, d << PLLODIV_SHIFT);
             //Reg::val(OSCCON + 2, m); <-- WRITE TO ODD ADDRESS: REMOVE
-            Reg::clrbit(OSCCON, PLLMUL_MASK << PLLMUL_SHIFT);
-            Reg::setbit(OSCCON, m << PLLMUL_SHIFT);
+            clrbit(OSCCON, PLLMUL_MASK << PLLMUL_SHIFT);
+            setbit(OSCCON, m << PLLMUL_SHIFT);
             //pll select
             clk_src(frc);
             //lock_irq(irstat);
@@ -207,7 +206,7 @@ pll_set     (PLLMUL m, DIVS d, CNOSC frc) -> void
             auto Osc::
 ready       (CLKRDY e) -> bool
             {
-            return Reg::anybit(OSCCON + 2, e);
+            return anybit(OSCCON + 2, e);
             }
 
 //osctun
@@ -219,7 +218,7 @@ tun_val     (int8_t v ) -> void
             if(v > 31) v = 31;
             if(v < -32) v = -32;
             Sys::unlock();
-            Reg::val(OSCTUN, v);
+            val(OSCTUN, v);
             Sys::lock();
             }
 
@@ -227,7 +226,7 @@ tun_val     (int8_t v ) -> void
             auto Osc::
 tun_val     () -> int8_t
             {
-            int8_t v = Reg::val8(OSCTUN);
+            int8_t v = val8(OSCTUN);
             if(v > 31) v or_eq 0xc0; //is negative, sign extend to 8bits
             return v;
             }

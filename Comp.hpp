@@ -1,10 +1,11 @@
 #pragma once
 
 #include <cstdint>
+#include "Reg.hpp"
 
 //Compare 1/2/3
 
-struct Comp {
+struct Comp : private Reg {
 
             enum
 CMX         { CMP1, CMP2, CMP3 };

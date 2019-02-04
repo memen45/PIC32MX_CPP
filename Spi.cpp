@@ -1,6 +1,5 @@
 #include "Spi.hpp"
 #include "Osc.hpp"
-#include "Reg.hpp"
 
 enum :uint32_t {
     SPIX_SPACING = 0x80, //spacing in words
@@ -51,59 +50,59 @@ Spi         (SPIX e)
             auto Spi::
 frame       (bool tf) -> void
             {
-            Reg::setbit(m_spix_con, 1<<FRMEN, tf);
+            setbit(m_spix_con, 1<<FRMEN, tf);
             }
 
 //=============================================================================
             auto Spi::
 frame_dir   (FRMDIR e) -> void
             {
-            Reg::setbit(m_spix_con, 1<<FRMSYNC, e);
+            setbit(m_spix_con, 1<<FRMSYNC, e);
             }
 
 //=============================================================================
             auto Spi::
 frame_pol   (FRMHL e) -> void
             {
-            Reg::setbit(m_spix_con, 1<<FRMPOL, e);
+            setbit(m_spix_con, 1<<FRMPOL, e);
             }
 
 //=============================================================================
             auto Spi::
 slave_sel   (bool tf) -> void
             {
-            Reg::setbit(m_spix_con, 1<<MSSEN, tf);
+            setbit(m_spix_con, 1<<MSSEN, tf);
             }
 
 //=============================================================================
             auto Spi::
 frame_pwidth (FRMPW e) -> void
             {
-            Reg::setbit(m_spix_con, 1<<FRMSYPW, e);
+            setbit(m_spix_con, 1<<FRMSYPW, e);
             }
 
 //=============================================================================
             auto Spi::
 frame_count (FRMCNT e) -> void
             {
-            Reg::clrbit(m_spix_con, FRMCNT_MASK<<FRMCNT_SHIFT);
-            Reg::setbit(m_spix_con, e<<FRMCNT_SHIFT);
+            clrbit(m_spix_con, FRMCNT_MASK<<FRMCNT_SHIFT);
+            setbit(m_spix_con, e<<FRMCNT_SHIFT);
             }
 
 //=============================================================================
             auto Spi::
 frame_edge  (FRMEDGE e) -> void
             {
-            Reg::setbit(m_spix_con, 1<<SPIFE, e);
+            setbit(m_spix_con, 1<<SPIFE, e);
             }
 
 //=============================================================================
             auto Spi::
 enhanced    (bool tf) -> void
             {
-            bool ison = Reg::anybit(m_spix_con, 1<<ON);
+            bool ison = anybit(m_spix_con, 1<<ON);
             on(false);
-            Reg::setbit(m_spix_con, 1<<ENHBUF, tf);
+            setbit(m_spix_con, 1<<ENHBUF, tf);
             on(ison);
             }
 
@@ -111,66 +110,66 @@ enhanced    (bool tf) -> void
             auto Spi::
 on          (bool tf) -> void
             {
-            Reg::setbit(m_spix_con, 1<<ON, tf);
+            setbit(m_spix_con, 1<<ON, tf);
             }
 
 //=============================================================================
             auto Spi::
 mode        (MODE e) -> void
             {
-            Reg::clrbit(m_spix_con, MODE_MASK<<MODE_SHIFT);
-            Reg::setbit(m_spix_con, e<<MODE_SHIFT);
+            clrbit(m_spix_con, MODE_MASK<<MODE_SHIFT);
+            setbit(m_spix_con, e<<MODE_SHIFT);
             }
 
 //=============================================================================
             auto Spi::
 phase       (PHASE e) -> void
             {
-            Reg::setbit(m_spix_con, 1<<SMP, e);
+            setbit(m_spix_con, 1<<SMP, e);
             }
 
 //=============================================================================
             auto Spi::
 clk_edge    (CLKEDGE e) -> void
             {
-            Reg::setbit(m_spix_con, 1<<CKE, e);
+            setbit(m_spix_con, 1<<CKE, e);
             }
 
 //=============================================================================
             auto Spi::
 ss          (bool tf) -> void
             {
-            Reg::setbit(m_spix_con, 1<<SSEN, tf);
+            setbit(m_spix_con, 1<<SSEN, tf);
             }
 
 //=============================================================================
             auto Spi::
 clk_pol     (CLKPOL e) -> void
             {
-            Reg::setbit(m_spix_con, 1<<CKP, e);
+            setbit(m_spix_con, 1<<CKP, e);
             }
 
 //=============================================================================
             auto Spi::
 master      (bool tf) -> void
             {
-            Reg::setbit(m_spix_con, 1<<MSTEN, tf);
+            setbit(m_spix_con, 1<<MSTEN, tf);
             }
 
 //=============================================================================
             auto Spi::
 tx_irq      (TXIRQ e) -> void
             {
-            Reg::clrbit(m_spix_con, STXISEL_MASK<<STXISEL_SHIFT);
-            Reg::setbit(m_spix_con, e<<STXISEL_SHIFT);
+            clrbit(m_spix_con, STXISEL_MASK<<STXISEL_SHIFT);
+            setbit(m_spix_con, e<<STXISEL_SHIFT);
             }
 
 //=============================================================================
             auto Spi::
 rx_irq      (RXIRQ e) -> void
             {
-            Reg::clrbit(m_spix_con, SRXISEL_MASK<<SRXISEL_SHIFT);
-            Reg::setbit(m_spix_con, e<<SRXISEL_SHIFT);
+            clrbit(m_spix_con, SRXISEL_MASK<<SRXISEL_SHIFT);
+            setbit(m_spix_con, e<<SRXISEL_SHIFT);
             }
 
 //spixstat
@@ -178,77 +177,77 @@ rx_irq      (RXIRQ e) -> void
             auto Spi::
 stat_rxcount () -> uint8_t
             {
-            return Reg::val8((vu8ptr)m_spix_con + (SPIXSTAT * 4) + 3);
+            return val8((vu8ptr)m_spix_con + (SPIXSTAT * 4) + 3);
             }
 
 //=============================================================================
             auto Spi::
 stat_txcount () -> uint8_t
             {
-            return Reg::val8((vu8ptr)m_spix_con + (SPIXSTAT * 4) + 2);
+            return val8((vu8ptr)m_spix_con + (SPIXSTAT * 4) + 2);
             }
 
 //=============================================================================
             auto Spi::
 stat_busy   () -> bool
             {
-            return Reg::anybit(m_spix_con + SPIXSTAT, 1<<SPIBUSY);
+            return anybit(m_spix_con + SPIXSTAT, 1<<SPIBUSY);
             }
 
 //=============================================================================
             auto Spi::
 stat_txurun () -> bool
             {
-            return Reg::anybit(m_spix_con + SPIXSTAT, 1<<SPITUR);
+            return anybit(m_spix_con + SPIXSTAT, 1<<SPITUR);
             }
 
 //=============================================================================
             auto Spi::
 stat_sremty () -> bool
             {
-            return Reg::anybit(m_spix_con + SPIXSTAT, 1<<SRMT);
+            return anybit(m_spix_con + SPIXSTAT, 1<<SRMT);
             }
 
 //=============================================================================
             auto Spi::
 stat_oerr   () -> bool
             {
-            return Reg::anybit(m_spix_con + SPIXSTAT, 1<<SPIROV);
+            return anybit(m_spix_con + SPIXSTAT, 1<<SPIROV);
             }
 
 //=============================================================================
             auto Spi::
 stat_oerrclr () -> void
             {
-            Reg::clrbit(m_spix_con + SPIXSTAT, 1<<SPIROV);
+            clrbit(m_spix_con + SPIXSTAT, 1<<SPIROV);
             }
 
 //=============================================================================
             auto Spi::
 stat_rxemty () -> bool
             {
-            return Reg::anybit(m_spix_con + SPIXSTAT, 1<<SPIRBE);
+            return anybit(m_spix_con + SPIXSTAT, 1<<SPIRBE);
             }
 
 //=============================================================================
             auto Spi::
 stat_txemty () -> bool
             {
-            return Reg::anybit(m_spix_con + SPIXSTAT, 1<<SPITBE);
+            return anybit(m_spix_con + SPIXSTAT, 1<<SPITBE);
             }
 
 //=============================================================================
             auto Spi::
 stat_txfull () -> bool
             {
-            return Reg::anybit(m_spix_con + SPIXSTAT, 1<<SPITBF);
+            return anybit(m_spix_con + SPIXSTAT, 1<<SPITBF);
             }
 
 //=============================================================================
             auto Spi::
 stat_rxfull () -> bool
             {
-            return Reg::anybit(m_spix_con + SPIXSTAT, 1<<SPIRBF);
+            return anybit(m_spix_con + SPIXSTAT, 1<<SPIRBF);
             }
 
 //spixbrg
@@ -256,7 +255,7 @@ stat_rxfull () -> bool
             auto Spi::
 baud        (uint16_t v) -> void
             {
-            Reg::val(m_spix_con + SPIXBRG, v);
+            val(m_spix_con + SPIXBRG, v);
             }
 
 //set frequency
@@ -280,7 +279,7 @@ freq        () -> uint32_t
             {
             uint32_t clk;
             clk = Osc::pbclk();
-            m_spix_freq = clk / (2 * (Reg::val16(m_spix_con + SPIXBRG) + 1));
+            m_spix_freq = clk / (2 * (val16(m_spix_con + SPIXBRG) + 1));
             return m_spix_freq;
             }
 

@@ -3,12 +3,14 @@
 #include <cstdint>
 
 #include "Pins.hpp"
+#include "Reg.hpp"
+#include "Sprintf.hpp"
 #include "Osc.hpp"
 
 
 //UART 1/2/3
 
-struct Uart {
+struct Uart : private Reg, private Sprintf {
 
     //instantiate Uart with uart number, optionally baud rate-
     //(pins setup manually)
@@ -212,6 +214,13 @@ putc        (const char) -> void;
             //(no '\n', like fputs)
             auto
 puts        (const char*) -> void;
+
+            template<typename... Args>
+            auto
+printf      (char const *fmt, Args... args) -> void
+            {
+            puts( Sprintf::sprintf(fmt, args...) );
+            }
 
             // -1 = none
             auto

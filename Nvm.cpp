@@ -1,6 +1,5 @@
 #include "Nvm.hpp"
 #include "Dma.hpp"
-#include "Reg.hpp"
 #include "Irq.hpp"
 #include "Sys.hpp"
 
@@ -105,8 +104,8 @@ mem_size    () -> uint32_t
 write_2word (uint32_t addr, uint32_t hw, uint32_t lw) -> uint8_t
             {
             address(addr);
-            Reg::val(NVMDATA1, hw);
-            Reg::val(NVMDATA0, lw);
+            val(NVMDATA1, hw);
+            val(NVMDATA0, lw);
             do_op(PGMDWORD);
             return error();
             }
@@ -117,7 +116,7 @@ write_row   (uint32_t src, uint32_t dst) -> uint8_t
             {
             //flash (dst may be 0 based, OR kseg0 flash addr)
             address(dst);
-            Reg::val(NVMSRCADDR, Reg::k2phys(src)); //sram
+            val(NVMSRCADDR, k2phys(src)); //sram
             do_op(PGMROW);
             return error();
             }
@@ -140,7 +139,7 @@ page_erase  (uint32_t v) -> uint8_t
 write_protect (uint32_t v) -> void
             {
             unlock();
-            Reg::val(NVMPWP, (v bitand PWP_CLR)); //PWPULOCK will be cleared
+            val(NVMPWP, (v bitand PWP_CLR)); //PWPULOCK will be cleared
             lock();
             }
 
@@ -150,6 +149,6 @@ write_protect (uint32_t v) -> void
 boot_protect (BOOTP e) -> void
             {
             unlock();
-            Reg::val(NVMBWP, e); //BWPULOCK will be cleared
+            val(NVMBWP, e); //BWPULOCK will be cleared
             lock();
             }

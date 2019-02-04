@@ -3,8 +3,9 @@
 //Resets
 
 #include <cstdint>
+#include "Reg.hpp"
 
-struct Resets {
+struct Resets : private Reg {
 
             //=== RCON ===
 

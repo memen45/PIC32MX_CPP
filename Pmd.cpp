@@ -1,5 +1,4 @@
 #include "Pmd.hpp"
-#include "Reg.hpp"
 #include "Sys.hpp"
 
 enum {
@@ -29,6 +28,6 @@ lock        () -> void
 disable     (PMD e, bool tf) -> void
             {
             unlock();
-            Reg::setbit(PMD1 + 16 * (e / 32), (1<<(e % 32)), tf);
+            setbit(PMD1 + 16 * (e / 32), (1<<(e % 32)), tf);
             lock();
             }

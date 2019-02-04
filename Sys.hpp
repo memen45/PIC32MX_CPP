@@ -1,8 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include "Reg.hpp"
 
-struct Sys {
+struct Sys : private Reg {
 
             //==== CFGCON ====
 

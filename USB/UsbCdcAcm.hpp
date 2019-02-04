@@ -1,9 +1,10 @@
 #pragma once
 
 #include "UsbEP.hpp"
+#include "Sprintf.hpp"
 #include <cstdint>
 
-struct UsbCdcAcm {
+struct UsbCdcAcm : private Sprintf {
 
             using
 notify_t    = UsbEP::notify_t;
@@ -30,6 +31,15 @@ TXRX        = UsbEP::TXRX;
 
             static auto
 busy        (TXRX) -> bool;
+
+            //printf to cdc, blocking on busy
+            template<typename... Args>
+            auto
+printf      (char const *fmt, Args... args) -> void
+            {
+            while( busy(UsbEP::TX) ); //wait until tx available
+            write( sprintf(fmt, args...) );
+            }
 
 };
 

@@ -3,8 +3,9 @@
 //I/O pins
 
 #include <cstdint>
+#include "Reg.hpp"
 
-struct Pins {
+struct Pins : private Reg {
 
     //helper enum
     enum : uint8_t {

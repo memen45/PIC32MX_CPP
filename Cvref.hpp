@@ -3,8 +3,9 @@
 //Voltage Reference (CVref, DAC)
 
 #include <cstdint>
+#include "Reg.hpp"
 
-struct Cvref {
+struct Cvref : private Reg {
 
             static auto
 on          (bool) -> void;

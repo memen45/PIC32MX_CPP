@@ -61,21 +61,21 @@ Pins        (RPN e, IOMODE m)
             auto Pins::
 pinval      () -> bool
             {
-            return Reg::anybit(m_pt + PORT, m_pn);
+            return anybit(m_pt + PORT, m_pn);
             }
 
 //=============================================================================
             auto Pins::
 latval      () -> bool
             {
-            return Reg::anybit(m_pt + LAT, m_pn);
+            return anybit(m_pt + LAT, m_pn);
             }
 
 //=============================================================================
             auto Pins::
 latval      (bool tf) -> void
             {
-            return Reg::setbit(m_pt + LAT, m_pn, tf);
+            return setbit(m_pt + LAT, m_pn, tf);
             }
 
 //=============================================================================
@@ -99,35 +99,35 @@ adcval      () -> uint16_t
             auto Pins::
 low         () -> void
             {
-            Reg::clrbit(m_pt + LAT, m_pn);
+            clrbit(m_pt + LAT, m_pn);
             }
 
 //=============================================================================
             auto Pins::
 high        () -> void
             {
-            Reg::setbit(m_pt + LAT, m_pn);
+            setbit(m_pt + LAT, m_pn);
             }
 
 //=============================================================================
             auto Pins::
 invert      () -> void
             {
-            Reg::flipbit(m_pt + LAT, m_pn);
+            flipbit(m_pt + LAT, m_pn);
             }
 
 //=============================================================================
             auto Pins::
 on          () -> void
             {
-            Reg::setbit(m_pt + LAT, m_pn, not m_lowison);
+            setbit(m_pt + LAT, m_pn, not m_lowison);
             }
 
 //=============================================================================
             auto Pins::
 off         () -> void
             {
-            Reg::setbit(m_pt + LAT, m_pn, m_lowison);
+            setbit(m_pt + LAT, m_pn, m_lowison);
             }
 
 //=============================================================================
@@ -148,47 +148,47 @@ lowison     (bool tf) -> void
             auto Pins::
 digital_in  () -> void
             {
-            Reg::setbit(m_pt + TRIS, m_pn);
+            setbit(m_pt + TRIS, m_pn);
             if (m_pt == ((vu32ptr)TRISA + TRISX_SPACING))
-                Reg::setbit(AD1PCFG, 1 << m_an);
+                setbit(AD1PCFG, 1 << m_an);
             }
 
 //=============================================================================
             auto Pins::
 analog_in   () -> void
             {
-            Reg::setbit(m_pt + TRIS, m_pn);
+            setbit(m_pt + TRIS, m_pn);
             if (m_pt == ((vu32ptr)TRISA + TRISX_SPACING))
-                Reg::clrbit(AD1PCFG, 1 << m_an);
+                clrbit(AD1PCFG, 1 << m_an);
             }
 
 //=============================================================================
             auto Pins::
 digital_out () -> void
             {
-            Reg::clrbit(m_pt + TRIS, m_pn);
+            clrbit(m_pt + TRIS, m_pn);
             if (m_pt == ((vu32ptr)TRISA + TRISX_SPACING))
-                Reg::setbit(AD1PCFG, 1 << m_an);
+                setbit(AD1PCFG, 1 << m_an);
             }
 
 //=============================================================================
             auto Pins::
 odrain      (bool tf) -> void
             {
-            Reg::setbit(m_pt + ODC, m_pn, tf);
+            setbit(m_pt + ODC, m_pn, tf);
             }
 
             auto Pins::
 pullup      (bool tf) -> void
             {
-            Reg::setbit(CNPUE, m_pn, tf);
+            setbit(CNPUE, m_pn, tf);
             }
 
 //=============================================================================
             auto Pins::
 icn         (bool tf) -> void
             {
-            Reg::setbit(CNCON, 1<<ON, tf);
+            setbit(CNCON, 1<<ON, tf);
             }
 
 //return ANn number for ADC channel select

@@ -1,5 +1,4 @@
 #include "Irq.hpp"
-#include "Reg.hpp"
 
 #include "Irq_isr.hpp"
 
@@ -13,6 +12,7 @@ enum {
         INT1EP = 1,
         INT0EP = 0,
     INTSTAT = 0xBF881010,
+    TPTMR = 0xBF881020,
     IFS_BASE = 0xBF881030,
     IEC_BASE = 0xBF881060,
     IPC_BASE = 0xBF881090
@@ -40,48 +40,49 @@ global      () -> bool
             auto Irq::
 proxtimer   (uint8_t n, uint32_t v) -> void
             { //n = priority 1-7 (and lower) starts prox timer, 0 = off
-            Reg::clrbit(INTCON, TPC_CLR<<TPC_SHIFT);
-            Reg::setbit(INTCON, (n bitand TPC_CLR)<<TPC_SHIFT);
+            clrbit(INTCON, TPC_CLR<<TPC_SHIFT);
+            setbit(INTCON, (n bitand TPC_CLR)<<TPC_SHIFT);
+            val(TPTMR, v); //timer value
             }
 
 //=============================================================================
             auto Irq::
 eint4_pol   (EINTXPOL e) -> void
             {
-            Reg::setbit(INTCON, 1<<INT4EP, e);
+            setbit(INTCON, 1<<INT4EP, e);
             }
 
 //=============================================================================
             auto Irq::
 eint3_pol   (EINTXPOL e) -> void
             {
-            Reg::setbit(INTCON, 1<<INT3EP, e);
+            setbit(INTCON, 1<<INT3EP, e);
             }
 
 //=============================================================================
             auto Irq::
 eint2_pol   (EINTXPOL e) -> void
             {
-            Reg::setbit(INTCON, 1<<INT2EP, e);
+            setbit(INTCON, 1<<INT2EP, e);
             }
 
 //=============================================================================
             auto Irq::
 eint1_pol   (EINTXPOL e) -> void
             {
-            Reg::setbit(INTCON, 1<<INT1EP, e);
+            setbit(INTCON, 1<<INT1EP, e);
             }
 
 //=============================================================================
             auto Irq::
 eint0_pol   (EINTXPOL e) -> void
             {
-            Reg::setbit(INTCON, 1<<INT0EP, e);
+            setbit(INTCON, 1<<INT0EP, e);
             }
 
 //note- the following offsets calculated in bytes as the register
 //numbers are enums (not uint32_t*)- so need to calculate bytes
-//the Reg::set/clr will reinterpret the enums to volatile uint32_t*
+//the set/clr will reinterpret the enums to volatile uint32_t*
 //
 //vector 40 example												IRQ number: 66
 //reg = 0xBF80F040 + (40/32)*16 = 0xBF80F050 = IFS1				+(66/32)*16 = +32
@@ -91,27 +92,27 @@ eint0_pol   (EINTXPOL e) -> void
             auto Irq::
 flag_clr    (IRQ_NR e) -> void
             {
-            Reg::clrbit(IFS_BASE + ((e / 32) * 16), 1u<<(e % 32));
+            clrbit(IFS_BASE + ((e / 32) * 16), 1u<<(e % 32));
             }
 
 //=============================================================================
             auto Irq::
 flag        (IRQ_NR e) -> bool
             {
-            return Reg::anybit(IFS_BASE + ((e / 32) * 16), 1u<<(e % 32));
+            return anybit(IFS_BASE + ((e / 32) * 16), 1u<<(e % 32));
             }
 
 //=============================================================================
             auto Irq::
 on          (IRQ_NR e, bool tf) -> void
             {
-            Reg::setbit(IEC_BASE + ((e / 32) * 16), 1u<<(e % 32), tf);
+            setbit(IEC_BASE + ((e / 32) * 16), 1u<<(e % 32), tf);
             }
 //=============================================================================
             auto Irq::
 on          (IRQ_NR e) -> bool
             {
-            return Reg::anybit(IEC_BASE + ((e / 32) * 16), 1u<<(e % 32));
+            return anybit(IEC_BASE + ((e / 32) * 16), 1u<<(e % 32));
             }
 
 //vector 17 example												Vector number: 28
@@ -129,8 +130,8 @@ init        (IRQ_NR e, uint8_t pri, uint8_t sub, bool tf) -> void
             uint8_t vn = m_lookup_vn[e];
             uint32_t priority_shift = 8 * (vn % 4);
             pri and_eq 7; sub and_eq 3; pri <<= 2; pri or_eq sub;
-            Reg::clrbit(IPC_BASE + ((vn / 4) * 16), (31<<priority_shift));
-            Reg::setbit(IPC_BASE + ((vn / 4) * 16), (pri<<priority_shift));
+            clrbit(IPC_BASE + ((vn / 4) * 16), (31<<priority_shift));
+            setbit(IPC_BASE + ((vn / 4) * 16), (pri<<priority_shift));
             flag_clr(e);
             on(e, tf);
             }
@@ -159,5 +160,5 @@ isr_fun     (IRQ_NR e, std::function<void()> callback) -> void
             auto Irq::
 enable_mvec (MVEC_MODE m) -> void
             {
-            Reg::setbit(INTCON, 1 << M_VEC, m);
+            setbit(INTCON, 1 << M_VEC, m);
             }

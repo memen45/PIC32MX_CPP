@@ -32,8 +32,9 @@
 */
 
 #include <cstdint>
+#include "Reg.hpp"
 
-struct Osc {
+struct Osc : private Reg {
 
             //==== OSCCON ====
 

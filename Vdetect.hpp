@@ -3,8 +3,9 @@
 //High/Low-Voltage Detect
 
 #include <cstdint>
+#include "Reg.hpp"
 
-struct Vdetect {
+struct Vdetect : private Reg {
 
             static auto
 on          (bool) -> void;

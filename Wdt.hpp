@@ -3,8 +3,9 @@
 //Watchdog timer
 
 #include <cstdint>
+#include "Reg.hpp"
 
-struct Wdt {
+struct Wdt : private Reg {
 
             static auto
 reset       () -> void;
