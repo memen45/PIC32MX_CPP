@@ -28,38 +28,7 @@ config_err  () -> bool;
 swreset     () -> void;
 
 
-            //==== RNMICON ====
-
-            static auto
-nmi_wdt     () -> bool;
-
-            static auto
-nmi_sw      () -> bool;
-
-            static auto
-nmi_gen     () -> bool;
-
-            static auto
-nmi_clkf    () -> bool;
-
-            static auto
-nmi_wdts    () -> bool;
-
-            static auto
-nmi_wdtcount (uint16_t) -> void;
-
-            static auto
-nmi_wdtclr  () -> void;
-
-
-            //==== PWRCON ====
-
-            static auto
-bor         (bool) -> void;
-
-            //used by Osc for reten sleep mode
-            static auto
-reten       (bool) -> void;
+            //==== RCON ====
 
             static auto
 vregs       (bool) -> void;

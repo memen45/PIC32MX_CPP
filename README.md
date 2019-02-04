@@ -8,9 +8,9 @@ The following modules are present in the current repository:
 | Ccp     | not (yet) | no |
 | Clc     | not (yet) | no |
 | Comp    | not (yet) | no |
-| Cp0     | not (yet) | no |
+| Cp0     | yes | no |
 | Cvref   | not (yet) | no |
-| Delay   | not (yet) | no |
+| Delay   | yes | no |
 | Dma     | not (yet) | no |
 | I2c     | yes | yes |
 | Irq     | yes | yes |
@@ -21,7 +21,7 @@ The following modules are present in the current repository:
 | Pmd     | not (yet) | no |
 | Pmp     | not (yet) | no |
 | Reg     | yes | yes |
-| Resets  | not (yet) | no |
+| Resets  | yes | no |
 | Rtcc    | not (yet) | no |
 | Spi     | yes | yes |
 | Sys     | yes (added support for prefetch cache and wait states) | yes |

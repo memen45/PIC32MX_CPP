@@ -96,16 +96,6 @@ sleep       () -> void
 
 //=============================================================================
             auto Osc::
-sleep_reten () -> void
-            {
-            //reten bit only enabled here, then disabled when wakes
-            Resets::reten(true);
-            sleep();
-            Resets::reten(false);
-            }
-
-//=============================================================================
-            auto Osc::
 idle        () -> void
             {
             Wdt::reset();

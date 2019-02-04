@@ -71,10 +71,6 @@ clk_lock    () -> void;
             static auto
 sleep       () -> void;
 
-            //retention sleep, wait
-            static auto
-sleep_reten () -> void;
-
             //idle, wait
             static auto
 idle        () -> void;
