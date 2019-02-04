@@ -224,7 +224,6 @@ baud_clk    () -> uint32_t;
             auto
 putc        (const char) -> void;
 
-            //(no '\n', like fputs)
             auto
 puts        (const char*) -> void;
 
@@ -237,7 +236,7 @@ printf      (char const *fmt, Args... args) -> void
 
             // -1 = none
             auto
-getchar     () -> int;
+getc        () -> int;
 
 
             private:

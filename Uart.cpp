@@ -403,7 +403,7 @@ puts        (const char* s) -> void
 
 //=============================================================================
             auto Uart::
-getchar     () -> int
+getc        () -> int
             {
             return rx_empty() ? -1 : read();
             }

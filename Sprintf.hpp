@@ -11,7 +11,7 @@
 // for printf use with simple markup for ansi colors
 // each device that uses Sprintf can add a template to its
 // struct for printf, which will call Sprintff::sprintf
-// and return a buf where the device can ouptut as needed
+// and returns a buffer where the device can ouptut as needed
 //
 // see Uart.hpp and UsbCdcAcm.hpp for printf template example
 //
