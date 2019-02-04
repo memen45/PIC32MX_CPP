@@ -25,7 +25,9 @@ I2CXADDR = 8,
 I2CXMSK = 12,
 I2CXBRG = 16,
 I2CXTRN = 20,
-I2CXRCV = 24
+I2CXRCV = 24,
+        
+TPGD_SHIFT = 23,    // T Pulse Globber Delay 0.000000104 approximated by shift 23
 };
 
 //=============================================================================
@@ -191,7 +193,7 @@ speed       (I2CSPEED e) -> void
             {
             uint32_t sck = e * 2;
             uint32_t clk = Osc::pbclk();
-            brg((clk / sck) - 2);
+            brg((clk / sck) - (clk >> TPGD_SHIFT) - 2);
             m_speed = e;
             }
 
