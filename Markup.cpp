@@ -1,6 +1,7 @@
 #include "Markup.hpp"
 
-#include <cstdio>
+#include <cstdio>  //memcpy
+#include <cstring> //strlen
 
 
             //cannot get constexpr to return a struct for some reason

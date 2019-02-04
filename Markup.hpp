@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include <cstdbool>
-#include <cstring> //strlen
+
 
 
 struct Markup {
@@ -23,7 +23,7 @@ strip       (char* src) -> bool;
 
     private:
 
-            bool m_ison{true};
+            bool m_ison{false};
 
             static const char m_trigger{'@'};
             static const char m_turnon{'+'};

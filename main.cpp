@@ -242,19 +242,23 @@ int main()
     Rtcc::on(true);
 
     info.on(true);  //uart on
-
+    //@+ turn on markup
+    //@! reset colors/attributes
+    info.printf("@+@!@Y\r\nTesting printf from uart@W\r\n");
 
     UsbDebug dbg( &info ); //set UsbDebug to use our uart
     dbg.debug( true );
+    dbg.debug("@GTesting printf from debug@W\r\n");
 
     Rgb rgb;
     Led12 led12;
 
     Pins pot{Pins::AN14}; //test adc, get pot adc val
     uint32_t p = pot.adcval();
-    dbg.debug("@!\r\n@R@wpot: %d@k@W\r\n",p);
+
+    dbg.debug("@R@ypot: %d@k@W\r\n",p);
     dbg.debug("@CUDID: %016llx\r\n", Sys::udid()); //check udid
-    dbg.debug("@Gstarting...\r\n@W");
+    dbg.debug("@Mstarting...\r\n@W");
 
     for(;;){
         Wdt::reset();

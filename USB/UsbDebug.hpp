@@ -7,23 +7,31 @@
 
 struct UsbDebug  {
 
-    UsbDebug(){}        //empty constructor
-    UsbDebug(Uart*);    //or specify a uart device
+            //empty constructor
+UsbDebug    ()
+            {
+            }
 
-    //(filename, funcname, format, args...)
-    static
-    void    debug       (const char*, const char*, const char*, ... );
+            //or specify a uart device
+UsbDebug    (Uart*);
 
-    static
-    void    debug       (bool);     //enable/disable
+            //(filename, funcname, format, args...)
+            static auto
+debug       (const char*, const char*, const char*, ... ) -> void;
 
-    static
-    bool    debug       (void);         //get enable/disable
+            //enable/disable
+            static auto
+debug       (bool) -> void;
 
-    static
-    void    debug       (Uart*);    //set which uart device
+            //get enable/disable
+            static auto
+debug       (void) -> bool;
 
-//printf type
+            //set which uart device
+            static auto
+debug       (Uart*) -> void;
+
+            //printf type
             template<typename... Args>
             auto
 debug       (char const *fmt, Args... args) -> void
@@ -31,7 +39,7 @@ debug       (char const *fmt, Args... args) -> void
             if(m_uart) m_uart->printf(fmt, args...);
             }
 
-//printf type with filename,function header
+            //printf type with filename,function header
             template<typename... Args>
             auto
 debug       (char const* fil, char const* func, char const* fmt, Args... args) -> void

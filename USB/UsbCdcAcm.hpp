@@ -4,7 +4,7 @@
 #include "Sprintf.hpp"
 #include <cstdint>
 
-struct UsbCdcAcm : protected Sprintf {
+struct UsbCdcAcm : private Sprintf {
 
             using
 notify_t    = UsbEP::notify_t;
@@ -37,8 +37,8 @@ busy        (TXRX) -> bool;
             auto
 printf      (char const *fmt, Args... args) -> void
             {
-            while( busy(UsbEP::TX) );
-            write( Sprintf::sprintf(fmt, args...) );
+            while( busy(UsbEP::TX) ); //wait until tx available
+            write( sprintf(fmt, args...) );
             }
 
 };
