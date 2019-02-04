@@ -11,7 +11,7 @@ The following modules are present in the current repository:
 | Cp0     | not (yet) | no |
 | Cvref   | not (yet) | no |
 | Delay   | not (yet) | no |
-| Dma     | in progress | no |
+| Dma     | not (yet) | no |
 | I2c     | yes | yes |
 | Irq     | yes | yes |
 | Nvm     | not (yet) | no |
