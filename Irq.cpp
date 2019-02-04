@@ -1,5 +1,4 @@
 #include "Irq.hpp"
-#include "Reg.hpp"
 
 enum {
 INTCON = 0xBF80F000,
@@ -37,49 +36,49 @@ global      () -> bool
             auto Irq::
 proxtimer   (uint8_t n, uint32_t v) -> void
             { //n = priority 1-7 (and lower) starts prox timer, 0 = off
-            Reg::clrbit(INTCON, TPC_CLR<<TPC_SHIFT);
-            Reg::setbit(INTCON, (n bitand TPC_CLR)<<TPC_SHIFT);
-            Reg::val(IPTMR, v); //timer value
+            clrbit(INTCON, TPC_CLR<<TPC_SHIFT);
+            setbit(INTCON, (n bitand TPC_CLR)<<TPC_SHIFT);
+            val(IPTMR, v); //timer value
             }
 
 //=============================================================================
             auto Irq::
 eint4_pol   (EINTXPOL e) -> void
             {
-            Reg::setbit(INTCON, 1<<INT4EP, e);
+            setbit(INTCON, 1<<INT4EP, e);
             }
 
 //=============================================================================
             auto Irq::
 eint3_pol   (EINTXPOL e) -> void
             {
-            Reg::setbit(INTCON, 1<<INT3EP, e);
+            setbit(INTCON, 1<<INT3EP, e);
             }
 
 //=============================================================================
             auto Irq::
 eint2_pol   (EINTXPOL e) -> void
             {
-            Reg::setbit(INTCON, 1<<INT2EP, e);
+            setbit(INTCON, 1<<INT2EP, e);
             }
 
 //=============================================================================
             auto Irq::
 eint1_pol   (EINTXPOL e) -> void
             {
-            Reg::setbit(INTCON, 1<<INT1EP, e);
+            setbit(INTCON, 1<<INT1EP, e);
             }
 
 //=============================================================================
             auto Irq::
 eint0_pol   (EINTXPOL e) -> void
             {
-            Reg::setbit(INTCON, 1<<INT0EP, e);
+            setbit(INTCON, 1<<INT0EP, e);
             }
 
 //note- the following offsets calculated in bytes as the register
 //numbers are enums (not uint32_t*)- so need to calculate bytes
-//the Reg::set/clr will reinterpret the enums to volatile uint32_t*
+//the set/clr will reinterpret the enums to volatile uint32_t*
 //
 //vector 40 example
 //reg = 0xBF80F040 + (40/32)*16 = 0xBF80F050 = IFS1
@@ -89,21 +88,21 @@ eint0_pol   (EINTXPOL e) -> void
             auto Irq::
 flag_clr    (IRQ_VN e) -> void
             {
-            Reg::clrbit(IFS_BASE + ((e / 32) * 16), 1u<<(e % 32));
+            clrbit(IFS_BASE + ((e / 32) * 16), 1u<<(e % 32));
             }
 
 //=============================================================================
             auto Irq::
 flag        (IRQ_VN e) -> bool
             {
-            return Reg::anybit(IFS_BASE + ((e / 32) * 16), 1u<<(e % 32));
+            return anybit(IFS_BASE + ((e / 32) * 16), 1u<<(e % 32));
             }
 
 //=============================================================================
             auto Irq::
 on          (IRQ_VN e, bool tf) -> void
             {
-            Reg::setbit(IEC_BASE + ((e / 32) * 16), 1u<<(e % 32), tf);
+            setbit(IEC_BASE + ((e / 32) * 16), 1u<<(e % 32), tf);
             }
 
 //vector 17 example
@@ -120,8 +119,8 @@ init        (IRQ_VN e, uint8_t pri, uint8_t sub, bool tf) -> void
             {
             uint32_t priority_shift = 8 * (e % 4);
             pri and_eq 7; sub and_eq 3; pri <<= 2; pri or_eq sub;
-            Reg::clrbit(IPC_BASE + ((e / 4) * 16), (31<<priority_shift));
-            Reg::setbit(IPC_BASE + ((e / 4) * 16), (pri<<priority_shift));
+            clrbit(IPC_BASE + ((e / 4) * 16), (31<<priority_shift));
+            setbit(IPC_BASE + ((e / 4) * 16), (pri<<priority_shift));
             flag_clr(e);
             on(e, tf);
             }
@@ -140,7 +139,7 @@ init        (irq_list_t* arr, uint8_t sz) -> void
 //=============================================================================
             auto Irq::
 shadow_set  (uint8_t pri) -> void
-            { //p as uint32_t makes sure Reg::val uses 32bit version template
+            { //p as uint32_t makes sure val uses 32bit version template
             uint32_t p = (pri and_eq 7)*4;
-            Reg::val(PRISS, p ? 1<<p : 0); //0=all clear, else single bit set
+            val(PRISS, p ? 1<<p : 0); //0=all clear, else single bit set
             }

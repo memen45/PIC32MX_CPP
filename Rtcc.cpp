@@ -1,6 +1,5 @@
 #include "Rtcc.hpp"
 #include "Osc.hpp"
-#include "Reg.hpp"
 #include "Sys.hpp"
 
 enum : uint32_t {
@@ -244,37 +243,37 @@ dt_to_dt    (date_t d, time_t t) -> Rtcc::datetime_t
             auto Rtcc::
 alarm       (bool tf) -> void
             {
-            Reg::setbit(RTCCON1, 1<<ALARMEN, tf);
+            setbit(RTCCON1, 1<<ALARMEN, tf);
             }
 
 //=============================================================================
             auto Rtcc::
 alarm       () -> bool
             {
-            return Reg::anybit(RTCCON1, 1<<ALARMEN);
+            return anybit(RTCCON1, 1<<ALARMEN);
             }
 
 //=============================================================================
             auto Rtcc::
 chime       (bool tf) -> void
             {
-            Reg::setbit(RTCCON1, 1<<CHIME, tf);
+            setbit(RTCCON1, 1<<CHIME, tf);
             }
 
 //=============================================================================
             auto Rtcc::
 alarm_interval (AMASK e) -> void
             {
-            Reg::clrbit(RTCCON1, AMASK_MASK<<AMASK_SHIFT);
-            Reg::setbit(RTCCON1, e<<AMASK_SHIFT);
+            clrbit(RTCCON1, AMASK_MASK<<AMASK_SHIFT);
+            setbit(RTCCON1, e<<AMASK_SHIFT);
             }
 
 //=============================================================================
             auto Rtcc::
 alarm_repeat (uint8_t v) -> void
             {
-            Reg::clrbit(RTCCON1, ALMRPT_MASK<<ALMRPT_SHIFT);
-            Reg::setbit(RTCCON1, v<<ALMRPT_SHIFT);
+            clrbit(RTCCON1, ALMRPT_MASK<<ALMRPT_SHIFT);
+            setbit(RTCCON1, v<<ALMRPT_SHIFT);
             }
 
 //=============================================================================
@@ -287,7 +286,7 @@ on          (bool tf) -> void
             //if using LPRC, just use Rtcc::clk_src(Rtcc::LPRC) first
             //if using PWRLPIN/FCY, will also habe to use clk_div/clk_pre
             unlock();
-            Reg::setbit(RTCCON1, 1<<ON, tf);
+            setbit(RTCCON1, 1<<ON, tf);
             lock();
             //if boot time not already recorded, store it
             //assumes rtcc will be turned on early in startup and datetime
@@ -301,10 +300,10 @@ on          (bool tf) -> void
 out_pin     (OUTSEL v) -> void
             {
             if(v != OFF){
-                Reg::clrbit(RTCCON1, OUTSEL_MASK<<OUTSEL_SHIFT);
-                Reg::setbit(RTCCON1, v<<OUTSEL_SHIFT);
+                clrbit(RTCCON1, OUTSEL_MASK<<OUTSEL_SHIFT);
+                setbit(RTCCON1, v<<OUTSEL_SHIFT);
             }
-            Reg::setbit(RTCCON1, 1<<PINON, v != OFF);
+            setbit(RTCCON1, 1<<PINON, v != OFF);
             }
 
 //=============================================================================
@@ -312,7 +311,7 @@ out_pin     (OUTSEL v) -> void
 clk_div     (uint16_t v) -> void
             {
             unlock();
-            Reg::val(RTCCON2+2, v);
+            val(RTCCON2+2, v);
             lock();
             }
 
@@ -321,8 +320,8 @@ clk_div     (uint16_t v) -> void
 clk_frdiv   (uint8_t v) -> void
             {
             unlock();
-            Reg::clrbit(RTCCON2, FRDIV_MASK<<FRDIV_SHIFT);
-            Reg::setbit(RTCCON2, (v bitand FRDIV_MASK)<<FRDIV_SHIFT);
+            clrbit(RTCCON2, FRDIV_MASK<<FRDIV_SHIFT);
+            setbit(RTCCON2, (v bitand FRDIV_MASK)<<FRDIV_SHIFT);
             lock();
             }
 
@@ -331,8 +330,8 @@ clk_frdiv   (uint8_t v) -> void
 clk_pre     (PS e) -> void
             {
             unlock();
-            Reg::clrbit(RTCCON2, PS_MASK<<PS_SHIFT);
-            Reg::setbit(RTCCON2, e<<PS_SHIFT);
+            clrbit(RTCCON2, PS_MASK<<PS_SHIFT);
+            setbit(RTCCON2, e<<PS_SHIFT);
             lock();
             }
 
@@ -342,8 +341,8 @@ clk_src     (CLKSEL e) -> void
             {
             if(e == SOSC) Osc::sosc(true);
             unlock();
-            Reg::clrbit(RTCCON2, CLKSEL_MASK<<CLKSEL_SHIFT);
-            Reg::setbit(RTCCON2, e<<CLKSEL_SHIFT);
+            clrbit(RTCCON2, CLKSEL_MASK<<CLKSEL_SHIFT);
+            setbit(RTCCON2, e<<CLKSEL_SHIFT);
             lock();
             }
 
@@ -351,28 +350,28 @@ clk_src     (CLKSEL e) -> void
             auto Rtcc::
 alarm_evt   () -> bool
             {
-            return Reg::anybit(RTCSTAT, 1<<ALMSTAT);
+            return anybit(RTCSTAT, 1<<ALMSTAT);
             }
 
 //=============================================================================
             auto Rtcc::
 time_busy   () -> bool
             {
-            return Reg::anybit(RTCSTAT, 1<<SYSNCSTAT);
+            return anybit(RTCSTAT, 1<<SYSNCSTAT);
             }
 
 //=============================================================================
             auto Rtcc::
 alarm_busy  () -> bool
             {
-            return Reg::anybit(RTCSTAT, 1<<ALMSYNCSTAT);
+            return anybit(RTCSTAT, 1<<ALMSYNCSTAT);
             }
 
 //=============================================================================
             auto Rtcc::
 half_sec    () -> bool
             {
-            return Reg::anybit(RTCSTAT, 1<<HALFSTAT);
+            return anybit(RTCSTAT, 1<<HALFSTAT);
             }
 
 //=============================================================================

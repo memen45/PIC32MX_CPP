@@ -4,7 +4,6 @@
 #include "Dma.hpp"
 #include "Wdt.hpp"
 #include "Resets.hpp"
-#include "Reg.hpp"
 #include "Sys.hpp"
 #include "Irq.hpp"
 
@@ -55,7 +54,7 @@ const uint8_t   Osc::m_mul_lookup[] = {2, 3, 4, 6, 8, 12, 24};
 frc_div     (DIVS e) -> void
             {
             Sys::unlock();
-            Reg::val(OSCCON + 3, e);
+            val(OSCCON + 3, e);
             Sys::lock();
             }
 
@@ -63,14 +62,14 @@ frc_div     (DIVS e) -> void
             auto Osc::
 frc_div     () -> DIVS
             {
-            return (DIVS)Reg::val8(OSCCON + 3);
+            return (DIVS)val8(OSCCON + 3);
             }
 
 //=============================================================================
             auto Osc::
 clk_src     () -> CNOSC
             {
-            return (CNOSC)(Reg::val8(OSCCON + 1)>>4);
+            return (CNOSC)(val8(OSCCON + 1)>>4);
             }
 
 //=============================================================================
@@ -78,9 +77,9 @@ clk_src     () -> CNOSC
 clk_src     (CNOSC e) -> void
             {
             uint8_t irstat = Sys::unlock_wait();
-            Reg::val(OSCCON + 1, e);
-            Reg::setbit(OSCCON, 1<<OSWEN);
-            while(Reg::anybit(OSCCON, 1<<OSWEN));
+            val(OSCCON + 1, e);
+            setbit(OSCCON, 1<<OSWEN);
+            while(anybit(OSCCON, 1<<OSWEN));
             Sys::lock(irstat);
             m_sysclk = 0;
             sysclk();
@@ -90,7 +89,7 @@ clk_src     (CNOSC e) -> void
             auto Osc::
 clk_lock    () -> void
             {
-            Reg::setbit(OSCCON, 1<<CLKLOCK);
+            setbit(OSCCON, 1<<CLKLOCK);
             }
 
 //=============================================================================
@@ -99,12 +98,12 @@ sleep       () -> void
             {
             //sleep bit only enabled here, then disabled when wakes
             Sys::unlock();
-            Reg::setbit(OSCCON, 1<<SLPEN);
+            setbit(OSCCON, 1<<SLPEN);
             Sys::lock();
             Wdt::reset();
             __asm__ __volatile__ ("wait");
             Sys::unlock();
-            Reg::clrbit(OSCCON, 1<<SLPEN);
+            clrbit(OSCCON, 1<<SLPEN);
             Sys::lock();
             }
 
@@ -130,7 +129,7 @@ idle        () -> void
             auto Osc::
 clk_bad     () -> bool
             {
-            return Reg::anybit(OSCCON, 1<<CF);
+            return anybit(OSCCON, 1<<CF);
             }
 
 //=============================================================================
@@ -138,7 +137,7 @@ clk_bad     () -> bool
 sosc        (bool tf) -> void
             {
             Sys::unlock();
-            Reg::setbit(OSCCON, 1<<SOSCEN, tf);
+            setbit(OSCCON, 1<<SOSCEN, tf);
             Sys::lock();
             while(tf != ready(SOSCRDY));
             //if turned on, wait for sosc start-up timer to expire
@@ -149,7 +148,7 @@ sosc        (bool tf) -> void
             auto Osc::
 sosc        () -> bool
             {
-            return Reg::anybit(OSCCON, 1<<SOSCEN);
+            return anybit(OSCCON, 1<<SOSCEN);
             }
 
 //spllcon
@@ -157,21 +156,21 @@ sosc        () -> bool
             auto Osc::
 pll_div     () -> DIVS
             {
-            return (DIVS)Reg::val8(SPLLCON + 3);
+            return (DIVS)val8(SPLLCON + 3);
             }
 
 //=============================================================================
             auto Osc::
 pll_mul     () -> PLLMUL
             {
-            return (PLLMUL)Reg::val8(SPLLCON + 2);
+            return (PLLMUL)val8(SPLLCON + 2);
             }
 
 //=============================================================================
             auto Osc::
 pll_src     () -> PLLSRC
             {
-            return (PLLSRC)Reg::anybit(SPLLCON, 1<<PLLICLK);
+            return (PLLSRC)anybit(SPLLCON, 1<<PLLICLK);
             }
 
 //private, use pll_set to change src
@@ -179,7 +178,7 @@ pll_src     () -> PLLSRC
             auto Osc::
 pll_src     (PLLSRC e) -> void
             {
-            Reg::setbit(SPLLCON, 1<<PLLICLK, e);
+            setbit(SPLLCON, 1<<PLLICLK, e);
             m_refoclk = 0;  //recalculate refo clock
             refoclk();     //as input now may be different
             }
@@ -196,8 +195,8 @@ pll_set     (PLLMUL m, DIVS d, PLLSRC s) -> void
             //switch to frc (hardware does nothing if already frc)
             clk_src(FRCDIV);
             //set new pll vals
-            Reg::val(SPLLCON + 3, d);
-            Reg::val(SPLLCON + 2, m);
+            val(SPLLCON + 3, d);
+            val(SPLLCON + 2, m);
             //pll select
             pll_src(s); //do after m, so refoclk() sees new m value
             //source to SPLL
@@ -211,14 +210,14 @@ pll_set     (PLLMUL m, DIVS d, PLLSRC s) -> void
             auto Osc::
 refo_div    (uint16_t v) -> void
             {
-            Reg::val(REFO1CON + 2, v);
+            val(REFO1CON + 2, v);
             }
 
 //=============================================================================
             auto Osc::
 refo_trim   (uint16_t v) -> void
             {
-            Reg::val(REFO1TRIM + 2, v<<7);
+            val(REFO1TRIM + 2, v<<7);
             }
 
 //=============================================================================
@@ -226,7 +225,7 @@ refo_trim   (uint16_t v) -> void
 refo_on     () -> void
             {
             refoclk(); //calculate if needed
-            Reg::setbit(REFO1CON, 1<<ON);
+            setbit(REFO1CON, 1<<ON);
 //            while(refo_active() == 0);
             }
 
@@ -242,7 +241,7 @@ refo_on     (ROSEL e) -> void
             auto Osc::
 refo_off    () -> void
             {
-            Reg::clrbit(REFO1CON, 1<<ON);
+            clrbit(REFO1CON, 1<<ON);
 //            while(refo_active());
             }
 
@@ -250,36 +249,36 @@ refo_off    () -> void
             auto Osc::
 refo_idle   (bool tf) -> void
             {
-            Reg::setbit(REFO1CON, 1<<SIDL, tf);
+            setbit(REFO1CON, 1<<SIDL, tf);
             }
 
 //=============================================================================
             auto Osc::
 refo_out    (bool tf) -> void
             {
-            Reg::setbit(REFO1CON, 1<<OE, tf);
+            setbit(REFO1CON, 1<<OE, tf);
             }
 
 //=============================================================================
             auto Osc::
 refo_sleep  (bool tf) -> void
             {
-            Reg::setbit(REFO1CON, 1<<RSLP, tf);
+            setbit(REFO1CON, 1<<RSLP, tf);
             }
 
 //=============================================================================
             auto Osc::
 refo_divsw  () -> void
             {
-            Reg::setbit(REFO1CON, 1<<DIVSWEN);
-            while(Reg::anybit(REFO1CON, 1<<DIVSWEN));
+            setbit(REFO1CON, 1<<DIVSWEN);
+            while(anybit(REFO1CON, 1<<DIVSWEN));
             }
 
 //=============================================================================
             auto Osc::
 refo_active () -> bool
             {
-            return Reg::anybit(REFO1CON, 1<<ACTIVE);
+            return anybit(REFO1CON, 1<<ACTIVE);
             }
 
 //anytime source set, get new m_refoclk
@@ -288,10 +287,10 @@ refo_active () -> bool
             auto Osc::
 refo_src    (ROSEL e) -> void
             {
-            bool ison = Reg::anybit(REFO1CON, 1<<ON);
+            bool ison = anybit(REFO1CON, 1<<ON);
             refo_off();
             if(e == RSOSC) sosc(true);
-            Reg::val(REFO1CON, e);
+            val(REFO1CON, e);
             if(ison) refo_on();
             m_refoclk = 0;
             refoclk();
@@ -303,7 +302,7 @@ refo_src    (ROSEL e) -> void
 refoclk     () -> uint32_t
             {
             if(m_refoclk) return m_refoclk; //previously calculated
-            switch(Reg::val8(REFO1CON)){
+            switch(val8(REFO1CON)){
                 case RSYSCLK:   m_refoclk = sysclk();       break;
                 case RPOSC:     m_refoclk = extclk();       break;
                 case RFRC:      m_refoclk = m_frcosc_freq;  break;
@@ -348,7 +347,7 @@ refo_freq   () -> uint32_t
             auto Osc::
 ready       (CLKRDY e) -> bool
             {
-            return Reg::anybit(CLKSTAT, e);
+            return anybit(CLKSTAT, e);
             }
 
 //osctun
@@ -357,7 +356,7 @@ ready       (CLKRDY e) -> bool
 tun_auto    (bool tf) -> void
             {
             Sys::unlock();
-            Reg::setbit(OSCTUN, 1<<ON, tf);
+            setbit(OSCTUN, 1<<ON, tf);
             Sys::lock();
             }
 
@@ -366,7 +365,7 @@ tun_auto    (bool tf) -> void
 tun_idle    (bool tf) -> void
             {
             Sys::unlock();
-            Reg::setbit(OSCTUN, 1<<SIDL, tf);
+            setbit(OSCTUN, 1<<SIDL, tf);
             Sys::lock();
             }
 
@@ -376,7 +375,7 @@ tun_src     (TUNSRC e) -> void
             {
             if(e == TSOSC) sosc(true);
             Sys::unlock();
-            Reg::setbit(OSCTUN, 1<<SRC, e);
+            setbit(OSCTUN, 1<<SRC, e);
             Sys::lock();
             }
 
@@ -384,7 +383,7 @@ tun_src     (TUNSRC e) -> void
             auto Osc::
 tun_lock    () -> bool
             {
-            return Reg::anybit(OSCTUN, 1<<LOCK);
+            return anybit(OSCTUN, 1<<LOCK);
             }
 
 //=============================================================================
@@ -392,7 +391,7 @@ tun_lock    () -> bool
 tun_lpol    (bool tf) -> void
             {
             Sys::unlock();
-            Reg::setbit(OSCTUN, 1<<POL, not tf);
+            setbit(OSCTUN, 1<<POL, not tf);
             Sys::lock();
             }
 
@@ -400,7 +399,7 @@ tun_lpol    (bool tf) -> void
             auto Osc::
 tun_rng     () -> bool
             {
-            return Reg::anybit(OSCTUN, 1<<ORNG);
+            return anybit(OSCTUN, 1<<ORNG);
             }
 
 //=============================================================================
@@ -408,7 +407,7 @@ tun_rng     () -> bool
 tun_rpol    (bool tf) -> void
             {
             Sys::unlock();
-            Reg::setbit(OSCTUN, 1<<ORPOL, not tf);
+            setbit(OSCTUN, 1<<ORPOL, not tf);
             Sys::lock();
             }
 
@@ -420,7 +419,7 @@ tun_val     (int8_t v ) -> void
             if(v > 31) v = 31;
             if(v < -32) v = -32;
             Sys::unlock();
-            Reg::val(OSCTUN, v);
+            val(OSCTUN, v);
             Sys::lock();
             }
 
@@ -428,7 +427,7 @@ tun_val     (int8_t v ) -> void
             auto Osc::
 tun_val     () -> int8_t
             {
-            int8_t v = Reg::val8(OSCTUN);
+            int8_t v = val8(OSCTUN);
             if(v > 31) v or_eq 0xc0; //is negative, sign extend to 8bits
             return v;
             }

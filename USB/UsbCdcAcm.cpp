@@ -123,11 +123,14 @@ static bool                 m_is_active = false;
 static const char*          m_filename = "UsbCdcAcm.cpp";
 
 //line coding- just store what pc wants, also return if wanted
-using line_coding_t = struct {
+using line_coding_t = union {
+    struct {
     uint32_t    baud;
     uint8_t     stop_bits;  //0-1,1=1.5,2=2
     uint8_t     parity;     //none=0,even, odd, mark, space
     uint8_t     data_bits;  //5,6,7,8,16
+    };
+    uint8_t all[7];
 };
 static line_coding_t        m_line_coding = {115200, 0, 0, 8};
 
@@ -182,12 +185,12 @@ ep0_request (UsbEP0* ep0) -> bool
             switch(ep0->setup_pkt.bRequest){
                 case CDC_SET_LINE_CODING:
                     //callback will print debug info after line coding data received
-                    ep0->read((uint8_t*)&m_line_coding, 7, true, showlinecoding); //rx data,
-                    ep0->write((uint8_t*)&m_line_coding, 0, true); //tx status
+                    ep0->read(m_line_coding.all, 7, true, showlinecoding); //rx data,
+                    ep0->write(m_line_coding.all, 0, true); //tx status
                     return true;
                 case CDC_GET_LINE_CODING:
-                    ep0->write((uint8_t*)&m_line_coding, 7, true); //tx data,
-                    ep0->read((uint8_t*)&m_line_coding, 0, true); //rx status
+                    ep0->write(m_line_coding.all, 7, true); //tx data,
+                    ep0->read(m_line_coding.all, 0, true); //rx status
                     return true;
                 case CDC_SET_CONTROL_LINE_STATE:
 
@@ -201,7 +204,7 @@ ep0_request (UsbEP0* ep0) -> bool
                     }
                     // * * * * DEBUG * * * *
 
-                    ep0->write((uint8_t*)&m_line_coding, 0, true); //tx status
+                    ep0->write(m_line_coding.all, 0, true); //tx status
                     return true;
             }
             return false; //unhandled

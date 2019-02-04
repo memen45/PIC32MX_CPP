@@ -1,10 +1,11 @@
 #pragma once
 
 #include <cstdint>
+#include "Reg.hpp"
 
 //MCCP 1-3, SCCP 4-9
 
-struct Ccp  {
+struct Ccp : private Reg {
 
             enum
 CCPX        {

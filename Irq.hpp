@@ -3,8 +3,9 @@
 //Interrupt
 
 #include <cstdint>
+#include "Reg.hpp"
 
-struct Irq {
+struct Irq : private Reg {
 
             static auto
 global      (bool) -> void;

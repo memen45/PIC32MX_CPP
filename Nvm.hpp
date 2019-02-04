@@ -3,6 +3,7 @@
 //Nvm
 
 #include <cstdint>
+#include "Reg.hpp"
 
 /*
     all done from flash, so check of wr for completion is not made
@@ -17,7 +18,7 @@
     (hardware 'forced' alignment, but may not be what is wanted if user error)
 */
 
-struct Nvm {
+struct Nvm : private Reg {
 
             enum
 MEM         : uint32_t {

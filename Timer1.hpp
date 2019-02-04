@@ -3,8 +3,9 @@
 //Timer1 functions
 
 #include <cstdint>
+#include "Reg.hpp"
 
-struct Timer1 {
+struct Timer1 : private Reg {
 
             static auto
 timer       (uint16_t) -> void;

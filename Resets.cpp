@@ -1,7 +1,6 @@
 #include "Resets.hpp"
 #include "Irq.hpp"
 #include "Sys.hpp"
-#include "Reg.hpp"
 
 enum : uint32_t {
 RCON = 0xBF8026E0,
@@ -38,8 +37,8 @@ cause       () -> CAUSE
             //boot_flags var will be 0 on any reset as c runtime will clear
             //before this function can run
             if(boot_flags == 0){
-                boot_flags = Reg::val(RCON);  //save
-                Reg::val(RCON, 0);    //then clear all flags (for next reset)
+                boot_flags = val(RCON);  //save
+                val(RCON, 0);    //then clear all flags (for next reset)
             }
             //check for por first- specific combo
             if(boot_flags == ((1u<<PORIO) | (1<<PORCORE) | BOR | POR)){
@@ -71,8 +70,8 @@ swreset     () -> void
             {
             Irq::global(false);
             Sys::unlock();
-            Reg::setbit(RSWRST, 1<<SWRST);
-            Reg::val(RSWRST);
+            setbit(RSWRST, 1<<SWRST);
+            val(RSWRST);
             for(;;);
             }
 
@@ -81,49 +80,49 @@ swreset     () -> void
             auto Resets::
 nmi_wdt     () -> bool
             {
-            return Reg::anybit(RNMICON, 1<<WDTR);
+            return anybit(RNMICON, 1<<WDTR);
             }
 
 //=============================================================================
             auto Resets::
 nmi_sw      () -> bool
             {
-            return Reg::anybit(RNMICON, 1<<SWNMI);
+            return anybit(RNMICON, 1<<SWNMI);
             }
 
 //=============================================================================
             auto Resets::
 nmi_gen     () -> bool
             {
-            return Reg::anybit(RNMICON, 1<<GNMI);
+            return anybit(RNMICON, 1<<GNMI);
             }
 
 //=============================================================================
             auto Resets::
 nmi_clkf    () -> bool
             {
-            return Reg::anybit(RNMICON, 1<<CF);
+            return anybit(RNMICON, 1<<CF);
             }
 
 //=============================================================================
             auto Resets::
 nmi_wdts    () -> bool
             {
-            return Reg::anybit(RNMICON, 1<<WDTS);
+            return anybit(RNMICON, 1<<WDTS);
             }
 
 //=============================================================================
             auto Resets::
 nmi_wdtcount (uint16_t v) -> void
             {
-            Reg::val(RNMICON, v);
+            val(RNMICON, v);
             }
 
 //=============================================================================
             auto Resets::
 nmi_wdtclr  () -> void
             {
-            Reg::clrbit(RNMICON, 1<<WDTR);
+            clrbit(RNMICON, 1<<WDTR);
             }
 
 //PWRCON
@@ -132,7 +131,7 @@ nmi_wdtclr  () -> void
 bor         (bool tf) -> void
             {
             Sys::unlock();
-            Reg::setbit(PWRCON, 1<<SBOREN, tf);
+            setbit(PWRCON, 1<<SBOREN, tf);
             Sys::lock();
             }
 
@@ -141,7 +140,7 @@ bor         (bool tf) -> void
 reten       (bool tf) -> void
             {
             Sys::unlock();
-            Reg::setbit(PWRCON, 1<<RETEN, tf);
+            setbit(PWRCON, 1<<RETEN, tf);
             Sys::lock();
             }
 
@@ -150,6 +149,6 @@ reten       (bool tf) -> void
 vregs       (bool tf) -> void
             {
             Sys::unlock();
-            Reg::setbit(PWRCON, 1<<VREGS, tf);
+            setbit(PWRCON, 1<<VREGS, tf);
             Sys::lock();
             }

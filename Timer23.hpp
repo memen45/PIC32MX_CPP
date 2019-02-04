@@ -3,8 +3,9 @@
 //Timer2/Timer3
 
 #include <cstdint>
+#include "Reg.hpp"
 
-struct Timer23 {
+struct Timer23 : private Reg {
 
             enum
 TMR23       { TMR2, TMR3 };

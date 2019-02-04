@@ -2,10 +2,11 @@
 
 #include <cstdint>
 #include "Pins.hpp"
+#include "Reg.hpp"
 
 //SPI 1/2/3
 
-struct Spi  {
+struct Spi : private Reg {
 
             enum
 SPIX        { SPI1, SPI2, SPI3 };

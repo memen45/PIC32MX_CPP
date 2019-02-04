@@ -62,11 +62,16 @@ use         (UsbCdcAcm* u) -> void
 //normal trigger char usage- @@ = '@', @@K = @K
 //=============================================================================
 //private
+//uart blocks on puts/putc- no worry
+//usb cdc needs to block here on write to make sure value does not go
+// out of scope before the usb gets around to sending, so wait for
+// cdc tx available, send, wait for available again- value no longer needed
             static auto
 do_puts     (const char* str) -> void
             {
             if(m_uart) m_uart->puts(str);
             else if(m_cdc){
+                while(m_cdc->busy(UsbEP::TX));
                 m_cdc->write(str);
                 while(m_cdc->busy(UsbEP::TX));
             }
@@ -77,7 +82,8 @@ do_putc     (const char c) -> void
             {
             if(m_uart) m_uart->putc(c);
             else if(m_cdc){
-                m_cdc->write((uint8_t*)&c, (uint16_t)1);
+                while(m_cdc->busy(UsbEP::TX));
+                m_cdc->write((uint8_t*)&c, 1);
                 while(m_cdc->busy(UsbEP::TX));
             }
             }
@@ -97,27 +103,21 @@ _mon_putc   (char c) -> void
                 static const char markdown[] = "KRGYBMCWkrgybmcw";
                 m_ansi_triggered = false;
                 uint8_t n = 0;
-                for( ; markdown[n]; n++ ){
-                    if( markdown[n] == c ) break;
-                }
+                for( ; markdown[n] and (markdown[n] != c); n++ );
                 if( markdown[n] ){ //found
                     if( not m_ansi_on ) return;
                     if( n bitand 8 ){
-                        do_puts(m_ansi_colorbg);
-                        do_puts(m_colors[n bitand 7]);
+                        return do_puts(m_ansi_colorbg),
+                             do_puts(m_colors[n bitand 7]);
                     } else {
-                        do_puts(m_ansi_colorfg);
-                        do_puts(m_colors[n bitand 7]);
+                        return do_puts(m_ansi_colorfg),
+                            do_puts(m_colors[n bitand 7]);
                     }
-                    return;
                 }
-                if( c == '!' ){
-                    do_puts(m_ansi_reset);
-                    return; //done here
-                }
+                if( c == '!' ) return do_puts(m_ansi_reset);
                 if( c == '-' || c == '+' ){
                     m_ansi_on = c == '-' ? false : true;
-                    return; //done here
+                    return;
                 }
                 //if was not "@@", need to print previously suppressed '@'
                 if( c != m_ansi_trigchar ) do_putc(m_ansi_trigchar);

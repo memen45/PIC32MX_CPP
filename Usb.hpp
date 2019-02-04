@@ -4,8 +4,9 @@
 
 #include <cstdint>
 #include "Pins.hpp"
+#include "Reg.hpp"
 
-struct Usb {
+struct Usb : private Reg {
 
         //BDT table
 

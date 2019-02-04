@@ -1,6 +1,5 @@
 #include "I2c.hpp"
 #include "Osc.hpp"
-#include "Reg.hpp"
 
 enum :uint32_t {
 I2CX_SPACING = 0x40, //spacing in words
@@ -46,35 +45,35 @@ I2c         (I2CX e)
             auto I2c::
 irq_stop    (bool tf) -> void
             {
-            Reg::setbit(m_i2cx_con, 1<<PCIE, tf);
+            setbit(m_i2cx_con, 1<<PCIE, tf);
             }
 
 //=============================================================================
             auto I2c::
 irq_start   (bool tf) -> void
             {
-            Reg::setbit(m_i2cx_con, 1<<SCIE, tf);
+            setbit(m_i2cx_con, 1<<SCIE, tf);
             }
 
 //=============================================================================
             auto I2c::
 overwrite   (bool tf) -> void
             {
-            Reg::setbit(m_i2cx_con, 1<<BOEN, tf);
+            setbit(m_i2cx_con, 1<<BOEN, tf);
             }
 
 //=============================================================================
             auto I2c::
 hold_time   (HOLDTIM e) -> void
             {
-            Reg::setbit(m_i2cx_con, 1<<SDAHT, e);
+            setbit(m_i2cx_con, 1<<SDAHT, e);
             }
 
 //=============================================================================
             auto I2c::
 irq_collision (bool tf) -> void
             {
-            Reg::setbit(m_i2cx_con, 1<<SBCDE, tf);
+            setbit(m_i2cx_con, 1<<SBCDE, tf);
             }
 
 //=============================================================================
@@ -84,99 +83,99 @@ on          (bool tf) -> void
             //always set brg in case clock changed
             //or speed not changed since init
             speed(m_speed);
-            Reg::setbit(m_i2cx_con, 1<<ON, tf);
+            setbit(m_i2cx_con, 1<<ON, tf);
             }
 
 //=============================================================================
             auto I2c::
 stop_idle   (bool tf) -> void
             {
-            Reg::setbit(m_i2cx_con, 1<<SIDL, tf);
+            setbit(m_i2cx_con, 1<<SIDL, tf);
             }
 
 //=============================================================================
             auto I2c::
 clk_release (bool tf) -> void
             {
-            Reg::setbit(m_i2cx_con, 1<<SCLREL, tf);
+            setbit(m_i2cx_con, 1<<SCLREL, tf);
             }
 
 //=============================================================================
             auto I2c::
 strict      (bool tf) -> void
             {
-            Reg::setbit(m_i2cx_con, 1<<STRICT, tf);
+            setbit(m_i2cx_con, 1<<STRICT, tf);
             }
 
 //=============================================================================
             auto I2c::
 addr_10bit  (bool tf) -> void
             {
-            Reg::setbit(m_i2cx_con, 1<<A10M, tf);
+            setbit(m_i2cx_con, 1<<A10M, tf);
             }
 
 //=============================================================================
             auto I2c::
 slew_rate   (bool tf) -> void
             {
-            Reg::setbit(m_i2cx_con, 1<<DISSLW, not tf);
+            setbit(m_i2cx_con, 1<<DISSLW, not tf);
             }
 
 //=============================================================================
             auto I2c::
 smb_levels  (bool tf) -> void
             {
-            Reg::setbit(m_i2cx_con, 1<<SMEN, tf);
+            setbit(m_i2cx_con, 1<<SMEN, tf);
             }
 
 //=============================================================================
             auto I2c::
 irq_gencall (bool tf) -> void
             {
-            Reg::setbit(m_i2cx_con, 1<<GCEN, tf);
+            setbit(m_i2cx_con, 1<<GCEN, tf);
             }
 
 //=============================================================================
             auto I2c::
 clk_stretch (bool tf) -> void
             {
-            Reg::setbit(m_i2cx_con, 1<<STREN, tf);
+            setbit(m_i2cx_con, 1<<STREN, tf);
             }
 
 //=============================================================================
             auto I2c::
 ack         (bool tf) -> void
             {
-            Reg::setbit(m_i2cx_con, 1<<ACKDT, not tf); //0=ACK,1=NACK
-            Reg::setbit(m_i2cx_con, 1<<ACKEN);
+            setbit(m_i2cx_con, 1<<ACKDT, not tf); //0=ACK,1=NACK
+            setbit(m_i2cx_con, 1<<ACKEN);
             }
 
 //=============================================================================
             auto I2c::
 rx          (bool tf) -> void
             {
-            Reg::setbit(m_i2cx_con, 1<<RCEN, tf);
+            setbit(m_i2cx_con, 1<<RCEN, tf);
             }
 
 //=============================================================================
             auto I2c::
 stop        (bool tf) -> void
             {
-            Reg::setbit(m_i2cx_con, 1<<PEN, tf);
+            setbit(m_i2cx_con, 1<<PEN, tf);
             }
 
 //=============================================================================
             auto I2c::
 repstart    (bool tf) -> void
             {
-            Reg::setbit(m_i2cx_con, 1<<RSEN, tf);
+            setbit(m_i2cx_con, 1<<RSEN, tf);
             }
 
 //=============================================================================
             auto I2c::
 start       (bool tf) -> void
             {
-            Reg::setbit(m_i2cx_con, 1<<SEN, tf);
+            setbit(m_i2cx_con, 1<<SEN, tf);
             }
 
 //I2CXSTAT
@@ -184,28 +183,28 @@ start       (bool tf) -> void
             auto I2c::
 stat        (STAT e) -> bool
             {
-            return Reg::anybit(m_i2cx_con + I2CXSTAT, e);
+            return anybit(m_i2cx_con + I2CXSTAT, e);
             }
 
 //=============================================================================
             auto I2c::
 buscol_clr  () -> void
             {
-            Reg::clrbit(m_i2cx_con + I2CXSTAT, BUSCOL);
+            clrbit(m_i2cx_con + I2CXSTAT, BUSCOL);
             }
 
 //=============================================================================
             auto I2c::
 txcol_clr   () -> void
             {
-            Reg::clrbit(m_i2cx_con + I2CXSTAT, TXCOL);
+            clrbit(m_i2cx_con + I2CXSTAT, TXCOL);
             }
 
 //=============================================================================
             auto I2c::
 rxoflow_clr () -> void
             {
-            Reg::clrbit(m_i2cx_con + I2CXSTAT, RXOFLOW);
+            clrbit(m_i2cx_con + I2CXSTAT, RXOFLOW);
             }
 
 //I2CXADDR
@@ -213,7 +212,7 @@ rxoflow_clr () -> void
             auto I2c::
 addr        (uint16_t v) -> void
             {
-            Reg::val(m_i2cx_con + I2CXADDR, v);
+            val(m_i2cx_con + I2CXADDR, v);
             }
 
 //I2CXMSK
@@ -221,7 +220,7 @@ addr        (uint16_t v) -> void
             auto I2c::
 addr_mask   (uint16_t v) -> void
             {
-            Reg::val(m_i2cx_con + I2CXMSK, v);
+            val(m_i2cx_con + I2CXMSK, v);
             }
 
 //I2CXBRG
@@ -241,7 +240,7 @@ speed       (I2CSPEED e) -> void
 brg         (uint16_t v) -> void
             {
             if(v < 2) v = 2; //0,1 not allowed
-            Reg::val(m_i2cx_con + I2CXBRG, v);
+            val(m_i2cx_con + I2CXBRG, v);
             }
 
 //I2CXTRN
@@ -249,7 +248,7 @@ brg         (uint16_t v) -> void
             auto I2c::
 write       (uint8_t v) -> void
             {
-            Reg::val(m_i2cx_con + I2CXTRN, v);
+            val(m_i2cx_con + I2CXTRN, v);
             }
 
 //I2CXRCV
@@ -257,5 +256,5 @@ write       (uint8_t v) -> void
             auto I2c::
 read        () -> uint8_t
             {
-            return Reg::val8(m_i2cx_con + I2CXRCV);
+            return val8(m_i2cx_con + I2CXRCV);
             }

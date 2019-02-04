@@ -3,9 +3,10 @@
 //Real-Time Clock & Calendar (RTCC)
 
 #include <cstdint>
+#include "Reg.hpp"
 
 
-struct Rtcc {
+struct Rtcc : private Reg {
 
             //friendly date/time format
             //hour12, pm, weekday not used when setting datetime

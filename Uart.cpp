@@ -1,5 +1,4 @@
 #include "Uart.hpp"
-#include "Reg.hpp"
 #include "Osc.hpp"
 #include "Pins.hpp"
 
@@ -121,22 +120,22 @@ read        () -> uint16_t
             auto Uart::
 stop_sleep  (bool tf) -> void
             {
-            Reg::setbit(m_uartx_base, 1<<SLPEN, not tf);
+            setbit(m_uartx_base, 1<<SLPEN, not tf);
             }
 
 //=============================================================================
             auto Uart::
 active      () -> bool
             {
-            return Reg::anybit(m_uartx_base, 1<<ACTIVE);
+            return anybit(m_uartx_base, 1<<ACTIVE);
             }
 
 //=============================================================================
             auto Uart::
 clk_sel     (CLKSEL e) -> void
             {
-            Reg::clrbit(m_uartx_base, CLKSEL_MASK<<CLKSEL_SHIFT);
-            Reg::setbit(m_uartx_base, e<<CLKSEL_SHIFT);
+            clrbit(m_uartx_base, CLKSEL_MASK<<CLKSEL_SHIFT);
+            setbit(m_uartx_base, e<<CLKSEL_SHIFT);
             baud_set();
             }
 
@@ -144,7 +143,7 @@ clk_sel     (CLKSEL e) -> void
             auto Uart::
 oflow_stop  (bool tf) -> void
             {
-            Reg::setbit(m_uartx_base, 1<<OVFDIS, not tf);
+            setbit(m_uartx_base, 1<<OVFDIS, not tf);
             }
 
 //=============================================================================
@@ -152,71 +151,71 @@ oflow_stop  (bool tf) -> void
 on          (bool tf) -> void
             {
             baud_set(); //in case not set
-            Reg::setbit(m_uartx_base, 1<<ON, tf);
+            setbit(m_uartx_base, 1<<ON, tf);
             }
 
 //=============================================================================
             auto Uart::
 stop_idle   (bool tf) -> void
             {
-            Reg::setbit(m_uartx_base, 1<<SIDL, tf);
+            setbit(m_uartx_base, 1<<SIDL, tf);
             }
 
 //=============================================================================
             auto Uart::
 irda        (bool tf) -> void
             {
-            Reg::setbit(m_uartx_base, 1<<IREN, tf);
+            setbit(m_uartx_base, 1<<IREN, tf);
             }
 
 //=============================================================================
             auto Uart::
 rts_mode    (RTSMODE e) -> void
             {
-            Reg::setbit(m_uartx_base, 1<<RTSMD, e);
+            setbit(m_uartx_base, 1<<RTSMD, e);
             }
 
 //=============================================================================
             auto Uart::
 wake        (bool tf) -> void
             {
-            Reg::setbit(m_uartx_base, 1<<WAKE, tf);
+            setbit(m_uartx_base, 1<<WAKE, tf);
             }
 
 //=============================================================================
             auto Uart::
 loopback    (bool tf) -> void
             {
-            Reg::setbit(m_uartx_base, 1<<LPBACK, tf);
+            setbit(m_uartx_base, 1<<LPBACK, tf);
             }
 
 //=============================================================================
             auto Uart::
 autobaud    (bool tf) -> void
             {
-            Reg::setbit(m_uartx_base, 1<<ABAUD, tf);
+            setbit(m_uartx_base, 1<<ABAUD, tf);
             }
 
 //=============================================================================
             auto Uart::
 rx_pol      (RXPOL e) -> void
             {
-            Reg::setbit(m_uartx_base, 1<<RXINV, e);
+            setbit(m_uartx_base, 1<<RXINV, e);
             }
 
 //=============================================================================
             auto Uart::
 hispeed     (bool tf) -> void
             {
-            Reg::setbit(m_uartx_base, 1<<BRGH, tf);
+            setbit(m_uartx_base, 1<<BRGH, tf);
             }
 
 //=============================================================================
             auto Uart::
 mode        (MODESEL e) -> void
             {
-            Reg::clrbit(m_uartx_base, MODE_MASK<<MODE_SHIFT);
-            Reg::setbit(m_uartx_base, e<<MODE_SHIFT);
+            clrbit(m_uartx_base, MODE_MASK<<MODE_SHIFT);
+            setbit(m_uartx_base, e<<MODE_SHIFT);
             }
 
 //uxsta
@@ -224,108 +223,108 @@ mode        (MODESEL e) -> void
             auto Uart::
 rx_mask     (uint8_t v) -> void
             {
-            Reg::val((vu8ptr)m_uartx_base + (UXSTA * 4) + 3, v);
+            val((vu8ptr)m_uartx_base + (UXSTA * 4) + 3, v);
             }
 
 //=============================================================================
             auto Uart::
 rx_addr     (uint8_t v) -> void
             {
-            Reg::val((vu8ptr)m_uartx_base + (UXSTA * 4) + 2, v);
+            val((vu8ptr)m_uartx_base + (UXSTA * 4) + 2, v);
             }
 
 //=============================================================================
             auto Uart::
 tx_irq      (UTXISEL e) -> void
             {
-            Reg::clrbit(m_uartx_base + UXSTA, UTXISEL_MASK<<UTXISEL_SHIFT);
-            Reg::setbit(m_uartx_base + UXSTA, e<<UTXISEL_SHIFT);
+            clrbit(m_uartx_base + UXSTA, UTXISEL_MASK<<UTXISEL_SHIFT);
+            setbit(m_uartx_base + UXSTA, e<<UTXISEL_SHIFT);
             }
 
 //=============================================================================
             auto Uart::
 tx_pol      (RXPOL e) -> void
             {
-            bool b = Reg::anybit(m_uartx_base, 1<<IREN) ? not e : e;
-            Reg::setbit(m_uartx_base + UXSTA, 1<<UTXINV, b);
+            bool b = anybit(m_uartx_base, 1<<IREN) ? not e : e;
+            setbit(m_uartx_base + UXSTA, 1<<UTXINV, b);
             }
 
 //=============================================================================
             auto Uart::
 rx_on       (bool tf) -> void
             {
-            Reg::setbit(m_uartx_base + UXSTA, 1<<URXEN, tf);
+            setbit(m_uartx_base + UXSTA, 1<<URXEN, tf);
             }
 
 //=============================================================================
             auto Uart::
 tx_break    () -> void
             {
-            Reg::setbit(m_uartx_base + UXSTA, 1<<UTXBRK);
+            setbit(m_uartx_base + UXSTA, 1<<UTXBRK);
             }
 
 //=============================================================================
             auto Uart::
 tx_on       (bool tf) -> void
             {
-            Reg::setbit(m_uartx_base + UXSTA, 1<<UTXEN, tf);
+            setbit(m_uartx_base + UXSTA, 1<<UTXEN, tf);
             }
 
 //=============================================================================
             auto Uart::
 tx_full     () -> bool
             {
-            return Reg::anybit(m_uartx_base + UXSTA, 1<<UTXBF);
+            return anybit(m_uartx_base + UXSTA, 1<<UTXBF);
             }
 
 //=============================================================================
             auto Uart::
 tx_done     () -> bool
             {
-            return Reg::anybit(m_uartx_base + UXSTA, 1<<TRMT);
+            return anybit(m_uartx_base + UXSTA, 1<<TRMT);
             }
 
 //=============================================================================
             auto Uart::
 rx_irq      (URXISEL e) -> void
             {
-            Reg::clrbit(m_uartx_base + UXSTA, URXISEL_MASK<<URXISEL_SHIFT);
-            Reg::setbit(m_uartx_base + UXSTA, e<<URXISEL_SHIFT);
+            clrbit(m_uartx_base + UXSTA, URXISEL_MASK<<URXISEL_SHIFT);
+            setbit(m_uartx_base + UXSTA, e<<URXISEL_SHIFT);
             }
 
 //=============================================================================
             auto Uart::
 rx_addren   (bool tf) -> void
             {
-            Reg::setbit(m_uartx_base + UXSTA, 1<<ADDEN, tf);
+            setbit(m_uartx_base + UXSTA, 1<<ADDEN, tf);
             }
 
 //=============================================================================
             auto Uart::
 rx_busy     () -> bool
             {
-            return not Reg::anybit(m_uartx_base + UXSTA, 1<<RIDLE);
+            return not anybit(m_uartx_base + UXSTA, 1<<RIDLE);
             }
 
 //=============================================================================
             auto Uart::
 rx_perr     () -> bool
             {
-            return Reg::anybit(m_uartx_base + UXSTA, 1<<PERR);
+            return anybit(m_uartx_base + UXSTA, 1<<PERR);
             }
 
 //=============================================================================
             auto Uart::
 rx_ferr     () -> bool
             {
-            return Reg::anybit(m_uartx_base + UXSTA, 1<<FERR);
+            return anybit(m_uartx_base + UXSTA, 1<<FERR);
             }
 
 //=============================================================================
             auto Uart::
 rx_oerr     () -> bool
             {
-            return Reg::anybit(m_uartx_base + UXSTA, 1<<OERR);
+            return anybit(m_uartx_base + UXSTA, 1<<OERR);
             }
 
 //=============================================================================
@@ -333,14 +332,14 @@ rx_oerr     () -> bool
             auto Uart::
 rx_oerrclr  () -> void
             {
-            Reg::clrbit(m_uartx_base + UXSTA, 1<<OERR);
+            clrbit(m_uartx_base + UXSTA, 1<<OERR);
             }
 
 //=============================================================================
             auto Uart::
 rx_empty    () -> bool
             {
-            return not Reg::anybit(m_uartx_base + UXSTA, 1<<URXDA);
+            return not anybit(m_uartx_base + UXSTA, 1<<URXDA);
             }
 
 //uxbrg
@@ -358,7 +357,7 @@ baud_set    (uint32_t v) -> void
             hispeed(true);
             //if v is 0 (clock too slow for desired baud),
             //just set to maximum baud for this clock
-            Reg::val(m_uartx_base + UXBRG, v ? v-1 : 0);
+            val(m_uartx_base + UXBRG, v ? v-1 : 0);
             }
 
 //called by clk_sel(), on()
@@ -374,7 +373,7 @@ baud_set    () -> void
             auto Uart::
 baud_clk    () -> uint32_t
             {
-            CLKSEL e = (CLKSEL)((Reg::val(m_uartx_base)>>17) bitand
+            CLKSEL e = (CLKSEL)((val(m_uartx_base)>>17) bitand
                 CLKSEL_MASK);
             if(e == REFO1) return Osc::refo_freq();
             else if(e == FRC) return Osc::frcclk();

@@ -1,5 +1,4 @@
 #include "Dma.hpp"
-#include "Reg.hpp"
 
 enum {
 DMACON = 0xBF808900,
@@ -68,28 +67,28 @@ Dma         (DMAX e)
             auto Dma::
 all_on      (bool tf) -> void
             {
-            Reg::setbit(DMACON, 1<<ON, tf);
+            setbit(DMACON, 1<<ON, tf);
             }
 
 //=============================================================================
             auto Dma::
 all_suspend (bool tf) -> void
             {
-            Reg::setbit(DMACON, 1<<SUSPEND, tf);
+            setbit(DMACON, 1<<SUSPEND, tf);
             }
 
 //=============================================================================
             auto Dma::
 all_suspend () -> bool
             {
-            return Reg::anybit(DMACON, 1<<SUSPEND);
+            return anybit(DMACON, 1<<SUSPEND);
             }
 
 //=============================================================================
             auto Dma::
 any_busy    () -> bool
             {
-            return Reg::anybit(DMACON, 1<<DMABUSY);
+            return anybit(DMACON, 1<<DMABUSY);
             }
 
 //DMASTAT
@@ -97,14 +96,14 @@ any_busy    () -> bool
             auto Dma::
     last_rd () -> bool
             {
-            return Reg::anybit(DMASTAT, 1<<RDWR);
+            return anybit(DMASTAT, 1<<RDWR);
             }
 
 //=============================================================================
             auto Dma::
 last_ch     () -> uint8_t
             {
-            return Reg::val8(DMASTAT) bitand DMACH_CLR;
+            return val8(DMASTAT) bitand DMACH_CLR;
             }
 
 //DMAADDR
@@ -112,7 +111,7 @@ last_ch     () -> uint8_t
             auto Dma::
 last_addr   () -> uint32_t
             {
-            return Reg::val(DMAADDR);
+            return val(DMAADDR);
             }
 
 //DCRCCON
@@ -120,53 +119,53 @@ last_addr   () -> uint32_t
             auto Dma::
 crc_byto    (CRCBYTO e) -> void
             {
-            Reg::clrbit(DCRCCON, BYTO_CLR<<BYTO_SHIFT);
-            Reg::setbit(DCRCCON, e<<BYTO_SHIFT);
-            Reg::setbit(DCRCCON, 1<<WBO, (bool)e);
+            clrbit(DCRCCON, BYTO_CLR<<BYTO_SHIFT);
+            setbit(DCRCCON, e<<BYTO_SHIFT);
+            setbit(DCRCCON, 1<<WBO, (bool)e);
             }
 
 //=============================================================================
             auto Dma::
 crc_bito    (CRCBITO e) -> void
             {
-            Reg::setbit(DCRCCON, 1<<BITO, e);
+            setbit(DCRCCON, 1<<BITO, e);
             }
 
 //=============================================================================
             auto Dma::
 crc_polyn   (uint8_t v) -> void
             {
-            Reg::clrbit(DCRCCON, PLEN_CLR<<PLEN_SHIFT);
-            Reg::setbit(DCRCCON, (v bitand PLEN_CLR)<<PLEN_SHIFT);
+            clrbit(DCRCCON, PLEN_CLR<<PLEN_SHIFT);
+            setbit(DCRCCON, (v bitand PLEN_CLR)<<PLEN_SHIFT);
             }
 
 //=============================================================================
             auto Dma::
 crc_on      (bool tf) -> void
             {
-            Reg::setbit(DCRCCON, 1<<CRCEN, tf);
+            setbit(DCRCCON, 1<<CRCEN, tf);
             }
 
 //=============================================================================
             auto Dma::
 crc_append  (bool tf) -> void
             {
-            Reg::setbit(DCRCCON, 1<<CRCAPP, tf);
+            setbit(DCRCCON, 1<<CRCAPP, tf);
             }
 
 //=============================================================================
             auto Dma::
 crc_type    (CRCTYPE e) -> void
             {
-            Reg::setbit(DCRCCON, 1<<CRCTYP, e);
+            setbit(DCRCCON, 1<<CRCTYP, e);
             }
 
 //=============================================================================
             auto Dma::
 crc_ch      (uint8_t v) -> void
             {
-            Reg::clrbit(DCRCCON, CRCCH_CLR<<CRCCH_SHIFT);
-            Reg::setbit(DCRCCON, (v bitand CRCCH_CLR)<<CRCCH_SHIFT);
+            clrbit(DCRCCON, CRCCH_CLR<<CRCCH_SHIFT);
+            setbit(DCRCCON, (v bitand CRCCH_CLR)<<CRCCH_SHIFT);
             }
 
 //DCRCDATA
@@ -174,14 +173,14 @@ crc_ch      (uint8_t v) -> void
             auto Dma::
 crc_seed    (uint32_t v) -> void
             {
-            Reg::val(DCRCDATA, v);
+            val(DCRCDATA, v);
             }
 
 //=============================================================================
             auto Dma::
 crc_data    () -> uint32_t
             {
-            return Reg::val(DCRCDATA);
+            return val(DCRCDATA);
             }
 
 //DCRCXOR
@@ -189,7 +188,7 @@ crc_data    () -> uint32_t
             auto Dma::
 crc_xor     (uint32_t v) -> void
             {
-            Reg::val(DCRCXOR, v);
+            val(DCRCXOR, v);
             }
 
 //functions for each channel (class instance)
@@ -198,22 +197,22 @@ crc_xor     (uint32_t v) -> void
             auto Dma::
 busy        () -> bool
             {
-            return Reg::anybit(m_dmax_con, 1<<CHBUSY);
+            return anybit(m_dmax_con, 1<<CHBUSY);
             }
 
 //=============================================================================
             auto Dma::
 chain       (CHCHAIN e) -> void
             {
-            Reg::setbit(m_dmax_con, 1<<CHCHNS, e == TOLOWER);
-            Reg::setbit(m_dmax_con, 1<<CHCHN, e not_eq CHAINOFF);
+            setbit(m_dmax_con, 1<<CHCHNS, e == TOLOWER);
+            setbit(m_dmax_con, 1<<CHCHN, e not_eq CHAINOFF);
             }
 
 //=============================================================================
             auto Dma::
 on          (bool tf) -> void
             {
-            Reg::setbit(m_dmax_con, 1<<CHEN, tf);
+            setbit(m_dmax_con, 1<<CHEN, tf);
             while(busy() not_eq tf);
             }
 
@@ -221,29 +220,29 @@ on          (bool tf) -> void
             auto Dma::
 evt_always  (bool tf) -> void
             {
-            Reg::setbit(m_dmax_con, 1<<CHAED, tf);
+            setbit(m_dmax_con, 1<<CHAED, tf);
             }
 
 //=============================================================================
             auto Dma::
 auto_en     (bool tf) -> void
             {
-            Reg::setbit(m_dmax_con, 1<<CHAEN, tf);
+            setbit(m_dmax_con, 1<<CHAEN, tf);
             }
 
 //=============================================================================
             auto Dma::
 evt         () -> bool
             {
-            return Reg::anybit(m_dmax_con, 1<<CHEDET);
+            return anybit(m_dmax_con, 1<<CHEDET);
             }
 
 //=============================================================================
             auto Dma::
 priority    (CHPRI e) -> void
             {
-            Reg::clrbit(m_dmax_con, CHPRI_CLR<<CHPRI_SHIFT);
-            Reg::setbit(m_dmax_con, e<<CHPRI_SHIFT);
+            clrbit(m_dmax_con, CHPRI_CLR<<CHPRI_SHIFT);
+            setbit(m_dmax_con, e<<CHPRI_SHIFT);
             }
 
 //DCHXECON
@@ -251,8 +250,8 @@ priority    (CHPRI e) -> void
             auto Dma::
 irq_abort   (uint8_t v) -> void
             {
-            Reg::val((vu8ptr)m_dmax_con + (DCHXECON * 4) + 2, v);
-            Reg::setbit(m_dmax_con + DCHXECON, 1<<AIRQEN,
+            val((vu8ptr)m_dmax_con + (DCHXECON * 4) + 2, v);
+            setbit(m_dmax_con + DCHXECON, 1<<AIRQEN,
                         v not_eq (uint8_t)IRQOFF);
             }
 
@@ -260,8 +259,8 @@ irq_abort   (uint8_t v) -> void
             auto Dma::
 irq_start   (uint8_t v) -> void
             {
-            Reg::val((vu8ptr)m_dmax_con + (DCHXECON * 4) + 1, v);
-            Reg::setbit(m_dmax_con + DCHXECON,
+            val((vu8ptr)m_dmax_con + (DCHXECON * 4) + 1, v);
+            setbit(m_dmax_con + DCHXECON,
                         1<<SIRQEN, v not_eq (uint8_t)IRQOFF);
             }
 
@@ -269,21 +268,21 @@ irq_start   (uint8_t v) -> void
             auto Dma::
 start       () -> void
             {
-            Reg::setbit(m_dmax_con+DCHXECON, 1<<CFORCE);
+            setbit(m_dmax_con+DCHXECON, 1<<CFORCE);
             }
 
 //=============================================================================
             auto Dma::
 abort       () -> void
             {
-            Reg::setbit(m_dmax_con+DCHXECON, 1<<CABORT);
+            setbit(m_dmax_con+DCHXECON, 1<<CABORT);
             }
 
 //=============================================================================
             auto Dma::
 abort_match (bool tf) -> void
             {
-            Reg::setbit(m_dmax_con+DCHXECON, 1<<PATEN, tf);
+            setbit(m_dmax_con+DCHXECON, 1<<PATEN, tf);
             }
 
 //DCHXINT
@@ -291,21 +290,21 @@ abort_match (bool tf) -> void
             auto Dma::
 irq         (IRQENF e, bool tf) -> void
             {
-            Reg::setbit((vu8ptr)m_dmax_con + (DCHXINT * 4) + 2, e, tf);
+            setbit((vu8ptr)m_dmax_con + (DCHXINT * 4) + 2, e, tf);
             }
 
 //=============================================================================
             auto Dma::
 flag        (IRQENF e) -> bool
             {
-            return Reg::anybit((vu8ptr)m_dmax_con + (DCHXINT * 4) + 2, e);
+            return anybit((vu8ptr)m_dmax_con + (DCHXINT * 4) + 2, e);
             }
 
 //=============================================================================
             auto Dma::
 flag_clr    (IRQENF e) -> void
             {
-            Reg::clrbit((vu8ptr)m_dmax_con + (DCHXINT * 4), e);
+            clrbit((vu8ptr)m_dmax_con + (DCHXINT * 4), e);
             }
 
 //DCHXSSA
@@ -313,7 +312,7 @@ flag_clr    (IRQENF e) -> void
             auto Dma::
 sstart_addr (uint32_t v) -> void
             {
-            Reg::val(m_dmax_con + DCHXSSA, Reg::k2phys(v));
+            val(m_dmax_con + DCHXSSA, k2phys(v));
             }
 
 //DCHXDSA
@@ -321,7 +320,7 @@ sstart_addr (uint32_t v) -> void
             auto Dma::
 dstart_addr (uint32_t v) -> void
             {
-            Reg::val(m_dmax_con + DCHXDSA, Reg::k2phys(v));
+            val(m_dmax_con + DCHXDSA, k2phys(v));
             }
 
 //DCHXSSIZ
@@ -329,7 +328,7 @@ dstart_addr (uint32_t v) -> void
             auto Dma::
 ssize       (uint16_t v) -> void
             {
-            Reg::val(m_dmax_con + DCHXSSIZ, v);
+            val(m_dmax_con + DCHXSSIZ, v);
             }
 
 //DCHXDSIZ
@@ -337,7 +336,7 @@ ssize       (uint16_t v) -> void
             auto Dma::
 dsize       (uint16_t v) -> void
             {
-            Reg::val(m_dmax_con + DCHXDSIZ, v);
+            val(m_dmax_con + DCHXDSIZ, v);
             }
 
 //DCHXSPTR
@@ -345,7 +344,7 @@ dsize       (uint16_t v) -> void
             auto Dma::
 spointer    (uint16_t v) -> void
             {
-            Reg::val(m_dmax_con + DCHXSPTR, v);
+            val(m_dmax_con + DCHXSPTR, v);
             }
 
 //DCHXDPTR
@@ -353,7 +352,7 @@ spointer    (uint16_t v) -> void
             auto Dma::
 dpointer    (uint16_t v) -> void
             {
-            Reg::val(m_dmax_con + DCHXDPTR, v);
+            val(m_dmax_con + DCHXDPTR, v);
             }
 
 //DCHXCSIZ
@@ -361,7 +360,7 @@ dpointer    (uint16_t v) -> void
             auto Dma::
 csize       (uint16_t v) -> void
             {
-            Reg::val(m_dmax_con + DCHXCSIZ, v);
+            val(m_dmax_con + DCHXCSIZ, v);
             }
 
 //DCHXCPTR
@@ -369,7 +368,7 @@ csize       (uint16_t v) -> void
             auto Dma::
 cpointer    () -> uint16_t
             {
-            return Reg::val16(m_dmax_con + DCHXCPTR);
+            return val16(m_dmax_con + DCHXCPTR);
             }
 
 //DCHXDAT
@@ -377,5 +376,5 @@ cpointer    () -> uint16_t
             auto Dma::
 pattern     (uint8_t v) -> void
             {
-            Reg::val(m_dmax_con + DCHXDAT, v);
+            val(m_dmax_con + DCHXDAT, v);
             }

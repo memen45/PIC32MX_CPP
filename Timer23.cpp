@@ -1,5 +1,4 @@
 #include "Timer23.hpp"
-#include "Reg.hpp"
 
 enum {
 T2CON = 0xBF808040, TMR23_SPACING = 0x10,  //spacing in words
@@ -54,29 +53,29 @@ period      () -> uint32_t
             auto Timer23::
 on          (bool tf) -> void
             {
-            Reg::setbit(m_txcon, 1<<ON, tf);
+            setbit(m_txcon, 1<<ON, tf);
             }
 
 //=============================================================================
             auto Timer23::
 stop_idle   (bool tf) -> void
             {
-            Reg::setbit(m_txcon, 1<<SIDL, tf);
+            setbit(m_txcon, 1<<SIDL, tf);
             }
 
 //=============================================================================
             auto Timer23::
 gate        (bool tf) -> void
             {
-            Reg::setbit(m_txcon, 1<<TGATE, tf);
+            setbit(m_txcon, 1<<TGATE, tf);
             }
 
 //=============================================================================
             auto Timer23::
 prescale    (PRESCALE e) -> void
             {
-            Reg::clrbit(m_txcon, TCKPS_CLR<<TCKPS_SHIFT);
-            Reg::setbit(m_txcon, e<<TCKPS_SHIFT);
+            clrbit(m_txcon, TCKPS_CLR<<TCKPS_SHIFT);
+            setbit(m_txcon, e<<TCKPS_SHIFT);
             }
 
 //=============================================================================
@@ -85,9 +84,9 @@ mode32      (bool tf) -> void
             {
             //T2 controls T32, so only do if this is T2
             if(m_txcon == (vu32ptr)T2CON){
-                Reg::setbit(m_txcon, 1<<T32, tf);
+                setbit(m_txcon, 1<<T32, tf);
                 //set T3 SIDL off
-                Reg::clrbit(m_txcon + TMR23_SPACING, SIDL);
+                clrbit(m_txcon + TMR23_SPACING, SIDL);
             }
             }
 
@@ -95,5 +94,5 @@ mode32      (bool tf) -> void
             auto Timer23::
 clk_src     (CLK e) -> void
             {
-            Reg::setbit(m_txcon, 1<<TCS, e);
+            setbit(m_txcon, 1<<TCS, e);
             }

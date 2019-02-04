@@ -1,6 +1,5 @@
 #include "Sys.hpp"
 #include "Irq.hpp"
-#include "Reg.hpp"
 #include "Dma.hpp"
 
 enum {
@@ -37,7 +36,7 @@ lock        () -> void
             Irq::global(false);
             //unlock_count only accessed with irq off
             if(unlock_count) unlock_count--;            //dec counter
-            if(unlock_count == 0) Reg::val(SYSKEY, 0);  //if 0, lock
+            if(unlock_count == 0) val(SYSKEY, 0);  //if 0, lock
             //
             if(irqstate) Irq::global(true);             //restore IE state
             }
@@ -52,8 +51,8 @@ unlock      () -> void
             Dma::all_suspend(true);                     //suspend DMA
             //
             if(unlock_count == 0){                      //first time, unlock
-                Reg::val(SYSKEY, MAGIC1);
-                Reg::val(SYSKEY, MAGIC2);
+                val(SYSKEY, MAGIC1);
+                val(SYSKEY, MAGIC2);
             }
             unlock_count++;                             //inc unlock_count
             //
@@ -82,8 +81,8 @@ unlock_wait () -> uint8_t
             Dma::all_suspend(true);                     //suspend DMA
             //
             if(unlock_count == 0){                      //first time, unlock
-                Reg::val(SYSKEY, MAGIC1);
-                Reg::val(SYSKEY, MAGIC2);
+                val(SYSKEY, MAGIC1);
+                val(SYSKEY, MAGIC2);
             }
             unlock_count++;                             //inc unlock_count
             //
@@ -95,29 +94,29 @@ unlock_wait () -> uint8_t
             auto Sys::
 bus_err     (bool tf) -> void
             {
-            Reg::setbit(CFGCON, 1<<BMXERRDIS, !tf);
+            setbit(CFGCON, 1<<BMXERRDIS, !tf);
             }
 
 //=============================================================================
             auto Sys::
 bus_mode    (BMXARB e) -> void
             {
-            Reg::clrbit(CFGCON, BMXARB_MASK<<BMXARB_SHIFT);
-            Reg::setbit(CFGCON, e<<BMXARB_SHIFT);
+            clrbit(CFGCON, BMXARB_MASK<<BMXARB_SHIFT);
+            setbit(CFGCON, e<<BMXARB_SHIFT);
             }
 
 //=============================================================================
             auto Sys::
 ram_exec    (uint8_t v) -> void
             {
-            Reg::val(CFGCON+2, v);
+            val(CFGCON+2, v);
             }
 
 //=============================================================================
             auto Sys::
 jtag        (bool tf) -> void
             {
-            Reg::setbit(CFGCON, 1<<JTAGEN, tf);
+            setbit(CFGCON, 1<<JTAGEN, tf);
             }
 
 //devid
@@ -125,14 +124,14 @@ jtag        (bool tf) -> void
             auto Sys::
 devid       () -> uint32_t
             {
-            return Reg::val(DEVID) bitand ID_MASK;
+            return val(DEVID) bitand ID_MASK;
             }
 
 //=============================================================================
             auto Sys::
 ver         () -> uint8_t
             {
-            return Reg::val(DEVID)>>VER_SHIFT;
+            return val(DEVID)>>VER_SHIFT;
             }
 
 //ancfg
@@ -140,14 +139,14 @@ ver         () -> uint8_t
             auto Sys::
 bgap_adc    (bool tf) -> void
             {
-            Reg::setbit(ANCFG, 1<<VBGADC, tf);
+            setbit(ANCFG, 1<<VBGADC, tf);
             }
 
 //=============================================================================
             auto Sys::
 bgap_comp   (bool tf) -> void
             {
-            Reg::setbit(ANCFG, 1<<VBGCMP, tf);
+            setbit(ANCFG, 1<<VBGCMP, tf);
             }
 
 //udid (20bytes, 11bytes usable-> reduced to 64bit hash)
@@ -159,7 +158,7 @@ udid        () -> uint64_t
             {
             uint64_t hash = 0xcbf29ce484222325;
             for(uint8_t i = 0; i < 20; i++){
-                uint8_t tmp = Reg::val8(UDID1+i);
+                uint8_t tmp = val8(UDID1+i);
                 hash = (hash ^ tmp) * 0x100000001b3;
             }
             return hash;

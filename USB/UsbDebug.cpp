@@ -3,7 +3,7 @@
 #include "Cp0.hpp"  //print cp0 count
 #include <cstdarg>  //variadic args
 #include "Uart.hpp" //any uart device can de used for output
-#include "Putc.hpp"
+#include "Putc.hpp" //set device to use for putc (printf)
 
 //debug is a blocking function
 

@@ -3,11 +3,11 @@
 #include <cstdint>
 
 #include "Pins.hpp"
-
+#include "Reg.hpp"
 
 //UART 1/2/3
 
-struct Uart {
+struct Uart : private Reg {
 
     //instantiate Uart with uart number, optionally baud rate-
     //(pins setup manually)

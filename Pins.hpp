@@ -3,8 +3,9 @@
 //I/O pins
 
 #include <cstdint>
+#include "Reg.hpp"
 
-struct Pins {
+struct Pins : private Reg {
 
             //include specified file depending on which pin count device is in use
             //(fyi compiler does not define __PIC32_PIN_COUNT for pic32mm,

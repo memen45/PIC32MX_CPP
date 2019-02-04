@@ -70,21 +70,21 @@ Pins        (RPN e, IOMODE m)
             auto Pins::
 pinval      () -> bool
             {
-            return Reg::anybit(m_pt + PORT, m_pn);
+            return anybit(m_pt + PORT, m_pn);
             }
 
 //=============================================================================
             auto Pins::
 latval      () -> bool
             {
-            return Reg::anybit(m_pt + LAT, m_pn);
+            return anybit(m_pt + LAT, m_pn);
             }
 
 //=============================================================================
             auto Pins::
 latval      (bool tf) -> void
             {
-            return Reg::setbit(m_pt + LAT, m_pn, tf);
+            return setbit(m_pt + LAT, m_pn, tf);
             }
 
 //=============================================================================
@@ -109,35 +109,35 @@ adcval      () -> uint16_t
             auto Pins::
 low         () -> void
             {
-            Reg::clrbit(m_pt + LAT, m_pn);
+            clrbit(m_pt + LAT, m_pn);
             }
 
 //=============================================================================
             auto Pins::
 high        () -> void
             {
-            Reg::setbit(m_pt + LAT, m_pn);
+            setbit(m_pt + LAT, m_pn);
             }
 
 //=============================================================================
             auto Pins::
 invert      () -> void
             {
-            Reg::flipbit(m_pt + LAT, m_pn);
+            flipbit(m_pt + LAT, m_pn);
             }
 
 //=============================================================================
             auto Pins::
 on          () -> void
             {
-            Reg::setbit(m_pt + LAT, m_pn, not m_lowison);
+            setbit(m_pt + LAT, m_pn, not m_lowison);
             }
 
 //=============================================================================
             auto Pins::
 off         () -> void
             {
-            Reg::setbit(m_pt + LAT, m_pn, m_lowison);
+            setbit(m_pt + LAT, m_pn, m_lowison);
             }
 
 //=============================================================================
@@ -151,7 +151,7 @@ ison        () -> bool
             auto Pins::
 icn_flagclr () -> void
             {
-            Reg::clrbit(m_pt + CNF, m_pn);
+            clrbit(m_pt + CNF, m_pn);
             }
 
 //=============================================================================
@@ -165,101 +165,101 @@ lowison     (bool tf) -> void
             auto Pins::
 digital_in  () -> void
             {
-            Reg::setbit(m_pt + TRIS, m_pn);
-            Reg::clrbit(m_pt, m_pn); //ANSELx
+            setbit(m_pt + TRIS, m_pn);
+            clrbit(m_pt, m_pn); //ANSELx
             }
 
 //=============================================================================
             auto Pins::
 analog_in   () -> void
             {
-            Reg::setbit(m_pt + TRIS, m_pn);
-            Reg::setbit(m_pt, m_pn); //ANSELx
+            setbit(m_pt + TRIS, m_pn);
+            setbit(m_pt, m_pn); //ANSELx
             }
 
 //=============================================================================
             auto Pins::
 digital_out () -> void
             {
-            Reg::clrbit(m_pt + TRIS, m_pn);
-            Reg::clrbit(m_pt, m_pn); //ANSELx
+            clrbit(m_pt + TRIS, m_pn);
+            clrbit(m_pt, m_pn); //ANSELx
             }
 
 //=============================================================================
             auto Pins::
 odrain      (bool tf) -> void
             {
-            Reg::setbit(m_pt + ODC, m_pn, tf);
+            setbit(m_pt + ODC, m_pn, tf);
             }
 
 //=============================================================================
             auto Pins::
 pullup      (bool tf) -> void
             {
-            Reg::setbit(m_pt + CNPU, m_pn, tf);
+            setbit(m_pt + CNPU, m_pn, tf);
             }
 
 //=============================================================================
             auto Pins::
 pulldn      (bool tf) -> void
             {
-            Reg::setbit(m_pt + CNPD, m_pn, tf);
+            setbit(m_pt + CNPD, m_pn, tf);
             }
 
 //=============================================================================
             auto Pins::
 icn         (bool tf) -> void
             {
-            Reg::setbit(m_pt + CNCON, 1<<ON, tf);
+            setbit(m_pt + CNCON, 1<<ON, tf);
             }
 
 //=============================================================================
             auto Pins::
 icn_rising  () -> void
             {
-            Reg::setbit(m_pt + CNCON, 1<<CNSTYLE);
-            Reg::setbit(m_pt + CNEN0, m_pn);
-            Reg::clrbit(m_pt + CNEN1, m_pn);
+            setbit(m_pt + CNCON, 1<<CNSTYLE);
+            setbit(m_pt + CNEN0, m_pn);
+            clrbit(m_pt + CNEN1, m_pn);
             }
 
 //=============================================================================
             auto Pins::
 icn_risefall () -> void
             {
-            Reg::setbit(m_pt + CNCON, 1<<CNSTYLE);
-            Reg::setbit(m_pt + CNEN0, m_pn);
-            Reg::setbit(m_pt + CNEN1, m_pn);
+            setbit(m_pt + CNCON, 1<<CNSTYLE);
+            setbit(m_pt + CNEN0, m_pn);
+            setbit(m_pt + CNEN1, m_pn);
             }
 
 //=============================================================================
             auto Pins::
 icn_falling () -> void
             {
-            Reg::setbit(m_pt + CNCON, 1<<CNSTYLE);
-            Reg::setbit(m_pt + CNEN1, m_pn);
-            Reg::clrbit(m_pt + CNEN0, m_pn);
+            setbit(m_pt + CNCON, 1<<CNSTYLE);
+            setbit(m_pt + CNEN1, m_pn);
+            clrbit(m_pt + CNEN0, m_pn);
             }
 
 //=============================================================================
             auto Pins::
 icn_mismatch () -> void
             {
-            Reg::setbit(m_pt + CNEN0, m_pn);
-            Reg::clrbit(m_pt + CNCON, 1<<CNSTYLE);
+            setbit(m_pt + CNEN0, m_pn);
+            clrbit(m_pt + CNCON, 1<<CNSTYLE);
             }
 
 //=============================================================================
             auto Pins::
 icn_flag    () -> bool
             {
-            return Reg::anybit(m_pt + CNF, m_pn);
+            return anybit(m_pt + CNF, m_pn);
             }
 
 //=============================================================================
             auto Pins::
 icn_stat    () -> bool
             {
-            return Reg::anybit(m_pt + CNSTAT, m_pn);
+            return anybit(m_pt + CNSTAT, m_pn);
             }
 
 //static
@@ -269,9 +269,9 @@ icn_stat    () -> bool
 pps_do      (uint32_t addr, uint8_t v) -> void
             {
             Sys::unlock();
-            Reg::clrbit(RPCON, 1<<IOLOCK);
-            Reg::val(addr, v);
-            Reg::setbit(RPCON, 1<<IOLOCK);
+            clrbit(RPCON, 1<<IOLOCK);
+            val(addr, v);
+            setbit(RPCON, 1<<IOLOCK);
             Sys::lock();
             }
 

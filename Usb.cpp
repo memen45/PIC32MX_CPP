@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <cstring>
 #include "Usb.hpp"
-#include "Reg.hpp"
 #include "Pins.hpp"
 
 //registers - all registers use only first 8bits
@@ -62,9 +61,9 @@ vbus_ison   () -> bool
             auto Usb::
 flags       () -> uint32_t
             {
-            return  Reg::val8(U1OTGIR)<<16 bitor
-                    Reg::val8(U1EIR)<<8 bitor
-                    Reg::val8(U1IR);
+            return  val8(U1OTGIR)<<16 bitor
+                    val8(U1EIR)<<8 bitor
+                    val8(U1IR);
             }
 
 //=============================================================================
@@ -78,18 +77,18 @@ flag        (FLAGS e) -> bool
             auto Usb::
 flags_clr   (uint32_t v) -> void
             {
-            Reg::val(U1OTGIR, (uint8_t)(v>>16));
-            Reg::val(U1EIR, (uint8_t)(v>>8));
-            Reg::val(U1IR, (uint8_t)v);
+            val(U1OTGIR, (uint8_t)(v>>16));
+            val(U1EIR, (uint8_t)(v>>8));
+            val(U1IR, (uint8_t)v);
             }
 
 //=============================================================================
             auto Usb::
 irqs        () -> uint32_t
             {
-            return  Reg::val8(U1OTGIE)<<16 bitor
-                    Reg::val8(U1EIE)<<8 bitor
-                    Reg::val8(U1IE);
+            return  val8(U1OTGIE)<<16 bitor
+                    val8(U1EIE)<<8 bitor
+                    val8(U1IE);
             }
 
 //=============================================================================
@@ -103,18 +102,18 @@ irq         (FLAGS e) -> bool
             auto Usb::
 irqs        (uint32_t v) -> void
             {
-            Reg::val(U1OTGIE, (uint8_t)(v>>16));
-            Reg::val(U1EIE, (uint8_t)(v>>8));
-            Reg::val(U1IE, (uint8_t)v);
+            val(U1OTGIE, (uint8_t)(v>>16));
+            val(U1EIE, (uint8_t)(v>>8));
+            val(U1IE, (uint8_t)v);
             }
 
 //=============================================================================
             auto Usb::
 irq         (FLAGS e, bool tf) -> void
             {
-            if(e > (1<<15)) Reg::setbit(U1OTGIE, e>>16, tf);
-            else if(e > (1<<7))Reg::setbit(U1EIE, e>>8, tf);
-            else Reg::setbit(U1IE, e, tf);
+            if(e > (1<<15)) setbit(U1OTGIE, e>>16, tf);
+            else if(e > (1<<7))setbit(U1EIE, e>>8, tf);
+            else setbit(U1IE, e, tf);
             }
 
 
@@ -123,14 +122,14 @@ irq         (FLAGS e, bool tf) -> void
             auto Usb::
 otg_stat    () -> uint32_t
             {
-            return Reg::val8(U1OTGSTAT)<<16;
+            return val8(U1OTGSTAT)<<16;
             }
 
 //=============================================================================
             auto Usb::
 otg_stat    (FLAGS e) -> bool
             {
-            return Reg::anybit(U1OTGSTAT, e>>16);
+            return anybit(U1OTGSTAT, e>>16);
             }
 
 //U1OTGCON
@@ -138,14 +137,14 @@ otg_stat    (FLAGS e) -> bool
             auto Usb::
 otg         (OTG e, bool tf) -> void
             {
-            Reg::setbit(U1OTGCON, e, tf);
+            setbit(U1OTGCON, e, tf);
             }
 
 //=============================================================================
             auto Usb::
 otg         (uint8_t v) -> void
             {
-            Reg::val(U1OTGCON, v);
+            val(U1OTGCON, v);
             }
 
 //U1PWRC
@@ -153,14 +152,14 @@ otg         (uint8_t v) -> void
             auto Usb::
 power       (POWER e) -> bool
             {
-            return Reg::anybit(U1PWRC, e);
+            return anybit(U1PWRC, e);
             }
 
 //=============================================================================
             auto Usb::
 power       (POWER e, bool tf) -> void
             {
-            Reg::setbit(U1PWRC, e, tf);
+            setbit(U1PWRC, e, tf);
             if(e == USBPWR and tf) bdt_init();
             }
 
@@ -169,7 +168,7 @@ power       (POWER e, bool tf) -> void
             auto Usb::
 stat        () -> uint8_t
             {
-            return Reg::val8(U1STAT)>>2;
+            return val8(U1STAT)>>2;
             }
 
 //U1CON
@@ -177,21 +176,21 @@ stat        () -> uint8_t
             auto Usb::
 control     (CONTROL e) -> bool
             {
-            return Reg::anybit(U1CON, e);
+            return anybit(U1CON, e);
             }
 
 //=============================================================================
             auto Usb::
 control     (CONTROL e, bool tf) -> void
             {
-            Reg::setbit(U1CON, e, tf);
+            setbit(U1CON, e, tf);
             }
 
 //=============================================================================
             auto Usb::
 control     (uint8_t v) -> void
             {
-            Reg::val(U1CON, v);
+            val(U1CON, v);
             }
 
 //U1ADDR
@@ -199,22 +198,22 @@ control     (uint8_t v) -> void
             auto Usb::
 low_speed   (bool tf) -> void
             {
-            Reg::setbit(U1ADDR, 1<<LSEN, tf);
+            setbit(U1ADDR, 1<<LSEN, tf);
             }
 
 //=============================================================================
             auto Usb::
 dev_addr    () -> uint8_t
             {
-            return Reg::val8(U1ADDR) bitand 127;
+            return val8(U1ADDR) bitand 127;
             }
 
 //=============================================================================
             auto Usb::
 dev_addr    (uint8_t v) -> void
             {
-            Reg::clrbit(U1ADDR, 127);
-            Reg::setbit(U1ADDR, v bitand 127);
+            clrbit(U1ADDR, 127);
+            setbit(U1ADDR, v bitand 127);
             }
 
 //U1FRML,H
@@ -222,7 +221,7 @@ dev_addr    (uint8_t v) -> void
             auto Usb::
 frame       () -> uint16_t
             {
-            return (Reg::val8(U1FRMH)<<8) bitor Reg::val8(U1FRML);
+            return (val8(U1FRMH)<<8) bitor val8(U1FRML);
             }
 
 //U1TOK
@@ -230,16 +229,16 @@ frame       () -> uint16_t
             auto Usb::
 tok_pid     (TOKPID e) -> void
             {
-            Reg::clrbit(U1TOK, 15<<4);
-            Reg::setbit(U1TOK, e);
+            clrbit(U1TOK, 15<<4);
+            setbit(U1TOK, e);
             }
 
 //=============================================================================
             auto Usb::
 tok_ep      (uint8_t v) -> void
             {
-            Reg::clrbit(U1TOK, 15);
-            Reg::setbit(U1TOK, v bitand 15);
+            clrbit(U1TOK, 15);
+            setbit(U1TOK, v bitand 15);
             }
 
 //U1SOF
@@ -247,7 +246,7 @@ tok_ep      (uint8_t v) -> void
             auto Usb::
 sof_cnt     (SOFVALS e) -> void
             {
-            Reg::val(U1SOF, e);
+            val(U1SOF, e);
             }
 
 //U1BDTP1,2,3
@@ -255,10 +254,10 @@ sof_cnt     (SOFVALS e) -> void
             auto Usb::
 bdt_addr    (uint32_t v) -> void
             {
-            v = Reg::k2phys(v); //physical address
-            Reg::val(U1BDTP1, (uint8_t)(v>>8)); //512byte aligned (bit0 unused)
-            Reg::val(U1BDTP2, (uint8_t)(v>>16));
-            Reg::val(U1BDTP3, (uint8_t)(v>>24));
+            v = k2phys(v); //physical address
+            val(U1BDTP1, (uint8_t)(v>>8)); //512byte aligned (bit0 unused)
+            val(U1BDTP2, (uint8_t)(v>>16));
+            val(U1BDTP3, (uint8_t)(v>>24));
             }
 
 //=============================================================================
@@ -266,10 +265,10 @@ bdt_addr    (uint32_t v) -> void
 bdt_addr    (uint8_t n, bool trx, bool eveodd) -> volatile bdt_t*
             {
             if(n > max_endpoint) return 0;      //invalid endpoint
-            uint32_t v = Reg::p2kseg0(          //check if bdt table address set
-                Reg::val8(U1BDTP3)<<24 bitor
-                Reg::val8(U1BDTP2)<<16 bitor
-                Reg::val8(U1BDTP1)<<8 );
+            uint32_t v = p2kseg0(          //check if bdt table address set
+                val8(U1BDTP3)<<24 bitor
+                val8(U1BDTP2)<<16 bitor
+                val8(U1BDTP1)<<8 );
             if(v != (uint32_t)bdt_table) return 0;  //something wrong
             return &bdt_table[n][trx][eveodd];
             }
@@ -279,21 +278,21 @@ bdt_addr    (uint8_t n, bool trx, bool eveodd) -> volatile bdt_t*
             auto Usb::
 config      (CONFIG e, bool tf) -> void
             {
-            Reg::setbit(U1CNFG1, e, tf);
+            setbit(U1CNFG1, e, tf);
             }
 
 //=============================================================================
             auto Usb::
 config      (CONFIG e) -> bool
             {
-            return Reg::anybit(U1CNFG1, e);
+            return anybit(U1CNFG1, e);
             }
 
 //=============================================================================
             auto Usb::
 config      (uint8_t v) -> void
             {
-            Reg::val(U1CNFG1, v);
+            val(U1CNFG1, v);
             }
 
 //U1EP0-15
@@ -302,7 +301,7 @@ config      (uint8_t v) -> void
 epcontrol   (uint8_t n, EPCTRL e, bool tf) -> void
             {
             n and_eq 15;
-            Reg::setbit(U1EP0+(n * U1EP_SPACING), e, tf);
+            setbit(U1EP0+(n * U1EP_SPACING), e, tf);
             }
 
 //=============================================================================
@@ -310,7 +309,7 @@ epcontrol   (uint8_t n, EPCTRL e, bool tf) -> void
 epcontrol   (uint8_t n, EPCTRL e) -> bool
             {
             n and_eq 15;
-            return Reg::anybit(U1EP0+(n * U1EP_SPACING), e);
+            return anybit(U1EP0+(n * U1EP_SPACING), e);
             }
 
 //=============================================================================
@@ -318,7 +317,7 @@ epcontrol   (uint8_t n, EPCTRL e) -> bool
 epcontrol   (uint8_t n, uint8_t v) -> void
             {
             n and_eq 15;
-            Reg::val(U1EP0+(n * U1EP_SPACING), v);
+            val(U1EP0+(n * U1EP_SPACING), v);
             }
 
 //=============================================================================
@@ -326,7 +325,7 @@ epcontrol   (uint8_t n, uint8_t v) -> void
 epcontrol   (uint8_t n) -> uint8_t
             {
             n and_eq 15;
-            return Reg::val8(U1EP0+(n * U1EP_SPACING));
+            return val8(U1EP0+(n * U1EP_SPACING));
             }
 
 //regs to reset state
@@ -335,17 +334,17 @@ epcontrol   (uint8_t n) -> uint8_t
 reset       () -> void
             {
             irqs(0);
-            Reg::val(U1CON, 0);     //usben
-            Reg::val(U1PWRC, 0);    //usbpwr
+            val(U1CON, 0);     //usben
+            val(U1PWRC, 0);    //usbpwr
             while(power(USBBUSY));
             flags_clr(0xFFFFFF);
-            Reg::val(U1ADDR, 0);
-            Reg::val(U1TOK, 0);
-            Reg::val(U1SOF, 0);
-            Reg::val(U1OTGCON, 0);
-            Reg::val(U1CNFG1, 1);
+            val(U1ADDR, 0);
+            val(U1TOK, 0);
+            val(U1SOF, 0);
+            val(U1OTGCON, 0);
+            val(U1CNFG1, 1);
             for(auto i = 0; i < 16; i++) epcontrol(i, 0);
-            Reg::val(U1BDTP1, 0);
-            Reg::val(U1BDTP2, 0);
-            Reg::val(U1BDTP3, 0);
+            val(U1BDTP1, 0);
+            val(U1BDTP2, 0);
+            val(U1BDTP3, 0);
             }
