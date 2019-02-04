@@ -2,19 +2,17 @@
 #include <cstdio>   //printf
 #include "Cp0.hpp"  //print cp0 count
 #include <cstdarg>  //variadic args
-#include "Uart.hpp" //any uart device can de used for output
-#include "Putc.hpp" //set device to use for putc (printf)
 
-//debug is a blocking function
 
-static bool m_enable{false};
+bool UsbDebug::m_enable{false};
+Uart* UsbDebug::m_uart{nullptr};
 
 // constructor specifying uart
 //=============================================================================
             UsbDebug::
 UsbDebug    (Uart* u)
             {
-            Putc::use(u);
+            debug(u);
             }
 
 // set putc device
@@ -22,7 +20,7 @@ UsbDebug    (Uart* u)
             auto UsbDebug::
 debug       (Uart* u) -> void
             {
-            Putc::use(u);
+            m_uart = u;
             }
 
 // enable/disable
@@ -44,19 +42,22 @@ debug       () -> bool
 // send buffer contents out via printf
 // (filename, funcname, message)
 //=============================================================================
-            auto UsbDebug::
-debug       (const char* fil, const char* fnam, const char* fmt, ...) -> void
-            {
-            if( not m_enable ) return;
-            va_list args;
-            va_start(args, fmt);
+//             auto UsbDebug::
+// debug       (const char* fil, const char* fnam, const char* fmt, ...) -> void
+//             {
+//             if( not m_enable ) return;
+            // va_list args;
+            // va_start(args, fmt);
 
-            printf( "[@R%010u@W]", Cp0::count() );
-            printf( "[@M%-14s@W]", fil ); //filename
-            printf( "[@G%-14s@W] ", fnam );
-            vprintf(fmt, args); //variadic arguments, use vprintf
-            printf("\r\n");
+            // printf( "[@R%010u@W]", Cp0::count() );
+            // printf( "[@M%-14s@W]", fil ); //filename
+            // printf( "[@G%-14s@W] ", fnam );
+            // vprintf(fmt, args); //variadic arguments, use vprintf
+            // printf("\r\n");
 
-            va_end(args);
-            }
+            // va_end(args);
+
+            // }
+
+
 
