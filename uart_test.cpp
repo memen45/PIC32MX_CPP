@@ -89,7 +89,7 @@ void main(void) {
 #include "Delay.hpp"
 #include "Cp0.hpp"
 
-//led status
+//led status of uart- errors or activity with persist time
 struct LedStatus {
 
     enum LEDSTATE { OK, OERR, BITERR, NOCHANGE };
@@ -104,8 +104,8 @@ struct LedStatus {
 
     //rgb led on curiosity board
     led_t leds[3] = {
-        { {Pins::D1, Pins::OUT}, {}, 4000 },     //Red
-        { {Pins::C3, Pins::OUT}, {}, 100 },      //Green
+        { {Pins::D1,  Pins::OUT}, {}, 4000 },   //Red
+        { {Pins::C3,  Pins::OUT}, {}, 100 },    //Green
         { {Pins::C15, Pins::OUT}, {}, 4000 }    //Blue
     };
     enum RGB { R, G, B };
@@ -157,7 +157,14 @@ int main()
     Cp0::compare_ms( 10 ); //cp0 irq every 10ms
     Irq::init( Irq::CORE_TIMER, 1, 0, true );
     Irq::global( true );
-    info.puts( "\r\nStarting uart echo test with led status...\r\n\r\n" );
+    //simple markup for ansi-
+    //  @+ = turn on markup
+    //  @! = reset colors/attributes
+    //  @W = white, @R = red, @G = gren, @B = blue (capitol letters = foreground)
+    //  @w = white, @k = black (lowercase letters = background)
+    //the uart inherits the Sprintf class, which does the printf work,
+    //along with the markup decoding
+    info.printf( "@+@!\r\n@WStarting uart echo test with @RL@GE@BD@W status...\r\n\r\n" );
     for(;;){
         Osc::idle(); //cp0 or rx2 will wake
     }
@@ -181,7 +188,7 @@ ISR( UART2_RX ){
     } else {
         leds.status(leds.OK);
         char c = info.read();
-        info.putchar( c ); //echo rx to tx
+        info.putc( c ); //echo rx to tx
         if( c == '\r' ) info.putchar( '\n' ); //add nl to cr
         //Delay::wait_s( 2 ); //to force overrun error
     }
