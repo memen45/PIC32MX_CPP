@@ -6,14 +6,25 @@
 enum {
     BMXCON = 0xBF882000,
         //BMXERRDIS = 27,
-        BMXARB_SHIFT = 0, BMXARB_MASK = 7,
+		BMXERRIXI = 20,
+		BMXERRICD = 19,
+		BMXERRDMA = 18,
+		BMXERRDS = 17,
+		BMXERRIS = 16,
 		BMXWSDRM = 6,
+        BMXARB_SHIFT = 0, BMXARB_MASK = 7,
         
-	BMXDKPBA = 0xBF882010,										//Kernel Program (RAM)
-	BMXDUDBA = 0xBF882020,										//User Data Base Address (RAM)
-	BMXDUPBA = 0xBF882030,										//User Program (RAM)
-	BMXPUPBA = 0xBF882050,										//User Program (Program Flash)
+	BMXDKPBA = 0xBF882010,									// Kseg Program (RAM) base address (until User Data RAM)
+	BMXDUDBA = 0xBF882020,									// User Data (RAM) base Address (until  User Program RAM)
+	BMXDUPBA = 0xBF882030,									// User Program (RAM) base address (until end of RAM)
+	
         //EXECADDR_SHIFT = 16, EXECADDR_MASK = 255,
+	
+	BMXDRMSZ = 0xBF882040,									// Data Ram size
+	BMXPUPBA = 0xBF882050,									// User Program (Flash) base address (until end of PFM)
+	BMXPFMSZ = 0xBF882060,									// Program Flash Memory (PFM) size
+	BMXBOOTSZ = 0xBF882070,									// Boot Flash size
+	
     
 	DDPCON = 0xBF80F200,
         JTAGEN = 3,
@@ -148,6 +159,13 @@ waitstates  () -> void
             val(CHECON, waitstates << PFMWS_SHIFT);
             if(irqstate) Irq::global(true);                 //restore IE state
             }
+    
+//=============================================================================
+			auto Sys::
+flash_size	() -> uint32_t
+			{
+			return val(BMXPFMSZ);
+			}
     
 //=============================================================================
             auto Sys::

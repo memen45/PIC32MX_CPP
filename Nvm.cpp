@@ -4,32 +4,25 @@
 #include "Sys.hpp"
 
 enum : uint32_t {
-NVMCON = 0xBF802930, //WR locked
+NVMCON = 0xBF80F400, //WR locked
     WR = 15,
     WREN = 14,
     WRERR = 13,
     LVDERR = 12,
+	LVDSTAT = 11,
     NVMOP_SHIFT = 0, NVMOP_CLR = 15,
     NOP = 0,
-    PGMDWORD = 2,
+	PGMWORD = 1,
     PGMROW = 3,
     ERASEPAGE = 4,
-    //PGMERASE = 7
-NVMKEY = 0xBF802940,
+    //PGMERASE = 5
+NVMKEY = 0xBF80F410,
     MAGIC1 = 0xAA996655,
     MAGIC2 = 0x556699AA,
-NVMADDR = 0xBF802950, //physical address
-NVMDATA0 = 0xBF802960,
-NVMDATA1 = 0xBF802970,
-NVMSRCADDR = 0xBF802980, //physical address
-NVMPWP = 0xBF802990, //locked
-    PWPULOCK = 31,
-    PWP_SHIFT = 0, PWP_CLR = 0xFFFFFF,
-NVMBWP = 0xBF8029A0, //locked
-    BWPULOCK = 15,
-    BWP2 = 10,
-    BWP1 = 9,
-    BWP0 = 8
+NVMADDR = 0xBF80F420, //physical address
+NVMDATA = 0xBF80F430,
+NVMSRCADDR = 0xBF80F440, //physical address
+
 };
 
 
@@ -96,17 +89,16 @@ error       () -> uint8_t
 mem_size    () -> uint32_t
             {
             //32K << 1,2,3 = 64k,128k,256k
-            return 0x8000 << ((Sys::devid() >> 15) & 3);
+            return Sys::flash_size();
             }
 
 //=============================================================================
             auto Nvm::
-write_2word (uint32_t addr, uint32_t hw, uint32_t lw) -> uint8_t
+write_word (uint32_t addr, uint32_t w) -> uint8_t
             {
             address(addr);
-            val(NVMDATA1, hw);
-            val(NVMDATA0, lw);
-            do_op(PGMDWORD);
+            val(NVMDATA, w);
+            do_op(PGMWORD);
             return error();
             }
 
@@ -129,26 +121,4 @@ page_erase  (uint32_t v) -> uint8_t
             address(v);
             do_op(ERASEPAGE);
             return error();
-            }
-
-//address = physical 0x1Dxxxxxx (0x1D03FFFF and below for 256k)
-//address masked so can provide a flash address for page (and below) to protect
-//(can use one time only)
-//=============================================================================
-            auto Nvm::
-write_protect (uint32_t v) -> void
-            {
-            unlock();
-            val(NVMPWP, (v bitand PWP_CLR)); //PWPULOCK will be cleared
-            lock();
-            }
-
-//(can use one time only)
-//=============================================================================
-            auto Nvm::
-boot_protect (BOOTP e) -> void
-            {
-            unlock();
-            val(NVMBWP, e); //BWPULOCK will be cleared
-            lock();
             }

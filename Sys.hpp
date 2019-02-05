@@ -41,7 +41,12 @@ unlock      () -> void;
 
             static auto
 unlock_wait () -> uint8_t;
-            
+
+
+			//==== BMX ====
+			
+			static auto
+flash_size	() -> uint32_t;
 
             //==== prefetch cache ====
     
