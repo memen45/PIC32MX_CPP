@@ -49,28 +49,10 @@ alarm_repeat (uint8_t) -> void;
 on          (bool) -> void;
 
             enum
-OUTSEL      : uint8_t { ALMEVT, CLKSEC, CLKSRC, OFF };
+OUTSEL      : uint8_t { ALMEVT, CLKSEC, OFF };
 
             static auto
 out_pin     (OUTSEL) -> void;
-
-            static auto
-clk_div     (uint16_t) -> void;
-
-            static auto
-clk_frdiv   (uint8_t) -> void;
-
-            enum
-PS          : uint8_t { PRE1, PRE16, PRE64, PRE256 };
-
-            static auto
-clk_pre     (PS) -> void;
-
-            enum
-CLKSEL      : uint8_t { SOSC, LPRC, PWRLPIN, FCY };
-
-            static auto
-clk_src     (CLKSEL) -> void;
 
             static auto
 alarm_evt   () -> bool;
