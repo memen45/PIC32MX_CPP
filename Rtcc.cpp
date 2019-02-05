@@ -127,7 +127,7 @@ unlock      () -> void
             static auto
 lock        () -> void
             {
-            Reg::clrbit(RTCCON1, 1<<RTCWREN);
+            Reg::clrbit(RTCCON, 1<<RTCWREN);
             Sys::lock();
             }
 
@@ -234,14 +234,14 @@ dt_to_dt    (date_t d, time_t t) -> Rtcc::datetime_t
             auto Rtcc::
 alarm       (bool tf) -> void
             {
-            setbit(RTCALRM, 1<<ALARMEN, tf);
+            setbit(RTCALRM, 1<<ALRMEN, tf);
             }
 
 //=============================================================================
             auto Rtcc::
 alarm       () -> bool
             {
-            return anybit(RTCALRM, 1<<ALARMEN);
+            return anybit(RTCALRM, 1<<ALRMEN);
             }
 
 //=============================================================================
@@ -294,7 +294,7 @@ out_pin     (OUTSEL v) -> void
             if(v != OFF){
                 setbit(RTCCON, 1<<RTSECSEL, v == CLKSEC);
             }
-            setbit(RTCCON1, 1<<PINON, v != OFF);
+            setbit(RTCCON, 1<<PINON, v != OFF);
             }
 
 //=============================================================================
@@ -315,7 +315,7 @@ time_busy   () -> bool
             auto Rtcc::
 alarm_busy  () -> bool
             {
-            return anybit(RTCALRM, 1<<ALMSYNCSTAT);
+            return anybit(RTCALRM, 1<<ALRMSYNCSTAT);
             }
 
 //=============================================================================
