@@ -244,11 +244,11 @@ int main()
     info.on(true);  //uart on
     //@+ turn on markup
     //@! reset colors/attributes
-    info.printf("@+@!@Y\r\nTesting printf from uart@W\r\n");
+    info.printf("@+@!@Y\r\nTesting @Mprintf@Y from uart@W\r\n");
 
     UsbDebug dbg( &info ); //set UsbDebug to use our uart
     dbg.debug( true );
-    dbg.debug("@GTesting printf from debug@W\r\n");
+    dbg.debug("@GTesting @Mprintf@G from debug@W\r\n");
 
     Rgb rgb;
     Led12 led12;

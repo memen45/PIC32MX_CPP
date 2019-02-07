@@ -168,21 +168,14 @@ rx_addren   (bool) -> void;
             auto
 rx_busy     () -> bool;
 
-            //rx parity err?
+            //rx parity, framing, or overrun err?
+            //return low byte which will contain these masked flags
             auto
-rx_perr     () -> bool;
-
-            //rx framing err?
-            auto
-rx_ferr     () -> bool;
-
-            //rx overrun err?
-            auto
-rx_oerr     () -> bool;
+rx_err      () -> uint8_t;
 
             //clear rx overrun err
             auto
-rx_oerrclr  () -> void;
+rx_errclr   () -> void;
 
             //rx is empty?
             auto
