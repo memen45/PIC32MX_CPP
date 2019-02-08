@@ -59,7 +59,7 @@ PREFEN      : uint8_t {
 pcache      (PREFEN) -> void;
             
             static auto
-waitstates  () -> void;
+waitstates  (uint32_t) -> void;
     
 private:
             enum 

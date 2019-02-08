@@ -150,9 +150,9 @@ ver         () -> uint8_t
 
 //=============================================================================
             auto Sys::
-waitstates  () -> void
+waitstates  (uint32_t clk) -> void
             {
-            uint8_t waitstates = Osc::sysclk() / FLASHSPEED;
+            uint8_t waitstates = clk / FLASHSPEED;
             bool irqstate = Irq::global();                //get STATUS.IE
             Irq::global(false);
             clrbit(BMXCON, 1 << BMXWSDRM);				//Disable RAM wait states

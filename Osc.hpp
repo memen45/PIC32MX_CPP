@@ -160,6 +160,10 @@ frcclk      () -> uint32_t;
             //get peripheral clock
             static auto
 pbclk      () -> uint32_t;
+            
+            //get peripheral clock
+            static auto
+clk_switch  (CNOSC, uint32_t) -> void;
 
 
             private:

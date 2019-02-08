@@ -232,6 +232,8 @@ sysclk      () -> uint32_t
                 case LPRC: m_sysclk = 31250; break; //+/-15% = 26562,5 - 35937,5
                 case SOSC: m_sysclk = 32768; break;
                 case POSC: m_sysclk = extclk(); break;
+				case FRC: m_sysclk = m_frcosc_freq; break;
+				case FRC16: m_sysclk = m_frcosc_freq >> 4;
                 case FRCPLL:
                 case POSCPLL: {
                     uint32_t f = (s == FRCPLL) ? m_frcosc_freq : extclk();
@@ -280,10 +282,9 @@ extclk      () -> uint32_t
             t1.period(0xFFFF);
             t1.prescale(t1.PS1);
             t1.timer(0);
-            //SOSC CLOCK SOURCE IS NOT AVAILABLE ON PIC32MX795F512L TIMER1
             //if sosc enabled, assume it is there
-        //    if(sosc()) t1.clk_src(t1.SOSC);
-        //    else t1.clk_src(t1.LPRC);
+			if (!sosc()) sosc(true);
+			t1.clk_src(t1.T1CK);
            //start timer1, get cp0 count
             t1.on(true);
             uint32_t c = cp0.count();
@@ -321,3 +322,56 @@ pbclk       () -> uint32_t
             m_pbclk = sysclk() >> pb_div();
             return m_pbclk;
             }
+            
+// auto calculate dividers or pll settings for the desired clk and speed
+//=============================================================================
+            auto Osc::
+clk_switch	(CNOSC e, uint32_t clk) -> void
+			{
+			uint32_t old = sysclk();
+			switch(e){
+                case LPRC: 
+                case SOSC:  
+                case POSC:  
+				case FRC16:
+                case FRCDIV:
+				case FRC: {
+					clk_src(e);									// perform the switch
+					uint32_t new_clk = sysclk();
+					if (old > new_clk)
+						Sys::waitstates(new_clk);				// NOTE: clk speed below 30 000 000 - waitstates are 0, so fix after clk_src(e) is fine
+					break;
+				}
+                case FRCPLL:
+                case POSCPLL: {
+                    uint32_t f = (e == FRCPLL) ? m_frcosc_freq : extclk();
+                    uint8_t idiv = (uint8_t) pll_idiv();
+                    idiv = m_idiv_lookup[idiv];
+					f /= idiv;									// fixed idiv
+											
+					uint8_t m = 0;										//15 16 17 18 19 20 21 24
+                    uint8_t odiv = 0;									// 1  2  4  8 16 32 64 256
+					uint32_t calc_clk = f * m_mul_lookup[m];	// fix multiplier
+					while (calc_clk > clk)						// odiv should only be increased if larger than desired clock
+					{
+						calc_clk >>= 1;
+						odiv++;
+						if (odiv == 7) break;
+					}
+					if (odiv == 7) odiv = 8;					//adjust DIV256
+					
+					f >>= odiv;									// fix odiv
+					calc_clk = f * m_mul_lookup[m];				
+					while (calc_clk < clk)						// mul should only be increased if smaller than desired clock
+						calc_clk = f * m_mul_lookup[++m];
+					
+					// start switching
+					if (calc_clk > old)	Sys::waitstates(calc_clk);	// increase clock ? increase waitstates BEFORE switch, otherwise flash read not possible
+					pll_set(static_cast<PLLMUL>(m), static_cast<DIVS>(odiv), e);							// perform the switch
+					if (calc_clk < old) Sys::waitstates(calc_clk);	// decrease clock ? decrease waitstates for faster flash read
+                    break;
+                }
+                default:
+                    break;
+            }
+			}
