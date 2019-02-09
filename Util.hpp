@@ -24,11 +24,11 @@ namespace Basename {
 
 };
 
-// from __FILE__, get the basename (address of)
+// from __FILE__, get the basename (address of, which is const char*)
 // filename provided to compiler may have path included, this will
 // get the basename so any debug output of filenames can show the
 // filename only, not inlcuding any path
 // (full file path will still get stored in flash)
-#define _FILE_BASENAME_ &__FILE__[ \
+#define FILE_BASENAME &__FILE__[ \
         Basename::const_expr_value< Basename::basename(__FILE__) >::value \
     ]

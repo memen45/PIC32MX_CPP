@@ -4,7 +4,7 @@
 #include "UsbEP.hpp"
 #include "Delay.hpp"
 #include "UsbDebug.hpp"
-#include "Util.hpp" //_FILE_BASENAME_
+#include "Util.hpp" //FILE_BASENAME
 
 
 //-----------------------------------------------------------------private-----
@@ -62,7 +62,7 @@ init        (bool tf) -> bool
             // * * * * DEBUG * * * *
             UsbDebug dbg;
             if( dbg.debug() ){
-                dbg.debug( _FILE_BASENAME_, __func__,
+                dbg.debug( FILE_BASENAME, __func__,
                     "%s@W@k", tf ? "@K@gusb started" : "@W@rusb stopped" );
             }
             // * * * * DEBUG * * * *
@@ -93,7 +93,7 @@ service     (uint32_t flags, uint8_t ustat) -> void
                 // * * * * DEBUG * * * *
                 UsbDebug dbg;
                 if( dbg.debug() ){
-                    dbg.debug( _FILE_BASENAME_, __func__,
+                    dbg.debug( FILE_BASENAME, __func__,
                        "frame: %d  ustat: %d",
                        usb.frame(),ustat );
                 }
