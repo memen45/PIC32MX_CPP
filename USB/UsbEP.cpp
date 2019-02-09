@@ -4,7 +4,7 @@
 #include "Reg.hpp"
 #include "UsbCentral.hpp"
 #include "UsbDebug.hpp"
-#include "Util.hpp" //THISFILE
+#include "Util.hpp" //_FILE_BASENAME_
 
 #include <cstdint>
 #include <cstring>  //memset, memcpy
@@ -128,7 +128,7 @@ setup       (info_t& x) -> bool
             // * * * * DEBUG * * * *
             UsbDebug dbg;
             if( dbg.debug() ){
-                dbg.debug( THISFILE, __func__,
+                dbg.debug( _FILE_BASENAME_, __func__,
                     "%s [%s][data%d][%db]",
                     &x == &m_tx ? "-->" : "<--",
                     i ? "odd" : "even",
@@ -165,7 +165,7 @@ service     (uint8_t ustat) -> bool
             // * * * * DEBUG * * * *
             UsbDebug dbg;
             if( dbg.debug() ){
-                dbg.debug( THISFILE, __func__,
+                dbg.debug( _FILE_BASENAME_, __func__,
                     "ustat: %d  ep: %d  pid: %d  bdt: %08x",
                     ustat,m_epnum,x.stat.pid,x.stat.val32 );
             }
@@ -264,7 +264,7 @@ set_address (UsbEP* ep) -> bool
             // * * * * DEBUG * * * *
             UsbDebug dbg;
             if( dbg.debug() ){
-                dbg.debug( THISFILE, __func__,
+                dbg.debug( _FILE_BASENAME_, __func__,
                     "@musb address: %d@k",
                     ep0->setup_pkt.wValue );
             }
@@ -302,7 +302,7 @@ control     (UsbEP0* ep0) -> bool
             // * * * * DEBUG * * * *
             UsbDebug dbg;
             if( dbg.debug() ){
-                dbg.debug( THISFILE, __func__,
+                dbg.debug( _FILE_BASENAME_, __func__,
                     "pkt: @Y%02x %02x %04x %04x %04x@W",
                     ep0->setup_pkt.bmRequestType, ep0->setup_pkt.bRequest,
                     ep0->setup_pkt.wValue,
@@ -437,7 +437,7 @@ service     (uint8_t ustat) -> bool
             // * * * * DEBUG * * * *
             UsbDebug dbg;
             if( dbg.debug() ){
-                dbg.debug( THISFILE, __func__,
+                dbg.debug( _FILE_BASENAME_, __func__,
                     "ustat: %d  ep: %d  pid: %d  bdt: %08x",
                     ustat, m_epnum, x.stat.pid, x.stat.val32 );
             }

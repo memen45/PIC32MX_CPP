@@ -1,8 +1,9 @@
 #pragma once
 
 
-namespace Util {
+namespace Basename {
 
+    //find offset of / or \ in const char*
     template <size_t S>
     static inline constexpr size_t basename(const char (& str)[S], size_t i = S - 1)
     {
@@ -10,9 +11,11 @@ namespace Util {
             i > 0 ? basename(str, i - 1) : 0;
     }
 
+    //terminate recursion
     template<typename T>
     static inline constexpr T basename(T (& str)[1]){ return 0; }
 
+    //using this (via macro below) will prevent code generation
     template <size_t V>
     struct const_expr_value
     {
@@ -25,6 +28,7 @@ namespace Util {
 // filename provided to compiler may have path included, this will
 // get the basename so any debug output of filenames can show the
 // filename only, not inlcuding any path
-#define THISFILE \
-    &__FILE__[ Util::const_expr_value<Util::basename(__FILE__)>::value ]
-
+// (full file path will still get stored in flash)
+#define _FILE_BASENAME_ &__FILE__[ \
+        Basename::const_expr_value< Basename::basename(__FILE__) >::value \
+    ]
