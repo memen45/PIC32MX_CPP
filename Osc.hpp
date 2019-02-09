@@ -124,7 +124,7 @@ pll_set     (PLLMUL, DIVS, CNOSC = FRC) -> void;
 
             enum
 CLKRDY      : uint32_t {
-            SOSCRDY = 1<<6, PBDIVRDY = 1<<5
+            SOSCRDY = 1<<22, PBDIVRDY = 1<<21
             };
 
             //clock ready?

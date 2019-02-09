@@ -196,7 +196,7 @@ pll_set     (PLLMUL m, DIVS d, CNOSC frc) -> void
             auto Osc::
 ready       (CLKRDY e) -> bool
             {
-            return anybit(OSCCON + 2, e);
+            return anybit(OSCCON, e);
             }
 
 //osctun

@@ -53,8 +53,8 @@ bdt_init    () -> void
             auto Usb::
 vbus_ison   () -> bool
             {
-			return flag(SESVD);
             //return vbus_pin.ison();
+                return true;
             }
 
 //U1OTGIR/IE, U1IR/IE, U1EIR/IE
@@ -266,7 +266,7 @@ bdt_addr    (uint32_t v) -> void
 bdt_addr    (uint8_t n, bool trx, bool eveodd) -> volatile bdt_t*
             {
             if(n > max_endpoint) return 0;      //invalid endpoint
-            uint32_t v = p2kseg0(          //check if bdt table address set
+            uint32_t v = p2kseg1(          //check if bdt table address set
                 val8(U1BDTP3)<<24 bitor
                 val8(U1BDTP2)<<16 bitor
                 val8(U1BDTP1)<<8 );
