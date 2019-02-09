@@ -4,6 +4,7 @@
 #include "UsbEP.hpp"
 #include "Delay.hpp"
 #include "UsbDebug.hpp"
+#include "Util.hpp" //THISFILE
 
 
 //-----------------------------------------------------------------private-----
@@ -14,8 +15,7 @@ static UsbCentral::service_t    m_service = 0;
 //counters
 static uint32_t                 m_timer1ms = 0;
 static uint32_t                 m_sofcount = 0;
-//debug use
-static const char*              m_filename = "UsbCentral.cpp";
+
 
 //class vars
 //=============================================================================
@@ -62,7 +62,7 @@ init        (bool tf) -> bool
             // * * * * DEBUG * * * *
             UsbDebug dbg;
             if( dbg.debug() ){
-                dbg.debug( m_filename, __func__,
+                dbg.debug( THISFILE, __func__,
                     "%s@W@k", tf ? "@K@gusb started" : "@W@rusb stopped" );
             }
             // * * * * DEBUG * * * *
@@ -93,7 +93,7 @@ service     (uint32_t flags, uint8_t ustat) -> void
                 // * * * * DEBUG * * * *
                 UsbDebug dbg;
                 if( dbg.debug() ){
-                    dbg.debug( m_filename, __func__,
+                    dbg.debug( THISFILE, __func__,
                        "frame: %d  ustat: %d",
                        usb.frame(),ustat );
                 }

@@ -6,6 +6,8 @@
 #include <cstring> //strlen
 #include <cstdio>  //debug printf
 #include "UsbDebug.hpp"
+#include "Util.hpp" //THISFILE
+
 
 UsbCh9 ch9; //so we can shorten usage from :: to .
 
@@ -119,8 +121,7 @@ static const uint8_t        m_ep_state_num = 1;
 static UsbEP                m_ep_txrx;   //ep2 = tx/rx
 static const uint8_t        m_ep_txrx_num = 2;
 static bool                 m_is_active = false;
-//DEBUG
-static const char*          m_filename = "UsbCdcAcm.cpp";
+
 
 //line coding- just store what pc wants, also return if wanted
 using line_coding_t = union {
@@ -155,7 +156,7 @@ bool showlinecoding(UsbEP* ep0){
     // * * * * DEBUG * * * *
     UsbDebug dbg;
     if( dbg.debug() ){
-        dbg.debug( m_filename, __func__,
+        dbg.debug( THISFILE, __func__,
             "@y@K%d %d %d %d@W@k",
             m_line_coding.baud, m_line_coding.stop_bits,
             m_line_coding.parity, m_line_coding.data_bits );
@@ -176,7 +177,7 @@ ep0_request (UsbEP0* ep0) -> bool
             // * * * * DEBUG * * * *
             UsbDebug dbg;
             if( dbg.debug() ){
-                dbg.debug( m_filename, __func__,
+                dbg.debug( THISFILE, __func__,
                     "@G%02x@W",
                     ep0->setup_pkt.bRequest );
             }
@@ -197,7 +198,7 @@ ep0_request (UsbEP0* ep0) -> bool
                     // * * * * DEBUG * * * *
                     UsbDebug dbg;
                     if( dbg.debug() ){
-                        dbg.debug( m_filename, __func__,
+                        dbg.debug( THISFILE, __func__,
                             "@c@KRTS: %d DTR: %d@k@W",
                             (ep0->setup_pkt.wValue bitand 2) >> 1,
                             ep0->setup_pkt.wValue bitand 1 );
