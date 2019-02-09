@@ -23,13 +23,11 @@
 
 
 // process string from Sprintf
-// add ansi code for markup
+// replace markup code with ansi code
 //=============================================================================
             auto Markup::
 markup      (char* str) -> bool
             {
-            //"test @Rstring@W" ->
-            //"test \033[38;5;196mstring\033[38;5;15m"
             char* str_copy = str;
             char buf[m_bufsiz];
             size_t idxbuf = 0;

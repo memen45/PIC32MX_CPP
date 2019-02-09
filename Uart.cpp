@@ -240,30 +240,22 @@ rx_busy     () -> bool
 
 //=============================================================================
             auto Uart::
-rx_perr     () -> bool
+rx_err      () -> uint8_t
             {
-            return anybit(m_uartx_base + UXSTA, 1<<PERR);
+            return val8(m_uartx_base + UXSTA) bitand (1<<PERR|1<<FERR|1<<OERR);
             }
 
+//clear rx overrun err (resets fifo by setting oerr, then clearing)
+//if was framing/parity error- need to set the oerr first
+//this way all errors can be cleared with this one function, even though
+//framing/parity errors don't require such a drastic solution
+//(at that point, things are already wrong, so the protocol above this will
+// have to deal with errors anyway)
 //=============================================================================
             auto Uart::
-rx_ferr     () -> bool
+rx_errclr   () -> void
             {
-            return anybit(m_uartx_base + UXSTA, 1<<FERR);
-            }
-
-//=============================================================================
-            auto Uart::
-rx_oerr     () -> bool
-            {
-            return anybit(m_uartx_base + UXSTA, 1<<OERR);
-            }
-
-//=============================================================================
-            //clear rx overrun err
-            auto Uart::
-rx_oerrclr  () -> void
-            {
+            setbit(m_uartx_base + UXSTA, 1<<OERR);
             clrbit(m_uartx_base + UXSTA, 1<<OERR);
             }
 
@@ -342,5 +334,8 @@ puts        (const char* s) -> void
             auto Uart::
 getc        () -> int
             {
-            return rx_empty() ? -1 : read();
+            if( rx_empty() ) return -1;
+            if( not rx_err() ) return read();
+            rx_errclr(); //just reset buffer on any error
+            return -1;
             }

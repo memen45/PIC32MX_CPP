@@ -45,7 +45,7 @@ debug       (char const *fmt, Args... args) -> void
 debug       (char const* fil, char const* func, char const* fmt, Args... args) -> void
             {
             if(not m_uart) return;
-            m_uart->printf( "[@R%010u@W]", Cp0::count() );
+            m_uart->printf( "[@B%010u@W]", Cp0::count() );
             m_uart->printf( "[@M%-14s@W][@G%-14s@W] ", fil, func );
             m_uart->printf( fmt, args... );
             m_uart->puts( "\r\n" );

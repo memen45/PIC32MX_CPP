@@ -178,21 +178,26 @@ ISRautoflag( CORE_TIMER ){
 ISR( UART2_RX ){
     Irq irq;
 
-    //get errors before reading rx buf
-    if( info.rx_oerr() ){
-        leds.status(leds.OERR);
-        info.rx_oerrclr(); //clear all buffers
-    } else if( info.rx_ferr() || info.rx_perr() ){
-        leds.status(leds.BITERR);
-        info.read(); //read just to advance buffer
-    } else {
+    //get errors before reading rx buf (for our own information)
+    uint8_t err = info.rx_err();
+
+    //get char-returns eof if any error,or if no data avaiable-
+    //(which should not happen in rx irq, that's why we are here)
+    //getc clears any errors by simply clearing the fifo buffer
+    int c = getc();
+    //can now clear flag
+    irq.flag_clr( irq.UART2_RX );
+
+    if( c >= 0 ){ //no error
         leds.status(leds.OK);
-        char c = info.read();
         info.putc( c ); //echo rx to tx
-        if( c == '\r' ) info.putchar( '\n' ); //add nl to cr
+        if( c == '\r' ) info.putc( '\n' ); //add nl to cr
         //Delay::wait_s( 2 ); //to force overrun error
+        return;
     }
 
-    irq.flag_clr( irq.UART2_RX );
+    if( err bitand 2 ) leds.status(leds.OERR);
+    else leds.status(leds.BITERR);
+
 }
 #endif
