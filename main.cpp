@@ -28,6 +28,7 @@
 #include "Nvm.hpp"
 #include "UsbDebug.hpp"
 
+#include <vector>
 
 //svg colors for rgb led
 const uint8_t svg[][3]{

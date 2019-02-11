@@ -157,9 +157,11 @@ bool showlinecoding(UsbEP* ep0){
     UsbDebug dbg;
     if( dbg.debug() ){
         dbg.debug( FILE_BASENAME, __func__,
-            "@y@K%d %d %d %d@W@k",
-            m_line_coding.baud, m_line_coding.stop_bits,
-            m_line_coding.parity, m_line_coding.data_bits );
+            "@y@K %d %d%c%c @W@k",
+            m_line_coding.baud, m_line_coding.data_bits,
+            "NEOMS"[m_line_coding.parity%5],
+            "112"[m_line_coding.stop_bits%3]
+            );
     }
     // * * * * DEBUG * * * *
     return true;
