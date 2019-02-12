@@ -28,7 +28,6 @@
 #include "Nvm.hpp"
 #include "UsbDebug.hpp"
 
-#include <vector>
 
 //svg colors for rgb led
 const uint8_t svg[][3]{
@@ -247,8 +246,8 @@ int main()
     //@! reset colors/attributes
     info.printf("@+@!@Y\r\nTesting @Mprintf@Y from uart@W\r\n");
 
-    UsbDebug dbg( &info ); //set UsbDebug to use our uart
-    dbg.debug( true );
+    UsbDebug dbg;
+    dbg.debug( &info ); //set UsbDebug to use our uart
     dbg.debug("@GTesting @Mprintf@G from debug@W\r\n");
 
     Rgb rgb;

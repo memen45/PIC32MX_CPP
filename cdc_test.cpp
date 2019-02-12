@@ -19,8 +19,7 @@
 #include "UsbDebug.hpp"
 
 
-
-//need uart for usb debugging (and printf)
+//need uart for usb debugging
 Uart info{Uart::UART2, Pins::C6, Pins::C7, 1000000};
 
 //pins used
@@ -103,9 +102,9 @@ int main()
     osc.tun_auto(true);                 //let sosc tune frc
 
     info.on(true);
-    UsbDebug dbg( &info );
+    UsbDebug::debug( &info );
 
-    printf("\r\n\r\nStarting...\r\n");
+    info.printf("\r\n\r\nStarting...\r\n");
 
     for(;;){
         Wdt::reset();
