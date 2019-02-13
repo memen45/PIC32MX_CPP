@@ -220,20 +220,11 @@ putc        (const char) -> void;
             auto
 puts        (const char*) -> void;
 
-            template<typename... Args>
             auto
-printf      (char const *fmt, Args... args) -> void
-            {
-            puts( Sprintf::sprintf(false, fmt, args...) );
-            }
+printf      (char const *fmt, ...) -> void;
 
-            //with markup
-            template<typename... Args>
             auto
-mprintf     (char const *fmt, Args... args) -> void
-            {
-            puts( Sprintf::sprintf(true, fmt, args...) );
-            }
+printf      (char const *fmt, va_list) -> void;
 
             // -1 = none
             auto

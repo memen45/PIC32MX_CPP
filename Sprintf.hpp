@@ -8,30 +8,31 @@
 // cannot use this class directly
 //
 // devices like uart, usb cdc can inherit Sprintf (private)
-// for printf, mprintf (with simple markup for ansi colors)
+// for printf use
 // each device that uses Sprintf can add a template to its
-// struct for printf, mprintf, which will call Sprintff::sprintf
-// (with true=markup), and returns a buffer where the device
-// can ouptut as needed
+// struct for printf, which will call Sprintf::sprintf
+// and returns a buffer which the device can ouptut as needed
 //
 // see Uart.hpp and UsbCdcAcm.hpp for printf template example
 //
-// each Sprintf user will get its own buffer
+// each class that inherits Sprintf will get its own buffer
+// (set to 256 here, which should be plenty for normal use)
+
 
 struct Sprintf  : private Markup {
 
     protected:
 
-            //bool is markup (true) or no markup (false)
             auto
-sprintf     (bool, char const *, ...) -> char*;
+sprintf     (char const *, ...) -> char*;
 
+            auto
+sprintf     (char const *, va_list)-> char*;
 
     private:
 
             //set size as needed
             static const size_t m_bufsiz{256};
-            //each class that inherits Sprintf will get its own buffer
             char m_buf[m_bufsiz];
 
 };

@@ -89,10 +89,10 @@ struct Rgb {
         Rtcc::datetime_t dt = Rtcc::datetime();
 
         if( not UsbDebug::debug() ){ //if not using uart for debug, print this
-        info.mprintf("@Wcolor[@R%02d@W]: @G%03d.%03d.%03d@W",
+        info.printf("@Wcolor[@R%02d@W]: @G%03d.%03d.%03d@W",
             m_idx,m_ccp[0].compb()>>8,m_ccp[1].compb()>>8,m_ccp[2].compb()>>8);
-        info.mprintf(" CP0 Count: @B%010u@W", Cp0::count());
-        info.mprintf(" now: @M%02d-%02d-%04d %02d:%02d:%02d %s@W\r\n",
+        info.printf(" CP0 Count: @B%010u@W", Cp0::count());
+        info.printf(" now: @M%02d-%02d-%04d %02d:%02d:%02d %s@W\r\n",
                 dt.month, dt.day, dt.year+2000, dt.hour12, dt.minute, dt.second,
                 dt.pm ? "PM" : "AM");
         }
@@ -244,11 +244,11 @@ int main()
     info.on(true);  //uart on
     //@+ turn on markup
     //@! reset colors/attributes
-    info.mprintf("@+@!@Y\r\nTesting @Mprintf@Y from uart@W\r\n");
+    info.printf("@+@!@Y\r\nTesting @Mprintf@Y from uart@W\r\n");
 
     UsbDebug dbg;
     dbg.debug( &info ); //set UsbDebug to use our uart
-    dbg.mdebug("@GTesting @Mprintf@G from debug@W\r\n");
+    dbg.debug("@GTesting @Mprintf@G from debug@W\r\n");
 
     Rgb rgb;
     Led12 led12;
@@ -256,9 +256,9 @@ int main()
     Pins pot{Pins::AN14}; //test adc, get pot adc val
     uint32_t p = pot.adcval();
 
-    dbg.mdebug("@R@ypot: %d@k@W\r\n",p);
-    dbg.mdebug("@CUDID: %016llx\r\n", Sys::udid()); //check udid
-    dbg.mdebug("@Mstarting...\r\n@W");
+    dbg.debug("@R@ypot: %d@k@W\r\n",p);
+    dbg.debug("@CUDID: %016llx\r\n", Sys::udid()); //check udid
+    dbg.debug("@Mstarting...\r\n@W");
 
     for(;;){
         Wdt::reset();

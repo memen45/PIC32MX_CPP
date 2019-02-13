@@ -4,7 +4,35 @@
 #include <cstdbool>
 #include <cstddef> //size_t
 
+/*
 
+used by Sprintf class
+
+@@ = @
+@! = reset ansi color/attributes
+@+ = markup on (state perists between use)
+@- = markup off (markup ignored, not printed, initial state is off)
+@K = blacK foreground, uppercase character = foreground color
+@k = blacK background, lowercase character = background color
+    colors= K R G Y B M C W (foreground) k rk g y b m c w (background)
+    blacK Red Green Yellow Blue Magenta Cyan White
+
+examples (assuming a Uart object named uart which has printf function)-
+    uart.printf("@+@!Test");    //turn on markup, reset ansi, print "Test"
+    uart.printf("K@whello@k@W");//foreground blacK, background white
+                                //print "hello"
+                                //foreground White, background black
+    uart.printf("@-");          //markup off
+    uart.printf("R@ghello@k@W");//print "hello" (markup ignored)
+    uart.printf("@+@Ghello@W"); //markup on, foreground Green
+                                //print "hello"
+                                //foreground White
+
+    if result of markup exceeds size of temporary markup buffer,
+    all markup will be stripped from incoming buffer and result
+    will still be printed
+
+*/
 
 struct Markup {
 
@@ -15,12 +43,12 @@ Markup      () //prevent direct use
             }
 
             auto
-markup      (char* str) -> bool;
+markup      (char*, size_t) -> bool;
 
 
             //strip markup from string (modify string in place)
             auto
-strip       (char* src) -> bool;
+strip       (char*) -> bool;
 
     private:
 
@@ -54,14 +82,11 @@ strip       (char* src) -> bool;
             using
 codes_t     = struct
             {
-            const char* ansistr;
-            const uint8_t siz;
+            const char* ansistr;    //includes markup character to match
+            const uint8_t siz;      //not including match character
             };
 
             //store all markup char+ansi codes and size of string-1
             static const codes_t m_codes[];
-            //size of temp buffer, should be same or larger
-            //than Sprintf buffer
-            static constexpr const size_t m_bufsiz{256};
 
 };

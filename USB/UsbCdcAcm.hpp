@@ -33,22 +33,9 @@ TXRX        = UsbEP::TXRX;
 busy        (TXRX) -> bool;
 
             //printf to cdc, blocking on busy
-            template<typename... Args>
+            //non-static so can call sprintf
             auto
-printf      (char const *fmt, Args... args) -> void
-            {
-            while( busy(UsbEP::TX) ); //wait until tx available
-            write( sprintf(false, fmt, args...) );
-            }
-
-            //printf to cdc (with markup), blocking on busy
-            template<typename... Args>
-            auto
-mprintf     (char const *fmt, Args... args) -> void
-            {
-            while( busy(UsbEP::TX) ); //wait until tx available
-            write( sprintf(true, fmt, args...) );
-            }
+printf      (char const *fmt, ...) -> void;
 
 };
 
