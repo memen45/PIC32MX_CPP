@@ -38,7 +38,16 @@ busy        (TXRX) -> bool;
 printf      (char const *fmt, Args... args) -> void
             {
             while( busy(UsbEP::TX) ); //wait until tx available
-            write( sprintf(fmt, args...) );
+            write( sprintf(false, fmt, args...) );
+            }
+
+            //printf to cdc (with markup), blocking on busy
+            template<typename... Args>
+            auto
+mprintf     (char const *fmt, Args... args) -> void
+            {
+            while( busy(UsbEP::TX) ); //wait until tx available
+            write( sprintf(true, fmt, args...) );
             }
 
 };

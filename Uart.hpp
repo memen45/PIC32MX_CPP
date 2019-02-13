@@ -224,7 +224,15 @@ puts        (const char*) -> void;
             auto
 printf      (char const *fmt, Args... args) -> void
             {
-            puts( Sprintf::sprintf(fmt, args...) );
+            puts( Sprintf::sprintf(false, fmt, args...) );
+            }
+
+            //with markup
+            template<typename... Args>
+            auto
+mprintf     (char const *fmt, Args... args) -> void
+            {
+            puts( Sprintf::sprintf(true, fmt, args...) );
             }
 
             // -1 = none
