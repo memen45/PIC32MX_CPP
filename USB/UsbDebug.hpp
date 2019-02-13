@@ -5,19 +5,14 @@
 #include "Uart.hpp"
 #include "Cp0.hpp"
 
+// send out debug info to a uart
+// mdebug variants will use simple ansi markup
+
 struct UsbDebug  {
 
-            //empty constructor
-UsbDebug    ()
-            {
-            }
-
-            //or specify a uart device
-UsbDebug    (Uart*);
-
-            //(filename, funcname, format, args...)
+            //set which uart device, optionally enable/disable
             static auto
-debug       (const char*, const char*, const char*, ... ) -> void;
+debug       (Uart*, bool = true) -> void;
 
             //enable/disable
             static auto
@@ -27,16 +22,22 @@ debug       (bool) -> void;
             static auto
 debug       (void) -> bool;
 
-            //set which uart device
-            static auto
-debug       (Uart*) -> void;
-
             //printf type
             template<typename... Args>
             auto
 debug       (char const *fmt, Args... args) -> void
             {
-            if(m_uart) m_uart->printf(fmt, args...);
+            if(not m_uart or not m_enable) return;
+            m_uart->printf(fmt, args...);
+            }
+
+            //printf type with markup
+            template<typename... Args>
+            auto
+mdebug      (char const *fmt, Args... args) -> void
+            {
+            if(not m_uart or not m_enable) return;
+            m_uart->mprintf(fmt, args...);
             }
 
             //printf type with filename,function header
@@ -44,10 +45,22 @@ debug       (char const *fmt, Args... args) -> void
             auto
 debug       (char const* fil, char const* func, char const* fmt, Args... args) -> void
             {
-            if(not m_uart) return;
-            m_uart->printf( "[@B%010u@W]", Cp0::count() );
-            m_uart->printf( "[@M%-14s@W][@G%-14s@W] ", fil, func );
+            if(not m_uart or not m_enable) return;
+            m_uart->printf( "[%010u]", Cp0::count() );
+            m_uart->printf( "[%-14s][%-14s] ", fil, func );
             m_uart->printf( fmt, args... );
+            m_uart->puts( "\r\n" );
+            }
+
+            //printf type with filename,function header (with markup)
+            template<typename... Args>
+            auto
+mdebug      (char const* fil, char const* func, char const* fmt, Args... args) -> void
+            {
+            if(not m_uart or not m_enable) return;
+            m_uart->mprintf( "[@B%010u@W]", Cp0::count() );
+            m_uart->mprintf( "[@M%-14s@W][@G%-14s@W] ", fil, func );
+            m_uart->mprintf( fmt, args... );
             m_uart->puts( "\r\n" );
             }
 
@@ -55,5 +68,6 @@ debug       (char const* fil, char const* func, char const* fmt, Args... args) -
 
             static Uart* m_uart;
             static bool m_enable;
+
 };
 

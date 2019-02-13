@@ -7,20 +7,14 @@
 bool UsbDebug::m_enable{false};
 Uart* UsbDebug::m_uart{nullptr};
 
-// constructor specifying uart
-//=============================================================================
-            UsbDebug::
-UsbDebug    (Uart* u)
-            {
-            debug(u);
-            }
 
-// set putc device
+// set uart device, optionally enable/disable (default = enable)
 //=============================================================================
             auto UsbDebug::
-debug       (Uart* u) -> void
+debug       (Uart* u, bool tf) -> void
             {
             m_uart = u;
+            m_enable = tf;
             }
 
 // enable/disable
