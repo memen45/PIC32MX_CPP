@@ -176,7 +176,7 @@ enable_mvec (MVEC_MODE) -> void;
 ////////////////////////////////////////////////////////////////////////////////
 // ISR MACRO
 // usage- ISR(ADC){ /* isr code here */ }
-#define ISR(nam) extern "C" __attribute((vector((int)Irq::nam),interrupt))\
+#define ISR(nam) extern "C" __attribute((vector((int)Irq::m_lookup_vn[Irq::nam]),interrupt))\
     void nam##_ISR()
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -186,6 +186,6 @@ enable_mvec (MVEC_MODE) -> void;
 // NOTE flag is cleared at start of isr, do not use if flag needs clearing
 // after a register is read
 #define ISRautoflag(nam) extern "C" \
-    __attribute((vector((int)Irq::nam),interrupt)) \
+    __attribute((vector((int)Irq::m_lookup_vn[Irq::nam]),interrupt)) \
     void nam##_ISR(){ Irq::flag_clr(Irq::nam); \
 
