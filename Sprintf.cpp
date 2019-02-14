@@ -1,16 +1,23 @@
 #include "Sprintf.hpp"
 #include <cstdio> //vsnprintf
 
-// printf format into buffer (tf=true=markup, false=no markup)
+// printf format into buffer, check for markup
 // return buffer
 //=============================================================================
             auto Sprintf::
-sprintf     (bool tf, char const *fmt, ...) -> char*
+sprintf     (char const *fmt, ...) -> char*
             {
             va_list args;
             va_start(args, fmt);
-            vsnprintf(m_buf, m_bufsiz, fmt, args);
+            sprintf(fmt, args);
             va_end(args);
-            if(tf) markup(m_buf);
+            return m_buf;
+            }
+
+            auto Sprintf::
+sprintf     (char const *fmt, va_list args) -> char*
+            {
+            vsnprintf(m_buf, m_bufsiz, fmt, args);
+            markup(m_buf, m_bufsiz);
             return m_buf;
             }

@@ -11,14 +11,17 @@
             #define MKSTR(str) { str, strlen(str)-1 }
 
             const Markup::codes_t Markup::m_codes[] = {
-                MKSTR( m_blacK ), MKSTR( m_Red ), MKSTR( m_Green ),
-                MKSTR( m_Yellow ), MKSTR( m_Blue ), MKSTR( m_Magenta ),
-                MKSTR( m_Cyan ), MKSTR( m_White ),
-                MKSTR( m_black ), MKSTR( m_red ), MKSTR( m_green ),
-                MKSTR( m_yellow ), MKSTR( m_blue ), MKSTR( m_magenta ),
-                MKSTR( m_cyan ), MKSTR( m_white ),
-                MKSTR( m_reset ),
-                {0,0}
+                MKSTR( m_blacK ),   MKSTR( m_Red ),
+                MKSTR( m_Green ),   MKSTR( m_Yellow ),
+                MKSTR( m_Blue ),    MKSTR( m_Magenta ),
+                MKSTR( m_Cyan ),    MKSTR( m_White ),
+
+                MKSTR( m_black ),   MKSTR( m_red ),
+                MKSTR( m_green ),   MKSTR( m_yellow ),
+                MKSTR( m_blue ),    MKSTR( m_magenta ),
+                MKSTR( m_cyan ),    MKSTR( m_white ),
+
+                MKSTR( m_reset ),   {0,0}
             };
 
 
@@ -26,13 +29,13 @@
 // replace markup code with ansi code
 //=============================================================================
             auto Markup::
-markup      (char* str) -> bool
+markup      (char* str, size_t siz) -> bool
             {
             char* str_copy = str;
-            char buf[m_bufsiz];
+            char buf[siz];
             size_t idxbuf = 0;
             bool any = false;
-            for(; idxbuf < m_bufsiz-2; str++){
+            for(; idxbuf < siz-2; str++){
                 buf[idxbuf] = *str;
                 if(not *str) break;
                 if(*str != m_trigger){ idxbuf++;  continue; }
@@ -45,12 +48,12 @@ markup      (char* str) -> bool
                 if(not m_ison) continue;
                 for(auto i = 0; m_codes[i].siz; i++){
                     if(m_codes[i].ansistr[0] != *str) continue;
-                    if(idxbuf+m_codes[i].siz >= m_bufsiz-2) return strip(str_copy);
+                    if(idxbuf+m_codes[i].siz >= siz-2) return strip(str_copy);
                     memcpy((void*)&buf[idxbuf], m_codes[i].ansistr+1, m_codes[i].siz);
                     idxbuf += m_codes[i].siz;
                 }
             }
-            if(idxbuf >= m_bufsiz-1) return strip(str_copy);
+            if(idxbuf >= siz-1) return strip(str_copy);
             if(any) memcpy((void*)str_copy, buf, idxbuf+1);
             return true;
             }

@@ -332,6 +332,26 @@ puts        (const char* s) -> void
 
 //=============================================================================
             auto Uart::
+printf      (char const *fmt, ...) -> void
+            {
+            va_list args;
+            va_start(args, fmt);
+            const char* str = Sprintf::sprintf(fmt, args);
+            va_end(args);
+            puts( str );
+            }
+
+// with va_list already setup (used by Debug class)
+//=============================================================================
+            auto Uart::
+printf      (char const *fmt, va_list args) -> void
+            {
+            const char* str = Sprintf::sprintf(fmt, args);
+            puts( str );
+            }
+
+//=============================================================================
+            auto Uart::
 getc        () -> int
             {
             if( rx_empty() ) return -1;

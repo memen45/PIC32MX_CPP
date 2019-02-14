@@ -156,7 +156,7 @@ bool showlinecoding(UsbEP* ep0){
     // * * * * DEBUG * * * *
     UsbDebug dbg;
     if( dbg.debug() ){
-        dbg.mdebug( FILE_BASENAME, __func__,
+        dbg.debug( FILE_BASENAME, __func__,
             "@y@K %d %d%c%c @W@k",
             m_line_coding.baud, m_line_coding.data_bits,
             "NEOMS"[m_line_coding.parity%5],
@@ -179,7 +179,7 @@ ep0_request (UsbEP0* ep0) -> bool
             // * * * * DEBUG * * * *
             UsbDebug dbg;
             if( dbg.debug() ){
-                dbg.mdebug( FILE_BASENAME, __func__,
+                dbg.debug( FILE_BASENAME, __func__,
                     "@G%02x@W",
                     ep0->setup_pkt.bRequest );
             }
@@ -200,7 +200,7 @@ ep0_request (UsbEP0* ep0) -> bool
                     // * * * * DEBUG * * * *
                     UsbDebug dbg;
                     if( dbg.debug() ){
-                        dbg.mdebug( FILE_BASENAME, __func__,
+                        dbg.debug( FILE_BASENAME, __func__,
                             "@c@KRTS: %d DTR: %d@k@W",
                             (ep0->setup_pkt.wValue bitand 2) >> 1,
                             ep0->setup_pkt.wValue bitand 1 );
@@ -307,4 +307,15 @@ is_active   () -> bool
 busy        (TXRX tr) -> bool
             {
             return is_active() and m_ep_txrx.busy( tr );
+            }
+
+//=============================================================================
+            auto UsbCdcAcm::
+printf      (char const *fmt, ...) -> void
+            {
+            va_list args;
+            va_start(args, fmt);
+            const char* str = sprintf(fmt, args);
+            while( busy(UsbEP::TX) ); //wait until tx available
+            write( str );
             }
