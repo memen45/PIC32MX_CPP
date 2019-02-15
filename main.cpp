@@ -254,11 +254,12 @@ int main()
     Led12 led12;
 
     Pins pot{Pins::AN14}; //test adc, get pot adc val
-    uint32_t p = pot.adcval();
+    uint32_t p = pot.adcval(); //12bit
+    p = p*1000 / 4095; // % x10
 
-    dbg.debug("@R@ypot: %d@k@W\r\n",p);
-    dbg.debug("@CUDID: %016llx\r\n", Sys::udid()); //check udid
-    dbg.debug("@Mstarting...\r\n@W");
+    dbg.debug("@Cpot value: @R%d.%d%%@W\r\n", p/10, p%10);
+    dbg.debug("@BUDID: %016llx\r\n", Sys::udid()); //check udid
+    dbg.debug("@Gstarting...\r\n@W");
 
     for(;;){
         Wdt::reset();
