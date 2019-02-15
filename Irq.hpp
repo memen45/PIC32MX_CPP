@@ -46,8 +46,10 @@ IRQ_VN      : uint8_t {
             COMPARATOR_1 = 23, COMPARATOR_2, COMPARATOR_3,
             //26,27,28
             USB = 29,
+            //30,31
             RTCC = 32,
             ADC = 33,
+            //34,35
             HLVD = 36,
             CLC1 = 37, CLC2, CLC3, CLC4,
             SPI1_ERR = 41, SPI1_TX, SPI1_RX,
@@ -62,14 +64,23 @@ IRQ_VN      : uint8_t {
             I2C2_SLAVE = 68, I2C2_MASTER, I2C2_BUS,
             I2C3_SLAVE = 71, I2C3_MASTER, I2C3_BUS,
             CCP1 = 74, CCT1,
+            //75
             CCP2 = 76, CCT2,
+            //77
             CCP3 = 78, CCT3,
+            //79
             CCP4 = 80, CCT4,
+            //81
             CCP5 = 82, CCT5,
+            //83
             CCP6 = 84, CCT6,
+            //85
             CCP7 = 86, CCT7,
+            //87
             CCP8 = 88, CCT8,
+            //89
             CCP9 = 90, CCT9,
+            //91
             FRC_TUNE = 92,
             //93
             NVM = 94,

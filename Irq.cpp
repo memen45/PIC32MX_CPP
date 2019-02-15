@@ -160,7 +160,10 @@ shadow_set  (uint8_t pri) -> void
             }
 
 
+//=============================================================================
 // ISR functions
+//=============================================================================
+
 
 // set isr function (or unset)
 // if unset, make sure irq is off
@@ -193,12 +196,29 @@ isr         () -> void
 // using _DefaultInterrupt for all interrupts- already a weak function used
 // in all vector locations, we just override it here
 // function pointers used to run an isr function
-// can still use priority levels, shadow set for a level, same as using an
-// isr function for each interrupt except only one isr
+// can still use priority levels, shadow set, same as using an
+// isr function for each interrupt except there is only one isr function
 // (isr will auto select shadow set, set ipl level)
+//
+// cannot use single vector mode without losing the ability to use SRS
+// while still using priority levels, also cannot use multi-vector with a
+// vector spacing of 0 as multi vector does not work unless spacing is >0
+//
+// the biggest downside is a waste of ~800 bytes as each vector takes 8 bytes
+// and they all end up in the same place, also the isr function table is ~400
+// bytes of ram
+//
+// the advantage is the following code is all we need to get the isr's
+// working- we simply register an isr function for a vector through a call
+// to 'Irq::isr_func()', where the passed function can be a lambda if wanted
+// isr flags will also be cleared automatically
+//
+// isr functions will have to be registered before an irq is enabled, although
+// the isr() function will check for a non-zero function pointer and disable
+// the irq if there is no function pointer set for the vector
 //=============================================================================
             extern "C"
-            auto __attribute__((interrupt, section(".vector_default")))
+            auto __attribute__((interrupt))
 _DefaultInterrupt (void) -> void
             {
             Irq::isr();
