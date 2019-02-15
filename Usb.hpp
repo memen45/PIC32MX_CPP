@@ -8,17 +8,17 @@
 
 struct Usb : private Reg {
 
-        //BDT table
+            //BDT table
 
-        //set/change as needed- instead of fixing bdt table size
-        //exactly to configuration used, just set max endpoint here
-        //and change if needed- (there will be some wasted space)
-        //will assume most configs will use ep <= 7
-        static const uint8_t max_endpoint = 7;
+            //set/change as needed- instead of fixing bdt table size
+            //exactly to configuration used, just set max endpoint here
+            //and change if needed- (there will be some wasted space)
+            //will assume most configs will use ep <= 7
+            static const uint8_t max_endpoint = 7;
 
-        //USB Buffer Descriptor Control Format
-                using
-        ctrl_t = union {
+            //USB Buffer Descriptor Control Format
+            using
+ctrl_t      = union {
             struct {
             unsigned        :2;
             unsigned bstall :1;
@@ -34,9 +34,10 @@ struct Usb : private Reg {
             uint8_t val8;
             uint32_t val32;
             };
-        //USB Buffer Descriptor Status Format
+
+            //USB Buffer Descriptor Status Format
             using
-        stat_t = union {
+stat_t      = union {
             struct {
             unsigned        :2;
             unsigned pid    :4;
@@ -51,7 +52,7 @@ struct Usb : private Reg {
             };
 
             using
-        bdt_t = struct {
+bdt_t       = struct {
             union { ctrl_t ctrl; stat_t stat; };
             uint32_t bufaddr;
             };

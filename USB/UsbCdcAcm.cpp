@@ -315,7 +315,7 @@ printf      (char const *fmt, ...) -> void
             {
             va_list args;
             va_start(args, fmt);
-            const char* str = sprintf(fmt, args);
+            sprintf(fmt, args);
             while( busy(UsbEP::TX) ); //wait until tx available
-            write( str );
+            write( sprintfbuf() );
             }

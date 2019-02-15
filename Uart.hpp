@@ -8,7 +8,7 @@
 
 //UART 1/2/3
 
-struct Uart : private Reg, private Sprintf {
+struct Uart : private Reg, private Sprintf<> {
 
     //instantiate Uart with uart number, optionally baud rate-
     //(pins setup manually)

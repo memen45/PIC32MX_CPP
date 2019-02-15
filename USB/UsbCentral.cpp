@@ -48,7 +48,7 @@ attach      () -> void
             UsbCentral::service(0xFF);          //others, 0xFF=reset endpoint
             usb.control(usb.USBEN, true);       //enable usb module
             usb.irqs(usb.SOF|usb.T1MSEC|usb.TRN|usb.IDLE); //start irq's
-            irq.init(irq.USB, Usb::usb_irq_pri, Usb::usb_irq_subpri, true);
+            irq.init(irq.USB, usb.usb_irq_pri, usb.usb_irq_subpri, true);
             irq.global(true);                   //global irq's on
             }
 

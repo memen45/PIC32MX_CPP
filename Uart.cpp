@@ -399,9 +399,9 @@ printf      (char const *fmt, ...) -> void
             {
             va_list args;
             va_start(args, fmt);
-            const char* str = Sprintf::sprintf(fmt, args);
+            sprintf(fmt, args);
             va_end(args);
-            puts( str );
+            puts( sprintfbuf() );
             }
 
 // with va_list already setup (used by Debug class)
@@ -409,8 +409,8 @@ printf      (char const *fmt, ...) -> void
             auto Uart::
 printf      (char const *fmt, va_list args) -> void
             {
-            const char* str = Sprintf::sprintf(fmt, args);
-            puts( str );
+            sprintf(fmt, args);
+            puts( sprintfbuf() );
             }
 
 //=============================================================================
