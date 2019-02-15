@@ -106,21 +106,20 @@ init        (irq_list_t*, uint8_t) -> void;
             static auto
 shadow_set  (uint8_t) -> void;
 
+            using
+isrfunc_t   = void(*)(void);
+
+            static auto
+isr_func    (IRQ_VN, isrfunc_t) -> void;
+
+            static auto
+isr         () -> void;
+
+    private:
+
+            static isrfunc_t m_isrfuncs[DMA3+1];
+
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// ISR MACRO
-// usage- ISR(ADC){ /* isr code here */ }
-#define ISR(nam) extern "C" __attribute((vector((int)Irq::nam),interrupt))\
-    void nam##_ISR()
 
-////////////////////////////////////////////////////////////////////////////////
-// ISR MACRO - auto clear irq flag
-// usage- ISRautoflag(ADC){ /* isr code here */ }}
-// NOTE- need }} to close isr
-// NOTE flag is cleared at start of isr, do not use if flag needs clearing
-// after a register is read
-#define ISRautoflag(nam) extern "C" \
-    __attribute((vector((int)Irq::nam),interrupt)) \
-    void nam##_ISR(){ Irq::flag_clr(Irq::nam); \
 

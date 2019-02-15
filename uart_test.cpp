@@ -152,9 +152,37 @@ int main()
 {
     Osc osc;
     osc.pll_set( osc.MUL12, osc.DIV4 ); //24MHz
-    info.on( true ); //turn on uart after osc (baud is set when turned on)
+
+    Irq::isr_func( Irq::UART2_RX,
+        []{
+        //get errors before reading rx buf (for our own information)
+        uint8_t err = info.rx_err();
+        //get char-returns eof if any error,or if no data avaiable-
+        //(which should not happen in rx irq, that's why we are here)
+        //getc clears any errors by simply clearing the fifo buffer
+        int c = info.getc();
+        if( c >= 0 ){ //no error
+            leds.status(leds.OK);
+            info.putc( c ); //echo rx to tx
+            if( c == '\r' ) info.putc( '\n' ); //add nl to cr
+            //Delay::wait_s( 2 ); //to force overrun error
+            return;
+        }
+
+        if( err bitand 2 ) leds.status(leds.OERR);
+        else leds.status(leds.BITERR);
+        }
+    );
     Irq::init( Irq::UART2_RX, 1, 0, true ); //pri=1, spri=0, on=true
+    info.on( true ); //turn on uart after osc (baud is set when turned on)
+
     Cp0::compare_ms( 10 ); //cp0 irq every 10ms
+    Irq::isr_func( Irq::CORE_TIMER,
+        []{
+        Cp0::compare_reload();
+        leds.update();
+        }
+    );
     Irq::init( Irq::CORE_TIMER, 1, 0, true );
     Irq::global( true );
     //simple markup for ansi-
@@ -170,34 +198,4 @@ int main()
     }
 }
 
-ISRautoflag( CORE_TIMER ){
-    Cp0::compare_reload();
-    leds.update();
-}}
-
-ISR( UART2_RX ){
-    Irq irq;
-
-    //get errors before reading rx buf (for our own information)
-    uint8_t err = info.rx_err();
-
-    //get char-returns eof if any error,or if no data avaiable-
-    //(which should not happen in rx irq, that's why we are here)
-    //getc clears any errors by simply clearing the fifo buffer
-    int c = getc();
-    //can now clear flag
-    irq.flag_clr( irq.UART2_RX );
-
-    if( c >= 0 ){ //no error
-        leds.status(leds.OK);
-        info.putc( c ); //echo rx to tx
-        if( c == '\r' ) info.putc( '\n' ); //add nl to cr
-        //Delay::wait_s( 2 ); //to force overrun error
-        return;
-    }
-
-    if( err bitand 2 ) leds.status(leds.OERR);
-    else leds.status(leds.BITERR);
-
-}
 #endif

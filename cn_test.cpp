@@ -28,6 +28,14 @@ int main()
     //set sw3 to icn falling, and enable
     sw3.icn_falling();
     sw3.icn( true );
+    //set isr function, pin C4 (sw3)
+    Irq::isr_func( Irq::CHANGE_NOTICE_C,
+        []{
+        sw3.icn_flagclr(); //<--need to clear this flag also
+        leds.update();
+        }
+    );
+
     //enable cn irq, and global
     Irq::init( Irq::CHANGE_NOTICE_C, 1, 0, true );
     Irq::global( true );
@@ -35,10 +43,3 @@ int main()
     for(;;){ Osc::idle(); }
 }
 
-//pin C4 (sw3)
-ISR( CHANGE_NOTICE_C ){
-    Irq irq;
-    irq.flag_clr( irq.CHANGE_NOTICE_C );
-    sw3.icn_flagclr(); //<--need to clear this flag also
-    leds.update();
-}

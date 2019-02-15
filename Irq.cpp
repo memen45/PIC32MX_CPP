@@ -16,6 +16,10 @@ IEC_BASE = 0xBF80F0C0,
 IPC_BASE = 0xBF80F140
 };
 
+// vector function pointer storage
+//=============================================================================
+Irq::isrfunc_t Irq::m_isrfuncs[Irq::DMA3+1] = {0};
+
 //=============================================================================
             auto Irq::
 global      (bool tf) -> void
@@ -98,11 +102,13 @@ flag        (IRQ_VN e) -> bool
             return anybit(IFS_BASE + ((e / 32) * 16), 1u<<(e % 32));
             }
 
+// enable/disable irq, cannot enable if no isr funtion set
 //=============================================================================
             auto Irq::
 on          (IRQ_VN e, bool tf) -> void
             {
-            setbit(IEC_BASE + ((e / 32) * 16), 1u<<(e % 32), tf);
+            setbit(IEC_BASE + ((e / 32) * 16), 1u<<(e % 32),
+                tf and m_isrfuncs[e] );
             }
 
 //vector 17 example
@@ -136,10 +142,64 @@ init        (irq_list_t* arr, uint8_t sz) -> void
 //priority shadow set (there is only 1 extra in pic32mm)
 //set specified priority (1-7) to use shadow register set
 //priority values of 0 will disable shadow register set
+// PRISS1<3:0> = PRISS<7:4>
+// PRISS2<3:0> = PRISS<11:8>
+// ...
+// PRISS7<3:0> = PRISS<31:28>
+// pri = 1 = 0x00000010 (1<<4) = 1<<(pri*4)
+// pri = 2 = 0x00000100 (1<<8) = 1<<(pri*4)
+// pri = 7 = 0x10000000 (1<<28)= 1<<(pri*4)
+// pri = 0 = 0, but 1<<(pri*4) = 1, which sets SS0 (single vector shadow set)
+//   is harmless in MVEC mode- will mask off anyway
 //=============================================================================
             auto Irq::
 shadow_set  (uint8_t pri) -> void
-            { //p as uint32_t makes sure val uses 32bit version template
-            uint32_t p = (pri and_eq 7)*4;
-            val(PRISS, p ? 1<<p : 0); //0=all clear, else single bit set
+            { //p as uint32_t makes sure val uses 32bit version of val template
+            uint32_t p = ((pri and_eq 7)*4) bitand 0xFFFFFFFE;
+            val(PRISS, p);
+            }
+
+
+// ISR functions
+
+// set isr function (or unset)
+// if unset, make sure irq is off
+//=============================================================================
+            auto Irq::
+isr_func    (IRQ_VN n, isrfunc_t f) -> void
+            {
+            m_isrfuncs[n] = f;
+            if(not f) on(n, false);
+            }
+
+// run isr function
+// get vector number from SIRQ, run function pointer if not 0,
+// clear flag after function is run
+// in case no function pointer, turn off irq (should not happen, but...)
+//=============================================================================
+            auto Irq::
+isr         () -> void
+            {
+            uint8_t vn = val8(INTSTAT); //SIRQ<7:0> = INTSTAT<7:0>
+            isrfunc_t f = m_isrfuncs[ vn ];
+            if( f ){
+                f();
+                flag_clr( (IRQ_VN)vn );
+            } else {
+                on((IRQ_VN)vn, false);
+            }
+            }
+
+// using _DefaultInterrupt for all interrupts- already a weak function used
+// in all vector locations, we just override it here
+// function pointers used to run an isr function
+// can still use priority levels, shadow set for a level, same as using an
+// isr function for each interrupt except only one isr
+// (isr will auto select shadow set, set ipl level)
+//=============================================================================
+            extern "C"
+            auto __attribute__((interrupt, section(".vector_default")))
+_DefaultInterrupt (void) -> void
+            {
+            Irq::isr();
             }

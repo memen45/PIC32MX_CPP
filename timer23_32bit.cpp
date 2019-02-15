@@ -13,6 +13,11 @@ int main()
     Osc osc;
     osc.pll_set(osc.MUL12, osc.DIV4);//8*12/4 = 24MHz
 
+    Irq::isr_func( Irq::TIMER_3,
+        []{
+        ledB.invert();
+        }
+    );
     Irq::init( Irq::TIMER_3, 1, 0, true );
     Irq::global( true );
 
@@ -24,6 +29,3 @@ int main()
     }
 }
 
-ISRautoflag( TIMER_3 ){
-    ledB.invert();
-}}//<-yes, 2 of them

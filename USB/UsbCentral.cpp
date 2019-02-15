@@ -43,6 +43,37 @@ attach      () -> void
             {
             Usb usb; Irq irq;
 
+            //set isr function for usb isr (lambda functions work fine)
+            Irq::isr_func(irq.USB,
+            []{
+                Usb usb;
+                uint32_t flags = usb.flags();   //get all flags
+                //get stat before trn flag cleared (which advances sie buffer)
+                uint8_t stat = usb.stat();
+                usb.flags_clr(flags);           //clear all flags we found
+
+                // * * * * DEBUG * * * *
+                //ignore t1msec,sof flag for debug (too many)
+                //print all flags and masked flags (enabled irqs)
+
+                // UsbDebug dbg;
+                // if( dbg.debug() ){
+                //     if( flags bitand (compl (usb.T1MSEC bitor usb.SOF)) ){
+                //     dbg.debug( FILE_BASENAME, __func__,
+                //         "flags: %08x  masked: %08x",
+                //         flags, flags bitand usb.irqs()
+                //         );
+                //     }
+                // }
+
+                // * * * * DEBUG * * * *
+
+                //only need enabled irq flags, stat only valid if TRN set
+                UsbCentral::service(flags bitand usb.irqs(), stat);
+            }
+            );
+
+
             usb.power(usb.USBPWR, true);        //power on (inits bdt table)
             ep0.init();                         //endpoint 0 init here
             UsbCentral::service(0xFF);          //others, 0xFF=reset endpoint
