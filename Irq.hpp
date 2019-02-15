@@ -131,6 +131,3 @@ isr         () -> void;
             static isrfunc_t m_isrfuncs[DMA3+1];
 
 };
-
-
-
