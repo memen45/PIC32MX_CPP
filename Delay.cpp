@@ -4,12 +4,20 @@
 
 //Delay functions
 
+// set us
+//=============================================================================
+            Delay::
+Delay       (uint32_t us)
+            {
+            set(us);
+            }
+
 //=============================================================================
             auto Delay::
 expired     () -> bool
             {
             if( m_expired ) return true; //do not calc, already know
-            if((Cp0::count() - m_start) >= m_countn) m_expired = true;
+            if((Cp0::count() - m_start) >= m_countn) expire();
             return m_expired;
             }
 
@@ -29,62 +37,32 @@ restart     () -> void
             m_expired = false;
             }
 
+// in micrososends
 //=============================================================================
             auto Delay::
-set_us      (uint32_t n) -> void
+set         (uint32_t n) -> void
             {
-            if(n > 300000000) n = 300000000;
+            if(n > m_max_us) n = m_max_us;
             set_count(n);
             }
 
-//=============================================================================
-            auto Delay::
-set_ms      (uint32_t n) -> void
-            {
-            if(n > 300000) n = 300000;
-            set_us(1000 * n);
-            }
-
-//=============================================================================
-            auto Delay::
-set_s       (uint16_t n) -> void
-            {
-            if(n > 300) n = 300;
-            set_ms(1000 * n);
-            }
-
-//private
+// private
 //=============================================================================
             auto Delay::
 set_count   (uint32_t n) -> void
             {
             restart();
-            m_countn = Osc::sysclk() / 2000000 * n;
+            m_countn = Osc::sysclk() / 2000000UL * n;
             }
 
-//static
+// static
+// in micrososends
 //=============================================================================
             auto Delay::
-wait_us     (uint32_t n) -> void
+wait        (uint32_t n) -> void
             {
-            if(n > 300000000) n = 300000000;
-            n = Osc::sysclk() / 2000000 * n;
+            if(n > m_max_us) n = m_max_us;
+            n = Osc::sysclk() / 2000000UL * n;
             uint32_t start = Cp0::count();
             while((Cp0::count() - start) < n);
-            }
-
-//=============================================================================
-            auto Delay::
-wait_ms     (uint32_t n) -> void
-            {
-            if(n > 300000) n = 300000;
-            wait_us(1000 * n);
-            }
-
-//=============================================================================
-            auto Delay::
-wait_s      (uint16_t n) -> void
-            {
-            if(n > 300) n = 300;
-            wait_ms(1000 * n);
             }

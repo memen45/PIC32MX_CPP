@@ -86,14 +86,14 @@ bool check_all(){
         auto pinok = true;      //assume ok
         pc.p.digital_out();     //set pin to output
         pc.p.low();             //pull low
-        Delay::wait_ms(10);     //give a little time
+        Delay::wait(10_ms);     //give a little time
         auto r = read_all();    //read all pins
         if(r != pc.v){          //if something wrong on this pin
             ret = false;        //any pin fail, fail all test
             pinok = false;      //fail this pin
         }
         pc.p.digital_in();      //back to input
-        Delay::wait_ms(10);     //wait a little
+        Delay::wait(10_ms);     //wait a little
 
         //print this pin header info
         info.printf("[%02u] %-10s%-5d", i++, pc.name, pc.pn);
@@ -129,7 +129,7 @@ int main()
         //button pressed
         cls();
         check_all();
-        Delay::wait_s(2);
+        Delay::wait(2_sec);
     }
 }
 

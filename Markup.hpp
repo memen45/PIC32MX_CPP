@@ -76,8 +76,11 @@ strip       (char*) -> bool;
             static constexpr const char* m_magenta = "m\033[48;5;163m";
             static constexpr const char* m_cyan    = "c\033[48;5;6m";
             static constexpr const char* m_white   = "w\033[48;5;15m";
-            //reset colors/attributes
-            static constexpr const char* m_reset   = "!\033[0;38;5;15m\033[48;5;0m";
+            //reset colors/attributes/cls/home
+            static constexpr const char* m_reset   = "!\033[0;38;5;15m"
+                                                     "\033[48;5;0m"
+                                                     "\033[2J"
+                                                     "\033[1;1H";
 
             using
 codes_t     = struct

@@ -83,7 +83,7 @@ struct Rgb {
             if(v < s) v += 256; else v -= 256;
             m_ccp[i].compb(v);
         }
-        m_delay.set_ms(t);
+        m_delay.set(t *1_ms);
         if(t == m_delay_short) return;
 
         Rtcc::datetime_t dt = Rtcc::datetime();
@@ -135,7 +135,7 @@ struct Led12 {
             m_led1.latval(m_led1_state);
             m_led2.latval(not m_led1_state); //always opposite
         }
-        m_delay.set_ms(t);
+        m_delay.set(t *1_ms);
     };
 
     private:
@@ -163,14 +163,14 @@ struct UsbTest {
     bool xmit = false;
 
     void debounce(Pins& p){
-        Delay::wait_ms( 50 ); //down
+        Delay::wait( 50_ms ); //down
         while( p.ison() );
-        Delay::wait_ms( 100 ); //up (long ok here)
+        Delay::wait( 100_ms ); //up (long ok here)
     }
 
     bool notify(UsbEP* ep){
         static uint8_t count = 1;
-        dly.set_ms(1000);
+        dly.set(1000_ms);
         if(count > 231) count = 1;
         Rtcc::datetime_t dt = Rtcc::datetime();
 
@@ -241,9 +241,11 @@ int main()
 
     Rtcc::on(true);
 
+
     info.on(true);  //uart on
+
     //@+ turn on markup
-    //@! reset colors/attributes
+    //@! reset colors/attributes/cls/home
     info.printf("@+@!@Y\r\nTesting @Mprintf@Y from uart@W\r\n");
 
     UsbDebug dbg;

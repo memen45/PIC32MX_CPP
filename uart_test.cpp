@@ -134,7 +134,7 @@ struct LedStatus {
         else if( state == BITERR ) n = B;
 
         //set delay and turn on
-        leds[n].persist.set_ms( leds[n].ontime );
+        leds[n].persist.set( leds[n].ontime *1_ms);
         leds[n].pin.on();
         state = NOCHANGE;
     }
@@ -165,7 +165,7 @@ int main()
             leds.status(leds.OK);
             info.putc( c ); //echo rx to tx
             if( c == '\r' ) info.putc( '\n' ); //add nl to cr
-            //Delay::wait_s( 2 ); //to force overrun error
+            //Delay::wait( 2_sec ); //to force overrun error
             return;
         }
 
