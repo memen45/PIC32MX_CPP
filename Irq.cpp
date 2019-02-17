@@ -212,6 +212,8 @@ isr         () -> void
 // working- we simply register an isr function for a vector through a call
 // to 'Irq::isr_func()', where the passed function can be a lambda if wanted
 // isr flags will also be cleared automatically
+// the function pointer can be changed so can have different functions for
+// a vector when wanted
 //
 // isr functions will have to be registered before an irq is enabled, although
 // the isr() function will check for a non-zero function pointer and disable

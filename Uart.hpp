@@ -32,9 +32,9 @@ struct Uart : private Reg, private Sprintf<> {
 UARTX       {
             //assume both tx/rx wanted unless specified
             //      |rx|tx|uartN|
-            UART1 = 0|1<<2|1<<3, UART1TX = 0|1<<2, UART1RX = 0|1<<3,
-            UART2 = 1|1<<2|1<<3, UART2TX = 1|1<<2, UART2RX = 1|1<<3,
-            UART3 = 2|1<<2|1<<3, UART3TX = 2|1<<2, UART3RX = 2|1<<3
+            UART1 = 1|1<<2|1<<3, UART1TX = 1|1<<2, UART1RX = 1|1<<3,
+            UART2 = 2|1<<2|1<<3, UART2TX = 2|1<<2, UART2RX = 2|1<<3,
+            UART3 = 3|1<<2|1<<3, UART3TX = 3|1<<2, UART3RX = 3|1<<3
             };
 
 Uart        (UARTX, uint32_t = 0); //fixed pins, or setup pins on your own

@@ -2,6 +2,7 @@
 #include "Osc.hpp"
 #include "Pins.hpp"
 
+
 enum {
 UARTX_SPACING = 0x40,  //spacing in words
 U1MODE = 0xBF801800,
@@ -49,10 +50,10 @@ UXBRG = 16
             Uart::
 Uart        (UARTX e, uint32_t baud)
             :
-            m_uartx_base((vu32ptr)U1MODE + ((e bitand 3) * UARTX_SPACING)),
-            m_uartx_tx(*((vu32ptr)U1MODE + ((e bitand 3) *
+            m_uartx_base((vu32ptr)U1MODE + (((e bitand 3)-1) * UARTX_SPACING)),
+            m_uartx_tx(*((vu32ptr)U1MODE + (((e bitand 3)-1) *
                 UARTX_SPACING) + UXTXREG)),
-            m_uartx_rx(*((vu32ptr)U1MODE + ((e bitand 3) *
+            m_uartx_rx(*((vu32ptr)U1MODE + (((e bitand 3)-1) *
                 UARTX_SPACING) + UXRXREG)),
             m_uartx_baud(baud)
             {
@@ -69,17 +70,17 @@ Uart        (UARTX e, Pins::RPN tx, Pins::RPN rx, uint32_t baud)
             :
             Uart(e, baud)
             {
-            uint32_t u = (uint32_t)(e bitand 3); //uart 0-2
-            //UART1 is fixed pins, no pps (UART1 is 0)
-            if(u == 0) return;
-            //must be uart2 (1) or uart3 (2)
+            uint32_t u = (uint32_t)(e bitand 3); //uart 1-3
+            //UART1 is fixed pins, no pps
+            if(u == 1) return;
+            //must be uart2 or uart3
             if(rx) {
                 Pins r(rx, Pins::INPU);
-                r.pps_in(u == 1 ? r.U2RX : r.U3RX);
+                r.pps_in(u == 2 ? r.U2RX : r.U3RX);
             }
             if(tx){
                 Pins t(tx, Pins::OUT);
-                t.pps_out(u == 1 ? t.U2TX : t.U3TX);
+                t.pps_out(u == 2 ? t.U2TX : t.U3TX);
             }
             }
 
@@ -339,13 +340,12 @@ rx_empty    () -> bool
             auto Uart::
 baud_set    (uint32_t v) -> void
             {
-            if(v < 110) v = 110;        //minimum
-            if(v > 921600) v = 921600;  //maximum
-            m_uartx_baud = v;           //store
-            uint32_t bclk = baud_clk();
+            v = v < 110 ? 110 : v;        //minimum 110
+            v = v > 921600 ? 921600 : v;  //maximum 921600
+            m_uartx_baud = v;             //store
             //always use highspeed, simpler and works fine @ 24Mhz/921600
             //max clock and lowest baud also fits in uxbrg in highspeed
-            v = bclk / 4 / m_uartx_baud;
+            v = baud_clk() / 4 / v;
             hispeed(true);
             //if v is 0 (clock too slow for desired baud),
             //just set to maximum baud for this clock

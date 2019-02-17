@@ -206,6 +206,8 @@ UsbTest utest;
 
 int main()
 {
+
+
     //just get/store resets cause (not used here,though)
     Resets::cause();
 
@@ -244,13 +246,16 @@ int main()
 
     info.on(true);  //uart on
 
+
     //@+ turn on markup
     //@! reset colors/attributes/cls/home
     info.printf("@+@!@Y\r\nTesting @Mprintf@Y from uart@W\r\n");
 
+
     UsbDebug dbg;
     dbg.debug( &info ); //set UsbDebug to use our uart
     dbg.debug("@GTesting @Mprintf@G from debug@W\r\n");
+
 
     Rgb rgb;
     Led12 led12;
