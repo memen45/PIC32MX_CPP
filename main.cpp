@@ -54,7 +54,7 @@ const uint8_t svg[][3]{
 
 //UsbDebug will use, will also be deault for printf
 //(via _mon_putc in UsbDeg.cpp)
-Uart info{Uart::UART2, Pins::C6, Pins::C7, 1000000};
+Uart info{Uart::UART2, Pins::C6, Pins::C7, 921600};
 
 
 //rgb led's struct, use pwm for brightness
