@@ -2,19 +2,25 @@
 
 #include <cstdint>
 #include "Reg.hpp"
+#include "Pins.hpp"
 
 //MCCP 1-3, SCCP 4-9
+//MCCP output OCM1A-F, OCM2A-F, OCM3A-F
+//SCCP output via pps OCM4-9
+//input capture via pps ICM1-9
+
+//use structs Mccp or Sccp (is after Ccp struct)
 
 struct Ccp : private Reg {
 
-            enum
-CCPX        {
-            CCP1, CCP2, CCP3, CCP4, CCP5, CCP6, CCP7, CCP8, CCP9
-            };
+    protected: //prevent direct use- have to use Mccp or Sccp
 
-            //instantiate Ccp with CCPn
-Ccp         (CCPX);
+            //instantiate Ccp via Mccp or Sccp
+            //(value is limited via enums in Mccp and Sccp structs,
+            // so can use uint8_t here)
+Ccp         (uint8_t);
 
+    public:
 
             //==== CCPxCON1 ====
 
@@ -340,6 +346,36 @@ ccp_num     () -> uint8_t;  //which ccp number am I
             private:
 
             volatile uint32_t* m_ccpx_con;
+
+};
+
+//split out structs for differences as needed
+//split for setting output pins
+
+//Mccp uses 1-3 (fixed output pins)
+struct Mccp : public Ccp {
+
+            enum
+MCCPX       {
+            CCP1, CCP2, CCP3
+            };
+
+Mccp        (MCCPX e) : Ccp(e) {}
+
+};
+
+//Sccp use 4-9 (pps for output)
+struct Sccp : public Ccp {
+
+            enum
+SCCPX       {
+            CCP4=3, CCP5, CCP6, CCP7, CCP8, CCP9
+            };
+
+Sccp        (SCCPX e) : Ccp(e) {}
+
+            auto
+out_pin     (Pins::RPN) -> void;
 
 };
 

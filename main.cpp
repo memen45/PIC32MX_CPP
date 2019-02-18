@@ -13,6 +13,7 @@
 
 #include <cstdlib>
 
+
 #include "Pins.hpp"
 #include "Wdt.hpp"
 #include "Osc.hpp"
@@ -27,6 +28,7 @@
 #include "UsbCdcAcm.hpp"
 #include "Nvm.hpp"
 #include "UsbDebug.hpp"
+#include "Util.hpp"
 
 
 //svg colors for rgb led
@@ -61,12 +63,12 @@ struct Rgb {
 
     Rgb(){
         //init pwm via loop- R,G use OCxB, B uses OCxE
-        for(auto i = 0; i < 3; i++){
-            m_ccp[i].mode(m_ccp[i].DEPWM16); //dual edge pwm 16bit
-            m_ccp[i].compa(0);
-            m_ccp[i].compb(0);
-            m_ccp[i].out_pins(i == 2 ? Ccp::OCE : Ccp::OCB);
-            m_ccp[i].on(true);
+        for(auto& m : m_ccp){
+            m.mode(m.DEPWM16); //dual edge pwm 16bit
+            m.compa(0);
+            m.compb(0);
+            m.out_pins(m.ccp_num() == 3 ? m.OCE : m.OCB);
+            m.on(true);
         }
     }
 
@@ -74,44 +76,42 @@ struct Rgb {
     void update(){
         if(not m_delay.expired()) return;
 
-        uint16_t t = m_delay_long;
-        for(uint8_t i = 0; i < 3; i++){
-            uint16_t v = m_ccp[i].compb();
-            uint16_t s = svg[m_idx][i]<<8;
-            if(v == s) continue;
-            t = m_delay_short;
-            if(v < s) v += 256; else v -= 256;
-            m_ccp[i].compb(v);
+        uint32_t t = m_delay_long;
+        //adjust pwm to match new colors (short delay per adjustment)
+        for(size_t i = 0; i < 3; i++){
+            uint16_t v = m_ccp[i].compb(); //get pwm value
+            uint16_t s = svg[m_svgn][i]<<8; //and svg color value
+            if(v == s) continue; //color is now set
+            t = m_delay_short; //ned to adjust more
+            if(v < s) v += 256; else v -= 256; //inc/dec color toward match
+            m_ccp[i].compb(v); //set new value
         }
-        m_delay.set(t *1_ms);
+        m_delay.set(t);
         if(t == m_delay_short) return;
 
         Rtcc::datetime_t dt = Rtcc::datetime();
 
         if( not UsbDebug::debug() ){ //if not using uart for debug, print this
         info.printf("@Wcolor[@R%02d@W]: @G%03d.%03d.%03d@W",
-            m_idx,m_ccp[0].compb()>>8,m_ccp[1].compb()>>8,m_ccp[2].compb()>>8);
+            m_svgn,m_ccp[0].compb()>>8,m_ccp[1].compb()>>8,m_ccp[2].compb()>>8);
         info.printf(" CP0 Count: @B%010u@W", Cp0::count());
         info.printf(" now: @M%02d-%02d-%04d %02d:%02d:%02d %s@W\r\n",
                 dt.month, dt.day, dt.year+2000, dt.hour12, dt.minute, dt.second,
                 dt.pm ? "PM" : "AM");
         }
 
-        if(++m_idx >= sizeof(svg)/sizeof(svg[0])) m_idx = 0;
+        if( ++m_svgn >= size(svg) ) m_svgn = 0;
+
     };
 
     private:
 
-    static const uint16_t m_delay_short{10};
-    static const uint16_t m_delay_long{1000};
-    uint8_t m_idx{0};
+    static const uint32_t m_delay_short{ 10_ms };
+    static const uint32_t m_delay_long{ 1_sec };
+    uint8_t m_svgn{ 0 };
     //pwm to rgb pins
     //mccp 1-3 pwm to rgb led's
-    Ccp m_ccp[3]{ Ccp::CCP1, Ccp::CCP2, Ccp::CCP3 };
-
-    Pins m_ledR{Pins::D1, Pins::OUT},
-         m_ledG{Pins::C3, Pins::OUT},
-         m_ledB{Pins::C15, Pins::OUT};
+    Mccp m_ccp[3]{ Mccp::CCP1, Mccp::CCP2, Mccp::CCP3 };
 
     Delay m_delay;
 
@@ -125,17 +125,16 @@ struct Led12 {
 
     void update(){
         if(not m_delay.expired()) return;
-        uint16_t t = m_pot.adcval()>>2; //(0-4096 -> 0-256)
-        if(t < 100){
-            t = 100;
+        uint32_t t = 1_ms * (m_pot.adcval()>>2); //(0-4096 -> 0-256)
+        if(t < 100_ms){
+            t = 100_ms;
             m_led1.off();
             m_led2.off();
         } else {
-            m_led1_state = not m_led1_state;
-            m_led1.latval(m_led1_state);
-            m_led2.latval(not m_led1_state); //always opposite
+            m_led1.invert();
+            m_led2.latval( not m_led1.latval() ); //always opposite
         }
-        m_delay.set(t *1_ms);
+        m_delay.set(t);
     };
 
     private:
@@ -143,7 +142,6 @@ struct Led12 {
     Pins m_pot{Pins::AN14}; //check pot val via adc
     Pins m_led1{Pins::D3, Pins::OUT};
     Pins m_led2{Pins::C13, Pins::OUT};
-    bool m_led1_state{false};
     Delay m_delay;
 
 };
@@ -217,20 +215,6 @@ int main()
     osc.sosc(true);                         //enable sosc if not already
     osc.tun_auto(true);                     //let sosc tune frc
 
-//testing REFOCLKI
-//Pins led1{Pins::D3, Pins::OUT};
-//Pins clki{Pins::D0, Pins::OUT}; //drive refclki
-//Pins clko{Pins::B15, Pins::IN}; //watch refclko
-//osc.refo_on(osc.RREFCLKI); //pin34 RD0 in
-//osc.refo_div(200); //divide by 200 (=200ms below, as loop is 1ms)
-//osc.refo_out(true); //pin3 RB15 out
-//
-//for(;;){
-//    clki.invert();
-//    if(clko.pinval()) led1.on(); else led1.off();
-//    Delay::wait_ms(1);
-//}
-
     Rtcc::datetime_t dt = Rtcc::datetime();
     if(dt.year == 0) Rtcc::datetime( {
         // 19, 1, 29, 0, 9, 45, 0 -> Y,M,D,0,H,M.S (day calculated in Rtcc)
@@ -242,20 +226,16 @@ int main()
     } );
 
     Rtcc::on(true);
-
-
     info.on(true);  //uart on
-
 
     //@+ turn on markup
     //@! reset colors/attributes/cls/home
     info.printf("@+@!@Y\r\nTesting @Mprintf@Y from uart@W\r\n");
 
-
+    //enable usb debugging via uart
     UsbDebug dbg;
     dbg.debug( &info ); //set UsbDebug to use our uart
     dbg.debug("@GTesting @Mprintf@G from debug@W\r\n");
-
 
     Rgb rgb;
     Led12 led12;
@@ -269,7 +249,7 @@ int main()
     dbg.debug("@Gstarting...\r\n@W");
 
     for(;;){
-        Wdt::reset();
+        Wdt::reset(); //in case fused on
         led12.update();
         rgb.update();
         utest.update();
