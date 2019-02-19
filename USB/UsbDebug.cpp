@@ -53,8 +53,8 @@ debug       (char const* fil, char const* func, char const* fmt, ...) -> void
             if(not m_uart or not m_enable) return;
             va_list args;
             va_start(args, fmt);
-            m_uart->printf( "[@B%010u@W]", Cp0::count() );
-            m_uart->printf( "[@M%-14s@W][@G%-14s@W] ", fil, func );
+            m_uart->printf( "[{B}%010u{W}]", Cp0::count() );
+            m_uart->printf( "[{M}%-14s{W}][{G}%-14s{W}] ", fil, func );
             m_uart->printf( fmt, args );
             va_end(args);
             m_uart->puts( "\r\n" );

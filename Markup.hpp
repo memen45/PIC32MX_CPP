@@ -8,23 +8,27 @@
 
 used by Sprintf class
 
-@@ = @
-@! = reset ansi color/attributes
-@+ = markup on (state perists between use)
-@- = markup off (markup ignored, not printed, initial state is off)
-@K = blacK foreground, uppercase character = foreground color
-@k = blacK background, lowercase character = background color
+//allow multiple markup codes by using { } to enclose codes
+
+{{ = {
+{!} = reset ansi color/attributes
+{+} = markup on (state perists between use)
+{-} = markup off (markup ignored, not printed, initial state is off)
+{/} = italic
+{|} = normal
+{K} = blacK foreground, uppercase character = foreground color
+{k} = blacK background, lowercase character = background color
     colors= K R G Y B M C W (foreground) k rk g y b m c w (background)
     blacK Red Green Yellow Blue Magenta Cyan White
 
 examples (assuming a Uart object named uart which has printf function)-
-    uart.printf("@+@!Test");    //turn on markup, reset ansi, print "Test"
-    uart.printf("K@whello@k@W");//foreground blacK, background white
-                                //print "hello"
-                                //foreground White, background black
-    uart.printf("@-");          //markup off
-    uart.printf("R@ghello@k@W");//print "hello" (markup ignored)
-    uart.printf("@+@Ghello@W"); //markup on, foreground Green
+    uart.printf("{+!}Test");    //turn on markup, reset ansi, print "Test"
+    uart.printf("{Kw/}hello{kW|}");//foreground blacK, background white
+                                //print "hello" in italics
+                                //foreground White, background black, normal
+    uart.printf("{-}");         //markup off
+    uart.printf("{Rg}hello{kW}");//print "hello" (markup ignored, is off)
+    uart.printf("{+G}hello{W}"); /markup back on, foreground Green
                                 //print "hello"
                                 //foreground White
 
@@ -54,7 +58,8 @@ strip       (char*) -> bool;
 
             bool m_ison{false};
 
-            static const char m_trigger{'@'};
+            static const char m_trigger{'{'};
+            static const char m_trigger_end{'}'};
             static const char m_turnon{'+'};
             static const char m_turnoff{'-'};
 
@@ -81,6 +86,10 @@ strip       (char*) -> bool;
                                                      "\033[48;5;0m"
                                                      "\033[2J"
                                                      "\033[1;1H";
+            //italic
+            static constexpr const char* m_italic  = "/\033[3m";
+            //normal
+            static constexpr const char* m_normal  = "|\033[0m";
 
             using
 codes_t     = struct

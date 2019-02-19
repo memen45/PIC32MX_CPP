@@ -265,7 +265,7 @@ set_address (UsbEP* ep) -> bool
             UsbDebug dbg;
             if( dbg.debug() ){
                 dbg.debug( FILE_BASENAME, __func__,
-                    "@musb address: %d@k",
+                    "{m}usb address: %d{k}",
                     ep0->setup_pkt.wValue );
             }
             // * * * * DEBUG * * * *
@@ -303,7 +303,7 @@ control     (UsbEP0* ep0) -> bool
             UsbDebug dbg;
             if( dbg.debug() ){
                 dbg.debug( FILE_BASENAME, __func__,
-                    "pkt: @Y%02x %02x %04x %04x %04x@W",
+                    "pkt: {Y}%02x %02x %04x %04x %04x{W}",
                     ep0->setup_pkt.bmRequestType, ep0->setup_pkt.bRequest,
                     ep0->setup_pkt.wValue,
                     ep0->setup_pkt.wIndex,

@@ -257,10 +257,10 @@ struct Rgb {
 
         if( not UsbDebug::debug() ){ //if not using uart for debug, print this
         Rtcc::datetime_t dt = Rtcc::datetime();
-        info.printf("@Wcolor[@R%03d@W]: %-25s @G%03d.%03d.%03d@W",
+        info.printf("{W}color[{R}%03d{W}]: {/}%-25s {|G}%03d.%03d.%03d{W}",
             m_svgn, Svg::name(m_svgn), sR, sG, sB);
-        info.printf(" CP0 Count: @B%010u@W", Cp0::count());
-        info.printf(" now: @M%02d-%02d-%04d %02d:%02d:%02d %s@W\r\n",
+        info.printf(" CP0 Count: {B}%010u{W}", Cp0::count());
+        info.printf(" now: {M}%02d-%02d-%04d %02d:%02d:%02d %s{W}\r\n",
                 dt.month, dt.day, dt.year+2000, dt.hour12, dt.minute, dt.second,
                 dt.pm ? "PM" : "AM");
         }
@@ -393,14 +393,14 @@ int main()
     Rtcc::on(true);
     info.on(true);  //uart on
 
-    //@+ turn on markup
-    //@! reset colors/attributes/cls/home
-    info.printf("@+@!@Y\r\nTesting @Mprintf@Y from uart@W\r\n");
+    //+ turn on markup
+    //! reset colors/attributes/cls/home
+    info.printf("{+!Y}\r\nTesting {/M}printf{|Y} from uart{W}\r\n");
 
     //enable usb debugging via uart
     UsbDebug dbg;
     dbg.debug( &info ); //set UsbDebug to use our uart
-    dbg.debug("@GTesting @Mprintf@G from debug@W\r\n");
+    dbg.debug("{G}Testing {/M}printf{|G} from debug{W}\r\n");
 
     Rgb rgb;
     Led12 led12;
@@ -409,9 +409,9 @@ int main()
     uint32_t p = pot.adcval(); //12bit
     p = p*1000 / 4095; // % x10
 
-    dbg.debug("@Cpot value: @R%d.%d%%@W\r\n", p/10, p%10);
-    dbg.debug("@BUDID: %016llx\r\n", Sys::udid()); //check udid
-    dbg.debug("@Gstarting...\r\n@W");
+    dbg.debug("{C}pot value: {R}%d.%d%%{W}\r\n", p/10, p%10);
+    dbg.debug("{B}UDID: %016llx\r\n", Sys::udid()); //check udid
+    dbg.debug("{G}starting...\r\n{W}");
 
     for(;;){
         Wdt::reset(); //in case fused on

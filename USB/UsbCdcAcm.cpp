@@ -157,7 +157,7 @@ bool showlinecoding(UsbEP* ep0){
     UsbDebug dbg;
     if( dbg.debug() ){
         dbg.debug( FILE_BASENAME, __func__,
-            "@y@K %d %d%c%c @W@k",
+            "{yK} %d %d%c%c {Wk}",
             m_line_coding.baud, m_line_coding.data_bits,
             "NEOMS"[m_line_coding.parity%5],
             "112"[m_line_coding.stop_bits%3]
@@ -180,7 +180,7 @@ ep0_request (UsbEP0* ep0) -> bool
             UsbDebug dbg;
             if( dbg.debug() ){
                 dbg.debug( FILE_BASENAME, __func__,
-                    "@G%02x@W",
+                    "{G}%02x{W}",
                     ep0->setup_pkt.bRequest );
             }
             // * * * * DEBUG * * * *
@@ -201,7 +201,7 @@ ep0_request (UsbEP0* ep0) -> bool
                     UsbDebug dbg;
                     if( dbg.debug() ){
                         dbg.debug( FILE_BASENAME, __func__,
-                            "@c@KRTS: %d DTR: %d@k@W",
+                            "{cK}RTS: %d DTR: %d{kW}",
                             (ep0->setup_pkt.wValue bitand 2) >> 1,
                             ep0->setup_pkt.wValue bitand 1 );
                     }
