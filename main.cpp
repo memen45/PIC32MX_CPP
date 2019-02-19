@@ -203,7 +203,7 @@ const char* Svg::name(size_t i){
     return Svg::m_svg[i].name;
 }
 bool Svg::valid(size_t i){
-    return i < (sizeof(m_svg)/sizeof(m_svg[0]));
+    return i < size(m_svg);
 }
 
 
