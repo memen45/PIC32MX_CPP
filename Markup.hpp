@@ -16,6 +16,7 @@ used by Sprintf class
 {-} = markup off (markup ignored, not printed, initial state is off)
 {/} = italic
 {|} = normal
+{_} = underline
 {K} = blacK foreground, uppercase character = foreground color
 {k} = blacK background, lowercase character = background color
     colors= K R G Y B M C W (foreground) k rk g y b m c w (background)
@@ -90,6 +91,8 @@ strip       (char*) -> bool;
             static constexpr const char* m_italic  = "/\033[3m";
             //normal
             static constexpr const char* m_normal  = "|\033[0m";
+            //underline
+            static constexpr const char* m_underline= "_\033[4m";
 
             using
 codes_t     = struct

@@ -22,7 +22,8 @@
                 MKSTR( m_cyan ),    MKSTR( m_white ),
 
                 MKSTR( m_reset ),   MKSTR( m_italic ),
-                MKSTR( m_normal ),  {0,0}
+                MKSTR( m_normal ),  MKSTR( m_underline ),
+                {0,0}
             };
 
 

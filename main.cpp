@@ -37,6 +37,7 @@ struct Svg {
     static uint8_t B(size_t);
     static const char* name(size_t);
     static bool valid(size_t);
+    static uint8_t randcolorn();
 
     private:
     using svg_t = struct { const char* name; uint32_t rgbval; };
@@ -205,7 +206,9 @@ const char* Svg::name(size_t i){
 bool Svg::valid(size_t i){
     return i < size(m_svg);
 }
-
+uint8_t Svg::randcolorn(){
+    return rand() % size(m_svg);
+}
 
 
 //UsbDebug will use, will also be deault for printf
@@ -265,14 +268,15 @@ struct Rgb {
                 dt.pm ? "PM" : "AM");
         }
 
-        if( not Svg::valid(++m_svgn) ) m_svgn = 0;
+        //if( not Svg::valid(++m_svgn) ) m_svgn = 0;
+        m_svgn = Svg::randcolorn();
 
     };
 
     private:
 
-    static const uint32_t m_delay_short{ 5_ms };
-    static const uint32_t m_delay_long{ 20_ms };
+    static const uint32_t m_delay_short{ 10_ms };
+    static const uint32_t m_delay_long{ 50_ms };
     uint8_t m_svgn{ 0 };
     //pwm to rgb pins
     //mccp 1-3 pwm to rgb led's
@@ -395,12 +399,12 @@ int main()
 
     //+ turn on markup
     //! reset colors/attributes/cls/home
-    info.printf("{+!Y}\r\nTesting {/M}printf{|Y} from uart{W}\r\n");
+    info.printf("{+!Y}\r\nTesting {/M_}printf{|Y} from uart{W}\r\n");
 
     //enable usb debugging via uart
     UsbDebug dbg;
     dbg.debug( &info ); //set UsbDebug to use our uart
-    dbg.debug("{G}Testing {/M}printf{|G} from debug{W}\r\n");
+    dbg.debug("{G}Testing {/M_}printf{|G} from debug{W}\r\n");
 
     Rgb rgb;
     Led12 led12;
