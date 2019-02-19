@@ -257,7 +257,7 @@ struct Rgb {
 
         if( not UsbDebug::debug() ){ //if not using uart for debug, print this
         Rtcc::datetime_t dt = Rtcc::datetime();
-        info.printf("{W}color[{R}%03d{W}]: {/}%-25s {|G}%03d.%03d.%03d{W}",
+        info.printf("{W}[{R}%03d{W}] {/}%-25s {|G}%03d.%03d.%03d{W}",
             m_svgn, Svg::name(m_svgn), sR, sG, sB);
         info.printf(" CP0 Count: {B}%010u{W}", Cp0::count());
         info.printf(" now: {M}%02d-%02d-%04d %02d:%02d:%02d %s{W}\r\n",
