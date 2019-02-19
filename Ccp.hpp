@@ -132,7 +132,8 @@ out_sync    (bool) -> void;
             enum
 OUTPINS     : uint8_t {
             OCF = 1<<5, OCE = 1<<4, OCD = 1<<3,
-            OCC = 1<<2, OCB = 1<<1, OCA = 1<<0
+            OCC = 1<<2, OCB = 1<<1, OCA = 1<<0,
+            OCOFF = 0 //set all off
             };
 
             auto
@@ -374,8 +375,11 @@ SCCPX       {
 
 Sccp        (SCCPX e) : Ccp(e) {}
 
+            //can set a pins pps directly here
+            //can also later disable a pins pps by setting
+            //optional bool value to false
             auto
-out_pin     (Pins::RPN) -> void;
+out_pin     (Pins::RPN, bool=true) -> void;
 
 };
 
