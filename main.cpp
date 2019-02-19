@@ -240,21 +240,18 @@ struct Rgb {
         uint8_t sR = Svg::R(m_svgn); //svg color value R
         uint8_t sG = Svg::G(m_svgn); //svg color value G
         uint8_t sB = Svg::B(m_svgn); //svg color value B
-        if(pvR != sR){
-            pvR += pvR < sR ? 1 : -1;
-            t = m_delay_short;
-            m_ccp[0].compb(pvR<<8);
-        }
-        if(pvG != sG){
-            pvG += pvG < sG ? 1 : -1;
-            t = m_delay_short;
-            m_ccp[1].compb(pvG<<8);
-        }
-        if(pvB != sB){
-            pvB += pvB < sB ? 1 : -1;
-            t = m_delay_short;
-            m_ccp[2].compb(pvB<<8);
-        }
+
+        auto check = [&](uint16_t pv, uint8_t s, uint8_t cn){
+            if( pv != s ){
+                pv += pv < s ? 1 : -1;
+                t = m_delay_short;
+                m_ccp[cn].compb(pv<<8);
+            }
+        };
+        check(pvR, sR, 0);
+        check(pvG, sG, 1);
+        check(pvB, sB, 2);
+
         m_delay.set(t);
         if(t == m_delay_short) return;
 
