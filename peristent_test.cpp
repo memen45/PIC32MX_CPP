@@ -1,4 +1,4 @@
-//persistant data test
+//persistent data test
 //pic32mm0256gpm064
 //xc32 2.15 or xc32 2.10
 
