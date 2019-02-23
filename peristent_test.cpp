@@ -82,12 +82,12 @@ Reset Cause: 0x40 - SWR
 Delay 2 seconds...done. Resetting...
 
  map file-
- 
+
 .persist        0x80000008        0x4
                 0x80000008                _persist_begin = .
  *(.persist .persist.*)
  *(.pbss .pbss.*)
- .pbss.pattern  0x80000008        0x4 build/default/production/peristant_test.o
+ .pbss.pattern  0x80000008        0x4 build/default/production/peristent_test.o
                 0x80000008                pattern
                 0x8000000c                . = ALIGN (0x4)
                 0x8000000c                _persist_end = .
