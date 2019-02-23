@@ -1,6 +1,6 @@
 //persistant data test
 //pic32mm0256gpm064
-//xc32 2.15
+//xc32 2.15 or xc32 2.10
 
 #include <cstdint>
 
@@ -80,4 +80,23 @@ Delay 2 seconds...done. Resetting...
 pattern: 0
 Reset Cause: 0x40 - SWR
 Delay 2 seconds...done. Resetting...
+
+ map file-
+ 
+.persist        0x80000008        0x4
+                0x80000008                _persist_begin = .
+ *(.persist .persist.*)
+ *(.pbss .pbss.*)
+ .pbss.pattern  0x80000008        0x4 build/default/production/peristant_test.o
+                0x80000008                pattern
+                0x8000000c                . = ALIGN (0x4)
+                0x8000000c                _persist_end = .
+
+.data           0x8000000c        0x0
+ *(.gnu.linkonce.d.*)
+ *(.data1)
+                0x8000000c                . = ALIGN (0x4)
+                0x8000000c                . = .
+                0x80008000                _gp = (ALIGN (0x10) + 0x7ff0)
+
 */

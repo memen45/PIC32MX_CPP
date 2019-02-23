@@ -30,6 +30,7 @@
 #include "UsbDebug.hpp"
 #include "Util.hpp"
 
+
 struct Svg {
 
     static uint8_t R(size_t);
