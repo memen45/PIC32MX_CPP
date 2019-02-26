@@ -107,6 +107,7 @@ addr_mask   (uint16_t) -> void;
 
             enum
 I2CSPEED    : uint32_t {
+                KHZ50 = 50000,
             KHZ100 = 100000, KHZ400 = 400000, MHZ1 = 1000000
             };
 
