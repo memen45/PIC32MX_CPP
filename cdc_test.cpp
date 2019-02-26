@@ -40,15 +40,15 @@ struct UsbTest {
 
     //demostrate usb tx callback
     static bool txcallback(UsbEP* ep){
-        Delay::wait_ms(3);
+        Delay::wait(3_ms);
         led1.off();
         return true;
     }
 
     void debounce(Pins& p){
-        Delay::wait_ms( 50 ); //down
+        Delay::wait( 50_ms ); //down
         while( p.ison() );
-        Delay::wait_ms( 100 ); //up, long
+        Delay::wait( 100_ms ); //up, long
     }
 
     public:
@@ -74,7 +74,7 @@ struct UsbTest {
             debounce( sw2 );
         }
         if( xmit and xmit_dly.expired() ){
-            xmit_dly.set_ms(500); //delay between sending
+            xmit_dly.sets(500_ms); //delay between sending
             //cycle through ansi colors 1-7
             static char hw[] = "\033[3_mHello ";
             static int color = 1;

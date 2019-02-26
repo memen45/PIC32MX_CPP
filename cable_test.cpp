@@ -22,11 +22,7 @@
 
 //hook up serial for info output
 Uart info{Uart::UART2, Pins::C6, Pins::C7, 230400};
-
-//override printf putc- mchp only uses uart2
-//although we are using uart2, this allows other uarts
-extern "C" void _mon_putc(char c){ info.putchar(c); }
-void cls(){ info.putchar(12); }
+void cls(){ info.putc(12); }
 
 //press sw3 to test
 Pins sw3{ Pins::C4,  Pins::INPU };
@@ -75,7 +71,7 @@ uint16_t read_all(){
 
 //check all pins, print info
 bool check_all(){
-    printf(
+    info.printf(
     "   RJ45 1-8 shorted, 2-6-7  shorted, 3,4,5 -> rs232 7,3,2  \r\n"
     "  RS232 4-5 shorted, 6-8-20 shorted, 7,3,2 -> rj45  3,4,5  \r\n\r\n"
     "-----------------------------------------------------------\r\n"
@@ -90,30 +86,30 @@ bool check_all(){
         auto pinok = true;      //assume ok
         pc.p.digital_out();     //set pin to output
         pc.p.low();             //pull low
-        Delay::wait_ms(10);     //give a little time
+        Delay::wait(10_ms);     //give a little time
         auto r = read_all();    //read all pins
         if(r != pc.v){          //if something wrong on this pin
             ret = false;        //any pin fail, fail all test
             pinok = false;      //fail this pin
         }
         pc.p.digital_in();      //back to input
-        Delay::wait_ms(10);     //wait a little
+        Delay::wait(10_ms);     //wait a little
 
         //print this pin header info
-        printf("[%02u] %-10s%-5d", i++, pc.name, pc.pn);
+        info.printf("[%02u] %-10s%-5d", i++, pc.name, pc.pn);
         //each pin info
         for(auto j = 15; j >= 0; j--){
             if(r & (1<<j)) printf(" -"); else printf("%2d", pins[j].pn);
             if(j != 8) continue;
             //now switching to pins on other side
             //if pins connected to 'other side'- print space, else |
-            printf(" %s", ((r&0xFF00)==0xFF00 || (r&0xFF)==0xFF) ? "|" : " ");
+            info.printf(" %s", ((r&0xFF00)==0xFF00 || (r&0xFF)==0xFF) ? "|" : " ");
         }
         //pin ok or fail
-        printf("  %s\r\n", pinok ? "OK" : ":(" );
+        info.printf("  %s\r\n", pinok ? "OK" : ":(" );
     }
     //print test result
-    printf("\r\n=>%s!\r\n", ret ? "PASS" : "FAIL" );
+    info.printf("\r\n=>%s!\r\n", ret ? "PASS" : "FAIL" );
     return ret;
 }
 
@@ -133,7 +129,7 @@ int main()
         //button pressed
         cls();
         check_all();
-        Delay::wait_s(2);
+        Delay::wait(2_sec);
     }
 }
 

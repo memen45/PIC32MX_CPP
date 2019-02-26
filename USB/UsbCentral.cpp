@@ -43,12 +43,43 @@ attach      () -> void
             {
             Usb usb; Irq irq;
 
+            //set isr function for usb isr (lambda functions work fine)
+            Irq::isr_func(irq.USB,
+            []{
+                Usb usb;
+                uint32_t flags = usb.flags();   //get all flags
+                //get stat before trn flag cleared (which advances sie buffer)
+                uint8_t stat = usb.stat();
+                usb.flags_clr(flags);           //clear all flags we found
+
+                // * * * * DEBUG * * * *
+                //ignore t1msec,sof flag for debug (too many)
+                //print all flags and masked flags (enabled irqs)
+
+                // UsbDebug dbg;
+                // if( dbg.debug() ){
+                //     if( flags bitand (compl (usb.T1MSEC bitor usb.SOF)) ){
+                //     dbg.debug( FILE_BASENAME, __func__,
+                //         "flags: %08x  masked: %08x",
+                //         flags, flags bitand usb.irqs()
+                //         );
+                //     }
+                // }
+
+                // * * * * DEBUG * * * *
+
+                //only need enabled irq flags, stat only valid if TRN set
+                UsbCentral::service(flags bitand usb.irqs(), stat);
+            }
+            );
+
+
             usb.power(usb.USBPWR, true);        //power on (inits bdt table)
             ep0.init();                         //endpoint 0 init here
             UsbCentral::service(0xFF);          //others, 0xFF=reset endpoint
             usb.control(usb.USBEN, true);       //enable usb module
             usb.irqs(usb.SOF|usb.T1MSEC|usb.TRN|usb.IDLE); //start irq's
-            irq.init(irq.USB, Usb::usb_irq_pri, Usb::usb_irq_subpri, true);
+            irq.init(irq.USB, usb.usb_irq_pri, usb.usb_irq_subpri, true);
             irq.global(true);                   //global irq's on
             }
 
@@ -63,13 +94,13 @@ init        (bool tf) -> bool
             UsbDebug dbg;
             if( dbg.debug() ){
                 dbg.debug( FILE_BASENAME, __func__,
-                    "%s@W@k", tf ? "@K@gusb started" : "@W@rusb stopped" );
+                    "%s{Wk}", tf ? "{Kg}usb started" : "{Wr}usb stopped" );
             }
             // * * * * DEBUG * * * *
 
             bool wason = Usb::power(Usb::USBPWR);
             detach();
-            if(wason) Delay::wait_ms(200);      //if was already on, wait
+            if(wason) Delay::wait(200_ms);      //if was already on, wait
             //if no vbus pin voltage or tf=false (wanted only detach)
             if(not Usb::vbus_ison() or not tf) return false;
             m_timer1ms = 0;                     //reset 1ms timer

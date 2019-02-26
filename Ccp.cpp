@@ -72,8 +72,8 @@ CCPXBUF = 32 //offset in words from ccp1con1
 
 //=============================================================================
             Ccp::
-Ccp         (CCPX e)
-            : m_ccpx_con((vu32ptr)CCP1CON1 + (e * CCPX_SPACING))
+Ccp         (uint8_t n)
+            : m_ccpx_con((vu32ptr)CCP1CON1 + (n * CCPX_SPACING))
             {
             }
 
@@ -200,12 +200,30 @@ out_sync    (bool tf) -> void
             setbit(m_ccpx_con + CCPXCON2, 1<<OENSYNC, tf);
             }
 
+// MCCP use fixed pins OCMnA-F
 //=============================================================================
             auto Ccp::
 out_pins    (OUTPINS e) -> void
             {
             clrbit(m_ccpx_con + CCPXCON2, OCPINS_MASK<<OCPINS_SHIFT);
             setbit(m_ccpx_con + CCPXCON2, e<<OCPINS_SHIFT);
+            }
+
+// SCCP uses PPS OCM4-9 (OCAEN also has to be set, reset val is 1 though)
+// to set a pps pin back to lat, use optional bool value of false
+// sccp4.out_pin(Pins::RP13); //set pin to use pps out OCM4
+// sccp4.out_pin(Pins::RP13, false); //set pin to use pps out PPSLAT
+// can set multiple pins to use the same OCMn, need to call this function
+// for each pin to set
+//=============================================================================
+            auto Sccp::
+out_pin     (Pins::RPN e, bool tf) -> void
+            {
+            out_pins(OCA); //OCAEN
+            Pins p{e, Pins::OUT};
+            //OCM4-9, figure out which one
+//            uint8_t n = ccp_num() - 4 + (uint8_t)p.OCM4;
+//            p.pps_out( tf ? (Pins::PPSOUT)n : Pins::PPSLAT );
             }
 
 //=============================================================================

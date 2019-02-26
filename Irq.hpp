@@ -160,9 +160,6 @@ init        (IRQ_NR, uint8_t, uint8_t, bool) -> void;
             static auto
 init        (irq_list_t*, uint8_t) -> void;
             
-            static auto
-isr_fun     (IRQ_NR, std::function<void()>) -> void;
-            
             enum 
 MVEC_MODE   : bool { 
             SVEC = false, MVEC 
@@ -171,21 +168,18 @@ MVEC_MODE   : bool {
             static auto
 enable_mvec (MVEC_MODE) -> void;
 
+            using
+//isrfunc_t   = void(*)(void);
+isrfunc_t   = std::function<void()>;
+
+            static auto
+isr_func    (IRQ_NR, isrfunc_t) -> void;
+
+            static auto
+isr         (uint8_t) -> void;
+
+    private:
+
+            static isrfunc_t m_isrfuncs[UART5_TX + 1];
+
 };
-
-////////////////////////////////////////////////////////////////////////////////
-// ISR MACRO
-// usage- ISR(ADC){ /* isr code here */ }
-#define ISR(nam) extern "C" __attribute((vector((int)Irq::m_lookup_vn[Irq::nam]),interrupt))\
-    void nam##_ISR()
-
-////////////////////////////////////////////////////////////////////////////////
-// ISR MACRO - auto clear irq flag
-// usage- ISRautoflag(ADC){ /* isr code here */ }}
-// NOTE- need }} to close isr
-// NOTE flag is cleared at start of isr, do not use if flag needs clearing
-// after a register is read
-#define ISRautoflag(nam) extern "C" \
-    __attribute((vector((int)Irq::m_lookup_vn[Irq::nam]),interrupt)) \
-    void nam##_ISR(){ Irq::flag_clr(Irq::nam); \
-

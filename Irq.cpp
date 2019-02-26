@@ -1,7 +1,5 @@
 #include "Irq.hpp"
 
-#include "Irq_isr.hpp"
-
 enum {
     INTCON = 0xBF881000,
         M_VEC = 12,
@@ -18,6 +16,11 @@ enum {
     IPC_BASE = 0xBF881090
 };
 
+// vector function pointer storage
+//=============================================================================
+Irq::isrfunc_t Irq::m_isrfuncs[Irq::UART5_TX + 1] = {0};
+
+// vector number to irq number lookup table
 constexpr uint8_t Irq::m_lookup_vn[];
 
 //=============================================================================
@@ -102,11 +105,13 @@ flag        (IRQ_NR e) -> bool
             return anybit(IFS_BASE + ((e / 32) * 16), 1u<<(e % 32));
             }
 
+// enable/disable irq, cannot enable if no isr funtion set
 //=============================================================================
             auto Irq::
 on          (IRQ_NR e, bool tf) -> void
             {
-            setbit(IEC_BASE + ((e / 32) * 16), 1u<<(e % 32), tf);
+            setbit(IEC_BASE + ((e / 32) * 16), 1u<<(e % 32),
+                tf and m_isrfuncs[e] );
             }
 //=============================================================================
             auto Irq::
@@ -144,21 +149,77 @@ init        (irq_list_t* arr, uint8_t sz) -> void
             for(; sz; arr++, sz--) init(arr->irqvn, arr->p, arr->s, arr->en);
             }
 
-/* Note that on the PIC32MX795F512L and alike not every isr flag has its own 
- * vector. Only one callback function can exist for one vector, last is used, 
- * so make sure a callback function deals with all possible isr causes for 
- * that vector */
-//=============================================================================
-            auto Irq::
-isr_fun     (IRQ_NR e, std::function<void()> callback) -> void
-            {
-            isr_callback[m_lookup_vn[e]] = callback;
-            }
-
 //enables multi vectored interrupts
 //=============================================================================
             auto Irq::
 enable_mvec (MVEC_MODE m) -> void
             {
             setbit(INTCON, 1 << M_VEC, m);
+            }
+
+
+//=============================================================================
+// ISR functions
+//=============================================================================
+
+
+// set isr function (or unset)
+// if unset, make sure irq is off
+//=============================================================================
+            auto Irq::
+isr_func    (IRQ_NR n, isrfunc_t f) -> void
+            {
+            m_isrfuncs[m_lookup_vn[n]] = f;
+            if(not f) on(n, false);
+            }
+
+// run isr function
+// run function pointer if not 0,
+// clear flag after function is run
+// in case no function pointer, turn off irq (should not happen, but...)
+//=============================================================================
+            auto Irq::
+isr         (uint8_t vn) -> void
+            {
+            isrfunc_t f = m_isrfuncs[ vn ];
+            if( f ){
+                f();
+                // flag_clr( (IRQ_NR)vn );      // cannot clear flag as irq nr is unknown
+            } else {
+                on((IRQ_NR)vn, false);
+            }
+            }
+
+// using _DefaultInterrupt for all interrupts- already a weak function used
+// in all vector locations, we just override it here
+// function pointers used to run an isr function
+// can still use priority levels, shadow set, same as using an
+// isr function for each interrupt except there is only one isr function
+// (isr will auto select shadow set, set ipl level)
+//
+// cannot use single vector mode without losing the ability to use SRS
+// while still using priority levels, also cannot use multi-vector with a
+// vector spacing of 0 as multi vector does not work unless spacing is >0
+//
+// the biggest downside is a waste of ~800 bytes as each vector takes 8 bytes
+// and they all end up in the same place, also the isr function table is ~400
+// bytes of ram
+//
+// the advantage is the following code is all we need to get the isr's
+// working- we simply register an isr function for a vector through a call
+// to 'Irq::isr_func()', where the passed function can be a lambda if wanted
+// isr flags will also be cleared automatically
+// the function pointer can be changed so can have different functions for
+// a vector when wanted
+//
+// isr functions will have to be registered before an irq is enabled, although
+// the isr() function will check for a non-zero function pointer and disable
+// the irq if there is no function pointer set for the vector
+//=============================================================================
+            extern "C"
+            auto __attribute__((interrupt))
+_DefaultInterrupt (void) -> void
+            {
+            uint8_t vn = Reg::val8(INTSTAT); //SIRQ<7:0> = INTSTAT<7:0>
+            Irq::isr(vn);
             }

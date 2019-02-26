@@ -21,7 +21,9 @@
                 MKSTR( m_blue ),    MKSTR( m_magenta ),
                 MKSTR( m_cyan ),    MKSTR( m_white ),
 
-                MKSTR( m_reset ),   {0,0}
+                MKSTR( m_reset ),   MKSTR( m_italic ),
+                MKSTR( m_normal ),  MKSTR( m_underline ),
+                {0,0}
             };
 
 
@@ -35,27 +37,42 @@ markup      (char* str, size_t siz) -> bool
             char buf[siz];
             size_t idxbuf = 0;
             bool any = false;
+
             for(; idxbuf < siz-2; str++){
-                buf[idxbuf] = *str;
-                if(not *str) break;
-                if(*str != m_trigger){ idxbuf++;  continue; }
+                buf[idxbuf] = *str;     //always copy (will get 0 terminator)
+                if(not *str) break;     //0 terminator found
+                if(*str != m_trigger){  //no markup
+                    idxbuf++;           //keep copied byte
+                    continue;           //next
+                }
+
                 //triggered
-                any = true;
-                str++; //skip '@'
-                if(*str == m_trigger) continue; //"@@" ,skip second @
-                if(*str == m_turnoff) m_ison = false;
-                if(*str == m_turnon) m_ison = true;
-                if(not m_ison) continue;
-                for(auto i = 0; m_codes[i].siz; i++){
-                    if(m_codes[i].ansistr[0] != *str) continue;
-                    if(idxbuf+m_codes[i].siz >= siz-2) return strip(str_copy);
-                    memcpy((void*)&buf[idxbuf], m_codes[i].ansistr+1, m_codes[i].siz);
-                    idxbuf += m_codes[i].siz;
+                any = true;             //flag the need to do a memcpy later
+                str++;                  //skip trigger char
+
+                if(*str == m_trigger) continue; //was escaped markup char
+
+                //now inside of markup, get all until find markup end char
+                for( ; idxbuf < siz-2; str++ ){
+                    if( not *str ) return strip(str_copy);  //0 terminator in markup
+                    if(*str == m_trigger_end ) break;       //markup done
+                    if(*str == m_turnoff) m_ison = false;   //check for on/off
+                    if(*str == m_turnon) m_ison = true;
+                    if(not m_ison) continue;                //skip markup if off
+
+                    //check for valid markup char, insert string data if found
+                    for(auto i = 0; m_codes[i].siz; i++){
+                        if(m_codes[i].ansistr[0] != *str) continue; //no match
+                        if(idxbuf+m_codes[i].siz >= siz-2) return strip(str_copy); //cannot fit
+                        memcpy((void*)&buf[idxbuf], m_codes[i].ansistr+1, m_codes[i].siz);
+                        idxbuf += m_codes[i].siz;
+                        break;
+                    }
                 }
             }
             if(idxbuf >= siz-1) return strip(str_copy);
             if(any) memcpy((void*)str_copy, buf, idxbuf+1);
-            return true;
+            return true; //markup success
             }
 
 //strip markup from string (modify string in place)
@@ -65,11 +82,12 @@ markup      (char* str, size_t siz) -> bool
 strip       (char* src) -> bool
             {
             char* dst = src;
-            // "@@"" -> "@""  "@W" -> ""
+            // "{{"" -> "{"  "{Wk}" -> ""
             while(*dst = *src, *src){
-                if(*src != m_trigger or *++src == m_trigger) dst++;
-                src++;
+                if( *src++ != m_trigger ){ dst++; continue; }
+                if( *src == m_trigger){ src++; dst++; continue; }
+                while( *src and *src++ != m_trigger_end );
             }
-            return false;
+            return false; //markup failed
             }
 

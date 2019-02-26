@@ -4,7 +4,7 @@
 #include "Sprintf.hpp"
 #include <cstdint>
 
-struct UsbCdcAcm : private Sprintf {
+struct UsbCdcAcm : private Sprintf<> {
 
             using
 notify_t    = UsbEP::notify_t;

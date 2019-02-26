@@ -32,3 +32,11 @@ namespace Basename {
 #define FILE_BASENAME &__FILE__[ \
         Basename::const_expr_value< Basename::basename(__FILE__) >::value \
     ]
+
+
+// size
+template <typename T, std::size_t N>
+constexpr std::size_t size(const T (&array)[N]) noexcept
+{
+    return N;
+}

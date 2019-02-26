@@ -1,4 +1,3 @@
-#include "Irq_isr.hpp"
 #include "Irq.hpp"
 
 /*
@@ -12,8 +11,7 @@
 // usage- ISR_DEFAULT(ADC)
 #define ISR_DEFAULT(nam) extern "C" __attribute((vector((int)Irq::m_lookup_vn[Irq::nam]),interrupt))  \
     void nam##_ISR() {                                                      \
-        if (isr_callback[Irq::m_lookup_vn[Irq::nam]])                       \
-        isr_callback[Irq::m_lookup_vn[Irq::nam]]();                         \
+        Irq::isr(Irq::m_lookup_vn[Irq::nam]);                               \
     }                                                                       \
 
 ISR_DEFAULT(TIMER_2)
