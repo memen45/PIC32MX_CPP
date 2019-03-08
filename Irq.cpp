@@ -175,7 +175,7 @@ isr_func    (IRQ_VN n, isrfunc_t f) -> void
             if(not f) on(n, false);
             }
 
-// run isr function
+// run isr function (header declaration set to inline)
 // get vector number from SIRQ, run function pointer if not 0,
 // clear flag after function is run
 // in case no function pointer, turn off irq (should not happen, but...)

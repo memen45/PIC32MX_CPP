@@ -171,7 +171,7 @@ pps_out     (PPSOUT) -> void;
 an_num      () -> uint8_t;           //get adc #
 
 
-            private:
+    private:
 
             static auto
 pps_do      (uint32_t, uint8_t) -> void;
