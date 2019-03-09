@@ -3,30 +3,32 @@
 #include "Reg.hpp"
 #include "Sys.hpp"
 
-enum { //offsets from base address, in words
-TRIS = 4,
-PORT = 8,
-LAT = 12,
-ODC = 16,
-CNPU = 20,
-CNPD = 24,
-CNCON = 28,
-CNEN0 = 32,
-CNSTAT = 36,
-CNEN1 = 40,
-CNF = 44
+//offsets from base address, in words (m_pt is a uint32 pointer)
+enum {
+    ANSEL = 0,
+    TRIS = 4,
+    PORT = 8,
+    LAT = 12,
+    ODC = 16,
+    CNPU = 20,
+    CNPD = 24,
+    CNCON = 28,
+    CNEN0 = 32,
+    CNSTAT = 36,
+    CNEN1 = 40,
+    CNF = 44
 };
 
 enum {
-ANSELX_SPACING = 64, //spacing in words
-ANSELA = 0xBF802BB0,
-//CNCONx
-    ON = 15,
-    CNSTYLE = 11,
-RPCON = 0xBF802A00,
-    IOLOCK = 11,
-RPINR1 = 0xBF802A20,
-RPOR0 = 0xBF802B10
+    PORT_SPACING = 64, //spacing in words
+    PORT_BASE = 0xBF802BB0,
+    //CNCONx
+        ON = 15,
+        CNSTYLE = 11,
+    RPCON = 0xBF802A00,
+        IOLOCK = 11,
+    RPINR1 = 0xBF802A20,
+    RPOR0 = 0xBF802B10
 };
 
 //IOMODE
@@ -52,7 +54,7 @@ enum : uint8_t { ACTL = 1<<2  }; //IOMODE ACTL bit (active low bit)
             Pins::
 Pins        (RPN e, IOMODE m)
             :
-            m_pt((vu32ptr)ANSELA+((e>>PTSHIFT) bitand PTMASK)*ANSELX_SPACING),
+            m_pt((vu32ptr)PORT_BASE+((e>>PTSHIFT) bitand PTMASK)*PORT_SPACING),
             m_pn(1<<(e bitand PNMASK)),
             m_lowison(m bitand ACTL),
             m_rpn((uint8_t)((e>>RPSHIFT) bitand RPMASK)),
@@ -166,7 +168,7 @@ lowison     (bool tf) -> void
 digital_in  () -> void
             {
             setbit(m_pt + TRIS, m_pn);
-            clrbit(m_pt, m_pn); //ANSELx
+            clrbit(m_pt + ANSEL, m_pn);
             }
 
 //=============================================================================
@@ -174,7 +176,7 @@ digital_in  () -> void
 analog_in   () -> void
             {
             setbit(m_pt + TRIS, m_pn);
-            setbit(m_pt, m_pn); //ANSELx
+            setbit(m_pt + ANSEL, m_pn);
             }
 
 //=============================================================================
@@ -182,7 +184,7 @@ analog_in   () -> void
 digital_out () -> void
             {
             clrbit(m_pt + TRIS, m_pn);
-            clrbit(m_pt, m_pn); //ANSELx
+            clrbit(m_pt + ANSEL, m_pn);
             }
 
 //=============================================================================

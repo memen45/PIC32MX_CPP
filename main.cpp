@@ -214,7 +214,7 @@ uint8_t Svg::randcolorn(){
 
 //UsbDebug will use, will also be default for printf
 //(via _mon_putc in UsbDeg.cpp)
-Uart info{Uart::UART2, Pins::C6, Pins::C7, 921600};
+Uart info{Uart::UART2, Pins::C6, Pins::C7, 1000000};
 
 
 //rgb led's struct, use pwm for brightness
