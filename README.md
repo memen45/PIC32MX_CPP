@@ -32,3 +32,4 @@ The following modules are present in the current repository:
 | Vdetect | not (yet) | no |
 | Wdt     | not (yet) | no |
 
+Peripheral access library for PIC32MX795F512L and alike PIC32MX family microcontrollers. Written in C++ which is supported now by the Microchip XC32++ compiler by default.
