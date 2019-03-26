@@ -25,7 +25,7 @@ PWRCON = 0xBF802710,
 
 //-----------------------------------------------------------------private-----
 //save rcon on boot (only one time)
-static uint32_t boot_flags;
+static uint32_t reset_flags;
 
 //RCON
 //save flags, clear flags, return reset cause
@@ -33,15 +33,16 @@ static uint32_t boot_flags;
             auto Resets::
 cause       () -> CAUSE
             {
-            //save flags only if not already saved
-            //boot_flags var will be 0 on any reset as c runtime will clear
+            //save flags only if not already saved, or if RCON is not 0
+            //reset_flags var will be 0 on any reset as c runtime will clear
             //before this function can run
-            if(boot_flags == 0){
-                boot_flags = val(RCON);  //save
+            //and if RCON is not 0, then something changed (as we clear RCON)
+            if(reset_flags == 0 || val(RCON) ){
+                reset_flags = val(RCON);  //save
                 val(RCON, 0);    //then clear all flags (for next reset)
             }
             //check for por first- specific combo
-            if(boot_flags == ((1u<<PORIO) | (1<<PORCORE) | BOR | POR)){
+            if(reset_flags == ((1u<<PORIO) | (1<<PORCORE) | BOR | POR)){
                 return POR;
             }
             //then go through flags high bits to low bits
@@ -49,7 +50,7 @@ cause       () -> CAUSE
             // because sleep also has idle set)
             uint8_t ret = EXTR;
             for(; ret > POR; ret >>= 1){
-                if(boot_flags bitand ret) break;
+                if(reset_flags bitand ret) break;
             }
             return (CAUSE)ret;
             }
@@ -59,7 +60,7 @@ cause       () -> CAUSE
             auto Resets::
 config_err  () -> bool
             {
-            return boot_flags bitand (1<<BCFGERR | 1<<BCFGFAIL | 1<<CMR);
+            return reset_flags bitand (1<<BCFGERR | 1<<BCFGFAIL | 1<<CMR);
             }
 
 //RSWRST

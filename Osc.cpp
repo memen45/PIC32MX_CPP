@@ -6,6 +6,7 @@
 #include "Resets.hpp"
 #include "Sys.hpp"
 #include "Irq.hpp"
+#include "Delay.hpp"
 
 enum {
 OSCCON = 0xBF802680,
@@ -92,6 +93,9 @@ clk_lock    () -> void
             setbit(OSCCON, 1<<CLKLOCK);
             }
 
+            //TODO
+            //get reset flags after wake from sleep by calling resets::cause()
+
 //=============================================================================
             auto Osc::
 sleep       () -> void
@@ -105,13 +109,23 @@ sleep       () -> void
             Sys::unlock();
             clrbit(OSCCON, 1<<SLPEN);
             Sys::lock();
+            Resets::cause(); //update resets cause
             }
 
+
+            //to keep from getting locked out
+            //(as MCLR does not wake up micro from reten sleep mode)
+            //wait before using retention sleep if POR or EXTR
+            //so programmer will be able to power/reset without problem if
+            //this function is used right away
+            //for rev A1 and A2 chips (40ms listed as time to wait)
 //=============================================================================
             auto Osc::
 sleep_reten () -> void
             {
             //reten bit only enabled here, then disabled when wakes
+            Resets::CAUSE rc = Resets::cause();
+            if( rc == Resets::POR or rc == Resets::EXTR ) Delay::wait( 200_ms );
             Resets::reten(true);
             sleep();
             Resets::reten(false);
@@ -123,6 +137,7 @@ idle        () -> void
             {
             Wdt::reset();
             __asm__ __volatile__ ("wait");
+            Resets::cause(); //update resets cause
             }
 
 //=============================================================================
