@@ -94,20 +94,26 @@ int main()
     int steps = 400;
     uint32_t speed = 2_ms;
 
-    for(;;){
+    auto check_sw3 = [&en](){
         if( sw3.ison() ){
             en = not en;
             while( sw3.ison() );
-            Delay::wait( 50_ms );
+            Delay::wait( 50_ms ); //blocking
+            info.printf("stepper: %s{W}\r\n", en ? "{G}ON" : "{R}OFF" );
         }
-        //adc vals 0-4095 -> speed range 2_ms to 2_ms+(4095us*2)
-        //2000us to 10190us
-        speed = (pot.adcval()<<1) + 2_ms;
+    };
+
+    for(;;){
+        check_sw3();
+        //adc vals 0-4095 -> speed range 2_ms to 2_ms+(4095us)
+        //speed = 2000us to 6095us
+        speed = pot.adcval() + 2_ms;
 
         if( en ){
-            info.printf( "step: {G}%+d{W}  speed: {G}%dus{W}\r\n", steps, speed );
+            info.printf( "step: {G}%+d{W}  speed: {G}%d us{W}\r\n", steps, speed );
             s.step( steps, speed );
-            Delay::wait( 2_sec );
+            Delay d{2_sec}; //non-blocking
+            while( check_sw3(), en and not d.expired() );
         }
         steps = -steps;
     }
