@@ -22,6 +22,7 @@
 
 Uart info{Uart::UART2, Pins::C6, Pins::C7, 1000000};
 Pins sw3{ Pins::C4, Pins::INPU }; //enable/disable stepper test
+Pins pot{ Pins::AN14 }; //stepper speed, check pot val via adc
 Pins stepper_pins[4]{
     {Pins::C0, Pins::OUT}, //AI1
     {Pins::C2, Pins::OUT}, //AI2
@@ -86,7 +87,7 @@ int main()
 
     //+ turn on markup
     //! reset colors/attributes/cls/home
-    info.printf("{+!Y}\r\nTesting {/M_}Stepper Motor driver{|W}\r\n");
+    info.printf("{+!Y}\r\nTesting {/M}Stepper Motor driver{|W}\r\n");
 
     StepperDriver s( stepper_pins );
     bool en = false;
@@ -99,8 +100,12 @@ int main()
             while( sw3.ison() );
             Delay::wait( 50_ms );
         }
+        //adc vals 0-4095 -> speed range 2_ms to 2_ms+(4095us*2)
+        //2000us to 10190us
+        speed = (pot.adcval()<<1) + 2_ms;
+
         if( en ){
-            info.printf( "step {G}%d{W}\r\n", steps );
+            info.printf( "step: {G}%+d{W}  speed: {G}%dus{W}\r\n", steps, speed );
             s.step( steps, speed );
             Delay::wait( 2_sec );
         }
