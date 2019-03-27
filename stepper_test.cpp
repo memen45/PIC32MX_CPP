@@ -97,12 +97,15 @@ int main()
     auto check_sw3 = [&en](){
         if( sw3.ison() ){
             en = not en;
-            while( sw3.ison() );
-            Delay::wait( 50_ms ); //blocking
+            while( sw3.ison() ); //wait for release
+            Delay::wait( 50_ms ); //blocking (debounce)
             info.printf("stepper: %s{W}\r\n", en ? "{G}ON" : "{R}OFF" );
         }
     };
 
+    //2 rotations CW, 2 rotations CCW, repeat
+    //sw3 for on/off
+    //pot controls step speed 2000us-6095us
     for(;;){
         check_sw3();
         //adc vals 0-4095 -> speed range 2_ms to 2_ms+(4095us)
