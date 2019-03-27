@@ -61,23 +61,6 @@ struct StepperDriver {
         stop();
     }
 
-//    void hstep(int n, uint32_t dly = 5_ms){
-//        static uint8_t step_idx;
-//        if( n == 0 ) return;
-//        int dir = n > 0 ? 1 : -1;
-//        if( n < 0 ) n = -n;
-//        if( dly < 2_ms ) dly = 2_ms;
-//        while(n--){
-//            for(auto i = 0; i < 4; i++){
-//                m_pins[i].latval( m_hstep_table[step_idx][i] );
-//            }
-//            step_idx += dir;
-//            step_idx and_eq 7;
-//            Delay::wait( dly );
-//        }
-//        stop();
-//    }
-
     private:
 
     Pins (&m_pins)[4];
@@ -85,10 +68,6 @@ struct StepperDriver {
     const bool m_step_table[4][4]{
         {1,0,0,1}, {0,1,0,1}, {0,1,1,0}, {1,0,1,0}
     };
-//    const bool m_hstep_table[8][4]{
-//        {1,0,0,1},{0,0,0,1},{0,1,0,1},{0,1,0,0},
-//        {0,1,1,0},{0,0,1,0},{1,0,1,0},{1,0,0,0}
-//    };
 
 };
 
