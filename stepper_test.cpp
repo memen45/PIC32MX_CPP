@@ -22,15 +22,23 @@
 
 Uart info{Uart::UART2, Pins::C6, Pins::C7, 1000000};
 Pins sw3{ Pins::C4, Pins::INPU }; //enable/disable stepper test
+Pins stepper_pins[4]{
+    {Pins::C0, Pins::OUT}, //AI1
+    {Pins::C2, Pins::OUT}, //AI2
+    {Pins::B0, Pins::OUT}, //BI1
+    {Pins::B2, Pins::OUT}, //BI2
+};
 
 struct StepperDriver {
+
+    StepperDriver( Pins (&pins)[4] ) : m_pins(pins) {}
 
     void stop(void){
         for( auto& p : m_pins ) p.off();
     }
 
     void brake(void){
-        //brake - connect one coil together (high in this case)
+        //brake - short one coil together (high in this case)
         //via both AI pins enabled (since pwm is tied high)
         m_pins[0].on();
         m_pins[1].on();
@@ -71,12 +79,9 @@ struct StepperDriver {
 //    }
 
     private:
-    Pins m_pins[4]{
-        {Pins::C0, Pins::OUT}, //AI1
-        {Pins::C2, Pins::OUT}, //AI2
-        {Pins::B0, Pins::OUT}, //BI1
-        {Pins::B2, Pins::OUT}, //BI2
-    };
+
+    Pins (&m_pins)[4];
+
     const bool m_step_table[4][4]{
         {1,0,0,1}, {0,1,0,1}, {0,1,1,0}, {1,0,1,0}
     };
@@ -104,7 +109,7 @@ int main()
     //! reset colors/attributes/cls/home
     info.printf("{+!Y}\r\nTesting {/M_}Stepper Motor driver{|W}\r\n");
 
-    StepperDriver s;
+    StepperDriver s( stepper_pins );
     bool en = false;
     int steps = 400;
     uint32_t speed = 2_ms;
@@ -116,7 +121,7 @@ int main()
             Delay::wait( 50_ms );
         }
         if( en ){
-            info.printf( "step {/G}%d{|W}\r\n", steps );
+            info.printf( "step {G}%d{W}\r\n", steps );
             s.step( steps, speed );
             Delay::wait( 2_sec );
         }
