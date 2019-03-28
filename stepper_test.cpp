@@ -22,6 +22,7 @@
 
 Uart info{Uart::UART2, Pins::C6, Pins::C7, 1000000};
 Pins sw3{ Pins::C4, Pins::INPU }; //enable/disable stepper test
+Pins sw2{ Pins::C10, Pins::INPU }; //brake enable/disable
 Pins pot{ Pins::AN14 }; //stepper speed, check pot val via adc
 Pins stepper_pins[4]{
     {Pins::C0, Pins::OUT}, //AI1
@@ -39,6 +40,7 @@ struct StepperDriver {
     }
 
     void brake(void){
+        stop();
         //brake - short one coil together (high in this case)
         //via both AI pins enabled (since pwm is tied high)
         m_pins[0].on();
@@ -90,33 +92,44 @@ int main()
     info.printf("{+!Y}\r\nTesting {/M}Stepper Motor driver{|W}\r\n");
 
     StepperDriver s( stepper_pins );
-    bool en = false;
+    bool en = false, brake = false;;
     int steps = 400;
     uint32_t speed = 2_ms;
 
-    auto check_sw3 = [&en](){
+    auto check_sw = [&](){
         if( sw3.ison() ){
             en = not en;
             while( sw3.ison() ); //wait for release
             Delay::wait( 50_ms ); //blocking (debounce)
             info.printf("stepper: %s{W}\r\n", en ? "{G}ON" : "{R}OFF" );
         }
+        if( sw2.ison() ){
+            brake = not brake;
+            while( sw2.ison() ); //wait for release
+            Delay::wait( 50_ms ); //blocking (debounce)
+            info.printf("brake: %s{W}\r\n", brake ? "{G}ON" : "{R}OFF" );
+            if( not en ) { if( brake ) s.brake(); else s.stop(); }
+        }
     };
 
+
     //2 rotations CW, 2 rotations CCW, repeat
-    //sw3 for on/off
+    //sw3 for on/off, sw2 for brake on/off
     //pot controls step speed 2000us-6095us
     for(;;){
-        check_sw3();
+        check_sw();
         //adc vals 0-4095 -> speed range 2_ms to 2_ms+(4095us)
         //speed = 2000us to 6095us
         speed = pot.adcval() + 2_ms;
-
         if( en ){
             info.printf( "step: {G}%+d{W}  speed: {G}%d us{W}\r\n", steps, speed );
-            s.step( steps, speed );
+            int i = steps > 0 ? steps : -steps;
+            for(; en and i; i--, check_sw()){
+                s.step( steps > 0 ? 1 : -1, speed );
+            }
             Delay d{2_sec}; //non-blocking
-            while( check_sw3(), en and not d.expired() );
+            while( check_sw(), en and not d.expired() ); //check switches while waiting
+            if( brake ) s.brake();
         }
         steps = -steps;
     }
