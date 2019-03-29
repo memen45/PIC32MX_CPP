@@ -102,7 +102,7 @@ int main()
     StepperDriver s( stepper_pins, 200 );
     bool en = false, brake = false;;
     int steps = 400; //2 turns
-    uint32_t speed = 150; //rpm (fastest)
+    uint32_t speed = 150; //rpm (fastest can do in current config)
 
     auto check_sw = [&](){
         if( sw3.ison() ){
