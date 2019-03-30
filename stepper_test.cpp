@@ -9,6 +9,10 @@
 
  stdby, pwma, pwmb - all tied to vcc
  vm - using 9v battery
+ C0 = AI1
+ C2 = AI2
+ B0 = BI1
+ B2 = BI2
 
 */
 
@@ -20,64 +24,74 @@
 #include "Resets.hpp"
 #include "Uart.hpp"
 
+//uart for info
 Uart info{Uart::UART2, Pins::C6, Pins::C7, 1000000};
+
+//pins
 Pins sw3{ Pins::C4, Pins::INPU };   //enable/disable stepper test
 Pins sw2{ Pins::C10, Pins::INPU };  //brake enable/disable
+Pins sw1{ Pins::B9, Pins::INPU };   //stepper mode
 Pins pot{ Pins::AN14 };             //set stepper speed
-Pins stepper_pins[4]{               //stepper pins
-    {Pins::C0, Pins::OUT}, //AI1
-    {Pins::C2, Pins::OUT}, //AI2
-    {Pins::B0, Pins::OUT}, //BI1
-    {Pins::B2, Pins::OUT}, //BI2
-};
 
+//stepper class
 struct StepperDriver {
 
-    StepperDriver( Pins (&pins)[4], uint16_t steps )
-    : m_pins(pins), m_steps_rev(steps)
+    StepperDriver( Pins::RPN ai1, Pins::RPN ai2, Pins::RPN bi1, Pins::RPN bi2,
+        uint16_t steps_rev )
+    : m_AI1(ai1, Pins::OUT), m_AI2(ai2, Pins::OUT),
+      m_BI1(bi1, Pins::OUT), m_BI2(bi2, Pins::OUT),
+      m_steps_rev(steps_rev)
     {
     }
 
+    //stepper modes- One Phase On, Two Phase On
+    enum MODE { PHASEON1, PHASEON2 };
+
+    void mode(MODE m){ m_mode = m; }
+    MODE mode() const { return m_mode; }
+
+    //stop stepper
     void stop(void){
-        for( auto& p : m_pins ) p.off();
+        //if brake on, brake w/both AI high as pwm's are tied to Vcc
+        m_AI1.latval( m_brake ); m_AI2.latval( m_brake );
+        m_BI1.off(); m_BI2.off();
     }
 
-    void brake(void){
-        stop();
-        //brake - short one coil together (high in this case)
-        //via both AI pins enabled (since pwm is tied high)
-        m_pins[0].on();
-        m_pins[1].on();
-    }
+    //set/get brake enable
+    void brake(bool tf){ m_brake = tf; }
+    bool brake(void) const { return m_brake; }
 
+    //step the motor
     void step(int n, uint32_t rpm = 150){
-        static uint8_t step_idx;
-        if( n == 0 ) return;
-        int dir = n > 0 ? 1 : -1;
-        if( n < 0 ) n = -n;
-        //if( dly < 2_ms ) dly = 2_ms;
-        if( rpm > 150 ) rpm = 150;
-        //dly in us calculated from rpm
-        uint32_t dly = 60000000 / (rpm * m_steps_rev);
+        static uint8_t step_idx;    //keep track of where we are
+        if( n == 0 ) return;        //nothing to do
+        int dir = n > 0 ? 1 : -1;   //which dir through step table
+        if( n < 0 ) n = -n;         //make number of steps positive
+        if( rpm > 150 ) rpm = 150;  //max rpm for this config
+        uint32_t dly = 60000000 / (rpm * m_steps_rev); //rpm -> us delay
         while(n--){
-            m_pins[0].latval( m_step_table[step_idx][0] ); //AI1
-            m_pins[1].latval( !m_step_table[step_idx][0] ); //AI2
-            m_pins[2].latval( m_step_table[step_idx][1] ); //BI1
-            m_pins[3].latval( !m_step_table[step_idx][1] ); //BI2
-            step_idx += dir;
-            step_idx and_eq 3;
-            Delay::wait( dly );
+            m_AI1.latval( m_step_table[m_mode][step_idx][0] == POS );
+            m_AI2.latval( m_step_table[m_mode][step_idx][0] == NEG );
+            m_BI1.latval( m_step_table[m_mode][step_idx][1] == POS);
+            m_BI2.latval( m_step_table[m_mode][step_idx][1] == NEG );
+            step_idx += dir;    //next step
+            step_idx and_eq 3;  //stay inside table
+            Delay::wait( dly ); //delay to get rpm
         }
-        stop();
+        stop(); //done, stop will turn off all, or brake
     }
 
     private:
 
-    Pins (&m_pins)[4]; //AI1, AI2, BI1,BI2
-    uint16_t m_steps_rev; //steps per rev
-    const bool m_step_table[4][2]{
-        //AI1 (AI2=!AI1), BI1 (BI2=!BI1)
-        {1,0}, {0,0}, {0,1}, {1,1}
+    Pins        m_AI1, m_AI2, m_BI1, m_BI2; //pins used
+    uint16_t    m_steps_rev;                //steps per rev
+    MODE        m_mode{PHASEON1};           //stepper mode
+    bool        m_brake{false};             //brake enable
+
+    enum COIL { OFF, POS, NEG };
+    const COIL m_step_table[2][4][2]{
+        { {POS,OFF}, {OFF,NEG}, {NEG,OFF}, {OFF,POS} }, //PHASEON1
+        { {POS,NEG}, {NEG,NEG}, {NEG,POS}, {POS,POS} }, //PHASEON2
     };
 
 };
@@ -97,26 +111,38 @@ int main()
 
     //+ turn on markup
     //! reset colors/attributes/cls/home
-    info.printf("{+!Y}\r\nTesting {/M}Stepper Motor driver{|W}\r\n");
+    info.printf("{+!M}\r\nStepper Motor driver test{|W}\r\n");
 
-    StepperDriver s( stepper_pins, 200 );
-    bool en = false, brake = false;;
+    StepperDriver s( Pins::C0, Pins::C2, Pins::B0, Pins::B2, 200 );
+    bool en = false;
     int steps = 400; //2 turns
-    uint32_t speed = 150; //rpm (fastest can do in current config)
+    uint32_t speed = 150; //rpm (fastest can do with current config)
 
+    auto debounce = [](Pins& p){
+        Delay d{ 50_ms }; //need 50ms of continuous sw off
+        while( not d.expired() ){
+            if( p.ison() ) d.restart(); //bounce/still pressed, start over
+        }
+
+    };
     auto check_sw = [&](){
         if( sw3.ison() ){
             en = not en;
-            while( sw3.ison() ); //wait for release
-            Delay::wait( 50_ms ); //blocking (debounce)
-            info.printf("stepper: %s{W}\r\n", en ? "{G}ON" : "{R}OFF" );
+            debounce( sw3 );
+            info.printf("%10s: %s{W}\r\n", "stepper", en ? "{G}ON" : "{R}OFF" );
         }
         if( sw2.ison() ){
-            brake = not brake;
-            while( sw2.ison() ); //wait for release
-            Delay::wait( 50_ms ); //blocking (debounce)
-            info.printf("brake: %s{W}\r\n", brake ? "{G}ON" : "{R}OFF" );
-            if( not en ) { if( brake ) s.brake(); else s.stop(); }
+            s.brake( not s.brake() );
+            debounce( sw2 );
+            info.printf("%10s: %s{W}\r\n", "brake", s.brake() ? "{G}ON" : "{R}OFF" );
+            if( not en ) s.stop();
+        }
+        if( sw1.ison() ){
+            s.mode( s.mode() == s.PHASEON1 ? s.PHASEON2 : s.PHASEON1  );
+            debounce( sw1 );
+            info.printf("%10s: {G}%s{W}\r\n", "mode",
+                    s.mode() == s.PHASEON2 ? "PHASEON2" : "PHASEON1" );
+
         }
     };
 
@@ -130,14 +156,14 @@ int main()
         //speed range 150rpm - 23rpm
         speed = (pot.adcval()>>5) + 23;
         if( en ){
-            info.printf( "step: {G}%+d{W}  speed: {G}%d rpm{W}\r\n", steps, speed );
+            info.printf( "%10s: {G}%+d{W}  speed: {G}%d rpm{W}\r\n",
+                    "step", steps, speed );
             int i = steps > 0 ? steps : -steps;
             for(; en and i; i--, check_sw()){
                 s.step( steps > 0 ? 1 : -1, speed );
             }
             Delay d{2_sec}; //non-blocking
             while( check_sw(), en and not d.expired() ); //check switches while waiting
-            if( brake ) s.brake();
         }
         steps = -steps;
     }
