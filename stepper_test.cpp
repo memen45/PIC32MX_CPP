@@ -98,33 +98,39 @@ struct StepperDriver {
 
 int main()
 {
-    //just get/store resets cause (not used here,though)
-    Resets::cause();
 
-    //set osc to 24MHz
-    Osc osc;
+    Resets::cause();                        //get/store resets cause
+
+    Osc osc;                                //set osc to 24MHz
     osc.pll_set(osc.MUL12, osc.DIV4);       //8*12/4 = 24MHz
-    osc.sosc(true);                         //enable sosc if not already
+    osc.sosc(true);                         //enable sosc (fuses may also set)
     osc.tun_auto(true);                     //let sosc tune frc
 
-    info.on(true);  //uart on
+    info.on(true);                          //uart on (after osc set)
 
-    //+ turn on markup
-    //! reset colors/attributes/cls/home
-    info.printf("{+!M}\r\nStepper Motor driver test{|W}\r\n");
+    //markup->  + turn on markup
+    //          ! reset colors/attributes/cls/home
+    //          M magenta foreground
+    //          W white foreground
+    //see Markup.hpp for info
+    info.printf("{+!M}\r\nStepper Motor driver test{W}\r\n");
 
+    //set pins, motor steps per rev
     StepperDriver s( Pins::C0, Pins::C2, Pins::B0, Pins::B2, 200 );
     bool en = false;
-    int steps = 400; //2 turns
-    uint32_t speed = 150; //rpm (fastest can do with current config)
+    int steps = 400;        //2 turns each time
+    uint32_t speed = 150;   //rpm (fastest can do with current config)
 
+    //debounce a switch
     auto debounce = [](Pins& p){
-        Delay d{ 50_ms }; //need 50ms of continuous sw off
+        Delay d{ 50_ms };               //need 50ms of continuous sw off
         while( not d.expired() ){
             if( p.ison() ) d.restart(); //bounce/still pressed, start over
         }
 
     };
+
+    //check all switches
     auto check_sw = [&](){
         if( sw3.ison() ){
             en = not en;
@@ -148,8 +154,8 @@ int main()
 
 
     //2 rotations CW, 2 rotations CCW, repeat
-    //sw3 for on/off, sw2 for brake on/off
-    //pot controls step speed 2000us-6095us
+    //sw3 for on/off, sw2 for brake on/off, sw1 for step mode
+    //pot controls step speed 23-150rpm
     for(;;){
         check_sw();
         //adc vals 0-4095 -> 0-127
@@ -158,7 +164,8 @@ int main()
         if( en ){
             info.printf( "%10s: {G}%+d{W}  speed: {G}%d rpm{W}\r\n",
                     "step", steps, speed );
-            int i = steps > 0 ? steps : -steps;
+            int i = steps > 0 ? steps : -steps; //to positive count
+            //do one step at a time so can check switches while stepping
             for(; en and i; i--, check_sw()){
                 s.step( steps > 0 ? 1 : -1, speed );
             }
