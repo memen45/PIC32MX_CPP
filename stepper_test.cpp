@@ -44,8 +44,8 @@ struct StepperDriver {
     {
     }
 
-    //stepper modes- One Phase On, Two Phase On
-    enum MODE { PHASEON1, PHASEON2 };
+    //stepper modes- One Phase On, Two Phase On, Half step
+    enum MODE { PHASEON1, PHASEON2, HALF };
 
     void mode(MODE m){ m_mode = m; }
     MODE mode() const { return m_mode; }
@@ -68,15 +68,19 @@ struct StepperDriver {
         int dir = n > 0 ? 1 : -1;   //which dir through step table
         if( n < 0 ) n = -n;         //make number of steps positive
         if( rpm > 150 ) rpm = 150;  //max rpm for this config
-        uint32_t dly = 60000000 / (rpm * m_steps_rev); //rpm -> us delay
+        uint32_t dly = 60000000 / (rpm * m_steps_rev<<(m_mode==HALF)); //us delay
         while(n--){
-            m_AI1.latval( m_step_table[m_mode][step_idx][0] == POS );
-            m_AI2.latval( m_step_table[m_mode][step_idx][0] == NEG );
-            m_BI1.latval( m_step_table[m_mode][step_idx][1] == POS);
-            m_BI2.latval( m_step_table[m_mode][step_idx][1] == NEG );
-            step_idx += dir;    //next step
-            step_idx and_eq 3;  //stay inside table
+            //0,2,4,6
+            if( m_mode == PHASEON1 and (step_idx bitand 1) ) step_idx += dir;
+            //1,3,5,7
+            if( m_mode == PHASEON2 and (not (step_idx bitand 1)) ) step_idx += dir;
+            step_idx and_eq 7;
+            m_AI1.latval( m_hstep_table[step_idx][0] == POS );
+            m_AI2.latval( m_hstep_table[step_idx][0] == NEG );
+            m_BI1.latval( m_hstep_table[step_idx][1] == POS);
+            m_BI2.latval( m_hstep_table[step_idx][1] == NEG );
             Delay::wait( dly ); //delay to get rpm
+            step_idx += dir;    //next step
         }
         stop(); //done, stop will turn off all, or brake
     }
@@ -89,9 +93,14 @@ struct StepperDriver {
     bool        m_brake{false};             //brake enable
 
     enum COIL { OFF, POS, NEG };
-    const COIL m_step_table[2][4][2]{
-        { {POS,OFF}, {OFF,NEG}, {NEG,OFF}, {OFF,POS} }, //PHASEON1
-        { {POS,NEG}, {NEG,NEG}, {NEG,POS}, {POS,POS} }, //PHASEON2
+    const COIL m_hstep_table[8][2]{
+        //1phase    2phase
+        //0,2,4,6   1,3,5,7
+        //AI  BI    AI   BI
+        {POS,OFF}, {POS,NEG},
+        {OFF,NEG}, {NEG,NEG},
+        {NEG,OFF}, {NEG,POS},
+        {OFF,POS}, {POS,POS}
     };
 
 };
@@ -144,10 +153,12 @@ int main()
             if( not en ) s.stop();
         }
         if( sw1.ison() ){
-            s.mode( s.mode() == s.PHASEON1 ? s.PHASEON2 : s.PHASEON1  );
+            static const char* m[] = {"PHASEON1","PHASEON2","HALF"};
+            if( s.mode() == s.PHASEON1 )        s.mode( s.PHASEON2 );
+            else if( s.mode() == s.PHASEON2 )   s.mode( s.HALF );
+            else                                s.mode( s.PHASEON1 );
             debounce( sw1 );
-            info.printf("%10s: {G}%s{W}\r\n", "mode",
-                    s.mode() == s.PHASEON2 ? "PHASEON2" : "PHASEON1" );
+            info.printf("%10s: {G}%s{W}\r\n", "mode", m[s.mode()] );
 
         }
     };
@@ -165,6 +176,7 @@ int main()
             info.printf( "%10s: {G}%+d{W}  speed: {G}%d rpm{W}\r\n",
                     "step", steps, speed );
             int i = steps > 0 ? steps : -steps; //to positive count
+            if( s.mode() == s.HALF ) i *= 2; //half step, double steps
             //do one step at a time so can check switches while stepping
             for(; en and i; i--, check_sw()){
                 s.step( steps > 0 ? 1 : -1, speed );
