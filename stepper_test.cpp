@@ -154,7 +154,7 @@ int main()
             if( not en ) s.stop();
         }
         if( sw1.ison() ){
-            static const char* m[] = {"PHASEON1","PHASEON2","HALF"};
+            const char* m[] = {"PHASEON1","PHASEON2","HALF"};
             if( s.mode() == s.PHASEON1 )        s.mode( s.PHASEON2 );
             else if( s.mode() == s.PHASEON2 )   s.mode( s.HALF );
             else                                s.mode( s.PHASEON1 );
