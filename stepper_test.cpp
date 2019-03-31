@@ -75,10 +75,10 @@ struct StepperDriver {
             //1,3,5,7
             if( m_mode == PHASEON2 and (not (step_idx bitand 1)) ) step_idx += dir;
             step_idx and_eq 7;
-            m_AI1.latval( m_hstep_table[step_idx][0] == POS );
-            m_AI2.latval( m_hstep_table[step_idx][0] == NEG );
-            m_BI1.latval( m_hstep_table[step_idx][1] == POS);
-            m_BI2.latval( m_hstep_table[step_idx][1] == NEG );
+            m_AI1.latval( m_step_table[step_idx][0] == POS );
+            m_AI2.latval( m_step_table[step_idx][0] == NEG );
+            m_BI1.latval( m_step_table[step_idx][1] == POS);
+            m_BI2.latval( m_step_table[step_idx][1] == NEG );
             Delay::wait( dly ); //delay to get rpm
             step_idx += dir;    //next step
         }
@@ -93,7 +93,8 @@ struct StepperDriver {
     bool        m_brake{false};             //brake enable
 
     enum COIL { OFF, POS, NEG };
-    const COIL m_hstep_table[8][2]{
+    const COIL m_step_table[8][2]{
+        //half step uses all
         //1phase    2phase
         //0,2,4,6   1,3,5,7
         //AI  BI    AI   BI
