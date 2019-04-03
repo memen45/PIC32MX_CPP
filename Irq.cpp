@@ -111,7 +111,7 @@ flag        (IRQ_NR e) -> bool
 on          (IRQ_NR e, bool tf) -> void
             {
             setbit(IEC_BASE + ((e / 32) * 16), 1u<<(e % 32),
-                tf and m_isrfuncs[e] );
+                tf and m_isrfuncs[m_lookup_vn[e]] );
             }
 //=============================================================================
             auto Irq::
@@ -184,7 +184,7 @@ isr         (uint8_t vn) -> void
             isrfunc_t f = m_isrfuncs[ vn ];
             if( f ){
                 f();
-                // flag_clr( (IRQ_NR)vn );      // cannot clear flag as irq nr is unknown
+                // flag_clr( (IRQ_NR)vn );      // cannot clear flag as irq nr is ambiguous
             } else {
                 on((IRQ_NR)vn, false);
             }
