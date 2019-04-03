@@ -3,21 +3,24 @@
 #include "Reg.hpp"
 #include "Sys.hpp"
 
-enum { //offsets from base address, in words
-    TRIS = 0, PORT = 4, LAT = 8, ODC = 12
+//offsets from base address, in words (m_pt is a uint32 pointer)
+enum {
+    TRIS = 0,
+    PORT = 4,
+    LAT = 8,
+    ODC = 12
 };
 
 enum {
-	TRISX_SPACING = 16, //spacing in words
-	TRISA = 0xBF886000,
-	AD1PCFG = 0xBF809060,
+    PORT_SPACING = 16, //spacing in words
+    PORT_BASE = 0xBF886000,
+    AD1PCFG = 0xBF809060,
     
+    //CNCONx
+        ON = 15,
 	CNCON = 0xBF8861C0,
 	CNEN = 0xBF8861D0,
 	CNPUE = 0xBF8861E0,
-	
-    //CNCONx
-        ON = 15
 };
 
 //IOMODE
@@ -42,8 +45,8 @@ enum : uint8_t { ACTL = 1<<2  }; //IOMODE ACTL bit (active low bit)
 //=============================================================================
             Pins::
 Pins        (RPN e, IOMODE m)
-            : 
-            m_pt((vu32ptr)TRISA + ((e>>PTSHIFT) bitand PTMASK) * TRISX_SPACING),
+            :
+            m_pt((vu32ptr)PORT_BASE+((e>>PTSHIFT) bitand PTMASK)*PORT_SPACING),
             m_pn(1<<(e bitand PNMASK)),
             m_lowison(m bitand ACTL),
             m_an((e>>ANSHIFT) bitand ANMASK),
@@ -149,7 +152,7 @@ lowison     (bool tf) -> void
 digital_in  () -> void
             {
             setbit(m_pt + TRIS, m_pn);
-            if (m_pt == ((vu32ptr)TRISA + TRISX_SPACING))
+            if (m_pt == ((vu32ptr)PORT_BASE + PORT_SPACING))
                 setbit(AD1PCFG, 1 << m_an);
             }
 
@@ -158,7 +161,7 @@ digital_in  () -> void
 analog_in   () -> void
             {
             setbit(m_pt + TRIS, m_pn);
-            if (m_pt == ((vu32ptr)TRISA + TRISX_SPACING))
+            if (m_pt == ((vu32ptr)PORT_BASE + PORT_SPACING))
                 clrbit(AD1PCFG, 1 << m_an);
             }
 
@@ -167,7 +170,7 @@ analog_in   () -> void
 digital_out () -> void
             {
             clrbit(m_pt + TRIS, m_pn);
-            if (m_pt == ((vu32ptr)TRISA + TRISX_SPACING))
+            if (m_pt == ((vu32ptr)PORT_BASE + PORT_SPACING))
                 setbit(AD1PCFG, 1 << m_an);
             }
 

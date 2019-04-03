@@ -6,6 +6,7 @@
 #include "Resets.hpp"
 #include "Sys.hpp"
 #include "Irq.hpp"
+#include "Delay.hpp"
 
 enum {
     OSCCON = 0xBF80F000,
@@ -79,6 +80,9 @@ clk_lock    () -> void
             setbit(OSCCON, 1<<CLKLOCK);
             }
 
+            //TODO
+            //get reset flags after wake from sleep by calling resets::cause()
+
 //=============================================================================
             auto Osc::
 sleep       () -> void
@@ -92,6 +96,7 @@ sleep       () -> void
             Sys::unlock();
             clrbit(OSCCON, 1<<SLPEN);
             Sys::lock();
+            Resets::cause(); //update resets cause
             }
 
 //=============================================================================
@@ -100,6 +105,7 @@ idle        () -> void
             {
             Wdt::reset();
             __asm__ __volatile__ ("wait");
+            Resets::cause(); //update resets cause
             }
 
 //=============================================================================

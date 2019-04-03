@@ -1,10 +1,3 @@
 Building, execute this line before building-
 date +%-y,%-m,%-d,0,%-k,%-M,%-S > ${ProjectDir}/now.h
 so any rtc setting can include now.h at point of datetime_t setting
-
-
-for debug filenames (out to uart)-
-to get filename with only basename, just create a constant with the name in the source file
-static const char* m_filename = "UsbCdcAcm.cpp";
-since __FILE__ will be the name (including path) provided to the compiler (we don't want it all)
-and all other ways to get only the basename are ugly and may /may not work or still bring in the whole __FILE_ string

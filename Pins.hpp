@@ -203,7 +203,7 @@ an_num      () -> uint8_t;           //get adc #
             auto
 cn_num      () -> uint8_t;           //get cn #
 
-            private:
+    private:
 
             volatile uint32_t*  m_pt;       //base address
             const uint16_t      m_pn;       //pin mask

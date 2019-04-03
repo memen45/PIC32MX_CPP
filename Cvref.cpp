@@ -1,11 +1,11 @@
 #include "Cvref.hpp"
 
-enum {
-DAC1CON = 0xBF802380,
-    ON = 15,
-    DACOE = 8,
-    REFSEL_SHIFT = 0, REFSEL_CLR = 3
-};
+            enum {
+            DAC1CON = 0xBF802380,
+            ON = 15,
+            DACOE = 8,
+            REFSEL_SHIFT = 0, REFSEL_CLR = 3
+            };
 
 //=============================================================================
             auto Cvref::

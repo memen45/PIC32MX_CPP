@@ -173,14 +173,15 @@ isr_func    (IRQ_NR n, isrfunc_t f) -> void
             if(not f) on(n, false);
             }
 
-// run isr function
-// run function pointer if not 0,
+// run isr function (header declaration set to inline)
+// get vector number from SIRQ, run function pointer if not 0,
 // clear flag after function is run
 // in case no function pointer, turn off irq (should not happen, but...)
 //=============================================================================
             auto Irq::
-isr         (uint8_t vn) -> void
+isr         () -> void
             {
+            uint8_t vn = Reg::val8(INTSTAT); //SIRQ<7:0> = INTSTAT<7:0>
             isrfunc_t f = m_isrfuncs[ vn ];
             if( f ){
                 f();
@@ -220,6 +221,5 @@ isr         (uint8_t vn) -> void
             auto __attribute__((interrupt))
 _DefaultInterrupt (void) -> void
             {
-            uint8_t vn = Reg::val8(INTSTAT); //SIRQ<7:0> = INTSTAT<7:0>
-            Irq::isr(vn);
+            Irq::isr();
             }

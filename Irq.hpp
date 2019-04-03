@@ -150,7 +150,7 @@ init        (IRQ_NR, uint8_t, uint8_t, bool) -> void;
 
             //to create a list (array) of irq's to init/enable
             using
-            irq_list_t = struct {
+irq_list_t  = struct {
             IRQ_NR irqvn;   //vector number
             uint8_t p;      //priority
             uint8_t s;      //sub-priority
@@ -175,8 +175,9 @@ isrfunc_t   = std::function<void()>;
             static auto
 isr_func    (IRQ_NR, isrfunc_t) -> void;
 
-            static auto
-isr         (uint8_t) -> void;
+            //only used in _DefaultInterrupt, make it inline
+            static inline auto
+isr         () -> void;
 
     private:
 
