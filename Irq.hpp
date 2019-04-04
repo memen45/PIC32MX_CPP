@@ -175,9 +175,8 @@ isrfunc_t   = std::function<void()>;
             static auto
 isr_func    (IRQ_NR, isrfunc_t) -> void;
 
-            //only used in _DefaultInterrupt, make it inline
-            static inline auto
-isr         () -> void;
+            static auto
+isr         (uint8_t) -> void;
 
     private:
 
