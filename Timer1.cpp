@@ -2,7 +2,7 @@
 #include "Osc.hpp"
 
 enum {
-    T1CON = 0xBF808000,
+    T1CON = 0xBF800600,
         ON = 15,
         SIDL = 13,
         TWDIS = 12,
