@@ -4,32 +4,32 @@ The following modules are present in the current repository:
 
 | Module | Code support for PIC32MX795F512L | tested |
 | ------- | -------------------------------:| ------:|
-| Adc     | yes | yes |
-| Ccp     | not (yet) | no |
-| Clc     | not (yet) | no |
-| Comp    | not (yet) | no |
-| Cp0     | yes | partially (count works) |
-| Cvref   | not (yet) | no |
-| Delay   | yes | yes |
-| Dma     | not (yet) | no |
-| I2c     | yes | yes |
-| Irq     | yes | yes |
-| Nvm     | yes | no |
-| Oc      | yes | yes |
-| Osc     | yes (clean required) | yes |
-| Pins    | yes | partially (an pins not) |
-| Pmd     | not (yet) | no |
-| Pmp     | not (yet) | no |
-| Reg     | yes | yes |
-| Resets  | yes | no |
-| Rtcc    | yes | yes |
-| Spi     | yes | yes |
-| Sys     | yes (added support for prefetch cache and wait states) | yes |
-| Timer1  | yes | yes |
-| Timer   | yes | yes |
-| Uart    | yes | yes |
-| Usb     | yes | no |
-| Vdetect | not (yet) | no |
-| Wdt     | not (yet) | no |
+| Adc     | ✔️ | ✔️ |
+| Ccp     | ➖ | ➖ |
+| Clc     | ➖ | ➖ |
+| Comp    | ➖ | ➖ |
+| Cp0     | ✔️ | partially (count works) |
+| Cvref   | ➖ | ➖ |
+| Delay   | ✔️ | ✔️ |
+| Dma     | ➖ | ➖ |
+| I2c     | ✔️ | ✔️ |
+| Irq     | ✔️ | ✔️ |
+| Nvm     | ✔️ | ➖ |
+| Oc      | ✔️ | ✔️ |
+| Osc     | ✔️ (clean required) | ✔️ |
+| Pins    | ✔️ | partially (an pins not) |
+| Pmd     | ➖ | ➖ |
+| Pmp     | ➖ | ➖ |
+| Reg     | ✔️ | ✔️ |
+| Resets  | ✔️ | ➖ |
+| Rtcc    | ✔️ | ✔️ |
+| Spi     | ✔️ | ✔️ |
+| Sys     | ✔️ (added support for prefetch cache and wait states) | ✔️ |
+| Timer1  | ✔️ | ✔️ |
+| Timer   | ✔️ | ✔️ |
+| Uart    | ✔️ | ✔️ |
+| Usb     | ✔️ | ➖ |
+| Vdetect | ➖ | ➖ |
+| Wdt     | ➖ | ➖ |
 
 Peripheral access library for PIC32MX795F512L and alike PIC32MX family microcontrollers. Written in C++ which is supported now by the Microchip XC32++ compiler by default.
