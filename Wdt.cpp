@@ -1,20 +1,19 @@
 #include "Wdt.hpp"
 
 enum {
-WDTCON = 0xBF803990,
-    CLRKEY = 0x5743,
+WDTCON = 0xBF800000,
     ON = 15,
-    WINEN = 0
-//RUNDIV, SLPDIV, CLKSEL are read-only and are set in config bits
+    WINEN = 1,
+    CLR = 0
+//WDTPS is read-only and set in config bits
 //if need to read them, can make your own read function(s)
 };
 
-//16bit write to upper 16bits of WDTCON
 //=============================================================================
             auto Wdt::
 reset       () -> void
             {
-            val(WDTCON + 2, (uint16_t)CLRKEY);
+            setbit(WDTCON, 1 << CLR);
             }
 
 //=============================================================================

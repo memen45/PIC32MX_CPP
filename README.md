@@ -30,6 +30,6 @@ The following modules are present in the current repository:
 | Uart    | ✔️ | ✔️ |
 | Usb     | ✔️ | ➖ |
 | Vdetect | ➖ | ➖ |
-| Wdt     | ➖ | ➖ |
+| Wdt     | ✔️ | ➖ |
 
 Peripheral access library for PIC32MX795F512L and alike PIC32MX family microcontrollers. Written in C++ which is supported now by the Microchip XC32++ compiler by default.
