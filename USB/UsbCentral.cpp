@@ -70,6 +70,9 @@ attach      () -> void
 
                 //only need enabled irq flags, stat only valid if TRN set
                 UsbCentral::service(flags bitand usb.irqs(), stat);
+				
+				// clear interrupt flag as it is not done by irq
+				Irq::flag_clr(Irq::USB);
             }
             );
 
@@ -100,7 +103,7 @@ init        (bool tf) -> bool
 
             bool wason = Usb::power(Usb::USBPWR);
             detach();
-            if(wason) Delay::wait(200_ms);      //if was already on, wait
+            // if(wason) Delay::wait(200_ms);      //if was already on, wait
             //if no vbus pin voltage or tf=false (wanted only detach)
             if(not Usb::vbus_ison() or not tf) return false;
             m_timer1ms = 0;                     //reset 1ms timer

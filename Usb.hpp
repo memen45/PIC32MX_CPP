@@ -295,8 +295,8 @@ bdt_addr    (uint8_t = 0, bool = 0, bool = 0) -> volatile bdt_t*;
 
             enum
 CONFIG      : uint8_t {
-            EYETEST = 1<<7, OEMON = 1<<6, SIDLE = 1<<4,
-            LSDEV = 1<<3, AUTOSUSP = 1<<0
+            EYETEST = 1<<7, OEMON = 1<<6, // FRZDEBUG = 1 << 5, not available?
+            SIDLE = 1<<4, AUTOSUSP = 1<<0
             };
 
             //set 1bit

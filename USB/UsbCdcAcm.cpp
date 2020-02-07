@@ -72,8 +72,8 @@ static const uint8_t m_descriptor[] = {
         2,                      //number of interfaces
         1,                      //this configuration number
         0,                      //string index for this config
-        ch9.SELFPOWER,          //self-powered and remote-wakup
-        50,                     //bus power required, in 2ma units
+        ch9.REQUIRED,           //bus-powered and remote-wakup
+        230,                    //bus power required, in 2ma units
 
         //interface0
         IFd( 0, 0, 1, 2, 2, 1, 0 ),
@@ -98,7 +98,7 @@ static const uint8_t m_descriptor[] = {
     //==== strings ====
 
     STRd( W(0x0409) ),                            //language 0x0409
-    STRd( _(P),_(I),_(C),_(3),_(2),_(M),_(M) ),   //manufacturer (idx 1)
+    STRd( _(P),_(I),_(C),_(3),_(2),_(M),_(X) ),   //manufacturer (idx 1)
     STRd( _(C),_(D),_(C),_(-),_(A),_(C),_(M) ),   //product (idx 2)
     STRd( _(1),_(2),_(3),_(4),_(5),_(6),_(7) ),   //serial# (idx 3)
 
@@ -174,7 +174,8 @@ bool showlinecoding(UsbEP* ep0){
             static auto
 ep0_request (UsbEP0* ep0) -> bool
             {
-            if(ep0->setup_pkt.bmRequestType != CDC_BMREQUEST_TYPE) return false;
+			uint8_t bm = (ep0->setup_pkt.bmRequestType & 0x7F);
+            if(bm != CDC_BMREQUEST_TYPE) return false;
 
             // * * * * DEBUG * * * *
             UsbDebug dbg;
